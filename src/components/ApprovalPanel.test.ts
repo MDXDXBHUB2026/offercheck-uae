@@ -1,0 +1,91 @@
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it } from "vitest";
+import { draftReply } from "@/lib/agents/drafter";
+import type { GateState } from "@/lib/approvalGate";
+import { ApprovalPanel } from "./ApprovalPanel";
+
+const DRAFT_LINE = "Before I go further";
+const NOTE = "Nothing is sent until you approve. Offer Check never sends messages for you.";
+
+function render(gate: GateState | null): string {
+  return renderToStaticMarkup(createElement(ApprovalPanel, { gate, dispatch: () => {} }));
+}
+
+const PENDING: GateState = { status: "pending", draft: draftReply(), editing: false };
+const APPROVED: GateState = { status: "approved", draft: draftReply(), copied: true };
+const DENIED: GateState = { status: "approved", draft: draftReply(), copied: false };
+
+describe("ApprovalPanel", () => {
+  it("shows only the prepare button before the click", () => {
+    const html = render(null);
+    expect(html).toContain("Prepare draft reply");
+    expect(html).not.toContain("Your approval needed");
+    expect(html).not.toContain(DRAFT_LINE);
+  });
+
+  it("shows the title, the label, the draft and the 3 buttons when pending", () => {
+    const html = render(PENDING);
+    expect(html).toContain("Your approval needed");
+    expect(html).toContain(NOTE);
+    expect(html).toContain(DRAFT_LINE);
+    for (const label of ["Approve and copy reply", "Edit draft", "Discard"]) {
+      expect(html).toContain(label);
+    }
+  });
+
+  it("gives an editable box while editing", () => {
+    const html = render({ ...PENDING, editing: true });
+    expect(html).toMatch(/<textarea id="draft-edit"/);
+    expect(html).not.toMatch(/<textarea[^>]*readonly/i);
+  });
+
+  it("disables approval for a blank draft", () => {
+    expect(render({ ...PENDING, editing: true, draft: "  " })).toMatch(
+      /<button type="button" disabled="">Approve and copy reply/,
+    );
+  });
+
+  it("confirms the copy when the clipboard works", () => {
+    const html = render(APPROVED);
+    expect(html).toContain("Reply copied.");
+    expect(html).not.toContain("<textarea");
+  });
+
+  it("shows a selectable box and a manual-copy message when the clipboard is denied", () => {
+    const html = render(DENIED);
+    expect(html).toContain("Select the text below and copy it yourself.");
+    expect(html).toMatch(/<textarea id="draft-manual-copy"[^>]*readonly/i);
+    expect(html).toContain(DRAFT_LINE);
+  });
+
+  it("does not offer approval again once approved", () => {
+    expect(render(APPROVED)).not.toContain("Approve and copy reply");
+  });
+
+  it("shows no draft after a discard", () => {
+    const html = render({ status: "discarded", draft: null });
+    expect(html).toContain("Draft discarded.");
+    expect(html).toContain("Prepare draft reply");
+    expect(html).not.toContain(DRAFT_LINE);
+  });
+
+  it("shows edited text as text, never as markup", () => {
+    const html = render({ ...APPROVED, draft: "<img src=x onerror=alert(1)>" });
+    expect(html).not.toContain("<img");
+  });
+
+  it.each<[string, GateState | null]>([
+    ["no draft", null],
+    ["pending", PENDING],
+    ["editing", { ...PENDING, editing: true }],
+    ["approved", APPROVED],
+    ["denied", DENIED],
+    ["discarded", { status: "discarded", draft: null }],
+  ])("uses native buttons that a keyboard can reach: %s", (_name, gate) => {
+    const html = render(gate);
+    expect(html.match(/<button/g)?.length).toBe(html.match(/<button type="button"/g)?.length);
+    expect(html).not.toMatch(/tabindex="[1-9]/i);
+    expect(html).not.toMatch(/role="button"/);
+  });
+});
