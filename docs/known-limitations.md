@@ -6,6 +6,7 @@ Offer Check is an MVP prototype. A low score or "No risk indicators found" does 
 - **Fixed rules can also over-match.** A rule can fire on text that mentions a fee or code without asking for it. A negation counts only when it is bound to the ask or the cost, as in `We never ask for a fee` or `Fees are not payable`, so other negative wording can still score.
 - **English wording only.** The fee, credential, document and urgency rules match English, so an offer in another language does not fire them. The free email rule works in any language, so such an offer can still score 20, and a low score means even less for it.
 - **Rules only, for now.** Verification and official-channel agents are not implemented. No company, domain or offer number is checked.
+- **The audit trail does not fingerprint offer or draft text, by design; it cannot prove which text a run analysed.**
 
 - **Tested on a small synthetic set.** Holdout 1 is consumed, and it ran on the rules as they were before the Step 1d fixes. Strict result: 11 of 18 passed. With the right rule counted as a pass: 15 of 18. H10 was a real miss, not a band dispute. Holdout 2 is also consumed. It ran on the rules after those fixes, and 15 of 16 passed. That is 16 synthetic cases, so it is a small sample. Failures are listed in `docs/rules-backlog.md`.
 

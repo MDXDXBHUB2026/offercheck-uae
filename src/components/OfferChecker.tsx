@@ -1,18 +1,61 @@
 "use client";
 
-import { useReducer, useState, type FormEvent } from "react";
+import { useReducer, useRef, useState, type FormEvent } from "react";
 import { ApprovalPanel } from "@/components/ApprovalPanel";
+import { AuditTrail } from "@/components/AuditTrail";
 import { ResultsPanel } from "@/components/ResultsPanel";
-import { gateReducer, INITIAL_GATE_FLOW } from "@/lib/approvalGate";
+import { planBlocks } from "@/lib/agents/drafter";
+import { gateReducer, INITIAL_GATE_FLOW, type GateAction } from "@/lib/approvalGate";
+import { appendEntries, gateRecords, type AuditEntry, type AuditRecord } from "@/lib/audit";
 import type { AnalysisResult } from "@/lib/types";
+
+type AnalyzeResponse = AnalysisResult & { runId: string; audit: AuditEntry[] };
 
 // ruleCount comes from the server page, so the rules themselves never ship to the browser.
 export function OfferChecker({ ruleCount }: { ruleCount: number }) {
   const [text, setText] = useState("");
-  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [result, setResult] = useState<AnalyzeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [gateFlow, dispatchGate] = useReducer(gateReducer, INITIAL_GATE_FLOW);
+  const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
+  const [auditFailed, setAuditFailed] = useState(false);
+  // Appends run one after another, so the chain stays in order. A new run starts a new chain.
+  const auditQueue = useRef<Promise<AuditEntry[]>>(Promise.resolve([]));
+  const runIdRef = useRef<string | null>(null);
+
+  function startAudit(runId: string | null, log: AuditEntry[]) {
+    runIdRef.current = runId;
+    auditQueue.current = Promise.resolve(log);
+    setAuditLog(log);
+    setAuditFailed(false);
+  }
+
+  function logGate(records: AuditRecord[]) {
+    if (records.length === 0) return;
+    const runId = records[0].runId;
+    auditQueue.current = auditQueue.current.then(
+      (log) =>
+        appendEntries(log, records).then(
+          (next) => {
+            if (runIdRef.current === runId) setAuditLog(next);
+            return next;
+          },
+          () => {
+            if (runIdRef.current === runId) setAuditFailed(true);
+            return log;
+          },
+        ),
+    );
+  }
+
+  function dispatchWithAudit(action: GateAction) {
+    if (!result) return;
+    // The draft adapts to the findings shown above. Only their rule ids reach the drafter.
+    const full = action.type === "prepare" ? { ...action, findings: result.findings } : action;
+    logGate(gateRecords(result.runId, gateFlow, gateReducer(gateFlow, full), planBlocks(result.findings)));
+    dispatchGate(full);
+  }
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -20,6 +63,7 @@ export function OfferChecker({ ruleCount }: { ruleCount: number }) {
     setError(null);
     setResult(null);
     dispatchGate({ type: "reset" });
+    startAudit(null, []);
     try {
       const response = await fetch("/api/analyze", {
         method: "POST",
@@ -29,6 +73,7 @@ export function OfferChecker({ ruleCount }: { ruleCount: number }) {
       const data = await response.json();
       if (response.ok) {
         setResult(data);
+        startAudit(data.runId, data.audit ?? []);
       } else {
         setError(data.error ?? "Something went wrong. Try again.");
       }
@@ -62,15 +107,8 @@ export function OfferChecker({ ruleCount }: { ruleCount: number }) {
         )}
         {result && <ResultsPanel result={result} ruleCount={ruleCount} />}
       </div>
-      {result && (
-        <ApprovalPanel
-          gate={gateFlow.gate}
-          // The draft adapts to the findings shown above. Only their rule ids reach the drafter.
-          dispatch={(action) =>
-            dispatchGate(action.type === "prepare" ? { ...action, findings: result.findings } : action)
-          }
-        />
-      )}
+      {result && <ApprovalPanel gate={gateFlow.gate} dispatch={dispatchWithAudit} />}
+      {result && <AuditTrail entries={auditLog} failed={auditFailed} />}
     </>
   );
 }

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { runManager } from "@/lib/agents/manager";
+import { runWithAudit } from "@/lib/auditRun";
 import { MAX_OFFER_CHARS } from "@/lib/types";
 
 const MAX_BODY_BYTES = MAX_OFFER_CHARS * 4 + 1024;
@@ -29,5 +29,5 @@ export async function POST(request: Request) {
     return errorResponse(TOO_LONG, 413);
   }
 
-  return NextResponse.json(runManager(text));
+  return NextResponse.json(await runWithAudit(text));
 }
