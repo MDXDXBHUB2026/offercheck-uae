@@ -1,5 +1,5 @@
-import { draftReply } from "./agents/drafter";
-import type { AuditEvent } from "./types";
+import { draftReply, isTemplateDraft } from "./agents/drafter";
+import type { AuditEvent, Finding } from "./types";
 
 export type GateState =
   | { status: "pending"; draft: string; editing: boolean }
@@ -14,7 +14,8 @@ export type GateFlow = {
 };
 
 export type GateAction =
-  | { type: "prepare"; at: string }
+  // findings choose the draft's blocks. Only their rule ids are read, never their evidence text.
+  | { type: "prepare"; at: string; findings?: readonly Pick<Finding, "source">[] }
   | { type: "startEdit"; at: string }
   | { type: "changeDraft"; draft: string }
   | { type: "approve"; copied: boolean; at: string }
@@ -35,7 +36,7 @@ export function gateReducer(flow: GateFlow, action: GateAction): GateFlow {
       if (gate && gate.status !== "discarded") return flow;
       return record(
         flow,
-        { status: "pending", draft: draftReply(), editing: false },
+        { status: "pending", draft: draftReply(action.findings), editing: false },
         { timestamp: action.at, actor: "drafter", event: "gate_pending", detail: "Draft prepared from template" },
       );
     }
@@ -60,7 +61,7 @@ export function gateReducer(flow: GateFlow, action: GateAction): GateFlow {
     }
     case "approve": {
       if (gate?.status !== "pending" || gate.draft.trim().length === 0) return flow;
-      const wording = gate.draft === draftReply() ? "Template draft" : "Edited draft";
+      const wording = isTemplateDraft(gate.draft) ? "Template draft" : "Edited draft";
       const copy = action.copied ? "copied to clipboard" : "clipboard denied, manual copy shown";
       return record(
         flow,

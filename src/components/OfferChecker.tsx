@@ -62,7 +62,15 @@ export function OfferChecker({ ruleCount }: { ruleCount: number }) {
         )}
         {result && <ResultsPanel result={result} ruleCount={ruleCount} />}
       </div>
-      {result && <ApprovalPanel gate={gateFlow.gate} dispatch={dispatchGate} />}
+      {result && (
+        <ApprovalPanel
+          gate={gateFlow.gate}
+          // The draft adapts to the findings shown above. Only their rule ids reach the drafter.
+          dispatch={(action) =>
+            dispatchGate(action.type === "prepare" ? { ...action, findings: result.findings } : action)
+          }
+        />
+      )}
     </>
   );
 }
