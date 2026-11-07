@@ -8,8 +8,8 @@ export const SEVERITY_WEIGHTS: Record<Severity, number> = {
 };
 
 const MAX_SCORE = 100;
-const HIGH_BAND_MIN = 60;
-const MEDIUM_BAND_MIN = 30;
+export const HIGH_BAND_MIN = 60;
+export const MEDIUM_BAND_MIN = 30;
 
 const BAND_LABELS: Record<RiskBand, string> = {
   high: "High risk indicators",

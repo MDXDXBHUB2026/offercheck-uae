@@ -2,7 +2,8 @@ import type { TraceStatus, TraceStep } from "@/lib/types";
 
 const AGENT_LABELS: Record<string, string> = {
   manager: "Manager",
-  intake: "Intake",
+  // Intake only cleans the text so far: it does not extract claims yet.
+  intake: "Intake (text cleaning only)",
   red_flag: "Red-flag",
   verification: "Verification",
   official_channel: "Official channel",

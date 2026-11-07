@@ -33,15 +33,12 @@ Source: one run of `src/lib/agents/eval/holdout2.ts` on 2026-11-06, with `redFla
 Numbers come from the Step 1c QA run.
 
 6. **Invisible characters and look-alike letters survive cleaning.** U+2061, U+2062, U+034F, U+FE0F, U+180E, Cyrillic homoglyphs and fullwidth letters.
-7. **The score-0 screen contradicts itself.** It says no rules matched while showing a warning mention.
-8. **The Agent run panel overstates Intake.** Intake is only a text cleaner so far.
-9. **The band label can disagree with the severity chip.** `Send your passport copy` shows a medium chip under a low band.
 11. **Hidden-only input gets a result.** It should get the empty-input error, because the check runs before cleaning.
-12. **The rule count is hard-coded in the UI.** `page.tsx` and `ResultsPanel.tsx` use a literal 5.
 13. **Wrong error for escaped input.** 20,000 control characters return the over-limit 413.
 14. **Minor over-matches.** `Do not trust anyone using hr.fake@gmail.com` fires RF-005. `Please reply today if you have any questions about the benefits` fires RF-004.
-15. **Test gaps.** `eval.test.ts` checks that the confusion counts add up, not the precision and recall values.
 16. **Thin timing margin on the maximum-size test.** Input of `"a, "` repeated takes about 580ms alone, against the 1000ms test limit. It failed in 3 of 12 full parallel runs during Step 2 (1,281ms and 1,248ms measured; the third value was not captured) and passed 3 of 3 runs alone. Cause: RF-001 split the rest of the sentence into list items for every clause, so cost grew with clauses times list items. Fixed on 2026-11-06 with a performance-only guard, and the test limit did not change. The list check now runs only for a part with a hit and only when a payer appears in that tail. `redFlag.ts` is now sha256 `789dc2b29a30940951257c677bddcb4eaf995bb8a187a19e3583ca51d1ebb76f`. Band, rule ids and info ids were identical before and after on all 77 cases.
+
+Defects 7, 8, 9, 12 and 15 were fixed on 2026-11-07 in the UI and tests only. `redFlag.ts` did not change.
 
 ## Evidence quotes
 

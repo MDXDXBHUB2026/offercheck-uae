@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { confusion, evaluateAll, evaluateOffer } from "./metrics";
+import { confusion, evaluateAll, evaluateOffer, type EvalResult } from "./metrics";
 import { EVAL_OFFERS } from "./offers";
 
 const covered = EVAL_OFFERS.filter((offer) => !offer.knownMiss);
@@ -42,12 +42,49 @@ describe("eval set", () => {
     }
   });
 
-  it("computes precision and recall from the results", () => {
+  // Tuned numbers: the dev eval is the set the rules were tuned on, so these are not blind.
+  // Recorded on 2026-11-07 with redFlag.ts sha256 789dc2b29a309409.... A change here needs a reason.
+  it("matches the recorded tuned precision and recall", () => {
     const results = evaluateAll();
-    const { truePositives, falsePositives, falseNegatives, trueNegatives } = confusion(results, [
-      "medium",
-      "high",
-    ]);
-    expect(truePositives + falsePositives + falseNegatives + trueNegatives).toBe(43);
+    expect(confusion(results, ["medium", "high"])).toEqual({
+      truePositives: 17,
+      falsePositives: 1,
+      falseNegatives: 1,
+      trueNegatives: 24,
+      precision: 17 / 18,
+      recall: 17 / 18,
+    });
+  });
+});
+
+describe("confusion", () => {
+  const result = (scamLike: boolean, band: "low" | "medium" | "high") =>
+    ({ offer: { scamLike }, band }) as unknown as EvalResult;
+
+  it("computes precision and recall from a known table", () => {
+    const results = [
+      result(true, "high"),
+      result(true, "medium"),
+      result(true, "high"),
+      result(true, "low"),
+      result(false, "medium"),
+      result(false, "low"),
+      result(false, "low"),
+    ];
+    expect(confusion(results, ["medium", "high"])).toEqual({
+      truePositives: 3,
+      falsePositives: 1,
+      falseNegatives: 1,
+      trueNegatives: 2,
+      precision: 3 / 4,
+      recall: 3 / 4,
+    });
+  });
+
+  it("respects the flagged bands", () => {
+    const results = [result(true, "medium"), result(true, "high"), result(false, "medium")];
+    const highOnly = confusion(results, ["high"]);
+    expect(highOnly.precision).toBe(1);
+    expect(highOnly.recall).toBe(1 / 2);
   });
 });

@@ -1,0 +1,83 @@
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it } from "vitest";
+import { runManager } from "@/lib/agents/manager";
+import { RULES } from "@/lib/agents/redFlag";
+import { AgentRun } from "./AgentRun";
+import { ResultsPanel } from "./ResultsPanel";
+
+function render(offerText: string, ruleCount = RULES.length): string {
+  const result = runManager(offerText);
+  return renderToStaticMarkup(createElement(ResultsPanel, { result, ruleCount }));
+}
+
+describe("ResultsPanel", () => {
+  // Defect 7: the score-0 screen said no rules matched while showing a warning mention.
+  it("does not say no rules matched when it shows a warning mention", () => {
+    const text = "Beware of agents who charge a fee";
+    const result = runManager(text);
+    expect(result.risk.score).toBe(0);
+    expect(result.findings.some((finding) => finding.severity === "info")).toBe(true);
+
+    const html = render(text);
+    const note = html.match(/<p class="no-match">(.*?)<\/p>/)?.[1] ?? "";
+    expect(note).not.toContain("rules matched");
+    expect(note).toContain("counted toward the score");
+    expect(html).toContain("only in a warning");
+    expect(html).toContain("Mentioned in a warning, not counted in the score");
+    expect(html).toContain("This does not confirm that the offer is genuine.");
+  });
+
+  it("says no rules matched when nothing matched at all", () => {
+    const html = render("Interview is on Monday at our Sharjah office.");
+    expect(html).toContain(`None of the ${RULES.length} rules matched.`);
+    expect(html).not.toContain("warning-mentions");
+  });
+
+  it("shows no score-0 note when a rule counted", () => {
+    expect(render("Pay the visa fee of AED 500")).not.toContain("None of the");
+  });
+
+  // Defect 9: a medium chip under a low band read as a contradiction.
+  it("shows each chip as rule points, with the band thresholds beside the score", () => {
+    const text = "Send your passport copy";
+    const result = runManager(text);
+    expect(result.risk.band).toBe("low");
+    expect(result.findings.map((finding) => finding.severity)).toEqual(["medium"]);
+
+    const html = render(text);
+    expect(html).toContain("medium rule, +20 points");
+    expect(html).toContain("Bands: high 60 or more, medium 30 to 59, low below 30.");
+  });
+
+  // Defect 12: the rule count was a literal 5.
+  it("takes the rule count from its prop", () => {
+    expect(render("Hello", 7)).toContain("None of the 7 rules matched.");
+  });
+});
+
+describe("AgentRun", () => {
+  // Defect 8: the label implied that Intake extracts claims.
+  it("labels Intake as text cleaning only", () => {
+    const html = renderToStaticMarkup(createElement(AgentRun, { trace: runManager("Hello").trace }));
+    expect(html).toContain("Intake (text cleaning only)");
+  });
+});
+
+describe("UI text", () => {
+  // Defect 12: no UI file may hard-code the number of rules.
+  it.each(["src/app/page.tsx", "src/components/OfferChecker.tsx", "src/components/ResultsPanel.tsx"])(
+    "%s has no literal rule count",
+    (file) => {
+      const source = readFileSync(join(process.cwd(), file), "utf8");
+      expect(source).not.toMatch(/\b\d+\s+(fixed\s+)?rules\b/);
+    },
+  );
+
+  it("page.tsx stays a server component, so the rules stay out of the client bundle", () => {
+    const source = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8");
+    expect(source).not.toContain('"use client"');
+  });
+});

@@ -1,4 +1,5 @@
 import { AgentRun } from "@/components/AgentRun";
+import { HIGH_BAND_MIN, MEDIUM_BAND_MIN, SEVERITY_WEIGHTS } from "@/lib/scoring";
 import type { AnalysisResult } from "@/lib/types";
 
 const CHECK_LABELS: Record<string, string> = {
@@ -13,7 +14,11 @@ const CHECK_LABELS: Record<string, string> = {
   urgency_mentioned_in_warning: "Urgency mentioned in a warning",
 };
 
-export function ResultsPanel({ result }: { result: AnalysisResult }) {
+function plural(count: number, word: string): string {
+  return `${count} ${word}${count === 1 ? "" : "s"}`;
+}
+
+export function ResultsPanel({ result, ruleCount }: { result: AnalysisResult; ruleCount: number }) {
   const { risk, findings } = result;
   const riskFindings = findings.filter((finding) => finding.severity !== "info");
   const warningMentions = findings.filter((finding) => finding.severity === "info");
@@ -24,9 +29,18 @@ export function ResultsPanel({ result }: { result: AnalysisResult }) {
         <span className="score-max">/ 100</span>
         <span className="score-label">{risk.label}</span>
       </div>
+      <p className="band-key">
+        Each matched rule adds points. Bands: high {HIGH_BAND_MIN} or more, medium{" "}
+        {MEDIUM_BAND_MIN} to {HIGH_BAND_MIN - 1}, low below {MEDIUM_BAND_MIN}.
+      </p>
 
-      {risk.score === 0 && (
-        <p>None of the 5 rules matched. This does not confirm that the offer is genuine.</p>
+      {riskFindings.length === 0 && (
+        <p className="no-match">
+          {warningMentions.length === 0
+            ? `None of the ${ruleCount} rules matched.`
+            : `None of the ${ruleCount} rules counted toward the score. The text mentions ${plural(warningMentions.length, "topic")} only in a warning, shown below.`}{" "}
+          This does not confirm that the offer is genuine.
+        </p>
       )}
 
       {riskFindings.length > 0 && (
@@ -35,7 +49,9 @@ export function ResultsPanel({ result }: { result: AnalysisResult }) {
             <li key={finding.source}>
               <h2>
                 {CHECK_LABELS[finding.check] ?? finding.check}
-                <span className={`severity severity-${finding.severity}`}>{finding.severity}</span>
+                <span className={`severity severity-${finding.severity}`}>
+                  {finding.severity} rule, +{SEVERITY_WEIGHTS[finding.severity]} points
+                </span>
               </h2>
               {finding.evidence.map((quote) => (
                 <blockquote key={quote}>{quote}</blockquote>

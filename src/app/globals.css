@@ -192,6 +192,12 @@ h2:focus-visible {
   color: var(--muted);
 }
 
+.band-key {
+  margin: -8px 0 16px;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
 .findings {
   margin: 0;
   padding: 0;
