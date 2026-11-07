@@ -18,7 +18,7 @@ const STATUS: Record<TraceStatus, { icon: string; label: string }> = {
 export function AgentRun({ trace }: { trace: TraceStep[] }) {
   return (
     <section className="agent-run" aria-label="Agent run">
-      <h2>Agent run</h2>
+      <h3>Agent run</h3>
       <ol>
         {trace.map((step) => (
           <li key={step.agent} className={`trace-${step.status}`}>

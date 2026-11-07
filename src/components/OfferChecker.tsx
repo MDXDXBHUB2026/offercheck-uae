@@ -14,8 +14,11 @@ import {
   type AuditRecord,
 } from "@/lib/audit";
 
-// ruleCount comes from the server page, so the rules themselves never ship to the browser.
-export function OfferChecker({ ruleCount }: { ruleCount: number }) {
+// A synthetic sample offer the user can load into the box with one button.
+export type Sample = { label: string; text: string };
+
+// ruleCount and samples come from the server page, so the rules themselves never ship to the browser.
+export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; samples?: Sample[] }) {
   const [text, setText] = useState("");
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +97,24 @@ export function OfferChecker({ ruleCount }: { ruleCount: number }) {
 
   return (
     <>
-      <form onSubmit={handleSubmit}>
+      <form className="card offer-form" onSubmit={handleSubmit}>
+        {samples.length > 0 && (
+          <div className="samples" role="group" aria-labelledby="samples-label">
+            <span id="samples-label" className="samples-label">
+              Try a synthetic sample:
+            </span>
+            {samples.map((sample) => (
+              <button
+                key={sample.label}
+                type="button"
+                className="secondary sample"
+                onClick={() => setText(sample.text)}
+              >
+                {sample.label}
+              </button>
+            ))}
+          </div>
+        )}
         <label htmlFor="offer">Job offer text</label>
         <textarea
           id="offer"

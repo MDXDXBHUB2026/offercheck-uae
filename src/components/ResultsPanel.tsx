@@ -1,4 +1,6 @@
 import { AgentRun } from "@/components/AgentRun";
+import { scoreArithmetic } from "@/components/scoreArithmetic";
+import { ScoreGauge } from "@/components/ScoreGauge";
 import { HIGH_BAND_MIN, MEDIUM_BAND_MIN, SEVERITY_WEIGHTS } from "@/lib/scoring";
 import type { AnalysisResult } from "@/lib/types";
 
@@ -22,13 +24,14 @@ export function ResultsPanel({ result, ruleCount }: { result: AnalysisResult; ru
   const { risk, findings } = result;
   const riskFindings = findings.filter((finding) => finding.severity !== "info");
   const warningMentions = findings.filter((finding) => finding.severity === "info");
+  const arithmetic = scoreArithmetic(findings, risk);
   return (
-    <section className="results" aria-label="Results">
-      <div className={`score score-${risk.band}`}>
-        <span className="score-value">{risk.score}</span>
-        <span className="score-max">/ 100</span>
-        <span className="score-label">{risk.label}</span>
-      </div>
+    <section className="results card" aria-labelledby="results-heading">
+      <h2 id="results-heading" className="section-title">
+        Risk indicators
+      </h2>
+      <ScoreGauge risk={risk} />
+      {arithmetic && <p className="arithmetic">{arithmetic}</p>}
       <p className="band-key">
         Each matched rule adds points. Bands: high {HIGH_BAND_MIN} or more, medium{" "}
         {MEDIUM_BAND_MIN} to {HIGH_BAND_MIN - 1}, low below {MEDIUM_BAND_MIN}.
@@ -46,13 +49,13 @@ export function ResultsPanel({ result, ruleCount }: { result: AnalysisResult; ru
       {riskFindings.length > 0 && (
         <ul className="findings">
           {riskFindings.map((finding) => (
-            <li key={finding.source}>
-              <h2>
-                {CHECK_LABELS[finding.check] ?? finding.check}
+            <li key={finding.source} className={`evidence-card evidence-${finding.severity}`}>
+              <h3>
+                <span>{CHECK_LABELS[finding.check] ?? finding.check}</span>
                 <span className={`severity severity-${finding.severity}`}>
                   {finding.severity} rule, +{SEVERITY_WEIGHTS[finding.severity]} points
                 </span>
-              </h2>
+              </h3>
               {finding.evidence.map((quote) => (
                 <blockquote key={quote}>{quote}</blockquote>
               ))}
@@ -67,7 +70,7 @@ export function ResultsPanel({ result, ruleCount }: { result: AnalysisResult; ru
           {warningMentions.map((finding) => (
             <li key={finding.source}>
               <p className="warning-note">Mentioned in a warning, not counted in the score</p>
-              <h2>{CHECK_LABELS[finding.check] ?? finding.check}</h2>
+              <h3>{CHECK_LABELS[finding.check] ?? finding.check}</h3>
               {finding.evidence.map((quote) => (
                 <blockquote key={quote}>{quote}</blockquote>
               ))}
