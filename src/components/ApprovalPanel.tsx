@@ -11,6 +11,16 @@ function now(): string {
   return new Date().toISOString();
 }
 
+// Why approval is blocked, or "" when it is not. The gate refuses the same cases on its own.
+function blockedReason(draft: string, editing: boolean): string {
+  if (draft.trim().length === 0) return "Write the reply before you approve.";
+  const missing = unfilledPlaceholders(draft);
+  if (missing.length === 0) return "";
+  return `${editing ? "Replace " : "Choose Edit draft and replace "}${listOf(missing)} with the real ${
+    missing.length === 1 ? "text" : "details"
+  } before you approve.`;
+}
+
 type ApprovalPanelProps = {
   gate: GateState | null;
   dispatch: Dispatch<GateAction>;
@@ -63,7 +73,7 @@ export function ApprovalPanel({ gate, dispatch }: ApprovalPanelProps) {
 
   const startEdit = () => dispatch({ type: "startEdit", at: now() });
   const discard = () => dispatch({ type: "discard", at: now() });
-  const missing = gate.status === "pending" ? unfilledPlaceholders(gate.draft) : [];
+  const reason = gate.status === "pending" ? blockedReason(gate.draft, gate.editing) : "";
 
   return (
     <section className="approval" aria-labelledby="approval-heading">
@@ -108,21 +118,25 @@ export function ApprovalPanel({ gate, dispatch }: ApprovalPanelProps) {
         </>
       )}
 
-      {missing.length > 0 && (
-        <p id="placeholder-note" className="placeholder-note">
-          {gate.status === "pending" && gate.editing ? "Replace " : "Choose Edit draft and replace "}
-          {listOf(missing)} with the real {missing.length === 1 ? "text" : "details"} before you
-          approve.
+      {/* A live region that stays in place while pending, so a screen reader announces each
+          change to the reason, such as one name left instead of two. */}
+      {gate.status === "pending" && (
+        <p id="approve-reason" className="placeholder-note" role="status">
+          {reason}
         </p>
       )}
 
       <div className="approval-actions">
         {gate.status === "pending" && (
+          // aria-disabled, not disabled: the button stays in the tab order, so keyboard and
+          // screen-reader users reach it and hear why it is blocked.
           <button
             type="button"
-            disabled={gate.draft.trim().length === 0 || missing.length > 0}
-            aria-describedby={missing.length > 0 ? "placeholder-note" : undefined}
-            onClick={() => approve(gate.draft)}
+            aria-disabled={reason ? true : undefined}
+            aria-describedby={reason ? "approve-reason" : undefined}
+            onClick={() => {
+              if (!reason) void approve(gate.draft);
+            }}
           >
             Approve and copy reply
           </button>

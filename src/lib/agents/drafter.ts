@@ -144,3 +144,23 @@ export function isTemplateDraft(text: string): boolean {
   }
   return generated.has(text);
 }
+
+// The names as the user filled them in: the greeting name and the sign-off name. A name is one to
+// five words with no comma or sentence punctuation, so a sentence added to either line still
+// counts as an edit.
+const NAME = String.raw`[^\s,;:!?]+(?: [^\s,;:!?]+){0,4}`;
+const FILLED_GREETING = new RegExp(String.raw`^Dear ${NAME},(?=\n)`);
+const FILLED_SIGN_OFF = new RegExp(String.raw`(?<=\nKind regards,\n)${NAME}$`);
+
+// The draft with the two names put back as placeholders. Nothing else is changed, so any other
+// difference from the template still shows.
+export function withNamePlaceholders(text: string): string {
+  return text.replace(FILLED_GREETING, () => GREETING).replace(FILLED_SIGN_OFF, () => "[Your name]");
+}
+
+// True when the wording is the template's, whatever names were filled in. With a template, the
+// draft must match that one; without, any draft the drafter can produce.
+export function isTemplateWording(text: string, template?: string): boolean {
+  const restored = withNamePlaceholders(text);
+  return template === undefined ? isTemplateDraft(restored) : restored === template;
+}

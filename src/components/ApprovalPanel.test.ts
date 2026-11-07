@@ -40,10 +40,12 @@ describe("ApprovalPanel", () => {
     expect(html).not.toMatch(/<textarea[^>]*readonly/i);
   });
 
-  it("disables approval for a blank draft", () => {
-    expect(render({ ...PENDING, editing: true, draft: "  " })).toMatch(
-      /<button type="button" disabled="">Approve and copy reply/,
+  it("blocks approval for a blank draft and says why", () => {
+    const html = render({ ...PENDING, editing: true, draft: "  " });
+    expect(html).toMatch(
+      /<button type="button" aria-disabled="true" aria-describedby="approve-reason">Approve and copy reply/,
     );
+    expect(html).toContain("Write the reply before you approve.");
   });
 
   it("blocks approval and says why while the names are unfilled", () => {
@@ -52,9 +54,24 @@ describe("ApprovalPanel", () => {
       "Choose Edit draft and replace [Recipient name] and [Your name] with the real details before you approve.",
     );
     expect(html).toMatch(
-      /<button type="button" disabled="" aria-describedby="placeholder-note">Approve and copy reply/,
+      /<button type="button" aria-disabled="true" aria-describedby="approve-reason">Approve and copy reply/,
     );
-    expect(html).toMatch(/<p id="placeholder-note"/);
+  });
+
+  it("keeps the blocked approve button focusable: aria-disabled, never the native disabled", () => {
+    for (const gate of [PENDING, { ...PENDING, editing: true, draft: "  " }, { ...PENDING, editing: true }]) {
+      const button = render(gate).match(/<button[^>]*>Approve and copy reply/)?.[0] ?? "";
+      expect(button).toContain('aria-disabled="true"');
+      expect(button).not.toMatch(/\sdisabled=|tabindex="-1"/i);
+    }
+  });
+
+  it("puts the reason in a live region that stays in place while pending", () => {
+    const filled = draftReply().replace("[Recipient name]", "Ms Example").replace("[Your name]", "Sam");
+    for (const gate of [PENDING, { ...PENDING, editing: true, draft: filled }]) {
+      expect(render(gate)).toMatch(/<p id="approve-reason" class="placeholder-note" role="status">/);
+    }
+    expect(render(APPROVED)).not.toContain("approve-reason");
   });
 
   it("names only the placeholders still left while editing", () => {
@@ -67,10 +84,10 @@ describe("ApprovalPanel", () => {
     expect(html).not.toContain("Choose Edit draft");
   });
 
-  it("allows approval with no message once the names are filled in", () => {
+  it("allows approval with an empty reason once the names are filled in", () => {
     const filled = draftReply().replace("[Recipient name]", "Ms Example").replace("[Your name]", "Sam");
     const html = render({ ...PENDING, editing: true, draft: filled });
-    expect(html).not.toContain("placeholder-note");
+    expect(html).toContain('<p id="approve-reason" class="placeholder-note" role="status"></p>');
     expect(html).toMatch(/<button type="button">Approve and copy reply/);
   });
 

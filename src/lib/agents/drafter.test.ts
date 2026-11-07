@@ -2,7 +2,14 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { gateReducer, INITIAL_GATE_FLOW } from "../approvalGate";
-import { DRAFTER_RULES, draftReply, isTemplateDraft, planBlocks } from "./drafter";
+import {
+  DRAFTER_RULES,
+  draftReply,
+  isTemplateDraft,
+  isTemplateWording,
+  planBlocks,
+  withNamePlaceholders,
+} from "./drafter";
 import { HOLDOUT_OFFERS } from "./eval/holdout";
 import { HOLDOUT_2_OFFERS } from "./eval/holdout2";
 import { EVAL_OFFERS } from "./eval/offers";
@@ -229,7 +236,7 @@ describe("drafter and score", () => {
       { type: "approve", copied: true, at: "t" } as const,
     ].reduce(gateReducer, pending);
     expect(approved.gate).toEqual({ status: "approved", draft: filled, copied: true });
-    expect(approved.events.at(-1)?.detail).toBe("Edited draft, copied to clipboard");
+    expect(approved.events.at(-1)?.detail).toBe("Template wording, names filled in, copied to clipboard");
     expect(JSON.stringify(approved.events)).not.toMatch(/Dear|Ms Example|Sam/);
   });
 
@@ -239,4 +246,35 @@ describe("drafter and score", () => {
       expect(readFileSync(join(process.cwd(), file), "utf8")).not.toMatch(/drafter|approvalGate/);
     },
   );
+});
+
+describe("template wording", () => {
+  const fill = (d: string) => d.replace("[Recipient name]", "Ms Example").replace("[Your name]", "Sam");
+
+  it("puts back only the two names", () => {
+    for (const draft of ALL_DRAFTS) {
+      expect(withNamePlaceholders(fill(draft))).toBe(draft);
+      expect(isTemplateWording(fill(draft))).toBe(true);
+      expect(isTemplateWording(fill(draft), draft)).toBe(true);
+    }
+  });
+
+  it("counts any other change as edited", () => {
+    const draft = draftReply([{ source: "RF-001" }]);
+    expect(isTemplateWording(fill(draft), draftReply())).toBe(false);
+    expect(isTemplateWording(`${fill(draft)}\nP.S.`, draft)).toBe(false);
+    expect(isTemplateWording(fill(draft).replace("Kind regards,", "Regards,"), draft)).toBe(false);
+    expect(isTemplateWording(fill(draft).replace("Dear ", "Hi "), draft)).toBe(false);
+    expect(isTemplateWording("My own words", draft)).toBe(false);
+  });
+
+  it("counts a sentence added to the greeting or sign-off line as edited", () => {
+    const draft = draftReply([{ source: "RF-001" }]);
+    const named = draft.replace("[Recipient name]", "Dr. Amal O'Neil-Smith").replace("[Your name]", "Sam Lee");
+    expect(isTemplateWording(named, draft)).toBe(true);
+    const greeting = fill(draft).replace("Dear Ms Example,", "Dear Bob, I have paid the fee and attached my passport,");
+    expect(isTemplateWording(greeting, draft)).toBe(false);
+    const signOff = fill(draft).replace(/Sam$/, "Jane - sending my bank login now");
+    expect(isTemplateWording(signOff, draft)).toBe(false);
+  });
 });

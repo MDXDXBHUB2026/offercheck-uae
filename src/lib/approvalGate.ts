@@ -1,4 +1,4 @@
-import { draftReply, isTemplateDraft } from "./agents/drafter";
+import { draftReply, isTemplateWording } from "./agents/drafter";
 import type { AuditEvent, Finding } from "./types";
 
 export type GateState =
@@ -69,7 +69,8 @@ export function gateReducer(flow: GateFlow, action: GateAction): GateFlow {
     case "approve": {
       if (gate?.status !== "pending" || gate.draft.trim().length === 0) return flow;
       if (unfilledPlaceholders(gate.draft).length > 0) return flow;
-      const wording = isTemplateDraft(gate.draft) ? "Template draft" : "Edited draft";
+      // Approval needs the names filled in, so the label says whether the wording itself changed.
+      const wording = isTemplateWording(gate.draft) ? "Template wording, names filled in" : "Edited wording";
       const copy = action.copied ? "copied to clipboard" : "clipboard denied, manual copy shown";
       return record(
         flow,

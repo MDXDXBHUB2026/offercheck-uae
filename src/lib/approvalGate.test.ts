@@ -97,7 +97,7 @@ describe("approve", () => {
   it("still approves and keeps the draft when the clipboard is denied", () => {
     const flow = run(PREPARE, ...FILL, { type: "approve", copied: false, at: AT });
     expect(flow.gate).toEqual({ status: "approved", draft: FILLED, copied: false });
-    expect(flow.events.at(-1)?.detail).toBe("Edited draft, clipboard denied, manual copy shown");
+    expect(flow.events.at(-1)?.detail).toBe("Template wording, names filled in, clipboard denied, manual copy shown");
   });
 
   it.each([
@@ -122,14 +122,14 @@ describe("approve", () => {
     expect(unfilledPlaceholders(FILLED)).toEqual([]);
   });
 
-  it("accepts an edited draft and labels it edited, not template", () => {
+  it("labels a draft with only the names filled in as template wording", () => {
     const flow = run(PREPARE, ...FILL, APPROVE);
     expect(flow.gate).toEqual({ status: "approved", draft: FILLED, copied: true });
     expect(flow.events.at(-1)).toEqual({
       timestamp: AT,
       actor: "user",
       event: "gate_approved",
-      detail: "Edited draft, copied to clipboard",
+      detail: "Template wording, names filled in, copied to clipboard",
     });
   });
 
@@ -148,7 +148,7 @@ describe("edit", () => {
   it("keeps the edited text and notes the edit on approval", () => {
     const flow = run(PREPARE, START_EDIT, { type: "changeDraft", draft: "My own words" }, APPROVE);
     expect(flow.gate).toEqual({ status: "approved", draft: "My own words", copied: true });
-    expect(flow.events.at(-1)?.detail).toBe("Edited draft, copied to clipboard");
+    expect(flow.events.at(-1)?.detail).toBe("Edited wording, copied to clipboard");
   });
 
   it("ignores typing unless editing was started", () => {
@@ -179,7 +179,7 @@ describe("audit events", () => {
     expect(run(PREPARE, ...FILL, APPROVE).events).toEqual([
       { timestamp: AT, actor: "drafter", event: "gate_pending", detail: "Draft prepared from template" },
       { timestamp: AT, actor: "user", event: "gate_edit_started", detail: "Draft opened for editing" },
-      { timestamp: AT, actor: "user", event: "gate_approved", detail: "Edited draft, copied to clipboard" },
+      { timestamp: AT, actor: "user", event: "gate_approved", detail: "Template wording, names filled in, copied to clipboard" },
     ]);
   });
 

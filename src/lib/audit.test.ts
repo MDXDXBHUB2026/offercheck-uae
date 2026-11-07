@@ -35,7 +35,8 @@ const ALLOWED_KEYS = new Set([
   "score",
   "band",
   "decision",
-  "edited",
+  "placeholders",
+  "text",
   "blocks",
 ]);
 // Every string value in the log comes from a fixed vocabulary: kinds, agents, statuses, rule ids,
@@ -184,7 +185,7 @@ describe("hash chain", () => {
       runId: log[0].runId,
       at: AT,
       kind: "gate_decision",
-      data: { decision: "pending", edited: false, blocks: [] },
+      data: { decision: "pending", placeholders: "unfilled", text: "template", blocks: [] },
     };
     const longer = await appendEntries(log, [record]);
     expect(longer[7].prevHash).toBe(log[6].hash);
@@ -203,30 +204,69 @@ describe("gate records", () => {
     return { next, records: gateRecords("run-1", flow, next, blocks) };
   }
 
-  it("records a prepared draft as pending and not edited", () => {
+  it("records a prepared draft as pending, placeholders unfilled, template text", () => {
     expect(step(INITIAL_GATE_FLOW, prepare).records).toEqual([
-      { runId: "run-1", at: AT, kind: "gate_decision", data: { decision: "pending", edited: false, blocks } },
+      {
+        runId: "run-1",
+        at: AT,
+        kind: "gate_decision",
+        data: { decision: "pending", placeholders: "unfilled", text: "template", blocks },
+      },
     ]);
   });
 
-  it("records an approval of an edited draft as approved and edited", () => {
+  it("records an approval with only the names filled in as filled, template text", () => {
     const editing = run(INITIAL_GATE_FLOW, prepare, { type: "startEdit", at: AT }, { type: "changeDraft", draft: filled });
     expect(step(editing, { type: "approve", copied: true, at: AT }).records[0].data).toEqual({
       decision: "approved",
-      edited: true,
+      placeholders: "filled",
+      text: "template",
       blocks,
     });
   });
 
-  it("records a discard, and whether the discarded draft was edited", () => {
+  it("records an approval of reworded text as filled and edited", () => {
+    const reworded = filled.replace("Kind regards,", "Best wishes,");
+    const editing = run(INITIAL_GATE_FLOW, prepare, { type: "startEdit", at: AT }, { type: "changeDraft", draft: reworded });
+    expect(step(editing, { type: "approve", copied: true, at: AT }).records[0].data).toEqual({
+      decision: "approved",
+      placeholders: "filled",
+      text: "edited",
+      blocks,
+    });
+  });
+
+  it.each([
+    ["one name filled", (d: string) => d.replace("[Recipient name]", "Ms Example"), "unfilled", "template"],
+    ["a name that spans two lines", (d: string) => d.replace("[Your name]", "Sam\nExtra"), "unfilled", "edited"],
+    ["an empty name", (d: string) => d.replace("[Recipient name]", ""), "unfilled", "edited"],
+    ["a line added at the end", (d: string) => `${d}\nP.S.`, "unfilled", "edited"],
+    [
+      "a paragraph removed",
+      (d: string) => d.split("\n\n").filter((_p, i) => i !== 1).join("\n\n"),
+      "unfilled",
+      "edited",
+    ],
+    ["another template's text", () => draftReply(), "unfilled", "edited"],
+  ])("records the draft state for %s", (_name, change, placeholders, text) => {
+    const pending = run(INITIAL_GATE_FLOW, prepare);
+    const edited = run(pending, { type: "startEdit", at: AT }, { type: "changeDraft", draft: change(draftReply(findings)) });
+    expect(step(edited, { type: "discard", at: AT }).records[0].data).toMatchObject({ placeholders, text });
+  });
+
+  it("records a discard with the discarded draft's state", () => {
     const pending = run(INITIAL_GATE_FLOW, prepare);
     expect(step(pending, { type: "discard", at: AT }).records[0].data).toEqual({
       decision: "discarded",
-      edited: false,
+      placeholders: "unfilled",
+      text: "template",
       blocks,
     });
     const edited = run(pending, { type: "startEdit", at: AT }, { type: "changeDraft", draft: "My words" });
-    expect(step(edited, { type: "discard", at: AT }).records[0].data.edited).toBe(true);
+    expect(step(edited, { type: "discard", at: AT }).records[0].data).toMatchObject({
+      placeholders: "filled",
+      text: "edited",
+    });
   });
 
   it("records nothing for opening the editor, typing, a refused approval or a reset", () => {
@@ -258,7 +298,7 @@ describe("gateStep", () => {
     const { flow, records } = steps({ type: "prepare", at: AT });
     expect(flow.gate).toEqual({ status: "pending", draft: draftReply(findings), editing: false });
     expect(records.map((r) => r.data)).toEqual([
-      { decision: "pending", edited: false, blocks: planBlocks(findings) },
+      { decision: "pending", placeholders: "unfilled", text: "template", blocks: planBlocks(findings) },
     ]);
   });
 
@@ -341,6 +381,11 @@ describe("privacy", () => {
       for (const digest of digests(text)) expect(json).not.toContain(digest);
     }
     expect(json).not.toMatch(/Ms Example|Sam|Dear|Recipient name/);
+    for (const entry of log.filter((e) => e.kind === "gate_decision")) {
+      expect(Object.keys(entry.data).sort()).toEqual(["blocks", "decision", "placeholders", "text"]);
+      expect(["unfilled", "filled"]).toContain(entry.data.placeholders);
+      expect(["template", "edited"]).toContain(entry.data.text);
+    }
     expect(foreignHex(log)).toEqual([]);
     await expect(verifyAuditLog(log)).resolves.toEqual({ ok: true });
   });

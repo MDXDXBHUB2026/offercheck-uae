@@ -1,5 +1,5 @@
-import { isTemplateDraft, planBlocks, type BlockId } from "./agents/drafter";
-import { gateReducer, type GateAction, type GateFlow } from "./approvalGate";
+import { isTemplateWording, planBlocks, renderBlocks, type BlockId } from "./agents/drafter";
+import { gateReducer, unfilledPlaceholders, type GateAction, type GateFlow } from "./approvalGate";
 import type { Finding } from "./types";
 import type { AnalysisResult } from "./types";
 
@@ -168,15 +168,33 @@ export function gateStep(
   return { action: full, after, records: gateRecords(runId, before, after, planBlocks(findings)) };
 }
 
-// The gate decisions made by one action: decision, whether the draft was edited, and the draft's
-// block ids. The draft itself is only compared against the templates, never stored.
+export type PlaceholderState = "unfilled" | "filled";
+export type TextState = "template" | "edited";
+
+// Two separate facts about the draft, each from a fixed vocabulary:
+// - placeholders: "unfilled" while any [..] is left, otherwise "filled".
+// - text: "edited" when the draft differs from its template once the two names are put back as
+//   placeholders, otherwise "template". Filling in the names alone is not an edit.
+export function draftState(
+  draft: string,
+  template: string,
+): { placeholders: PlaceholderState; text: TextState } {
+  return {
+    placeholders: unfilledPlaceholders(draft).length > 0 ? "unfilled" : "filled",
+    text: isTemplateWording(draft, template) ? "template" : "edited",
+  };
+}
+
+// The gate decisions made by one action: the decision, the draft's state and its block ids. The
+// draft itself is only compared against its template, never stored or hashed.
 export function gateRecords(
   runId: string,
   before: GateFlow,
   after: GateFlow,
   blocks: readonly BlockId[],
 ): AuditRecord[] {
-  const draft = after.gate?.draft ?? before.gate?.draft ?? null;
+  const template = renderBlocks(blocks);
+  const draft = after.gate?.draft ?? before.gate?.draft ?? template;
   return after.events.slice(before.events.length).flatMap((event) => {
     const decision = DECISIONS[event.event];
     if (!decision) return [];
@@ -185,7 +203,7 @@ export function gateRecords(
         runId,
         at: event.timestamp,
         kind: "gate_decision" as const,
-        data: { decision, edited: draft !== null && !isTemplateDraft(draft), blocks: [...blocks] },
+        data: { decision, ...draftState(draft, template), blocks: [...blocks] },
       },
     ];
   });

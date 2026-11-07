@@ -45,3 +45,98 @@ describe("POST /api/analyze input limits", () => {
     expect(await response.text()).not.toContain("CANARY");
   });
 });
+
+const MAX_BODY_BYTES = 81_024;
+
+// A body with no Content-Length, sent in chunks as a client would stream it. It counts the bytes
+// the route pulled and whether the route cancelled the rest.
+function streamedBody(total: number, chunkSize: number, prefix = "") {
+  const head = new TextEncoder().encode(prefix);
+  const seen = { pulled: 0, cancelled: false };
+  const stream = new ReadableStream<Uint8Array>(
+    {
+      pull(controller) {
+        if (seen.pulled >= total) return controller.close();
+        const size = Math.min(chunkSize, total - seen.pulled);
+        const chunk = new Uint8Array(size).fill(0x61);
+        chunk.set(head.subarray(seen.pulled, seen.pulled + size).subarray(0, size));
+        controller.enqueue(chunk);
+        seen.pulled += size;
+      },
+      cancel() {
+        seen.cancelled = true;
+      },
+    },
+    { highWaterMark: 0 },
+  );
+  return { stream, seen };
+}
+
+function streamRequest(body: ReadableStream<Uint8Array>, headers: Record<string, string> = {}): Request {
+  return new Request("http://localhost/api/analyze", {
+    method: "POST",
+    body,
+    headers,
+    duplex: "half",
+  } as RequestInit);
+}
+
+function jsonStream(json: string, chunkSize: number): ReadableStream<Uint8Array> {
+  const bytes = new TextEncoder().encode(json);
+  let offset = 0;
+  return new ReadableStream<Uint8Array>({
+    pull(controller) {
+      if (offset >= bytes.length) return controller.close();
+      controller.enqueue(bytes.slice(offset, offset + chunkSize));
+      offset += chunkSize;
+    },
+  });
+}
+
+describe("POST /api/analyze streamed body cap", () => {
+  it("reads a small body with no Content-Length", async () => {
+    const request = streamRequest(jsonStream(JSON.stringify({ text: "Pay AED 500 to start" }), 7));
+    expect(request.headers.get("content-length")).toBeNull();
+    const response = await POST(request);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toHaveProperty("risk.score");
+  });
+
+  it("reads an offer of exactly the limit with no Content-Length", async () => {
+    const response = await POST(streamRequest(jsonStream(JSON.stringify({ text: "é".repeat(MAX_OFFER_CHARS) }), 4096)));
+    expect(response.status).toBe(200);
+  });
+
+  it("cuts off an oversized body with no Content-Length at the cap", async () => {
+    const chunk = 1024;
+    const { stream, seen } = streamedBody(10 * 1024 * 1024, chunk, '{"text":"');
+    const request = streamRequest(stream);
+    expect(request.headers.get("content-length")).toBeNull();
+    const response = await POST(request);
+    expect(response.status).toBe(413);
+    await expect(response.json()).resolves.toEqual({ error: TOO_LONG });
+    expect(seen.cancelled).toBe(true);
+    expect(seen.pulled).toBeGreaterThan(MAX_BODY_BYTES);
+    expect(seen.pulled).toBeLessThanOrEqual(MAX_BODY_BYTES + chunk);
+  });
+
+  it("does not trust a Content-Length that understates the body", async () => {
+    const { stream, seen } = streamedBody(10 * 1024 * 1024, 1024, '{"text":"');
+    const response = await POST(streamRequest(stream, { "content-length": "20" }));
+    expect(response.status).toBe(413);
+    await expect(response.json()).resolves.toEqual({ error: TOO_LONG });
+    expect(seen.pulled).toBeLessThanOrEqual(MAX_BODY_BYTES + 1024);
+  });
+
+  it("ignores a small false Content-Length on a valid body", async () => {
+    const body = JSON.stringify({ text: "Pay AED 500 to start" });
+    expect((await post(body, { "content-length": "5" })).status).toBe(200);
+  });
+
+  it("refuses a body one byte over the cap, and never echoes it", async () => {
+    const json = JSON.stringify({ text: "CANARY" + "a".repeat(MAX_BODY_BYTES) }).slice(0, MAX_BODY_BYTES + 1);
+    const response = await POST(streamRequest(jsonStream(json, 8192)));
+    expect(response.status).toBe(413);
+    expect(await response.text()).not.toContain("CANARY");
+  });
+});
