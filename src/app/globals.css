@@ -120,6 +120,12 @@ h2:focus-visible {
   font-size: 0.875rem;
 }
 
+.placeholder-note {
+  margin: 12px 0 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
 .approval-actions {
   display: flex;
   flex-wrap: wrap;

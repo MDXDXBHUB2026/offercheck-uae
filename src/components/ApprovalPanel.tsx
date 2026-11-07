@@ -1,7 +1,11 @@
 import { useEffect, useRef, type Dispatch } from "react";
-import { copyText, type GateAction, type GateState } from "@/lib/approvalGate";
+import { copyText, unfilledPlaceholders, type GateAction, type GateState } from "@/lib/approvalGate";
 
 const NOTHING_SENT = "Nothing is sent until you approve. Offer Check never sends messages for you.";
+
+function listOf(items: string[]): string {
+  return items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
+}
 
 function now(): string {
   return new Date().toISOString();
@@ -59,6 +63,7 @@ export function ApprovalPanel({ gate, dispatch }: ApprovalPanelProps) {
 
   const startEdit = () => dispatch({ type: "startEdit", at: now() });
   const discard = () => dispatch({ type: "discard", at: now() });
+  const missing = gate.status === "pending" ? unfilledPlaceholders(gate.draft) : [];
 
   return (
     <section className="approval" aria-labelledby="approval-heading">
@@ -103,11 +108,20 @@ export function ApprovalPanel({ gate, dispatch }: ApprovalPanelProps) {
         </>
       )}
 
+      {missing.length > 0 && (
+        <p id="placeholder-note" className="placeholder-note">
+          {gate.status === "pending" && gate.editing ? "Replace " : "Choose Edit draft and replace "}
+          {listOf(missing)} with the real {missing.length === 1 ? "text" : "details"} before you
+          approve.
+        </p>
+      )}
+
       <div className="approval-actions">
         {gate.status === "pending" && (
           <button
             type="button"
-            disabled={gate.draft.trim().length === 0}
+            disabled={gate.draft.trim().length === 0 || missing.length > 0}
+            aria-describedby={missing.length > 0 ? "placeholder-note" : undefined}
             onClick={() => approve(gate.draft)}
           >
             Approve and copy reply

@@ -58,9 +58,15 @@ const SIGN_OFF = "Kind regards,\n[Your name]";
 type Tier = "high" | "medium";
 
 // Rule ids in the fixed priority order. tier mirrors the rule's severity in redFlag.ts, and a test
-// keeps the two in step. RF-003 is medium, but next to a high signal the reply declines to send
-// documents rather than asking about them.
-const RULE_BLOCKS: { id: string; tier: Tier; block: (high: boolean) => BlockId; warning?: BlockId }[] = [
+// keeps the two in step. Next to a high signal, RF-003 declines to send documents rather than
+// asking about them, and RF-005 adds nothing because the closing already asks for the official
+// channel.
+const RULE_BLOCKS: {
+  id: string;
+  tier: Tier;
+  block: (high: boolean) => BlockId | null;
+  warning?: BlockId;
+}[] = [
   { id: "RF-002", tier: "high", block: () => "credentials-decline", warning: "credentials-clarify" },
   {
     id: "RF-003",
@@ -70,7 +76,7 @@ const RULE_BLOCKS: { id: string; tier: Tier; block: (high: boolean) => BlockId; 
   },
   { id: "RF-001", tier: "high", block: () => "fee-decline", warning: "fee-clarify" },
   { id: "RF-004", tier: "medium", block: () => "urgency-time", warning: "urgency-clarify" },
-  { id: "RF-005", tier: "medium", block: () => "email-official" },
+  { id: "RF-005", tier: "medium", block: (high) => (high ? null : "email-official") },
 ];
 
 export const DRAFTER_RULES: readonly { id: string; tier: Tier; hasWarning: boolean }[] =
@@ -94,7 +100,7 @@ export function planBlocks(findings: readonly Pick<Finding, "source">[] = []): B
   const closing: BlockId = high ? "close-official" : matched.length > 0 ? "close-written" : "close-thanks";
   return [
     opening,
-    ...matched.map((rule) => rule.block(high)),
+    ...matched.flatMap((rule) => rule.block(high) ?? []),
     ...warned.map((rule) => rule.warning as BlockId),
     closing,
   ];

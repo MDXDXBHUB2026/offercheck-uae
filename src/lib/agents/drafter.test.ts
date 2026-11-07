@@ -89,10 +89,14 @@ describe("planBlocks cases", () => {
       "credentials-decline",
       "documents-hold",
       "fee-decline",
-      "email-official",
       "urgency-clarify",
       "close-official",
     ]);
+  });
+
+  it("drops the official email question next to a high signal, but keeps it otherwise", () => {
+    expect(plan("RF-001", "RF-005")).toEqual(["open-confirm", "fee-decline", "close-official"]);
+    expect(plan("RF-005")).toEqual(["open-questions", "email-official", "close-written"]);
   });
 
   it("ignores unknown rule ids", () => {
@@ -212,13 +216,21 @@ describe("drafter and score", () => {
     expect(scoreOnly(SCAM_OFFER)).toEqual(before);
   });
 
-  it("puts the adapted draft into the gate and keeps the template label", () => {
+  it("puts the adapted draft into the gate, which holds it until the names are filled in", () => {
     const { findings } = runManager(SCAM_OFFER);
     const pending = gateReducer(INITIAL_GATE_FLOW, { type: "prepare", at: "t", findings });
     expect(pending.gate).toEqual({ status: "pending", draft: draftReply(findings), editing: false });
-    const approved = gateReducer(pending, { type: "approve", copied: true, at: "t" });
-    expect(approved.events.at(-1)?.detail).toBe("Template draft, copied to clipboard");
-    expect(JSON.stringify(approved.events)).not.toContain("Dear [Recipient name]");
+    expect(gateReducer(pending, { type: "approve", copied: true, at: "t" })).toBe(pending);
+
+    const filled = draftReply(findings).replace("[Recipient name]", "Ms Example").replace("[Your name]", "Sam");
+    const approved = [
+      { type: "startEdit", at: "t" } as const,
+      { type: "changeDraft", draft: filled } as const,
+      { type: "approve", copied: true, at: "t" } as const,
+    ].reduce(gateReducer, pending);
+    expect(approved.gate).toEqual({ status: "approved", draft: filled, copied: true });
+    expect(approved.events.at(-1)?.detail).toBe("Edited draft, copied to clipboard");
+    expect(JSON.stringify(approved.events)).not.toMatch(/Dear|Ms Example|Sam/);
   });
 
   it.each(["src/lib/agents/manager.ts", "src/lib/agents/redFlag.ts", "src/lib/scoring.ts"])(

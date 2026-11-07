@@ -6,6 +6,7 @@ import {
   copyText,
   gateReducer,
   INITIAL_GATE_FLOW,
+  unfilledPlaceholders,
   type GateAction,
   type GateFlow,
 } from "./approvalGate";
@@ -16,6 +17,9 @@ const START_EDIT: GateAction = { type: "startEdit", at: AT };
 const DISCARD: GateAction = { type: "discard", at: AT };
 const APPROVE: GateAction = { type: "approve", copied: true, at: AT };
 const CANARY = "Pay AED 500 to our agent hr.canary@gmail.com";
+// The template with both names filled in, which is what a user must do before approving.
+const FILLED = draftReply().replace("[Recipient name]", "Ms Example").replace("[Your name]", "Sam");
+const FILL: GateAction[] = [START_EDIT, { type: "changeDraft", draft: FILLED }];
 
 function run(...actions: GateAction[]): GateFlow {
   return actions.reduce(gateReducer, INITIAL_GATE_FLOW);
@@ -48,7 +52,8 @@ describe("prepare", () => {
   it("does nothing while a draft exists", () => {
     const pending = run(PREPARE);
     expect(gateReducer(pending, PREPARE)).toBe(pending);
-    const approved = run(PREPARE, APPROVE);
+    const approved = run(PREPARE, ...FILL, APPROVE);
+    expect(approved.gate?.status).toBe("approved");
     expect(gateReducer(approved, PREPARE)).toBe(approved);
   });
 
@@ -71,7 +76,7 @@ describe("discard", () => {
   });
 
   it("clears an approved draft", () => {
-    expect(run(PREPARE, APPROVE, DISCARD).gate).toEqual({ status: "discarded", draft: null });
+    expect(run(PREPARE, ...FILL, APPROVE, DISCARD).gate).toEqual({ status: "discarded", draft: null });
   });
 
   it("records one event only", () => {
@@ -82,17 +87,50 @@ describe("discard", () => {
 
 describe("approve", () => {
   it("approves when the clipboard works", () => {
-    expect(run(PREPARE, APPROVE).gate).toEqual({
+    expect(run(PREPARE, ...FILL, APPROVE).gate).toEqual({
       status: "approved",
-      draft: draftReply(),
+      draft: FILLED,
       copied: true,
     });
   });
 
   it("still approves and keeps the draft when the clipboard is denied", () => {
-    const flow = run(PREPARE, { type: "approve", copied: false, at: AT });
-    expect(flow.gate).toEqual({ status: "approved", draft: draftReply(), copied: false });
-    expect(flow.events.at(-1)?.detail).toBe("Template draft, clipboard denied, manual copy shown");
+    const flow = run(PREPARE, ...FILL, { type: "approve", copied: false, at: AT });
+    expect(flow.gate).toEqual({ status: "approved", draft: FILLED, copied: false });
+    expect(flow.events.at(-1)?.detail).toBe("Edited draft, clipboard denied, manual copy shown");
+  });
+
+  it.each([
+    ["both names unfilled", draftReply()],
+    ["only [Your name] unfilled", draftReply().replace("[Recipient name]", "Ms Example")],
+    ["only [Recipient name] unfilled", draftReply().replace("[Your name]", "Sam")],
+    ["any other [..] placeholder", "Dear Ms Example, see you on [date]. Sam"],
+  ])("refuses while a placeholder is left: %s", (_name, draft) => {
+    const flow = run(PREPARE, START_EDIT, { type: "changeDraft", draft });
+    expect(gateReducer(flow, APPROVE)).toBe(flow);
+    expect(gateReducer(flow, { type: "approve", copied: false, at: AT })).toBe(flow);
+  });
+
+  it("refuses the untouched template draft", () => {
+    const flow = run(PREPARE);
+    expect(gateReducer(flow, APPROVE)).toBe(flow);
+  });
+
+  it("finds each unfilled placeholder once", () => {
+    expect(unfilledPlaceholders(draftReply())).toEqual(["[Recipient name]", "[Your name]"]);
+    expect(unfilledPlaceholders(`${FILLED} [Your name] [Your name]`)).toEqual(["[Your name]"]);
+    expect(unfilledPlaceholders(FILLED)).toEqual([]);
+  });
+
+  it("accepts an edited draft and labels it edited, not template", () => {
+    const flow = run(PREPARE, ...FILL, APPROVE);
+    expect(flow.gate).toEqual({ status: "approved", draft: FILLED, copied: true });
+    expect(flow.events.at(-1)).toEqual({
+      timestamp: AT,
+      actor: "user",
+      event: "gate_approved",
+      detail: "Edited draft, copied to clipboard",
+    });
   });
 
   it("does nothing when the draft is blank", () => {
@@ -101,7 +139,7 @@ describe("approve", () => {
   });
 
   it("records one event only", () => {
-    const flow = run(PREPARE, APPROVE);
+    const flow = run(PREPARE, ...FILL, APPROVE);
     expect(gateReducer(flow, APPROVE)).toBe(flow);
   });
 });
@@ -119,14 +157,14 @@ describe("edit", () => {
   });
 
   it("sends an approved draft back to pending, so it needs approval again", () => {
-    const flow = run(PREPARE, APPROVE, START_EDIT);
-    expect(flow.gate).toEqual({ status: "pending", draft: draftReply(), editing: true });
+    const flow = run(PREPARE, ...FILL, APPROVE, START_EDIT);
+    expect(flow.gate).toEqual({ status: "pending", draft: FILLED, editing: true });
   });
 });
 
 describe("audit events", () => {
   it("writes every state change in order", () => {
-    const flow = run(PREPARE, START_EDIT, APPROVE, START_EDIT, DISCARD, PREPARE);
+    const flow = run(PREPARE, ...FILL, APPROVE, START_EDIT, DISCARD, PREPARE);
     expect(eventNames(flow)).toEqual([
       "gate_pending",
       "gate_edit_started",
@@ -138,9 +176,10 @@ describe("audit events", () => {
   });
 
   it("records who acted and when", () => {
-    expect(run(PREPARE, APPROVE).events).toEqual([
+    expect(run(PREPARE, ...FILL, APPROVE).events).toEqual([
       { timestamp: AT, actor: "drafter", event: "gate_pending", detail: "Draft prepared from template" },
-      { timestamp: AT, actor: "user", event: "gate_approved", detail: "Template draft, copied to clipboard" },
+      { timestamp: AT, actor: "user", event: "gate_edit_started", detail: "Draft opened for editing" },
+      { timestamp: AT, actor: "user", event: "gate_approved", detail: "Edited draft, copied to clipboard" },
     ]);
   });
 
@@ -157,19 +196,22 @@ describe("audit events", () => {
   it("never holds the draft, template or edited", () => {
     const flow = run(
       PREPARE,
+      ...FILL,
       APPROVE,
       START_EDIT,
       { type: "changeDraft", draft: CANARY },
       APPROVE,
       DISCARD,
     );
+    expect(eventNames(flow)).toContain("gate_discarded");
     const events = JSON.stringify(flow.events);
     expect(events).not.toContain("Before I go further");
+    expect(events).not.toContain("Ms Example");
     expect(events).not.toContain(CANARY);
   });
 
   it("clears on reset for a new analysis", () => {
-    expect(gateReducer(run(PREPARE, APPROVE), { type: "reset" })).toEqual(INITIAL_GATE_FLOW);
+    expect(gateReducer(run(PREPARE, ...FILL, APPROVE), { type: "reset" })).toEqual(INITIAL_GATE_FLOW);
   });
 });
 

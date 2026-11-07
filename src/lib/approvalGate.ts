@@ -24,6 +24,13 @@ export type GateAction =
 
 export const INITIAL_GATE_FLOW: GateFlow = { gate: null, events: [] };
 
+// Any [..] left in the draft, such as [Recipient name] or [Your name], is still to be filled in.
+const PLACEHOLDER = /\[[^\]\n]*\]/g;
+
+export function unfilledPlaceholders(draft: string): string[] {
+  return [...new Set(draft.match(PLACEHOLDER) ?? [])];
+}
+
 function record(flow: GateFlow, gate: GateState, event: AuditEvent): GateFlow {
   return { gate, events: [...flow.events, event] };
 }
@@ -61,6 +68,7 @@ export function gateReducer(flow: GateFlow, action: GateAction): GateFlow {
     }
     case "approve": {
       if (gate?.status !== "pending" || gate.draft.trim().length === 0) return flow;
+      if (unfilledPlaceholders(gate.draft).length > 0) return flow;
       const wording = isTemplateDraft(gate.draft) ? "Template draft" : "Edited draft";
       const copy = action.copied ? "copied to clipboard" : "clipboard denied, manual copy shown";
       return record(

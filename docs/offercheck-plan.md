@@ -46,7 +46,7 @@ User pastes offer
 | Red-flag | Intake JSON | Findings with severity and evidence quotes | Rule checklist first, LLM only to explain | Let the LLM change a rule result |
 | Verification | Company name, sender email/domain | Domain age, domain/company match, web-presence summary | Domain lookup (RDAP), web search, page fetch with SSRF block | Fetch private/internal addresses; scrape social profiles |
 | Official-channel | Offer number format, company | Plain steps to verify through the ministry's website, app or call centre | Static, source-linked guidance | Claim an offer is "verified" itself |
-| Drafter | Approved findings | Safe reply, evidence summary | LLM | Run before the approval gate |
+| Drafter | Approved findings | Safe reply, evidence summary | Deterministic and template-based today (fixed blocks chosen by rule id). An LLM may later only polish the wording of the fixed blocks; decided on Day 2 | Run before the approval gate |
 
 ### Shared finding format
 ```json

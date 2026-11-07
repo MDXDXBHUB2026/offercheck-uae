@@ -46,6 +46,34 @@ describe("ApprovalPanel", () => {
     );
   });
 
+  it("blocks approval and says why while the names are unfilled", () => {
+    const html = render(PENDING);
+    expect(html).toContain(
+      "Choose Edit draft and replace [Recipient name] and [Your name] with the real details before you approve.",
+    );
+    expect(html).toMatch(
+      /<button type="button" disabled="" aria-describedby="placeholder-note">Approve and copy reply/,
+    );
+    expect(html).toMatch(/<p id="placeholder-note"/);
+  });
+
+  it("names only the placeholders still left while editing", () => {
+    const html = render({
+      ...PENDING,
+      editing: true,
+      draft: draftReply().replace("[Recipient name]", "Ms Example"),
+    });
+    expect(html).toContain("Replace [Your name] with the real text before you approve.");
+    expect(html).not.toContain("Choose Edit draft");
+  });
+
+  it("allows approval with no message once the names are filled in", () => {
+    const filled = draftReply().replace("[Recipient name]", "Ms Example").replace("[Your name]", "Sam");
+    const html = render({ ...PENDING, editing: true, draft: filled });
+    expect(html).not.toContain("placeholder-note");
+    expect(html).toMatch(/<button type="button">Approve and copy reply/);
+  });
+
   it("confirms the copy when the clipboard works", () => {
     const html = render(APPROVED);
     expect(html).toContain("Reply copied.");
