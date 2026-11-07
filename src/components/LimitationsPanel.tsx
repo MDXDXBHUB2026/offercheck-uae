@@ -1,4 +1,5 @@
 import { LIMITS_SECTION, type InlinePart } from "@/components/limitations";
+import { Card, SectionHeader } from "@/components/ui";
 
 function Inline({ parts }: { parts: InlinePart[] }) {
   return (
@@ -18,18 +19,18 @@ function Inline({ parts }: { parts: InlinePart[] }) {
 
 export function LimitationsPanel({ intro, items }: { intro: string; items: InlinePart[][] }) {
   return (
-    <section className="limits card" aria-labelledby="limits-heading">
-      <h2 id="limits-heading" className="section-title">
-        {LIMITS_SECTION}
-      </h2>
-      <p>{intro}</p>
-      <ul>
-        {items.map((parts, index) => (
-          <li key={index}>
-            <Inline parts={parts} />
-          </li>
-        ))}
-      </ul>
+    <section className="block limits" aria-labelledby="limits-heading">
+      <SectionHeader id="limits-heading" title={LIMITS_SECTION} />
+      <Card>
+        <p>{intro}</p>
+        <ul>
+          {items.map((parts, index) => (
+            <li key={index}>
+              <Inline parts={parts} />
+            </li>
+          ))}
+        </ul>
+      </Card>
     </section>
   );
 }

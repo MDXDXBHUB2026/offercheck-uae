@@ -9,7 +9,10 @@ describe("AuditTrail", () => {
   it("lists every entry with its kind, data and a short hash, and none of the offer", async () => {
     const { audit, findings } = await runWithAudit(SCAM_OFFER);
     const html = renderToStaticMarkup(createElement(AuditTrail, { entries: audit }));
-    expect(html).toContain("Audit trail: 7 entries, checking the chain");
+    // Step 5: the summary is a title, a count and a chain-status chip in separate spans.
+    expect(html).toMatch(
+      /<summary><span class="audit-title">Audit trail<\/span><span class="audit-count">7 entries<\/span><span class="chip chip-neutral">checking the chain<\/span><\/summary>/,
+    );
     expect(html.match(/<li>/g)).toHaveLength(7);
     expect(html).toContain(`offerLength: ${SCAM_OFFER.length}`);
     expect(html).toContain(audit[0].hash.slice(0, 12));

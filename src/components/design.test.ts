@@ -101,9 +101,19 @@ describe("limitations panel", () => {
 describe("sample buttons", () => {
   it("are real buttons for the three synthetic samples", () => {
     const html = renderToStaticMarkup(createElement(Home));
+    // Step 5: each button carries a visible "Synthetic" tag after its name.
     for (const label of ["Fee scam", "Clean offer", "Injection attempt"]) {
-      expect(html).toContain(`<button type="button" class="secondary sample">${label}</button>`);
+      expect(html).toContain(
+        `<button type="button" class="sample"><span>${label}</span><span class="sample-tag">Synthetic</span></button>`,
+      );
     }
+  });
+
+  // S4-4: the buttons sit in a group with an accessible name.
+  it("sit in a labelled group", () => {
+    const html = renderToStaticMarkup(createElement(Home));
+    expect(html).toContain('role="group" aria-labelledby="samples-label"');
+    expect(html).toMatch(/<span id="samples-label"[^>]*>Try a synthetic sample<\/span>/);
   });
 
   it("are left out when no samples are given", () => {

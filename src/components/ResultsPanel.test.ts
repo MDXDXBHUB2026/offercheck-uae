@@ -82,7 +82,12 @@ describe("AgentRun", () => {
 
 describe("UI text", () => {
   // Defect 12: no UI file may hard-code the number of rules.
-  it.each(["src/app/page.tsx", "src/components/OfferChecker.tsx", "src/components/ResultsPanel.tsx"])(
+  it.each([
+    "src/app/page.tsx",
+    "src/app/check/page.tsx",
+    "src/components/OfferChecker.tsx",
+    "src/components/ResultsPanel.tsx",
+  ])(
     "%s has no literal rule count",
     (file) => {
       const source = readFileSync(join(process.cwd(), file), "utf8");
@@ -90,8 +95,11 @@ describe("UI text", () => {
     },
   );
 
-  it("page.tsx stays a server component, so the rules stay out of the client bundle", () => {
-    const source = readFileSync(join(process.cwd(), "src/app/page.tsx"), "utf8");
-    expect(source).not.toContain('"use client"');
-  });
+  it.each(["src/app/page.tsx", "src/app/check/page.tsx"])(
+    "%s stays a server component, so the rules stay out of the client bundle",
+    (file) => {
+      const source = readFileSync(join(process.cwd(), file), "utf8");
+      expect(source).not.toContain('"use client"');
+    },
+  );
 });

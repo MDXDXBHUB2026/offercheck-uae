@@ -3,6 +3,7 @@ import { join } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
+import { NoticeStrip, SiteFooter } from "@/components/shell/site";
 import Home from "./page";
 
 const NOTICE = "Prototype. Use synthetic or redacted offers only. The app does not store offer text.";
@@ -16,8 +17,15 @@ function sourceFiles(dir: string): string[] {
 }
 
 describe("home page", () => {
-  it("shows the prototype notice", () => {
-    expect(renderToStaticMarkup(createElement(Home))).toContain(NOTICE);
+  // Phase 1: the notice moved from the page into the shared layout (the strip under the header and
+  // the footer), so every route shows it. These are the two components the layout renders.
+  it("shows the prototype notice in the site-wide strip and footer", () => {
+    expect(renderToStaticMarkup(createElement(NoticeStrip))).toContain(NOTICE);
+    expect(renderToStaticMarkup(createElement(SiteFooter))).toContain(NOTICE);
+  });
+
+  it("is the Check workspace", () => {
+    expect(renderToStaticMarkup(createElement(Home))).toContain('<textarea id="offer"');
   });
 });
 

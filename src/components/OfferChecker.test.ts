@@ -1,0 +1,150 @@
+import { createElement, type ReactElement, type ReactNode } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { draftReply } from "@/lib/agents/drafter";
+import { SCAM_OFFER } from "@/lib/agents/fixtures";
+import { runManager } from "@/lib/agents/manager";
+import { ApprovalPanel } from "./ApprovalPanel";
+import { checkBlockedReason, OfferChecker } from "./OfferChecker";
+import { ResultsPanel } from "./ResultsPanel";
+import { ScoreGauge } from "./ScoreGauge";
+
+// The text the stubbed useState("") hands back, so a test can call the form's submit handler as if
+// the user had typed it. Every other hook keeps its real initial value and ignores updates.
+const typed = vi.hoisted(() => ({ text: "", stubbed: false }));
+
+vi.mock("react", async (importOriginal) => {
+  const real = await importOriginal<typeof import("react")>();
+  return {
+    ...real,
+    useState: <T,>(initial: T) =>
+      typed.stubbed ? [initial === "" ? typed.text : initial, () => {}] : real.useState(initial),
+    useReducer: (reducer: unknown, initial: unknown) =>
+      typed.stubbed ? [initial, () => {}] : (real.useReducer as (r: unknown, i: unknown) => unknown)(reducer, initial),
+    useRef: <T,>(initial: T) => (typed.stubbed ? { current: initial } : real.useRef(initial)),
+  };
+});
+
+type FormProps = { children?: ReactNode; onSubmit?: (event: { preventDefault: () => void }) => unknown };
+
+function findForm(node: ReactNode): ReactElement<FormProps> | null {
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      const found = findForm(child);
+      if (found) return found;
+    }
+    return null;
+  }
+  if (!node || typeof node !== "object" || !("props" in node)) return null;
+  const element = node as ReactElement<FormProps>;
+  if (element.type === "form") return element;
+  return findForm(element.props.children);
+}
+
+async function submitWith(text: string) {
+  typed.text = text;
+  typed.stubbed = true;
+  const fetchMock = vi.fn(() => new Promise<never>(() => {}));
+  vi.stubGlobal("fetch", fetchMock);
+  try {
+    const tree = OfferChecker({ ruleCount: 5 });
+    const form = findForm(tree);
+    expect(form).not.toBeNull();
+    const preventDefault = vi.fn();
+    void form?.props.onSubmit?.({ preventDefault });
+    await Promise.resolve();
+    expect(preventDefault).toHaveBeenCalled();
+    return fetchMock;
+  } finally {
+    typed.stubbed = false;
+  }
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("Check offer button (S4-1)", () => {
+  it("stays focusable while the box is empty: aria-disabled with a reason, never native disabled", () => {
+    const html = renderToStaticMarkup(createElement(OfferChecker, { ruleCount: 5, samples: [{ label: "S", text: "x" }] }));
+    const button = html.match(/<button type="submit"[^>]*>/)?.[0] ?? "";
+    expect(button).toContain('aria-disabled="true"');
+    expect(button).toContain('aria-describedby="check-reason"');
+    expect(button).not.toMatch(/\sdisabled=|tabindex="-1"/i);
+    expect(html).toContain("Paste an offer or choose a sample, then check it.");
+    expect(html).toMatch(/<p id="check-reason" class="helper">/);
+  });
+
+  it("gives a reason for empty or blank text only", () => {
+    expect(checkBlockedReason("", true)).toBe("Paste an offer or choose a sample, then check it.");
+    expect(checkBlockedReason("  \n ", false)).toBe("Paste an offer, then check it.");
+    expect(checkBlockedReason("Pay the fee", true)).toBe("");
+  });
+
+  it.each([[""], ["   "]])("sends nothing when submitted with %j", async (text) => {
+    expect(await submitWith(text)).not.toHaveBeenCalled();
+  });
+
+  it("sends the request once the box has text", async () => {
+    const fetchMock = await submitWith("Pay the visa fee of AED 500");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the live character count against the limit", () => {
+    const html = renderToStaticMarkup(createElement(OfferChecker, { ruleCount: 5 }));
+    expect(html).toContain('<span id="offer-count" class="counter">0 / 20,000</span>');
+    expect(html).toMatch(/<textarea id="offer"[^>]*aria-describedby="offer-count"/);
+  });
+});
+
+describe("Step 5 results layout", () => {
+  it("puts the score on the side and findings, agent run, then the caller's panels in the main column", () => {
+    const result = runManager(SCAM_OFFER);
+    const html = renderToStaticMarkup(
+      createElement(ResultsPanel, { result, ruleCount: 5 }, createElement("p", { id: "child" }, "child")),
+    );
+    const side = html.indexOf('class="results-side"');
+    const main = html.indexOf('class="results-main"');
+    expect(side).toBeGreaterThan(-1);
+    expect(html.indexOf("results-heading")).toBeLessThan(main);
+    const order = ["findings-heading", "agent-run-heading", 'id="child"'].map((s) => html.indexOf(s));
+    expect(order.every((index) => index > main)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+  });
+
+  it("draws stub agents with a 'Not implemented yet' label and no check icon", () => {
+    const html = renderToStaticMarkup(createElement(ResultsPanel, { result: runManager("Hello"), ruleCount: 5 }));
+    const rows = html.match(/<li class="trace-[^"]+">.*?<\/li>/g) ?? [];
+    const stubs = rows.filter((row) => row.includes("trace-not_implemented"));
+    expect(stubs).toHaveLength(2);
+    for (const row of stubs) {
+      expect(row).toContain('<span class="trace-summary">Not implemented yet</span>');
+      expect(row).not.toContain("<svg");
+    }
+  });
+
+  it("animates the arc to the server's score, from a CSS variable", () => {
+    const html = renderToStaticMarkup(
+      createElement(ScoreGauge, { risk: { score: 60, band: "high", label: "High risk indicators" } }),
+    );
+    expect(html).toContain('class="gauge-value"');
+    expect(html).toContain("--score:60");
+  });
+});
+
+describe("draft placeholders", () => {
+  it("shows each unfilled placeholder as a highlighted chip", () => {
+    const html = renderToStaticMarkup(
+      createElement(ApprovalPanel, { gate: { status: "pending", draft: draftReply(), editing: false }, dispatch: () => {} }),
+    );
+    expect(html).toContain('<mark class="placeholder">[Recipient name]</mark>');
+    expect(html).toContain('<mark class="placeholder">[Your name]</mark>');
+  });
+
+  it("puts the blocked reason under the action buttons, with the button still described by it", () => {
+    const html = renderToStaticMarkup(
+      createElement(ApprovalPanel, { gate: { status: "pending", draft: draftReply(), editing: false }, dispatch: () => {} }),
+    );
+    expect(html.indexOf('class="approval-actions"')).toBeLessThan(html.indexOf('id="approve-reason"'));
+  });
+});

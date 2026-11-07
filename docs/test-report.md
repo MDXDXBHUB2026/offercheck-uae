@@ -1,10 +1,10 @@
 # Test report
 
-As of 2026-11-07, at the commit that adds this file. Every number gives its source. Nothing here was deployed, so no test ran against a live URL.
+As of 2026-11-07, updated at the Phase 1 commit (product shell and design system). Every number gives its source. Nothing here was deployed, so no test ran against a live URL.
 
 ## Unit and component tests per suite
 
-Source: `npx vitest run --reporter=json` on Windows 11, Node 24.19.0. Total: **588 tests in 18 files, 588 passed, 0 failed, 0 skipped**.
+Source: `npx vitest run --reporter=json` on Windows 11, Node 24.19.0. Total: **755 tests in 21 files, 755 passed, 0 failed, 0 skipped**. (Step 3: 588 in 18 files. Step 4: 680 in 19 files.)
 
 | Suite | Tests | Passed | What it covers | What it does not cover |
 |---|---|---|---|---|
@@ -14,12 +14,15 @@ Source: `npx vitest run --reporter=json` on Windows 11, Node 24.19.0. Total: **5
 | `src/lib/approvalGate.test.ts` | 38 | 38 | Gate states, placeholder refusal, labels, events hold no draft, clipboard | The React wiring in `OfferChecker.tsx` |
 | `src/lib/agents/intake.test.ts` | 32 | 32 | Hidden characters removed, line joins, line endings | Look-alike letters and the hidden characters listed in QA-6 |
 | `src/lib/agents/drafter.test.ts` | 29 | 29 | The five draft cases, block order, no offer text in drafts, template wording with names filled | Tone or quality of the wording as read by a person |
-| `src/app/page.test.ts` | 25 | 25 | The prototype notice; no console, logger, file write or browser storage in any source file | Logging added by the host or a proxy |
+| `src/components/design.test.ts` | 89 | 89 | Arithmetic line agrees with the score on every fixture; gauge is decorative; only measured times; limitations text; sample buttons and their labelled group | Visual layout and real screen-reader output |
+| `src/app/page.test.ts` | 45 | 45 | The prototype notice in the site-wide strip and footer; `/` is the Check workspace; no console, logger, file write or browser storage in any source file (more files since Phase 1) | Logging added by the host or a proxy |
+| `src/app/routes.test.ts` | 45 | 45 | Every route has a title, description and one h1 and adds no landmark of its own; placeholders say "Not built yet" with no numbers; nav covers every route; layout has skip link and one main; header `aria-current`, no menu button without script, menu button `aria-expanded`/`aria-controls` with script; footer wording; error pages never show the error message or digest; not-found; loading; check-request failures never echo a server string; shared UI components; WCAG AA contrast of the token pairs in `globals.css` | Real focus movement and the Escape key (checked by hand in Chrome, see the build log); contrast of colours not set by a token |
+| `src/components/OfferChecker.test.ts` | 11 | 11 | Check offer is `aria-disabled` with a reason (S4-1); an empty or blank submit does not fetch, a filled one fetches once; character counter; results order; stub timeline; gauge `--score`; placeholder marks; approve reason under the actions | A real browser click and network failure (checked by hand) |
 | `src/components/ApprovalPanel.test.ts` | 20 | 20 | Markup per gate state, `aria-disabled`, reason live region, focusable buttons | Real focus movement and screen-reader output (no DOM in tests) |
 | `src/app/api/analyze/route.test.ts` | 16 | 16 | 20,000-character limit, body cap, streamed and chunked bodies, false Content-Length, 20,000 control characters, no echo | A real socket. That was checked by hand once; see REV-L2 in `docs/defects.md`. Rate limiting does not exist (REV-O1) |
 | `src/lib/scoring.test.ts` | 14 | 14 | Weights, bands, score floor | Whether the weights are right for real offers |
 | `src/lib/agents/manager.test.ts` | 13 | 13 | Step order, stub statuses, durations | Real agents for verification and official-channel, which are not built |
-| `src/components/ResultsPanel.test.ts` | 11 | 11 | Score-0 note, chips, rule count, stub labels, server-component check | Visual layout |
+| `src/components/ResultsPanel.test.ts` | 13 | 13 | Score-0 note, chips, rule count, stub labels, server-component check (now also `src/app/check/page.tsx`) | Visual layout |
 | `scripts/check-no-bypass.test.mjs` | 10 | 10 | The no-bypass check passes on this repo and fails on each banned pattern | Bypasses the patterns do not name |
 | `src/lib/agents/eval/holdout.test.ts` | 4 | 4 | The holdout 1 set is unchanged and its result is in the docs | It never runs the rules: holdout 1 is consumed |
 | `src/lib/agents/eval/holdout2.test.ts` | 4 | 4 | The holdout 2 set is unchanged and its result is in the docs | It never runs the rules: holdout 2 is consumed |
@@ -32,7 +35,8 @@ Source: `npx vitest run --reporter=json` on Windows 11, Node 24.19.0. Total: **5
 - `npm run lint` passed.
 - `npm run build` passed.
 - `npm run check:no-bypass` passed.
-- None of the 28 regex literals in `src/lib/agents/redFlag.ts` appear in `.next/static`.
+- Client bundle (Phase 1): an ad hoc script found 29 regex literals and 47 string phrases of 12 or more characters in `src/lib/agents/redFlag.ts` and searched the 14 files in `.next/static`. **0 regex literals** were found. 9 phrases were found, all rule ID labels (`fee_requested`, `free_email_contact` and so on) that `ResultsPanel.tsx` already used at `7334612`; no pattern or matching text. (Step 4 counted 28 literals with a different script.)
+- `redFlag.ts` sha256 `789dc2b29a30940951257c677bddcb4eaf995bb8a187a19e3583ca51d1ebb76f`, unchanged; `redFlag.ts` and `scoring.ts` have no diff against `7334612`.
 
 **Not covered by any suite:**
 - End-to-end browser journeys. Playwright is not set up, and there is no deployed URL.

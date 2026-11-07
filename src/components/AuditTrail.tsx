@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Chip, Disclosure, type ChipTone } from "@/components/ui";
 import { verifyAuditLog, type AuditEntry, type AuditValue, type ChainCheck } from "@/lib/audit";
 
 const HASH_SHOWN = 12;
@@ -20,6 +21,17 @@ function chainLabel(check: ChainCheck | null): string {
   return check.ok ? "chain verified" : `chain broken at entry ${check.brokenAt + 1}`;
 }
 
+function chainTone(check: ChainCheck | null): ChipTone {
+  if (!check) return "neutral";
+  return check.ok ? "success" : "high";
+}
+
+// The time part of the ISO timestamp, in UTC, as recorded.
+function clock(at: string): string {
+  const match = /T(\d{2}:\d{2}:\d{2})/.exec(at);
+  return match ? `${match[1]} UTC` : at;
+}
+
 // Shows only what the log holds: ids, counts, statuses and decisions. It never holds offer or
 // draft text, so there is nothing private to show.
 export function AuditTrail({ entries, failed }: { entries: AuditEntry[]; failed?: boolean }) {
@@ -38,28 +50,39 @@ export function AuditTrail({ entries, failed }: { entries: AuditEntry[]; failed?
 
   const result = check?.entries === entries ? check.result : null;
   return (
-    <section className="audit-trail" aria-label="Audit trail">
+    <section className="block audit-trail" aria-label="Audit trail">
       {/* Outside the collapsed list, so a screen reader announces it. */}
-      <p role="status">
+      <p className="audit-failed" role="status">
         {failed ? "This browser could not add the latest step to the audit trail." : ""}
       </p>
-      <details>
-      <summary>
-        Audit trail: {entries.length} {entries.length === 1 ? "entry" : "entries"}, {chainLabel(result)}
-      </summary>
-      <ol>
-        {entries.map((entry) => (
-          <li key={entry.hash}>
-            <span className="audit-kind">{entry.kind}</span>{" "}
-            <time dateTime={entry.at}>{entry.at}</time>{" "}
-            {Object.entries(entry.data)
-              .map(([key, value]) => `${key}: ${show(key, value)}`)
-              .join("; ")}{" "}
-            <code title={entry.hash}>{entry.hash.slice(0, HASH_SHOWN)}</code>
-          </li>
-        ))}
-      </ol>
-      </details>
+      <Disclosure
+        summary={
+          <>
+            <span className="audit-title">Audit trail</span>
+            <span className="audit-count">
+              {entries.length} {entries.length === 1 ? "entry" : "entries"}
+            </span>
+            <Chip tone={chainTone(result)}>{chainLabel(result)}</Chip>
+          </>
+        }
+      >
+        <ol>
+          {entries.map((entry) => (
+            <li key={entry.hash}>
+              <span className="audit-kind">{entry.kind}</span>
+              <time dateTime={entry.at} title={entry.at}>
+                {clock(entry.at)}
+              </time>
+              <span className="audit-data">
+                {Object.entries(entry.data)
+                  .map(([key, value]) => `${key}: ${show(key, value)}`)
+                  .join("; ")}
+              </span>
+              <code title={entry.hash}>{entry.hash.slice(0, HASH_SHOWN)}</code>
+            </li>
+          ))}
+        </ol>
+      </Disclosure>
     </section>
   );
 }
