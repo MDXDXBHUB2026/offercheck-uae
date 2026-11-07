@@ -68,6 +68,9 @@ export function SiteHeader() {
             ))}
           </ul>
         </nav>
+        <Link href="/check#offer" className="header-action">
+          Check an offer
+        </Link>
       </div>
     </header>
   );

@@ -7,7 +7,7 @@ import { Callout, Card, Chip, SectionHeader } from "@/components/ui";
 import { HIGH_BAND_MIN, MEDIUM_BAND_MIN, SEVERITY_WEIGHTS } from "@/lib/scoring";
 import type { AnalysisResult } from "@/lib/types";
 
-const CHECK_LABELS: Record<string, string> = {
+export const CHECK_LABELS: Record<string, string> = {
   fee_requested: "Asks you to pay a fee or money",
   credentials_requested: "Asks for a code, password or card details",
   identity_documents_requested: "Asks for identity or bank documents",

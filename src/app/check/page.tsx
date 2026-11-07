@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { HeroBackdrop } from "@/components/HeroBackdrop";
+import { HeroPreview } from "@/components/HeroPreview";
 import { readLimitations } from "@/components/limitations";
 import { LimitationsPanel } from "@/components/LimitationsPanel";
 import { OfferChecker, type Sample } from "@/components/OfferChecker";
@@ -25,13 +27,21 @@ export default function CheckPage() {
   return (
     <>
       <section className="hero" aria-labelledby="page-title">
-        <h1 id="page-title" className="page-title">
-          Check a job offer before you pay or share anything.
-        </h1>
-        <p className="intro">
-          Paste a job offer to check it against {RULES.length} fixed rules. English text only. No AI
-          is used yet, and your text is not saved.
-        </p>
+        <div className="hero-copy">
+          <h1 id="page-title" className="page-title">
+            Check a job offer before you pay or share anything.
+          </h1>
+          <p className="intro">
+            Paste a job offer to check it against {RULES.length} fixed rules. English text only. No
+            AI is used yet, and your text is not saved.
+          </p>
+          <a className="button-link button-light" href="#offer">
+            Check an offer
+          </a>
+        </div>
+        <HeroPreview sampleText={SCAM_OFFER} />
+        {/* Decorative background video, positioned behind the hero by CSS. */}
+        <HeroBackdrop />
       </section>
       <OfferChecker ruleCount={RULES.length} samples={SAMPLES} />
       <LimitationsPanel intro={limits.intro} items={limits.items} />

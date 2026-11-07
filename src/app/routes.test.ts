@@ -4,6 +4,10 @@ import { createElement, type ReactElement, type ReactNode } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { networkFailure, responseFailure } from "@/components/checkRequest";
+import { HeroPreview } from "@/components/HeroPreview";
+import { CHECK_LABELS } from "@/components/ResultsPanel";
+import { runManager } from "@/lib/agents/manager";
+import { SCAM_OFFER } from "@/lib/agents/fixtures";
 import { isCurrent, SiteHeader } from "@/components/shell/SiteHeader";
 import { NAV_ITEMS, SiteFooter } from "@/components/shell/site";
 import { Button, Callout, Chip, DataTable, Disclosure, HelperText, SectionHeader, Timeline } from "@/components/ui";
@@ -100,10 +104,64 @@ describe("site header", () => {
     }
   });
 
+  it("has one action on the right, a real link to the text box, never marked as the current page", () => {
+    nav.pathname = "/check";
+    const html = renderToStaticMarkup(createElement(SiteHeader));
+    expect(html).toContain('<a class="header-action" href="/check#offer">Check an offer</a>');
+    expect(html.match(/aria-current="page"/g)).toHaveLength(1);
+  });
+
   it("treats / as the Check page", () => {
     expect(isCurrent("/", "/check")).toBe(true);
     expect(isCurrent("/", "/lab")).toBe(false);
     expect(isCurrent("/about", "/about")).toBe(true);
+  });
+});
+
+describe("hero", () => {
+  it("the screen shows the real result of the synthetic fee-scam sample, and says so", () => {
+    const result = runManager(SCAM_OFFER);
+    const counted = result.findings.filter((finding) => finding.severity !== "info");
+    const html = renderToStaticMarkup(createElement(HeroPreview, { sampleText: SCAM_OFFER }));
+    expect(html).toContain(`<span class="score-value">${result.risk.score}</span>`);
+    expect(html).toContain(result.risk.label);
+    expect(html.match(/<li>/g)).toHaveLength(counted.length);
+    for (const finding of counted) expect(html).toContain(`>${CHECK_LABELS[finding.check]}<`);
+    expect(html).toContain("synthetic “Fee scam” sample");
+    expect(html).toContain("not a verdict");
+  });
+
+  it("the Check page hero has its copy, a CTA to the text box, the example screen and a decorative backdrop", () => {
+    const html = renderToStaticMarkup(createElement(check.default));
+    const hero = html.slice(html.indexOf('<section class="hero"'), html.indexOf("</section>") + 10);
+    expect(hero).toContain('<div class="hero-copy"><h1 id="page-title"');
+    expect(hero).toContain('<a class="button-link button-light" href="#offer">Check an offer</a>');
+    expect(hero).toContain('<figure class="hero-figure"');
+    expect(html).toContain('<textarea id="offer"');
+    // Only the hero has a video, and it is the silent decorative backdrop.
+    expect(html.match(/<video/g)).toHaveLength(1);
+    expect(hero.indexOf("hero-backdrop")).toBeGreaterThan(hero.indexOf("hero-figure"));
+  });
+
+  it("the backdrop video is hidden from assistive tech, muted, looping, never autoplays from markup, and has no audio track", () => {
+    const html = renderToStaticMarkup(createElement(check.default));
+    const backdrop = html.slice(html.indexOf('<div class="hero-backdrop"'), html.indexOf("</video>") + 8);
+    expect(backdrop).toContain('aria-hidden="true"');
+    // Decorative only: no controls of its own (the owner chose no pause button).
+    expect(backdrop).not.toContain("<button");
+    const video = backdrop.slice(backdrop.indexOf("<video"), backdrop.indexOf(">", backdrop.indexOf("<video")) + 1);
+    for (const attr of ["muted", "loop", "playsInline", 'poster="/hero/poster.jpg"', 'tabindex="-1"']) {
+      expect(video.toLowerCase()).toContain(attr.toLowerCase());
+    }
+    expect(video).not.toContain("autoplay");
+    expect(video).not.toContain("controls");
+    for (const file of ["loop.mp4", "loop.webm", "poster.jpg"]) {
+      expect(backdrop + video).toContain(file === "poster.jpg" ? file : `/hero/${file}`);
+      const bytes = readFileSync(join(process.cwd(), "public/hero", file));
+      expect(bytes.length).toBeLessThan(1_000_000);
+    }
+    // An MP4 audio track would declare a "soun" handler.
+    expect(readFileSync(join(process.cwd(), "public/hero/loop.mp4")).includes("soun")).toBe(false);
   });
 });
 
@@ -209,12 +267,25 @@ describe("colour contrast (WCAG AA, from the tokens in globals.css)", () => {
     ["on-primary", "action-hover"],
     ["high", "high-bg"],
     ["high", "surface"],
+    // The lightest point of a glass card: its top sheen.
+    ["ink", "surface-top"],
+    ["muted", "surface-top"],
+    ["primary", "surface-top"],
+    ["high", "surface-top"],
     ["medium", "medium-bg"],
     ["success", "success-bg"],
   ];
 
   it.each([...TEXT_PAIRS, ["heading", "bg"], ["heading", "surface"]])("text %s on %s is at least 4.5:1", (fg, bg) => {
     expect(ratio(fg, bg)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  // The hero video's brightest encoded pixel, measured by decoding it (see make-hero-loop.py).
+  const VIDEO_MAX_LUMINANCE = 0.12;
+  it.each(["ink", "heading"])("hero text %s keeps 4.5:1 over the brightest pixel of the background video", (fg) => {
+    expect((luminance(token(fg)) + 0.05) / (VIDEO_MAX_LUMINANCE + 0.05)).toBeGreaterThanOrEqual(4.5);
+    expect(css).toMatch(/\.hero \.intro \{[^}]*color: var\(--ink\);/);
+    expect(css).toMatch(/\.hero-caption \{\s*color: var\(--ink\);/);
   });
 
   it("control borders are at least 3:1 on the surface", () => {

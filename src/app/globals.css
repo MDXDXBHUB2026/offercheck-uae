@@ -5,12 +5,18 @@
    src/app/routes.test.ts computes them from these tokens. */
 :root {
   color-scheme: dark;
-  --bg: #030712;
+  --bg: #020617;
   /* --surface is what a glass card looks like over --bg (slate-900 at 40%), for contrast checks. */
-  --surface: #080d1c;
+  --surface: #070d1f;
   --card-bg: rgba(15, 23, 42, 0.4);
   --fill: #0f172a;
-  --border: rgba(30, 41, 59, 0.6);
+  /* Hairline glass edge (decorative; controls use --control-border). */
+  --border: rgba(148, 163, 184, 0.14);
+  /* Glass: a faint white sheen at the top of every card, a lit top edge and a soft depth shadow.
+     --surface-top is the lightest point of a card (the sheen over --surface), for contrast checks. */
+  --glass-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0) 45%);
+  --surface-top: #13192a;
+  --glass-blur: saturate(180%) blur(20px);
   --header-border: #0f172a;
   /* Form-control and secondary-button edges need 3:1 against the surface (WCAG 1.4.11). */
   --control-border: #64748b;
@@ -34,11 +40,11 @@
   --not-built-bg: #0f172a;
   --header-bg: rgba(2, 6, 23, 0.7);
   --aurora: linear-gradient(to right, rgba(6, 182, 212, 0.1), rgba(99, 102, 241, 0.1), rgba(37, 99, 235, 0.1));
-  --radius-card: 16px;
-  --radius-control: 12px;
+  --radius-card: 22px;
+  --radius-control: 14px;
   --radius-pill: 9999px;
-  /* No drop shadows; a transparent shadow keeps the finding cards' inset bar valid. */
-  --shadow-card: 0 0 #0000;
+  /* A lit top edge and a soft, wide depth shadow (the finding cards add their inset bar to it). */
+  --shadow-card: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 24px 48px -24px rgba(0, 0, 0, 0.7);
   --font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-head: var(--font-body);
   --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
@@ -63,9 +69,12 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+/* A faint blue light from above the page, like a lit stage, over the near-black navy. */
 body {
   margin: 0;
-  background: var(--bg);
+  background:
+    radial-gradient(1200px 640px at 50% -12%, rgba(37, 99, 235, 0.1), transparent 70%) no-repeat,
+    var(--bg);
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 17px;
@@ -122,8 +131,8 @@ p {
   z-index: 50;
   border-bottom: 1px solid var(--header-border);
   background: var(--header-bg);
-  -webkit-backdrop-filter: blur(24px);
-  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  backdrop-filter: saturate(180%) blur(20px);
 }
 
 /* Without the blur the translucent bar would let text show through, so it turns solid. */
@@ -203,7 +212,6 @@ p {
   isolation: isolate;
 }
 
-.hero::before,
 .placeholder::before {
   content: "";
   position: absolute;
@@ -218,8 +226,214 @@ p {
   pointer-events: none;
 }
 
+/* Hero: copy on the left, a screen showing a real example result on the right (one column on
+   smaller screens). */
 .hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  gap: 48px;
   margin-bottom: 40px;
+}
+
+/* A soft glow behind both columns; it drifts slowly when motion is allowed. */
+.hero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: 25%;
+  right: 25%;
+  width: 500px;
+  height: 500px;
+  border-radius: 9999px;
+  background: linear-gradient(to right, rgba(37, 99, 235, 0.1), rgba(79, 70, 229, 0.1));
+  filter: blur(120px);
+  pointer-events: none;
+}
+
+/* A silent loop behind the whole hero, full width, fading out at the bottom: a tilted wall of
+   glass offer cards slides by, and a light sweep lights their status chips. Its brightest pixel
+   is at most 0.12 luminance, so the ink and white hero text keep 4.5:1 (see
+   scripts/make-hero-loop.py). */
+.hero-backdrop {
+  position: absolute;
+  z-index: -2;
+  top: -48px;
+  bottom: -40px;
+  left: 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  overflow: hidden;
+  pointer-events: none;
+  background: var(--bg) url("/hero/poster.jpg") center / cover no-repeat;
+  -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
+  mask-image: linear-gradient(to bottom, #000 60%, transparent);
+}
+
+.hero-backdrop video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* A soft shade behind the headline side, so the copy sits on calm dark glass. It only darkens. */
+.hero-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(2, 6, 23, 0.75), rgba(2, 6, 23, 0.35) 45%, rgba(2, 6, 23, 0) 70%);
+}
+
+@media (max-width: 1023px) {
+  .hero-backdrop::after {
+    background: linear-gradient(180deg, rgba(2, 6, 23, 0.55), rgba(2, 6, 23, 0.35) 50%, rgba(2, 6, 23, 0));
+  }
+}
+
+.hero-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+.hero .page-title {
+  color: #ffffff;
+  font-weight: 700;
+}
+
+/* Over the background video the intro and caption use ink, not muted: ink keeps 4.5:1 up to a
+   pixel luminance of 0.135, muted only up to 0.04. */
+.hero .intro {
+  margin-top: 0;
+  font-size: 18px;
+  line-height: 28px;
+  font-weight: 300;
+  color: var(--ink);
+}
+
+/* White pill CTA. */
+.button-link.button-light {
+  padding: 12px 24px;
+  border-color: #ffffff;
+  background: #ffffff;
+  color: #020617;
+  font-size: 16px;
+}
+
+.button-link.button-light:hover {
+  border-color: #f1f5f9;
+  background: #f1f5f9;
+}
+
+/* The landing target of "Check an offer" clears the sticky header and shows its label. */
+#offer {
+  scroll-margin-top: 120px;
+}
+
+.hero-figure {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+/* A monitor-like frame. Below 1024px its content sets the height: a fixed 16:9 there would be
+   shorter than the content, and the browser would widen the frame past the screen instead. */
+.hero-screen {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+  background: rgba(15, 23, 42, 0.6);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+.screen-bar {
+  display: flex;
+  gap: 6px;
+  padding: 6px 8px 10px;
+}
+
+.screen-bar span {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #334155;
+}
+
+.screen-body {
+  flex: 1;
+  display: grid;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  border-radius: 12px;
+  background: var(--bg);
+}
+
+.screen-body .score {
+  margin-top: 0;
+}
+
+.screen-findings {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.screen-findings li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 12px;
+  border-radius: var(--radius-control);
+  background: var(--fill);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+.hero-caption {
+  color: var(--ink);
+  font-size: 14px;
+  line-height: 20px;
+}
+
+/* The header's action on the right: a real link to the text box. */
+.header-action {
+  grid-area: end;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius-pill);
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all var(--hover);
+}
+
+.header-action:hover {
+  border-color: var(--ink);
+  background: var(--fill);
+}
+
+@media (min-width: 480px) {
+  .screen-body {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
 }
 
 /* Huge, semibold, tightly tracked headlines over quieter grey body text. */
@@ -240,14 +454,15 @@ h1,
   line-height: 28px;
 }
 
-/* Glass card: a thin border and a faint fill, no drop shadow. */
+/* Glass card: hairline edge, faint fill with a top sheen, frosted and saturated backdrop, lit top
+   edge and a soft depth shadow. */
 .card {
   padding: 24px;
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
-  background: var(--card-bg);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  background: var(--glass-sheen), var(--card-bg);
+  -webkit-backdrop-filter: var(--glass-blur);
+  backdrop-filter: var(--glass-blur);
   box-shadow: var(--shadow-card);
 }
 
@@ -358,6 +573,8 @@ button {
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;
+  /* A lit top edge, as on glass. */
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
   transition: all var(--hover);
 }
 
@@ -1294,6 +1511,7 @@ body {
   font-size: 14px;
   font-weight: 500;
   text-decoration: none;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
   transition: all var(--hover);
 }
 
@@ -1345,6 +1563,11 @@ a {
 @media (max-width: 767px) {
   .nav-toggle {
     display: inline-flex;
+  }
+
+  /* The Menu button takes the right-hand slot; the same link is the hero's CTA. */
+  .header-action {
+    display: none;
   }
 
   .site-header-inner {
@@ -1419,6 +1642,10 @@ a {
     margin-bottom: 56px;
   }
 
+  .hero-backdrop {
+    top: -96px;
+  }
+
   h1,
   .page-title {
     font-size: 60px;
@@ -1427,6 +1654,17 @@ a {
 }
 
 @media (min-width: 1024px) {
+  .hero {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hero-screen {
+    aspect-ratio: 1 / 1;
+  }
+
+  .screen-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
 
   .input-card {
     padding: 40px;
@@ -1455,6 +1693,16 @@ a {
 
   .draft-card {
     padding: 32px;
+  }
+}
+
+@media (min-width: 1280px) {
+  .hero-screen {
+    aspect-ratio: 16 / 9;
+  }
+
+  .screen-body {
+    grid-template-columns: 200px minmax(0, 1fr);
   }
 }
 
@@ -1503,6 +1751,20 @@ a {
   button:not(:disabled):not([aria-disabled="true"]):active,
   .button-link:active {
     transform: scale(0.98);
+  }
+
+  .button-link.button-light:active {
+    transform: scale(0.95);
+  }
+
+  @keyframes aurora-drift {
+    to {
+      transform: translate(-60px, 40px) scale(1.1);
+    }
+  }
+
+  .hero::before {
+    animation: aurora-drift 18s ease-in-out infinite alternate;
   }
 
   .disclosure {

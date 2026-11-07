@@ -19,11 +19,14 @@ One dark theme (`color-scheme: dark`); there is no light variant.
 
 | Token | Value | Use |
 |---|---|---|
-| `--bg` | #030712 | Page background |
-| `--surface` | #080d1c | What a glass card looks like over the page (slate-900 at 40% over `--bg`); used for contrast checks and the text box |
+| `--bg` | #020617 | Page background |
+| `--surface` | #070d1f | What a glass card looks like over the page (slate-900 at 40% over `--bg`); used for contrast checks and the text box |
 | `--card-bg` | rgba(15, 23, 42, 0.4) | Card fill, with a 12px backdrop blur |
 | `--fill` | #0f172a | Quiet fills: callouts, quote blocks, chips, hover states, blocked buttons |
-| `--border` | rgba(30, 41, 59, 0.6) | Card borders (decorative) |
+| `--border` | rgba(148, 163, 184, 0.14) | Hairline glass edge on cards (decorative) |
+| `--glass-sheen` | white 5% to 0 over the top 45% | Light sheen at the top of every glass card |
+| `--surface-top` | #13192a | The lightest point of a glass card (sheen over `--surface`), for contrast checks |
+| `--glass-blur` | saturate(180%) blur(20px) | Card and header backdrop, as on apple.com |
 | `--header-border` | #0f172a | Header and footer rules |
 | `--control-border` | #64748b | Text box and secondary-button edges (needs 3:1) |
 | `--heading` | #f8fafc | Headings, wordmark, score |
@@ -41,41 +44,51 @@ One dark theme (`color-scheme: dark`); there is no light variant.
 | `--aurora` | cyan-500, indigo-500, blue-600, each at 10% | Glow behind the page heading |
 
 - Blue is for actions and links only. Icons, quote marks, the logo mark and completed timeline nodes are monochrome.
-- Radii: cards 16px, controls (text box, callouts) 12px, buttons and chips fully round (pill).
-- No drop shadows. `--shadow-card` is transparent; cards are outlined by the thin border.
+- Radii: cards 22px, controls (text box, callouts) 14px, buttons and chips fully round (pill).
+- Glass, apple.com style: cards have a hairline edge, a faint fill with a top sheen, a saturated frosted backdrop, a lit top edge (1px inset white at 7%) and a soft wide depth shadow (`--shadow-card`). Filled buttons carry the same lit top edge. The page has a faint blue light from above (radial, 10%).
 - Type: system font stack (`system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`), San Francisco on Apple devices. Headings semibold with letter-spacing -0.025em. Scale: page heading 36/40 (60/60 from 768px), section 28/34, card title 20/28, body 17/25, intro 19/28, secondary 14/20 to 14/22, nav links 12/16, labels and chips 12/16. Buttons 14px medium; textarea 16px. Tabular numerals for scores, counters and times.
 
 ## Contrast (WCAG 2.x relative luminance)
 
 | Text | Background | Ratio |
 |---|---|---|
-| heading #F8FAFC | bg #030712 | 19.24 |
-| ink #E2E8F0 | bg #030712 | 16.33 |
-| ink #E2E8F0 | surface #080D1C | 15.71 |
+| heading #F8FAFC | bg #020617 | 19.28 |
+| ink #E2E8F0 | bg #020617 | 16.36 |
+| ink #E2E8F0 | surface #070D1F | 15.68 |
 | ink #E2E8F0 | fill #0F172A | 14.48 |
-| muted #94A3B8 | bg #030712 | 7.85 |
-| muted #94A3B8 | surface #080D1C | 7.55 |
+| muted #94A3B8 | bg #020617 | 7.87 |
+| muted #94A3B8 | surface #070D1F | 7.54 |
 | muted #94A3B8 | fill #0F172A | 6.96 |
-| primary #60A5FA | bg #030712 | 7.92 |
-| primary #60A5FA | surface #080D1C | 7.62 |
+| primary #60A5FA | bg #020617 | 7.93 |
+| primary #60A5FA | surface #070D1F | 7.60 |
 | primary #60A5FA | fill #0F172A | 7.02 |
 | primary #60A5FA | primary-tint #0C1A3A | 6.75 |
 | ink #E2E8F0 | primary-tint #0C1A3A | 13.91 |
 | white #FFFFFF | action #2563EB | 5.17 |
 | white #FFFFFF | action-hover #1D4ED8 | 6.70 |
 | high #F87171 | high-bg #2A0D12 | 6.52 |
-| high #F87171 | surface #080D1C | 7.00 |
+| high #F87171 | surface #070D1F | 6.99 |
+| white #FFFFFF (hero heading) | bg #020617 | 20.17 |
+| slate-950 #020617 | white #FFFFFF (hero CTA) | 20.17 |
+| slate-950 #020617 | slate-100 #F1F5F9 (hero CTA hover) | 18.41 |
 | medium #FBBF24 | medium-bg #2A1A05 | 10.08 |
 | success #34D399 | success-bg #062419 | 8.57 |
 
-Non-text (needs 3:1): control border #64748B on surface 4.07. Text over glass cards is checked against `--surface`; the aurora behind it is 10% opacity and does not change the result measurably.
+Non-text (needs 3:1): control border #64748B on surface 4.06. Text over glass cards is checked against `--surface` and against its lightest point `--surface-top` (ink 11.4, muted 6.8, primary 6.9, high 6.1); the aurora behind it is 10% opacity and does not change the result measurably.
 
 ## Layout
 
 - Content up to 1280px wide, centred, 24px side padding. Main area 48px top and bottom, 96px from 768px.
-- Header: sticky, frosted, 52px tall. Wordmark with the inline-SVG mark on the left; small grey nav links centred (current page in heading colour, semibold, with a 2px bar, not colour alone). The right column stays empty to keep the links centred. Below 768px the links fold behind a Menu button on the right (`aria-expanded`, `aria-controls`, Escape closes and refocuses); without JavaScript all links show.
+- Header: sticky, frosted, 52px tall. Wordmark with the inline-SVG mark on the left; small grey nav links centred (current page in heading colour, semibold, with a 2px bar, not colour alone). On the right, a small outlined pill "Check an offer", a real link to `/check#offer` (never marked as the current page). Below 768px that link is hidden and the links fold behind a Menu button on the right (`aria-expanded`, `aria-controls`, Escape closes and refocuses); without JavaScript all links show.
 - Under the header: a slim prototype-notice strip on `--fill`, centred, muted text and info icon, not a red alert.
-- Page heading area (`.hero`, `.placeholder`) carries the aurora: an absolutely positioned, 120px-blurred gradient behind the heading, `pointer-events: none`. `overflow-x: clip` on html and body stops it causing sideways scroll.
+- Check page hero: a grid, one column, two equal columns from 1024px, 48px gap, vertically centred.
+  - Left (`.hero-copy`): the page heading in white, bold (700), 36/40 then 60/60; the intro 18/28 light (300) in muted grey; a white pill CTA "Check an offer" (`.button-light`: white fill, slate-950 text, slate-100 on hover, scales to 0.95 when pressed) that jumps to the text box (`#offer`, which clears the sticky header with `scroll-margin-top`).
+  - Right (`HeroPreview`): a monitor-like frame (slate-900 at 60%, 1px #1E293B border, 16px radius, 8px padding, soft wide shadow, three window dots) showing a real result: the synthetic "Fee scam" sample run through the same rules on the server at build time (score gauge, band, each counted rule with its points). The caption says it is the synthetic sample and "Risk indicators, not a verdict". Nothing in it is typed by hand; a test compares it with `runManager`.
+  - The frame is 1:1 from 1024px and 16:9 from 1280px. Below 1024px its content sets the height: a fixed 16:9 would be shorter than the content, and the browser would widen the frame past the screen (overflow-x: clip would then hide the overflow rather than show a scrollbar).
+  - Background video (`HeroBackdrop`): a silent 20-second loop, full width behind the hero, fading out at the bottom: a looping card slider. A wall of glass offer cards (gradient avatar, name bars, skeleton lines, a status chip and a small gauge arc, no words or numbers) stands on a plane tilted away in perspective; its six rows slide in alternate directions, and a soft diagonal light sweep crosses it once per loop, lighting the chips and gauges red, amber or green. The far side recedes to the left into the dark behind the headline, with a CSS shade (`.hero-backdrop::after`, darken only) for calm copy; the near side sits behind the example screen. Rendered locally by `scripts/make-hero-loop.py` (numpy, Pillow, ffmpeg; sub-pixel motion, streamed to the encoders) into `public/hero/` (WebM 830 KB, MP4 774 KB, poster 96 KB; 1600×900, 24 fps). Pixels are capped in brightness; decoded, the brightest is 0.111 (WebM) and 0.088 (MP4), and a test pins the limit at 0.12, so the hero intro and caption (ink) keep at least 4.5:1 and the white heading more. The video is `aria-hidden`, muted, `playsInline`, not focusable and has no `autoplay` attribute: it starts from script only when there is no reduced-motion preference, otherwise (and without JavaScript) the still poster shows.
+  - No pause button, by the owner's decision (2026-11-08). Known gap: WCAG 2.2.2 (Pause, Stop, Hide) asks for a way to pause moving content that starts automatically and lasts more than five seconds; reduced-motion users get the still poster, but others cannot stop the loop. Recorded in docs/defects.md.
+  - The AI-generated video supplied earlier was rejected: from its sixth second it showed a fraud verdict, a government-registry lookup, payment blocking and biometrics, none of which the app does.
+- Aurora: on the Check hero, a 500px circle (blue-600 to indigo-600, each at 10%), blurred 120px, at top 25% / right 25% behind both columns, drifting slowly (18s, alternate) when motion is allowed. On placeholder pages, a wider cyan-indigo-blue band behind the heading. Both are `pointer-events: none`; `overflow-x: clip` on html and body stops them causing sideways scroll.
 - Input card: label, 16px textarea (min-height 220px, resize vertical, focus state), live counter "n / 20,000" (from MAX_OFFER_CHARS), primary "Check offer" pill (full width on mobile). All three sample buttons (scam, clean, "Injection attempt") as pills with a "Synthetic" tag, in a labelled group. Real busy state while the request runs (spinner and aria-busy), no fake progress.
 - Results, desktop (from 1024px): two columns. Left, sticky below the header: score card with the arc gauge, the score, the band chip, the points sum, the band thresholds and "Risk indicators, not a verdict". Right: findings, agent run, draft, audit trail. Mobile: one column in that order.
 - Gauge: colour by band, plus the band text and the number (never colour alone).
@@ -90,6 +103,7 @@ Non-text (needs 3:1): control border #64748B on surface 4.07. Text over glass ca
 - All interactive states transition over 300ms with an ease-out curve (cubic-bezier(0.16, 1, 0.3, 1)).
 - Only without a reduced-motion preference (`@media (prefers-reduced-motion: no-preference)`):
   - The heading area, input card, limitations panel and results fade in and rise 16px over 700ms, staggered by 80ms.
+  - The hero aurora drifts slowly (18s, alternating) and the background card slider plays.
   - Findings, warning mentions, the draft and the audit trail fade up as they scroll into view, where `animation-timeline: view()` is supported.
   - Pressable buttons and button links scale to 1.02 on hover and 0.98 when pressed; blocked buttons do not move. A closed disclosure scales to 1.01 on hover.
 - The gauge arc animates 600ms to the score. With reduced motion every duration is 0s.
