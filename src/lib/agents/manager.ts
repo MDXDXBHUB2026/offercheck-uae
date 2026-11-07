@@ -3,7 +3,7 @@ import type { AnalysisResult, TraceStep } from "../types";
 import { cleanOfferText } from "./intake";
 import { RULES, runRedFlagWorker } from "./redFlag";
 
-const NOT_IMPLEMENTED = "Not yet implemented";
+const NOT_IMPLEMENTED = "Not implemented yet";
 
 function timed<T>(run: () => T): { result: T; durationMs: number } {
   const start = performance.now();

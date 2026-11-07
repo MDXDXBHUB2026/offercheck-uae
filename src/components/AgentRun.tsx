@@ -12,7 +12,7 @@ const AGENT_LABELS: Record<string, string> = {
 
 const STATUS: Record<TraceStatus, { icon: string; label: string }> = {
   completed: { icon: "✓", label: "Completed" },
-  not_implemented: { icon: "○", label: "Not yet implemented" },
+  not_implemented: { icon: "○", label: "Not implemented yet" },
 };
 
 export function AgentRun({ trace }: { trace: TraceStep[] }) {

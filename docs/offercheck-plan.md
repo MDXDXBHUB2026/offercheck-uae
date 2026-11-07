@@ -34,7 +34,7 @@ User pastes offer
  APPROVAL GATE (human) --> 5. Drafter agent: safe reply + evidence summary
       |
       v
- Audit log (every step, agent, input hash, output, approval)
+ Audit log (every step, agent, status, approval; no input text or input hash)
 ```
 
 ### Agent contracts
@@ -47,6 +47,20 @@ User pastes offer
 | Verification | Company name, sender email/domain | Domain age, domain/company match, web-presence summary | Domain lookup (RDAP), web search, page fetch with SSRF block | Fetch private/internal addresses; scrape social profiles |
 | Official-channel | Offer number format, company | Plain steps to verify through the ministry's website, app or call centre | Static, source-linked guidance | Claim an offer is "verified" itself |
 | Drafter | Approved findings | Safe reply, evidence summary | Deterministic and template-based today (fixed blocks chosen by rule id). An LLM may later only polish the wording of the fixed blocks; decided on Day 2 | Run before the approval gate |
+
+### Build status today
+
+The contracts above are the target design. What runs today (also stated in `docs/known-limitations.md`; the Agent run panel and the audit trail use the same labels):
+
+| Step | Status |
+|---|---|
+| Intake | Implemented: text cleaning only. Claim extraction not implemented yet |
+| Red-flag | Implemented: fixed rules, no LLM |
+| Verification | Not implemented yet |
+| Official-channel | Not implemented yet |
+| Risk aggregator | Implemented: deterministic weights |
+| Drafter | Implemented: fixed template blocks, no LLM. Runs only after the user asks for a draft |
+| Audit trail | Implemented: page memory only, hash-chained, no offer or draft text |
 
 ### Shared finding format
 ```json

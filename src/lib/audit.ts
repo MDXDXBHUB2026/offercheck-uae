@@ -1,5 +1,6 @@
-import { isTemplateDraft, type BlockId } from "./agents/drafter";
-import type { GateFlow } from "./approvalGate";
+import { isTemplateDraft, planBlocks, type BlockId } from "./agents/drafter";
+import { gateReducer, type GateAction, type GateFlow } from "./approvalGate";
+import type { Finding } from "./types";
 import type { AnalysisResult } from "./types";
 
 // The audit trail records what the agents and the user did, never what anyone wrote. It holds no
@@ -26,6 +27,39 @@ export type AuditEntry = AuditRecord & {
 };
 
 export type GateDecision = "pending" | "approved" | "discarded";
+
+// What /api/analyze returns. The browser checks the shape before using it, so a proxy error page
+// or a broken reply shows an error instead of crashing the page.
+export type AnalyzeResponse = AnalysisResult & { runId: string; audit: AuditEntry[] };
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+export function isAnalyzeResponse(value: unknown): value is AnalyzeResponse {
+  if (!isRecord(value) || !isRecord(value.risk)) return false;
+  return (
+    typeof value.runId === "string" &&
+    typeof value.risk.score === "number" &&
+    typeof value.risk.band === "string" &&
+    typeof value.risk.label === "string" &&
+    Array.isArray(value.trace) &&
+    Array.isArray(value.findings) &&
+    value.findings.every(
+      (f) => isRecord(f) && typeof f.source === "string" && Array.isArray(f.evidence),
+    ) &&
+    Array.isArray(value.audit) &&
+    value.audit.every(
+      (e) =>
+        isRecord(e) &&
+        typeof e.hash === "string" &&
+        typeof e.prevHash === "string" &&
+        typeof e.kind === "string" &&
+        typeof e.at === "string" &&
+        isRecord(e.data),
+    )
+  );
+}
 
 export const GENESIS_HASH = "0".repeat(64);
 
@@ -95,7 +129,8 @@ export function runRecords(
     if (step.agent === "manager") {
       total = timing.durationMs;
     } else if (step.agent === "intake") {
-      records.push({ runId, at: finishedAt, kind: "intake_done", data: timing });
+      // Intake only cleans the text so far. Claim extraction is not implemented yet.
+      records.push({ runId, at: finishedAt, kind: "intake_done", data: { ...timing, scope: "text_cleaning_only" } });
     } else {
       const extra: Record<string, AuditValue> =
         step.agent === "red_flag"
@@ -118,6 +153,20 @@ const DECISIONS: Record<string, GateDecision> = {
   gate_approved: "approved",
   gate_discarded: "discarded",
 };
+
+// One gate action, from the latest state, not the state of the last render: a double-click on
+// approve then gives one "approved" entry, because the second click finds the gate already approved.
+export function gateStep(
+  runId: string,
+  before: GateFlow,
+  action: GateAction,
+  findings: readonly Pick<Finding, "source">[],
+): { action: GateAction; after: GateFlow; records: AuditRecord[] } {
+  // The draft adapts to the findings. Only their rule ids reach the drafter.
+  const full = action.type === "prepare" ? { ...action, findings } : action;
+  const after = gateReducer(before, full);
+  return { action: full, after, records: gateRecords(runId, before, after, planBlocks(findings)) };
+}
 
 // The gate decisions made by one action: decision, whether the draft was edited, and the draft's
 // block ids. The draft itself is only compared against the templates, never stored.

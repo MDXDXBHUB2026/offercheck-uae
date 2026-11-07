@@ -17,7 +17,7 @@ Mobile-first. No new dependencies other than next/font. Do not change scoring lo
 - Score: semicircle gauge plus the arithmetic line, for example "40 + 20 + 20 + 20 = 100, capped".
 - Evidence cards: quoted offer text with the matched phrase highlighted, a severity badge with its points, and the rule ID.
 - Info findings (RF-00x-W): visibly different from risk findings, labelled "Mentioned in a warning, not counted in the score".
-- Agent run list: status icon, agent name, one-line summary, measured time; "Not run" or "Not yet implemented" where true.
+- Agent run list: status icon, agent name, one-line summary, measured time; "Not run" or "Not implemented yet" where true.
 - Sample buttons: fee scam, clean offer, injection attempt (synthetic fixtures only).
 - A "What this check cannot do" panel that reads from docs/known-limitations.md content.
 

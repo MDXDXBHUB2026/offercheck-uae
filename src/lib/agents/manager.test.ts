@@ -85,7 +85,7 @@ describe("runManager trace", () => {
     for (const step of steps) {
       expect(step.status).toBe("not_implemented");
       expect(step.durationMs).toBeNull();
-      expect(step.summary).toBe("Not yet implemented");
+      expect(step.summary).toBe("Not implemented yet");
     }
   });
 

@@ -54,6 +54,16 @@ h1 {
   color: var(--muted);
 }
 
+.notice {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--high);
+  border-radius: 6px;
+  background: var(--surface);
+  font-weight: 600;
+}
+
 label {
   display: block;
   margin-bottom: 6px;

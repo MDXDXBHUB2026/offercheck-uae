@@ -64,6 +64,20 @@ describe("AgentRun", () => {
     const html = renderToStaticMarkup(createElement(AgentRun, { trace: runManager("Hello").trace }));
     expect(html).toContain("Intake (text cleaning only)");
   });
+
+  it("labels each stub agent as not implemented yet, never as completed", () => {
+    const html = renderToStaticMarkup(createElement(AgentRun, { trace: runManager("Hello").trace }));
+    const rows = html.match(/<li[^>]*>.*?<\/li>/g) ?? [];
+    const row = (label: string) => rows.find((li) => li.includes(`class="trace-agent">${label}<`)) ?? "";
+    for (const label of ["Verification", "Official channel"]) {
+      expect(row(label)).toContain('aria-label="Not implemented yet"');
+      expect(row(label)).toContain("Not run");
+      expect(row(label)).not.toMatch(/Completed|done/i);
+    }
+    for (const label of ["Intake (text cleaning only)", "Red-flag", "Risk aggregator"]) {
+      expect(row(label)).toContain('aria-label="Completed"');
+    }
+  });
 });
 
 describe("UI text", () => {

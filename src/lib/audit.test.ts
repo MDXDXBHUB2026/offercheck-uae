@@ -12,7 +12,9 @@ import { gateReducer, INITIAL_GATE_FLOW, type GateAction, type GateFlow } from "
 import {
   appendEntries,
   gateRecords,
+  gateStep,
   GENESIS_HASH,
+  isAnalyzeResponse,
   verifyAuditLog,
   type AuditEntry,
   type AuditRecord,
@@ -24,6 +26,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{1
 const OFFERS = [SCAM_OFFER, LEGIT_OFFER, ...[...EVAL_OFFERS, ...HOLDOUT_OFFERS].map((offer) => offer.text)];
 const ALLOWED_KEYS = new Set([
   "offerLength",
+  "scope",
   "status",
   "durationMs",
   "agent",
@@ -85,6 +88,24 @@ describe("run records", () => {
     expect(audit[2].data.ruleIds).toEqual(findings.filter((f) => f.severity !== "info").map((f) => f.source));
     expect(audit[5].data).toMatchObject({ score: risk.score, band: risk.band });
     expect(audit[3].data).toEqual({ agent: "verification", status: "not_implemented", durationMs: null });
+  });
+
+  it("labels each step as it really is: stubs as not implemented, intake as text cleaning only", async () => {
+    const { audit } = await runWithAudit(SCAM_OFFER);
+    const status = Object.fromEntries(
+      audit.filter((e) => e.kind === "agent_step").map((e) => [e.data.agent, e.data.status]),
+    );
+    expect(status).toEqual({
+      red_flag: "completed",
+      verification: "not_implemented",
+      official_channel: "not_implemented",
+      risk_aggregator: "completed",
+    });
+    expect(audit[1].data).toMatchObject({ status: "completed", scope: "text_cleaning_only" });
+    for (const entry of audit.filter((e) => e.data.status === "not_implemented")) {
+      expect(entry.kind).toBe("agent_step");
+      expect(entry.data.durationMs).toBeNull();
+    }
   });
 
   it("gives every run a random id and timestamps, shared by all its entries", async () => {
@@ -215,6 +236,60 @@ describe("gate records", () => {
     const editing = run(pending, { type: "startEdit", at: AT });
     expect(step(editing, { type: "changeDraft", draft: "x" }).records).toEqual([]);
     expect(step(editing, { type: "reset" }).records).toEqual([]);
+  });
+});
+
+describe("gateStep", () => {
+  const findings = [{ source: "RF-002" }];
+  const filled = draftReply(findings).replace("[Recipient name]", "Ms Example").replace("[Your name]", "Sam");
+
+  function steps(...actions: GateAction[]) {
+    let flow = INITIAL_GATE_FLOW;
+    const records: AuditRecord[] = [];
+    for (const action of actions) {
+      const step = gateStep("run-1", flow, action, findings);
+      flow = step.after;
+      records.push(...step.records);
+    }
+    return { flow, records };
+  }
+
+  it("fills in the findings on prepare and logs the draft's block ids", () => {
+    const { flow, records } = steps({ type: "prepare", at: AT });
+    expect(flow.gate).toEqual({ status: "pending", draft: draftReply(findings), editing: false });
+    expect(records.map((r) => r.data)).toEqual([
+      { decision: "pending", edited: false, blocks: planBlocks(findings) },
+    ]);
+  });
+
+  it("logs one approval for a double-click", () => {
+    const { records } = steps(
+      { type: "prepare", at: AT },
+      { type: "startEdit", at: AT },
+      { type: "changeDraft", draft: filled },
+      { type: "approve", copied: true, at: AT },
+      { type: "approve", copied: true, at: AT },
+    );
+    expect(records.map((r) => r.data.decision)).toEqual(["pending", "approved"]);
+  });
+});
+
+describe("isAnalyzeResponse", () => {
+  it("accepts a real reply", async () => {
+    expect(isAnalyzeResponse(JSON.parse(JSON.stringify(await runWithAudit(SCAM_OFFER))))).toBe(true);
+  });
+
+  it.each([
+    ["null", null],
+    ["an HTML string", "<html>Bad gateway</html>"],
+    ["an error body", { error: "x" }],
+    ["no run id", { risk: { score: 0, band: "low", label: "x" }, trace: [], findings: [], audit: [] }],
+    [
+      "a broken audit entry",
+      { runId: "r", risk: { score: 0, band: "low", label: "x" }, trace: [], findings: [], audit: [{}] },
+    ],
+  ])("rejects %s", (_name, value) => {
+    expect(isAnalyzeResponse(value)).toBe(false);
   });
 });
 
