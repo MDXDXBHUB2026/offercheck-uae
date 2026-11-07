@@ -302,6 +302,30 @@ describe("gateStep", () => {
     ]);
   });
 
+  it("labels and logs a draft swapped for another template's wording as edited, the same way", () => {
+    // The wording of the no-findings template, names filled in, in a run whose template is RF-002's.
+    const swapped = draftReply().replace("[Recipient name]", "Ms Example").replace("[Your name]", "Sam");
+    const { flow, records } = steps(
+      { type: "prepare", at: AT },
+      { type: "startEdit", at: AT },
+      { type: "changeDraft", draft: swapped },
+      { type: "approve", copied: true, at: AT },
+    );
+    expect(flow.events.at(-1)?.detail).toBe("Edited wording, copied to clipboard");
+    expect(records.at(-1)?.data).toMatchObject({ decision: "approved", placeholders: "filled", text: "edited" });
+  });
+
+  it("labels and logs this run's own template with names filled as template, the same way", () => {
+    const { flow, records } = steps(
+      { type: "prepare", at: AT },
+      { type: "startEdit", at: AT },
+      { type: "changeDraft", draft: filled },
+      { type: "approve", copied: true, at: AT },
+    );
+    expect(flow.events.at(-1)?.detail).toBe("Template wording, names filled in, copied to clipboard");
+    expect(records.at(-1)?.data).toMatchObject({ decision: "approved", placeholders: "filled", text: "template" });
+  });
+
   it("logs one approval for a double-click", () => {
     const { records } = steps(
       { type: "prepare", at: AT },

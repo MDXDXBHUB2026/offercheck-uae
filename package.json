@@ -19,7 +19,9 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check:no-bypass": "node scripts/check-no-bypass.mjs",
+    "check": "npm test && npm run typecheck && npm run lint && npm run build && npm run check:no-bypass"
   },
   "name": "offercheck",
   "version": "0.1.0",

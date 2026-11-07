@@ -34,7 +34,7 @@ Numbers come from the Step 1c QA run.
 
 6. **Invisible characters and look-alike letters survive cleaning.** U+2061, U+2062, U+034F, U+FE0F, U+180E, Cyrillic homoglyphs and fullwidth letters.
 11. **Hidden-only input gets a result.** It should get the empty-input error, because the check runs before cleaning.
-13. **Wrong error for escaped input.** 20,000 control characters return the over-limit 413.
+13. **Wrong error for escaped input.** 20,000 control characters returned the over-limit 413. Fixed on 2026-11-07: the body cap is now 122,048 bytes (20,000 characters at 6 bytes each for JSON `\uXXXX` escapes, plus 2,048), so any offer within the character limit fits. See `docs/defects.md`.
 14. **Minor over-matches.** `Do not trust anyone using hr.fake@gmail.com` fires RF-005. `Please reply today if you have any questions about the benefits` fires RF-004.
 16. **Thin timing margin on the maximum-size test.** Input of `"a, "` repeated takes about 580ms alone, against the 1000ms test limit. It failed in 3 of 12 full parallel runs during Step 2 (1,281ms and 1,248ms measured; the third value was not captured) and passed 3 of 3 runs alone. Cause: RF-001 split the rest of the sentence into list items for every clause, so cost grew with clauses times list items. Fixed on 2026-11-06 with a performance-only guard, and the test limit did not change. The list check now runs only for a part with a hit and only when a payer appears in that tail. `redFlag.ts` is now sha256 `789dc2b29a30940951257c677bddcb4eaf995bb8a187a19e3583ca51d1ebb76f`. Band, rule ids and info ids were identical before and after on all 77 cases.
 

@@ -254,7 +254,6 @@ describe("template wording", () => {
   it("puts back only the two names", () => {
     for (const draft of ALL_DRAFTS) {
       expect(withNamePlaceholders(fill(draft))).toBe(draft);
-      expect(isTemplateWording(fill(draft))).toBe(true);
       expect(isTemplateWording(fill(draft), draft)).toBe(true);
     }
   });

@@ -7,10 +7,12 @@ export type GateState =
   | { status: "discarded"; draft: null };
 
 // gate is null until the user asks for a draft. events never hold the draft: an edited draft can
-// contain anything the user typed, including text pasted from the offer.
+// contain anything the user typed, including text pasted from the offer. template is this run's
+// template draft, kept so the approval label and the audit entry check against the same text.
 export type GateFlow = {
   gate: GateState | null;
   events: AuditEvent[];
+  template: string | null;
 };
 
 export type GateAction =
@@ -22,7 +24,7 @@ export type GateAction =
   | { type: "discard"; at: string }
   | { type: "reset" };
 
-export const INITIAL_GATE_FLOW: GateFlow = { gate: null, events: [] };
+export const INITIAL_GATE_FLOW: GateFlow = { gate: null, events: [], template: null };
 
 // Any [..] left in the draft, such as [Recipient name] or [Your name], is still to be filled in.
 const PLACEHOLDER = /\[[^\]\n]*\]/g;
@@ -31,8 +33,26 @@ export function unfilledPlaceholders(draft: string): string[] {
   return [...new Set(draft.match(PLACEHOLDER) ?? [])];
 }
 
+export type PlaceholderState = "unfilled" | "filled";
+export type TextState = "template" | "edited";
+
+// Two separate facts about the draft, each from a fixed vocabulary. The approval label and the
+// audit entry both use this one check, against this run's own template:
+// - placeholders: "unfilled" while any [..] is left, otherwise "filled".
+// - text: "edited" when the draft differs from the template once the two names are put back as
+//   placeholders, otherwise "template". Filling in the names alone is not an edit.
+export function draftState(
+  draft: string,
+  template: string,
+): { placeholders: PlaceholderState; text: TextState } {
+  return {
+    placeholders: unfilledPlaceholders(draft).length > 0 ? "unfilled" : "filled",
+    text: isTemplateWording(draft, template) ? "template" : "edited",
+  };
+}
+
 function record(flow: GateFlow, gate: GateState, event: AuditEvent): GateFlow {
-  return { gate, events: [...flow.events, event] };
+  return { ...flow, gate, events: [...flow.events, event] };
 }
 
 // An action that does not fit the current state changes nothing and records nothing.
@@ -41,9 +61,10 @@ export function gateReducer(flow: GateFlow, action: GateAction): GateFlow {
   switch (action.type) {
     case "prepare": {
       if (gate && gate.status !== "discarded") return flow;
+      const template = draftReply(action.findings);
       return record(
-        flow,
-        { status: "pending", draft: draftReply(action.findings), editing: false },
+        { ...flow, template },
+        { status: "pending", draft: template, editing: false },
         { timestamp: action.at, actor: "drafter", event: "gate_pending", detail: "Draft prepared from template" },
       );
     }
@@ -70,7 +91,8 @@ export function gateReducer(flow: GateFlow, action: GateAction): GateFlow {
       if (gate?.status !== "pending" || gate.draft.trim().length === 0) return flow;
       if (unfilledPlaceholders(gate.draft).length > 0) return flow;
       // Approval needs the names filled in, so the label says whether the wording itself changed.
-      const wording = isTemplateWording(gate.draft) ? "Template wording, names filled in" : "Edited wording";
+      const { text } = draftState(gate.draft, flow.template ?? draftReply());
+      const wording = text === "template" ? "Template wording, names filled in" : "Edited wording";
       const copy = action.copied ? "copied to clipboard" : "clipboard denied, manual copy shown";
       return record(
         flow,
@@ -80,8 +102,9 @@ export function gateReducer(flow: GateFlow, action: GateAction): GateFlow {
     }
     case "discard": {
       if (!gate || gate.status === "discarded") return flow;
+      // A discard clears the template too; the audit entry for it reads the template from before.
       return record(
-        flow,
+        { ...flow, template: null },
         { status: "discarded", draft: null },
         { timestamp: action.at, actor: "user", event: "gate_discarded", detail: "Draft cleared" },
       );

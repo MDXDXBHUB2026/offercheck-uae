@@ -31,7 +31,7 @@ function eventNames(flow: GateFlow): string[] {
 
 describe("before the click", () => {
   it("has no draft and no events", () => {
-    expect(INITIAL_GATE_FLOW).toEqual({ gate: null, events: [] });
+    expect(INITIAL_GATE_FLOW).toEqual({ gate: null, events: [], template: null });
   });
 
   it.each<[string, GateAction]>([

@@ -46,7 +46,8 @@ describe("POST /api/analyze input limits", () => {
   });
 });
 
-const MAX_BODY_BYTES = 81_024;
+// 20,000 characters at 6 bytes each (JSON \uXXXX escapes) plus 2,048 bytes of overhead.
+const MAX_BODY_BYTES = 122_048;
 
 // A body with no Content-Length, sent in chunks as a client would stream it. It counts the bytes
 // the route pulled and whether the route cancelled the rest.
@@ -126,6 +127,7 @@ describe("POST /api/analyze streamed body cap", () => {
     expect(response.status).toBe(413);
     await expect(response.json()).resolves.toEqual({ error: TOO_LONG });
     expect(seen.pulled).toBeLessThanOrEqual(MAX_BODY_BYTES + 1024);
+    expect(seen.cancelled).toBe(true);
   });
 
   it("ignores a small false Content-Length on a valid body", async () => {
@@ -138,5 +140,35 @@ describe("POST /api/analyze streamed body cap", () => {
     const response = await POST(streamRequest(jsonStream(json, 8192)));
     expect(response.status).toBe(413);
     expect(await response.text()).not.toContain("CANARY");
+  });
+});
+
+describe("POST /api/analyze worst-case JSON escaping", () => {
+  // U+0001 is sent as \u0001: 6 bytes in the JSON body for 1 character of text.
+  const CONTROL = String.fromCharCode(1);
+  const body = (count: number) => JSON.stringify({ text: CONTROL.repeat(count) });
+
+  it("has a byte cap that covers 20,000 escaped characters", () => {
+    expect(new TextEncoder().encode(body(MAX_OFFER_CHARS)).length).toBeLessThan(MAX_BODY_BYTES);
+  });
+
+  it("accepts 20,000 control characters", async () => {
+    const response = await POST(streamRequest(jsonStream(body(MAX_OFFER_CHARS), 8192)));
+    expect(response.status).toBe(200);
+  });
+
+  it("refuses 20,001 control characters with the same 413 message", async () => {
+    const response = await POST(streamRequest(jsonStream(body(MAX_OFFER_CHARS + 1), 8192)));
+    expect(response.status).toBe(413);
+    await expect(response.json()).resolves.toEqual({ error: TOO_LONG });
+  });
+
+  it("still cuts off an oversized chunked body at the new cap", async () => {
+    const { stream, seen } = streamedBody(10 * 1024 * 1024, 4096, '{"text":"');
+    const response = await POST(streamRequest(stream));
+    expect(response.status).toBe(413);
+    expect(seen.cancelled).toBe(true);
+    expect(seen.pulled).toBeGreaterThan(MAX_BODY_BYTES);
+    expect(seen.pulled).toBeLessThanOrEqual(MAX_BODY_BYTES + 4096);
   });
 });

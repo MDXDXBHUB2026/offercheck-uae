@@ -158,9 +158,7 @@ export function withNamePlaceholders(text: string): string {
   return text.replace(FILLED_GREETING, () => GREETING).replace(FILLED_SIGN_OFF, () => "[Your name]");
 }
 
-// True when the wording is the template's, whatever names were filled in. With a template, the
-// draft must match that one; without, any draft the drafter can produce.
-export function isTemplateWording(text: string, template?: string): boolean {
-  const restored = withNamePlaceholders(text);
-  return template === undefined ? isTemplateDraft(restored) : restored === template;
+// True when the wording is this template's, whatever names were filled in.
+export function isTemplateWording(text: string, template: string): boolean {
+  return withNamePlaceholders(text) === template;
 }
