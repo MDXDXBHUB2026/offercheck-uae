@@ -1,14 +1,11 @@
 import type { Metadata } from "next";
-import { Inter, Space_Grotesk } from "next/font/google";
 import type { ReactNode } from "react";
 import { SiteHeader } from "@/components/shell/SiteHeader";
 import { NoticeStrip, SiteFooter } from "@/components/shell/site";
 import "./globals.css";
 
-// next/font downloads the font files at build time and serves them from this app, so the browser
-// makes no request to Google.
-const inter = Inter({ subsets: ["latin"], display: "swap", variable: "--font-inter" });
-const spaceGrotesk = Space_Grotesk({ subsets: ["latin"], display: "swap", variable: "--font-heading" });
+// Text uses the system font stack set in globals.css (San Francisco on Apple devices), so no
+// font files are downloaded.
 
 export const metadata: Metadata = {
   title: { default: "Offer Check UAE", template: "%s · Offer Check UAE" },
@@ -18,7 +15,7 @@ export const metadata: Metadata = {
 // One header, notice, main landmark and footer for every page. Pages render inside <main>.
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`${inter.variable} ${spaceGrotesk.variable}`}>
+    <html lang="en">
       <body>
         <a className="skip-link" href="#main">
           Skip to content

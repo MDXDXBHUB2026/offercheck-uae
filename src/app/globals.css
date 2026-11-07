@@ -1,39 +1,62 @@
-/* Offer Check UAE: Step 5 premium UI pass (docs/step5-premium-ui.md). Light palette only.
-   Spacing uses 4/8/12/16/24/32/48/64 only. Contrast ratios are in docs/build-log/2026-11-07.md. */
+/* Offer Check UAE: dark navy aurora theme in the Apple Pro style. System font stack, slate greys
+   on near-black navy, one flat blue for actions, pill buttons, thin-bordered glass cards, a frosted
+   sticky header, a faint aurora glow behind the page heading, and fade-in-up entrances.
+   Values follow the Tailwind slate/blue palette. Every text pair meets WCAG AA;
+   src/app/routes.test.ts computes them from these tokens. */
 :root {
-  color-scheme: light;
-  --bg: #f6f4ef;
-  --surface: #ffffff;
-  --border: #e4e0d6;
-  /* Borders of form controls need 3:1 against the card (WCAG 1.4.11); #e4e0d6 is decorative only. */
-  --control-border: #7a8481;
-  --ink: #14211f;
-  --muted: #5b6764;
-  --primary: #0f5c55;
-  --primary-hover: #0b4a45;
-  --primary-tint: #e7f1ef;
+  color-scheme: dark;
+  --bg: #030712;
+  /* --surface is what a glass card looks like over --bg (slate-900 at 40%), for contrast checks. */
+  --surface: #080d1c;
+  --card-bg: rgba(15, 23, 42, 0.4);
+  --fill: #0f172a;
+  --border: rgba(30, 41, 59, 0.6);
+  --header-border: #0f172a;
+  /* Form-control and secondary-button edges need 3:1 against the surface (WCAG 1.4.11). */
+  --control-border: #64748b;
+  --heading: #f8fafc;
+  --ink: #e2e8f0;
+  --muted: #94a3b8;
+  /* Links and other blue text. */
+  --primary: #60a5fa;
+  --primary-tint: #0c1a3a;
+  /* Filled actions. Hover darkens: white on blue-500 would be 3.68:1, below AA. */
+  --action: #2563eb;
+  --action-hover: #1d4ed8;
   --on-primary: #ffffff;
-  --high: #b3261e;
-  --high-bg: #fbe9e7;
-  --medium: #8a4b00;
-  --medium-bg: #fff1dc;
-  --success: #1e6b3a;
-  --success-bg: #e5f2e9;
-  --not-built: #6b7471;
-  --not-built-bg: #eef0ef;
+  --high: #f87171;
+  --high-bg: #2a0d12;
+  --medium: #fbbf24;
+  --medium-bg: #2a1a05;
+  --success: #34d399;
+  --success-bg: #062419;
+  --not-built: #94a3b8;
+  --not-built-bg: #0f172a;
+  --header-bg: rgba(2, 6, 23, 0.7);
+  --aurora: linear-gradient(to right, rgba(6, 182, 212, 0.1), rgba(99, 102, 241, 0.1), rgba(37, 99, 235, 0.1));
   --radius-card: 16px;
-  --radius-control: 10px;
-  --shadow-card: 0 1px 2px rgba(20, 33, 31, 0.04), 0 8px 24px rgba(20, 33, 31, 0.06);
-  --font-body: var(--font-inter), system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-head: var(--font-heading), var(--font-body);
-  --font-mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
-  --hover: 120ms ease-out;
+  --radius-control: 12px;
+  --radius-pill: 9999px;
+  /* No drop shadows; a transparent shadow keeps the finding cards' inset bar valid. */
+  --shadow-card: 0 0 #0000;
+  --font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-head: var(--font-body);
+  --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --hover: 300ms var(--ease-out);
+  --header-height: 52px;
 }
 
 *,
 *::before,
 *::after {
   box-sizing: border-box;
+}
+
+/* clip, not hidden: the aurora's blur may reach past the edge, and clip keeps sticky working. */
+html,
+body {
+  overflow-x: clip;
 }
 
 html {
@@ -45,8 +68,8 @@ body {
   background: var(--bg);
   color: var(--ink);
   font-family: var(--font-body);
-  font-size: 16px;
-  line-height: 26px;
+  font-size: 17px;
+  line-height: 25px;
   overflow-wrap: anywhere;
   -webkit-font-smoothing: antialiased;
 }
@@ -56,8 +79,9 @@ h2,
 h3,
 .score-value,
 .wordmark {
+  color: var(--heading);
   font-family: var(--font-head);
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
 }
 
 h1,
@@ -87,36 +111,59 @@ p {
 
 .shell {
   width: 100%;
-  max-width: calc(1120px + 32px);
+  max-width: calc(1280px + 48px);
   margin: 0 auto;
-  padding-inline: 16px;
+  padding-inline: 24px;
 }
 
 .site-header {
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid var(--header-border);
+  background: var(--header-bg);
+  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
+}
+
+/* Without the blur the translucent bar would let text show through, so it turns solid. */
+@supports not ((backdrop-filter: blur(24px)) or (-webkit-backdrop-filter: blur(24px))) {
+  .site-header {
+    background: var(--bg);
+  }
 }
 
 .site-header-inner {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  grid-template-areas: "logo nav end";
   align-items: center;
-  justify-content: space-between;
-  gap: 4px 24px;
-  padding-block: 12px;
+  column-gap: 24px;
+  min-height: var(--header-height);
 }
 
 .wordmark {
+  grid-area: logo;
+  justify-self: start;
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 20px;
-  line-height: 28px;
+  gap: 8px;
+  font-size: 17px;
+  line-height: 22px;
   font-weight: 600;
 }
 
+.site-nav {
+  grid-area: nav;
+}
+
+.nav-toggle {
+  grid-area: end;
+  justify-self: end;
+}
+
 .mark {
-  color: var(--primary);
+  color: var(--ink);
 }
 
 .tagline {
@@ -126,59 +173,90 @@ p {
 }
 
 .notice-strip {
-  background: var(--primary-tint);
-  border-bottom: 1px solid #cfe3df;
+  background: var(--fill);
 }
 
 .notice {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  padding-block: 8px;
+  padding-block: 10px;
+  color: var(--muted);
   font-size: 14px;
-  line-height: 22px;
+  line-height: 20px;
+  text-align: center;
 }
 
 .notice .icon {
-  color: var(--primary);
-}
-
-.page {
-  padding-bottom: 64px;
-}
-
-.hero {
-  padding-top: 40px;
-  margin-bottom: 24px;
-}
-
-h1,
-.page-title {
-  max-width: 720px;
-  font-size: 28px;
-  line-height: 36px;
-  font-weight: 700;
-}
-
-.intro {
-  max-width: 640px;
-  margin-top: 12px;
   color: var(--muted);
 }
 
+.page {
+  padding-block: 48px;
+}
+
+/* The heading area carries a faint aurora glow behind it. */
+.hero,
+.placeholder {
+  position: relative;
+  isolation: isolate;
+}
+
+.hero::before,
+.placeholder::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  top: -120px;
+  left: -10%;
+  width: 120%;
+  height: 420px;
+  border-radius: 9999px;
+  background: var(--aurora);
+  filter: blur(120px);
+  pointer-events: none;
+}
+
+.hero {
+  margin-bottom: 40px;
+}
+
+/* Huge, semibold, tightly tracked headlines over quieter grey body text. */
+h1,
+.page-title {
+  max-width: 820px;
+  font-size: 36px;
+  line-height: 40px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+
+.intro {
+  max-width: 680px;
+  margin-top: 16px;
+  color: var(--muted);
+  font-size: 19px;
+  line-height: 28px;
+}
+
+/* Glass card: a thin border and a faint fill, no drop shadow. */
 .card {
   padding: 24px;
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
-  background: var(--surface);
+  background: var(--card-bg);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   box-shadow: var(--shadow-card);
 }
 
 .section-title {
   margin-bottom: 16px;
   font-size: 28px;
-  line-height: 36px;
+  line-height: 34px;
   font-weight: 600;
+  letter-spacing: -0.022em;
 }
 
 .eyebrow {
@@ -271,23 +349,21 @@ button {
   gap: 8px;
   min-height: 44px;
   min-width: 44px;
-  padding: 8px 24px;
-  border: 1px solid var(--primary);
-  border-radius: var(--radius-control);
-  background: var(--primary);
+  padding: 8px 20px;
+  border: 1px solid var(--action);
+  border-radius: var(--radius-pill);
+  background: var(--action);
   color: var(--on-primary);
   font: inherit;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition:
-    background-color var(--hover),
-    border-color var(--hover),
-    color var(--hover);
+  transition: all var(--hover);
 }
 
 button:hover {
-  background: var(--primary-hover);
-  border-color: var(--primary-hover);
+  background: var(--action-hover);
+  border-color: var(--action-hover);
 }
 
 button.secondary {
@@ -298,7 +374,7 @@ button.secondary {
 
 button.secondary:hover {
   border-color: var(--ink);
-  background: var(--bg);
+  background: var(--fill);
 }
 
 button.text-button {
@@ -309,7 +385,7 @@ button.text-button {
 }
 
 button.text-button:hover {
-  background: var(--primary-tint);
+  background: var(--fill);
   border-color: transparent;
   text-decoration: underline;
   text-underline-offset: 4px;
@@ -322,7 +398,7 @@ button[aria-disabled="true"],
 button:disabled:hover,
 button[aria-disabled="true"]:hover {
   border: 1px dashed var(--control-border);
-  background: var(--not-built-bg);
+  background: var(--fill);
   color: var(--muted);
   cursor: not-allowed;
   text-decoration: none;
@@ -362,7 +438,7 @@ h2:focus-visible {
 .spinner {
   width: 16px;
   height: 16px;
-  border: 2px solid rgba(91, 103, 100, 0.3);
+  border: 2px solid var(--border);
   border-top-color: currentColor;
   border-radius: 50%;
   animation: spin 800ms linear infinite;
@@ -421,7 +497,7 @@ button.sample {
   gap: 8px;
   padding: 4px 8px 4px 16px;
   border-color: var(--control-border);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: var(--surface);
   color: var(--ink);
   font-size: 14px;
@@ -429,8 +505,8 @@ button.sample {
 }
 
 button.sample:hover {
-  border-color: var(--primary);
-  background: var(--primary-tint);
+  border-color: var(--ink);
+  background: var(--fill);
 }
 
 .sample-tag {
@@ -463,14 +539,6 @@ button.sample:hover {
   display: grid;
   gap: 40px;
   margin-top: 40px;
-  animation: rise 200ms ease-out;
-}
-
-@keyframes rise {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
 }
 
 .results-main {
@@ -669,9 +737,9 @@ blockquote {
   gap: 12px;
   margin: 16px 0 0;
   padding: 12px 16px;
-  border-left: 3px solid var(--primary);
+  border-left: 3px solid var(--control-border);
   border-radius: 0 var(--radius-control) var(--radius-control) 0;
-  background: var(--bg);
+  background: var(--fill);
   font-size: 15px;
   line-height: 24px;
 }
@@ -684,7 +752,7 @@ blockquote > span {
 .quote-glyph {
   flex: none;
   margin-top: 4px;
-  color: var(--primary);
+  color: var(--muted);
 }
 
 .source {
@@ -767,8 +835,8 @@ blockquote > span {
 }
 
 .trace-completed .trace-icon {
-  background: var(--primary);
-  color: var(--on-primary);
+  background: var(--ink);
+  color: var(--surface);
 }
 
 .trace-not_implemented .trace-icon {
@@ -985,7 +1053,7 @@ code {
 .limits code {
   padding: 0 4px;
   border-radius: 4px;
-  background: var(--bg);
+  background: var(--fill);
   color: var(--ink);
 }
 
@@ -995,10 +1063,10 @@ code {
   position: absolute;
   top: 8px;
   left: 8px;
-  z-index: 10;
+  z-index: 30;
   padding: 8px 16px;
-  border-radius: var(--radius-control);
-  background: var(--primary);
+  border-radius: var(--radius-pill);
+  background: var(--action);
   color: var(--on-primary);
   font-weight: 600;
   transform: translateY(-200%);
@@ -1021,7 +1089,8 @@ main:focus {
 .site-nav ul {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
+  justify-content: center;
+  gap: 0 4px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -1031,29 +1100,26 @@ main:focus {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding: 8px 12px;
+  padding: 8px 10px;
   border-radius: var(--radius-control);
   color: var(--muted);
-  font-size: 14px;
-  line-height: 22px;
-  font-weight: 500;
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 400;
   text-decoration: none;
-  transition:
-    background-color var(--hover),
-    color var(--hover);
+  transition: all var(--hover);
 }
 
 .site-nav a:hover {
-  background: var(--bg);
   color: var(--ink);
 }
 
-/* The current page: ink text, bolder weight and an underline bar, not colour alone. */
+/* The current page: ink text, bolder weight and a thin bar, not colour alone. */
 .site-nav a[aria-current="page"] {
   color: var(--ink);
   font-weight: 600;
-  box-shadow: inset 0 -3px 0 var(--primary);
-  border-radius: var(--radius-control) var(--radius-control) 0 0;
+  box-shadow: inset 0 -2px 0 var(--ink);
+  border-radius: 0;
 }
 
 .nav-toggle {
@@ -1062,31 +1128,37 @@ main:focus {
 }
 
 .site-footer {
-  margin-top: 64px;
-  border-top: 1px solid var(--border);
-  background: var(--surface);
+  border-top: 1px solid var(--header-border);
+  background: var(--bg);
 }
 
 .footer-inner {
   display: grid;
   gap: 8px;
-  padding-block: 32px;
+  padding-block: 40px;
   color: var(--muted);
   font-size: 14px;
-  line-height: 22px;
+  line-height: 20px;
 }
 
 .footer-lead {
   color: var(--ink);
   font-family: var(--font-head);
-  font-size: 20px;
-  line-height: 28px;
+  font-size: 17px;
+  line-height: 24px;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.022em;
+}
+
+/* The footer sits at the bottom of short pages. */
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
 }
 
 .page {
-  min-height: 50vh;
+  flex: 1 0 auto;
 }
 
 /* Shared components */
@@ -1110,9 +1182,9 @@ main:focus {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  padding: 12px 16px;
+  padding: 14px 18px;
   border-radius: var(--radius-control);
-  background: var(--primary-tint);
+  background: var(--fill);
   font-size: 14px;
   line-height: 22px;
   text-align: left;
@@ -1120,7 +1192,7 @@ main:focus {
 
 .callout > .icon {
   margin-top: 1px;
-  color: var(--primary);
+  color: var(--ink);
 }
 
 .callout-body {
@@ -1142,7 +1214,7 @@ main:focus {
 }
 
 .callout-neutral {
-  background: var(--bg);
+  background: var(--fill);
 }
 
 .callout-neutral > .icon {
@@ -1214,18 +1286,20 @@ main:focus {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding: 8px 24px;
-  border: 1px solid var(--primary);
-  border-radius: var(--radius-control);
-  background: var(--primary);
+  padding: 8px 20px;
+  border: 1px solid var(--action);
+  border-radius: var(--radius-pill);
+  background: var(--action);
   color: var(--on-primary);
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   text-decoration: none;
-  transition: background-color var(--hover);
+  transition: all var(--hover);
 }
 
 .button-link:hover {
-  background: var(--primary-hover);
+  border-color: var(--action-hover);
+  background: var(--action-hover);
 }
 
 .button-link.secondary {
@@ -1235,7 +1309,7 @@ main:focus {
 }
 
 .button-link.secondary:hover {
-  background: var(--bg);
+  background: var(--fill);
 }
 
 .hero-actions {
@@ -1273,8 +1347,15 @@ a {
     display: inline-flex;
   }
 
-  .site-nav {
-    flex-basis: 100%;
+  .site-header-inner {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "logo end"
+      "nav nav";
+  }
+
+  .site-nav ul {
+    justify-content: flex-start;
   }
 
   .site-nav[data-collapsed="true"] {
@@ -1292,8 +1373,7 @@ a {
   }
 
   .site-nav a[aria-current="page"] {
-    border-radius: 0 var(--radius-control) var(--radius-control) 0;
-    box-shadow: inset 3px 0 0 var(--primary);
+    box-shadow: inset 2px 0 0 var(--ink);
   }
 }
 
@@ -1314,10 +1394,6 @@ a {
 }
 
 @media (min-width: 600px) {
-  .shell {
-    max-width: calc(1120px + 48px);
-    padding-inline: 24px;
-  }
 
   .input-foot {
     grid-template-columns: minmax(0, 1fr) auto;
@@ -1334,20 +1410,26 @@ a {
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
+  .page {
+    padding-block: 96px;
+  }
+
   .hero {
-    padding-top: 64px;
-    margin-bottom: 32px;
+    margin-bottom: 56px;
   }
 
   h1,
   .page-title {
-    font-size: 44px;
-    line-height: 52px;
+    font-size: 60px;
+    line-height: 60px;
   }
+}
+
+@media (min-width: 1024px) {
 
   .input-card {
-    padding: 32px;
+    padding: 40px;
   }
 
   .results {
@@ -1357,9 +1439,10 @@ a {
     margin-top: 64px;
   }
 
+  /* Clears the sticky header. */
   .results-side {
     position: sticky;
-    top: 24px;
+    top: calc(var(--header-height) + 24px);
   }
 
   .score-card {
@@ -1383,5 +1466,62 @@ a {
     animation-duration: 0s !important;
     animation-iteration-count: 1 !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* Micro-interactions and entrances, only without a reduced-motion preference. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+  }
+
+  .hero,
+  .placeholder,
+  .input-card,
+  .limits,
+  .results {
+    animation: fade-in-up 700ms var(--ease-out) both;
+  }
+
+  .input-card {
+    animation-delay: 80ms;
+  }
+
+  .limits {
+    animation-delay: 160ms;
+  }
+
+  /* A subtle lift on anything that can be pressed. Blocked buttons stay still. */
+  button:not(:disabled):not([aria-disabled="true"]):hover,
+  .button-link:hover {
+    transform: scale(1.02);
+  }
+
+  button:not(:disabled):not([aria-disabled="true"]):active,
+  .button-link:active {
+    transform: scale(0.98);
+  }
+
+  .disclosure {
+    transition: all var(--hover);
+  }
+
+  .disclosure:not([open]):hover {
+    transform: scale(1.01);
+  }
+
+  /* Cards further down the page float up as they scroll into view, where supported. */
+  @supports (animation-timeline: view()) {
+    .finding,
+    .warning-mentions li,
+    .approval,
+    .audit-trail {
+      animation: fade-in-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 40%;
+    }
   }
 }

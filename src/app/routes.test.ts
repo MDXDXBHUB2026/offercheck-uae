@@ -191,19 +191,29 @@ describe("colour contrast (WCAG AA, from the tokens in globals.css)", () => {
     return (x + 0.05) / (y + 0.05);
   };
 
-  it.each([
+  const TEXT_PAIRS = [
     ["ink", "bg"],
+    ["ink", "surface"],
+    ["ink", "fill"],
     ["muted", "bg"],
     ["muted", "surface"],
+    ["muted", "fill"],
     ["muted", "not-built-bg"],
     ["not-built", "surface"],
+    ["primary", "bg"],
     ["primary", "surface"],
+    ["primary", "fill"],
     ["primary", "primary-tint"],
     ["ink", "primary-tint"],
+    ["on-primary", "action"],
+    ["on-primary", "action-hover"],
     ["high", "high-bg"],
+    ["high", "surface"],
     ["medium", "medium-bg"],
     ["success", "success-bg"],
-  ])("text %s on %s is at least 4.5:1", (fg, bg) => {
+  ];
+
+  it.each([...TEXT_PAIRS, ["heading", "bg"], ["heading", "surface"]])("text %s on %s is at least 4.5:1", (fg, bg) => {
     expect(ratio(fg, bg)).toBeGreaterThanOrEqual(4.5);
   });
 
@@ -211,9 +221,20 @@ describe("colour contrast (WCAG AA, from the tokens in globals.css)", () => {
     expect(ratio("control-border", "surface")).toBeGreaterThanOrEqual(3);
   });
 
-  // --not-built on --not-built-bg is 4.21:1, so text on that background uses --muted.
+  it("is one dark theme, with no light variant to fall out of date", () => {
+    expect(root).toContain("color-scheme: dark;");
+    expect(css).not.toContain("prefers-color-scheme");
+  });
+
+  // Hover lifts and entrances run only when no reduced-motion preference is set.
+  it("keeps motion behind prefers-reduced-motion: no-preference", () => {
+    const motion = css.slice(css.indexOf("@media (prefers-reduced-motion: no-preference)"));
+    expect(motion).toContain("@keyframes fade-in-up");
+    expect(css.indexOf("@keyframes fade-in-up")).toBe(css.indexOf("@media (prefers-reduced-motion: no-preference)") + motion.indexOf("@keyframes fade-in-up"));
+    expect(css.slice(0, css.indexOf("@media (prefers-reduced-motion: no-preference)"))).not.toMatch(/scale\(1\.0[12]\)/);
+  });
+
   it("text on the not-built background uses the muted colour", () => {
-    expect(ratio("not-built", "not-built-bg")).toBeLessThan(4.5);
     expect(css).toMatch(/\.chip-not-built \{[^}]*color: var\(--muted\);/);
     expect(css).toMatch(/\.trace-not_implemented \.trace-summary \{[^}]*color: var\(--muted\);/);
   });
