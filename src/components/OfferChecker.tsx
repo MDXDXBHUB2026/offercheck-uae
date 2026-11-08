@@ -15,7 +15,7 @@ import {
   type AuditEntry,
   type AuditRecord,
 } from "@/lib/audit";
-import { scoreChip } from "@/components/scoreChip";
+import { qualifiedSummary, scoreChip } from "@/components/scoreChip";
 import { offerSignals, type OfferSignal } from "@/lib/offerLikeness";
 import { languageNotice, type LanguageNotice } from "@/lib/textScript";
 import { MAX_OFFER_CHARS } from "@/lib/types";
@@ -57,6 +57,10 @@ export function resultAnnouncement(
   result: Pick<AnalyzeResponse, "risk" | "findings">,
   language: LanguageNotice | null = null,
 ): string {
+  // LANG-3: tier 2 with nothing matched reads as one qualified sentence, as in the Risk aggregator row.
+  if (language === "part" && result.findings.length === 0) {
+    return `Results ready. ${qualifiedSummary(result.risk, result.findings, language)}`;
+  }
   return `Results ready. Score ${result.risk.score} of 100: ${scoreChip(result.risk, result.findings, language).label}.`;
 }
 

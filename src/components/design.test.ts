@@ -10,6 +10,7 @@ import { HOLDOUT_2_OFFERS } from "@/lib/agents/eval/holdout2";
 import { LEGIT_OFFER, SCAM_OFFER } from "@/lib/agents/fixtures";
 import { runManager } from "@/lib/agents/manager";
 import type { Finding, Severity } from "@/lib/types";
+import { languageNotice } from "@/lib/textScript";
 import { readLimitations } from "./limitations";
 import { PUBLIC_LIMITS, PUBLIC_LIMITS_INTRO } from "./publicLimitations";
 import { OfferChecker, resultAnnouncement } from "./OfferChecker";
@@ -161,6 +162,7 @@ describe("score chip with the language notice (LANG-2)", () => {
   const A4_TEXT = "Reply within 2 hours or this offer is cancelled. Only 3 slots left.";
   const NEUTRAL = "Not checked: most of the text is not in English";
   const REVIEW = "Low, review the findings below";
+  const TICK = 'd="M6.5 10.5l2.5 2.5 4.5-5"';
   const scoreSide = (html: string) => html.slice(html.indexOf("score-card"), html.indexOf("results-main"));
   const emptyCard = (html: string) => html.match(/class="[^"]*empty-state[^"]*">(.*?)<\/div>/)?.[1] ?? "";
   const aggregatorRow = (html: string) =>
@@ -190,8 +192,9 @@ describe("score chip with the language notice (LANG-2)", () => {
       expect(empty).toContain("The 5 rules read English only, so they could not check most of this text.");
       expect(empty).toContain("This does not confirm that the offer is genuine.");
       expect(empty).not.toContain("None of the 5 rules matched.");
-      // No green tick beside a line that says the text was not checked.
-      expect(empty).not.toContain("<svg");
+      // No green tick beside a line that says the text was not checked; the neutral info icon (LANG-3).
+      expect(empty).not.toContain(TICK);
+      expect(empty).toContain('class="icon icon-info"');
     }
   });
 
@@ -199,8 +202,8 @@ describe("score chip with the language notice (LANG-2)", () => {
     const cases: [string, "most" | "part" | null][] = [
       [A4_TEXT, "most"],
       [SCAM_OFFER, "most"],
-      [LEGIT_OFFER, "part"],
-      [ARABIC_FEE, "part"],
+      [A4_TEXT, "part"],
+      [SCAM_OFFER, "part"],
       [LEGIT_OFFER, null],
       [ARABIC_FEE, null],
       [A4_TEXT, null],
@@ -228,13 +231,7 @@ describe("score chip with the language notice (LANG-2)", () => {
     for (const text of [A4_TEXT, SCAM_OFFER]) expect(render(text, "most").side).not.toContain("score-neutral");
   });
 
-  it("tier 2 keeps the current chip and empty line, plus the notice", () => {
-    const { side, html, chip } = render(LEGIT_OFFER, "part");
-    expect(chip).toBe("No risk indicators found");
-    expect(side).not.toContain("score-neutral");
-    expect(side).toContain("Part of this text is not in English.");
-    expect(emptyCard(html)).toContain("None of the 5 rules matched.");
-    expect(emptyCard(html)).toContain("<svg");
+  it("tier 2 with a finding keeps the finding chip", () => {
     expect(render(A4_TEXT, "part").chip).toBe(REVIEW);
   });
 
@@ -243,13 +240,15 @@ describe("score chip with the language notice (LANG-2)", () => {
     expect(chip).toBe("No risk indicators found");
     expect(side).not.toContain("score-neutral");
     expect(emptyCard(html)).toContain("None of the 5 rules matched.");
-    expect(emptyCard(html)).toContain("<svg");
+    expect(emptyCard(html)).toContain(TICK);
   });
 
-  it("announces the neutral wording to screen readers in tier 1 only", () => {
+  it("announces the qualified wording to screen readers with a notice", () => {
     const result = runManager(ARABIC_FEE);
     expect(resultAnnouncement(result, "most")).toBe(`Results ready. Score 0 of 100: ${NEUTRAL}.`);
-    expect(resultAnnouncement(result, "part")).toBe("Results ready. Score 0 of 100: No risk indicators found.");
+    expect(resultAnnouncement(result, "part")).toBe(
+      "Results ready. Score 0 of 100 on the English part. Part of the text was not checked.",
+    );
     expect(resultAnnouncement(result)).toBe("Results ready. Score 0 of 100: No risk indicators found.");
     expect(resultAnnouncement(runManager(A4_TEXT), "most")).toBe(`Results ready. Score 20 of 100: ${REVIEW}.`);
   });
@@ -257,6 +256,103 @@ describe("score chip with the language notice (LANG-2)", () => {
   it("styles the neutral chip with ink on fill, no green", () => {
     const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
     expect(css).toMatch(/\.score-neutral \.score-label \{\s*background: var\(--fill\);\s*color: var\(--ink\);/);
+  });
+});
+
+// LANG-3 (live retest): with the tier 2 notice and nothing matched, the page still said "No risk
+// indicators found" in the chip, the Findings card, the Risk aggregator row and the announcement.
+// Display only: the score, band, findings and server trace are unchanged.
+describe("tier 2 with no finding is qualified, not all clear (LANG-3)", () => {
+  const ARABIC_FEE = "يرجى دفع 750 درهم لتأكيد الوظيفة";
+  const A4_TEXT = "Reply within 2 hours or this offer is cancelled. Only 3 slots left.";
+  const TIER_2 = `${LEGIT_OFFER}\n${ARABIC_FEE}`;
+  const TIER_2_FINDING = `${A4_TEXT}\n${ARABIC_FEE}`;
+  const ALL_CLEAR = "No risk indicators found";
+  const PART_CHIP = "Score 0 on the English part. Part of the text was not checked.";
+  const PART_EMPTY =
+    "None of the 5 rules matched in the English part. Part of the text was not checked, and this does not confirm that the offer is genuine.";
+  const PART_SUMMARY = "Score 0 of 100 on the English part. Part of the text was not checked.";
+  const TICK = 'd="M6.5 10.5l2.5 2.5 4.5-5"';
+  const scoreSide = (html: string) => html.slice(html.indexOf("score-card"), html.indexOf("results-main"));
+  const emptyCard = (html: string) => html.match(/class="[^"]*empty-state[^"]*">(.*?)<\/div>/)?.[1] ?? "";
+  const aggregatorRow = (html: string) =>
+    html.match(/<span class="trace-agent">Risk aggregator<\/span><span class="trace-summary">([^<]*)<\/span>/)?.[1] ?? "";
+  const render = (text: string) => {
+    const result = runManager(text);
+    const tier = languageNotice(text);
+    const html = renderToStaticMarkup(createElement(ResultsPanel, { result, ruleCount: 5, languageNotice: tier }));
+    const side = scoreSide(html);
+    return { result, tier, html, side, chip: side.match(/<p class="chip score-label">([^<]*)<\/p>/)?.[1] };
+  };
+
+  it("the test texts are tier 2, one with no finding and one with a finding", () => {
+    expect([languageNotice(TIER_2), languageNotice(TIER_2_FINDING)]).toEqual(["part", "part"]);
+    expect(runManager(TIER_2).findings).toEqual([]);
+    expect(runManager(TIER_2_FINDING).risk.score).toBe(20);
+  });
+
+  it("tier 2, no finding: neutral chip with the qualified wording", () => {
+    const { side, chip } = render(TIER_2);
+    expect(chip).toBe(PART_CHIP);
+    expect(side).toContain("score-neutral");
+    expect(side).toContain("Part of this text is not in English.");
+  });
+
+  it("tier 2, no finding: the Findings card has the info icon, no tick, and the qualified line", () => {
+    const empty = emptyCard(render(TIER_2).html);
+    expect(empty).toContain(PART_EMPTY);
+    expect(empty).toContain('class="icon icon-info"');
+    expect(empty).not.toContain(TICK);
+    expect(empty).not.toContain("None of the 5 rules matched.");
+  });
+
+  it("tier 2, no finding: the Risk aggregator row and the announcement say the same", () => {
+    const { result, html } = render(TIER_2);
+    expect(aggregatorRow(html)).toBe(PART_SUMMARY);
+    expect(resultAnnouncement(result, "part")).toBe(`Results ready. ${PART_SUMMARY}`);
+    // The server's trace is unchanged.
+    expect(result.trace.find((step) => step.agent === "risk_aggregator")?.summary).toBe(`Score 0 of 100: ${ALL_CLEAR}`);
+  });
+
+  it("with any notice and no finding, the all-clear wording appears nowhere", () => {
+    for (const [text, tier] of [[TIER_2, "part"], [ARABIC_FEE, "most"]] as const) {
+      const result = runManager(text);
+      const html = renderToStaticMarkup(createElement(ResultsPanel, { result, ruleCount: 5, languageNotice: tier }));
+      expect(html).not.toContain(ALL_CLEAR);
+      expect(resultAnnouncement(result, tier)).not.toContain(ALL_CLEAR);
+    }
+  });
+
+  it("tier 2 with a finding: the finding chip and the finding, no all-clear wording", () => {
+    const { side, html, chip, result } = render(TIER_2_FINDING);
+    expect(chip).toBe("Low, review the findings below");
+    expect(side).toContain("score-caution");
+    expect(html).toContain('class="findings"');
+    expect(html).not.toContain("empty-state");
+    expect(html).not.toContain(ALL_CLEAR);
+    expect(html).not.toContain(PART_CHIP);
+    expect(resultAnnouncement(result, "part")).toBe("Results ready. Score 20 of 100: Low, review the findings below.");
+  });
+
+  it("Clean offer, fully checked: the green signals are unchanged", () => {
+    const { side, html, chip, result, tier } = render(LEGIT_OFFER);
+    expect(tier).toBeNull();
+    expect(chip).toBe(ALL_CLEAR);
+    expect(side).not.toContain("score-neutral");
+    expect(emptyCard(html)).toContain("None of the 5 rules matched.");
+    expect(emptyCard(html)).toContain(TICK);
+    expect(aggregatorRow(html)).toBe(`Score 0 of 100: ${ALL_CLEAR}`);
+    expect(resultAnnouncement(result, null)).toBe(`Results ready. Score 0 of 100: ${ALL_CLEAR}.`);
+  });
+
+  it("leaves the score, band and findings unchanged", () => {
+    const plain = runManager(TIER_2);
+    expect(render(TIER_2).result).toMatchObject({ risk: plain.risk, findings: plain.findings });
+  });
+
+  it("styles the info icon in the muted colour, not green", () => {
+    const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
+    expect(css).toMatch(/\.empty-state \.icon-info \{\s*color: var\(--muted\);/);
   });
 });
 

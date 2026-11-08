@@ -329,6 +329,13 @@ describe("colour contrast (WCAG AA, from the tokens in globals.css)", () => {
     expect(css).toMatch(/\.score-neutral \.score-label \{\s*background: var\(--fill\);\s*color: var\(--ink\);/);
   });
 
+  // LANG-3: the Findings card's info icon is muted on the card; a graphic needs at least 3:1.
+  it("info icon muted on the card is at least 3:1", () => {
+    expect(ratio("muted", "surface-top")).toBeGreaterThanOrEqual(3);
+    expect(ratio("muted", "surface")).toBeGreaterThanOrEqual(3);
+    expect(css).toMatch(/\.empty-state \.icon-info \{\s*color: var\(--muted\);/);
+  });
+
   it("control borders are at least 3:1 on the surface", () => {
     expect(ratio("control-border", "surface")).toBeGreaterThanOrEqual(3);
   });

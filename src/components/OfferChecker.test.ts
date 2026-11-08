@@ -119,6 +119,17 @@ describe("language notice (LANG-1)", () => {
     expect(renderWith(ARABIC, recordCheck(respond(ENGLISH), ENGLISH))).not.toContain(neutral);
   });
 
+  // LANG-3: the whole rendered page, draft and audit included, never says all clear in tier 2.
+  it("tier 2 with no finding: no all-clear wording anywhere on the page, qualified announcement", () => {
+    const tier2 = "Thank you for applying. We will be in touch.\nيرجى دفع 750 درهم لتأكيد الوظيفة";
+    const check = recordCheck(respond(tier2), tier2);
+    expect(check.languageNotice).toBe("part");
+    expect(check.response.findings).toEqual([]);
+    const html = renderWith(tier2, check);
+    expect(html).not.toContain("No risk indicators found");
+    expect(html).toContain("Results ready. Score 0 of 100 on the English part. Part of the text was not checked.");
+  });
+
   it("clears the result when a new check starts, then stores the flag for the submitted text", async () => {
     typed.checked = recordCheck(respond(ARABIC), ARABIC);
     typed.checkedSets = [];

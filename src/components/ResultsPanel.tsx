@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 import { AgentRun } from "@/components/AgentRun";
-import { CheckCircleIcon, QuoteGlyph } from "@/components/icons";
+import { CheckCircleIcon, InfoIcon, QuoteGlyph } from "@/components/icons";
 import { scoreArithmetic } from "@/components/scoreArithmetic";
-import { NOT_CHECKED_LABEL } from "@/components/scoreChip";
+import { qualifiedSummary } from "@/components/scoreChip";
 import { ScoreGauge } from "@/components/ScoreGauge";
 import { Callout, Card, Chip, SectionHeader } from "@/components/ui";
 import { HIGH_BAND_MIN, MEDIUM_BAND_MIN, SEVERITY_WEIGHTS } from "@/lib/scoring";
@@ -71,6 +71,8 @@ export function ResultsPanel({
   const warningMentions = findings.filter((finding) => finding.severity === "info");
   const arithmetic = scoreArithmetic(findings, risk);
   const notChecked = languageNotice === "most" && findings.length === 0;
+  const partNotChecked = languageNotice === "part" && findings.length === 0;
+  const partlyChecked = notChecked || partNotChecked;
   return (
     <div className="results">
       <div className="results-side">
@@ -118,17 +120,21 @@ export function ResultsPanel({
           <SectionHeader id="findings-heading" title="Findings" />
 
           {/* LANG-2: when most of the text is not English and nothing matched, say the rules could
-              not read it, with no tick: "none matched" would imply they ran on readable text. */}
+              not read it. LANG-3: with part of it not English, say only the English part matched
+              nothing. Either way no green tick, which would read as all clear: a neutral info icon. */}
           {riskFindings.length === 0 && (
             <Card className="empty-state">
-              {!notChecked && <CheckCircleIcon size={24} />}
+              {partlyChecked ? <InfoIcon size={24} className="icon icon-info" /> : <CheckCircleIcon size={24} />}
               <p className="no-match">
                 {notChecked
-                  ? `The ${ruleCount} rules read English only, so they could not check most of this text.`
-                  : warningMentions.length === 0
-                  ? `None of the ${ruleCount} rules matched.`
-                  : `None of the ${ruleCount} rules counted toward the score. The text mentions ${plural(warningMentions.length, "topic")} only in a warning, shown below.`}{" "}
-                This does not confirm that the offer is genuine.
+                  ? `The ${ruleCount} rules read English only, so they could not check most of this text. This does not confirm that the offer is genuine.`
+                  : partNotChecked
+                  ? `None of the ${ruleCount} rules matched in the English part. Part of the text was not checked, and this does not confirm that the offer is genuine.`
+                  : `${
+                      warningMentions.length === 0
+                        ? `None of the ${ruleCount} rules matched.`
+                        : `None of the ${ruleCount} rules counted toward the score. The text mentions ${plural(warningMentions.length, "topic")} only in a warning, shown below.`
+                    } This does not confirm that the offer is genuine.`}
               </p>
             </Card>
           )}
@@ -165,7 +171,7 @@ export function ResultsPanel({
 
         <AgentRun
           trace={result.trace}
-          aggregatorSummary={notChecked ? `Score ${risk.score} of 100. ${NOT_CHECKED_LABEL}.` : undefined}
+          aggregatorSummary={qualifiedSummary(risk, findings, languageNotice) ?? undefined}
         />
 
         {children}

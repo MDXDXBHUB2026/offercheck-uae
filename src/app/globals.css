@@ -1031,6 +1031,11 @@ blockquote > span {
   color: var(--success);
 }
 
+/* LANG-3: with a language notice and nothing matched, not all clear, so no green. */
+.empty-state .icon-info {
+  color: var(--muted);
+}
+
 /* Agent run timeline */
 
 .timeline {
