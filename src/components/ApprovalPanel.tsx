@@ -5,6 +5,14 @@ import { copyText, unfilledPlaceholders, type GateAction, type GateState } from 
 
 const NOTHING_SENT = "Nothing is sent until you approve. Offer Check never sends messages for you.";
 
+// After approval: say what happened, and that nothing was sent. When the browser blocked the
+// clipboard, the reply was not copied, so the note does not say it was.
+function approvedNote(copied: boolean): string {
+  return copied
+    ? "Reply approved and copied. Offer Check has not sent anything."
+    : "Reply approved. Offer Check has not sent anything.";
+}
+
 function listOf(items: string[]): string {
   return items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
 }
@@ -118,7 +126,7 @@ export function ApprovalPanel({ gate, dispatch }: ApprovalPanelProps) {
         {gate.status === "pending" ? "Your approval needed" : "Reply approved"}
       </h2>
       <div className="card draft-card">
-        <p className="approval-note">{NOTHING_SENT}</p>
+        <p className="approval-note">{gate.status === "approved" ? approvedNote(gate.copied) : NOTHING_SENT}</p>
 
         {gate.status === "pending" && gate.editing && (
           <>

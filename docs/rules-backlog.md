@@ -28,6 +28,25 @@ Source: one run of `src/lib/agents/eval/holdout2.ts` on 2026-11-06, with `redFla
 - **Line joins are a heuristic.** A break stays before a list row, a label row or an ask verb, and after a one-word heading. Other one-idea-per-line text is joined, so an employer-covers phrase can still clear the next line if that line starts with some other word.
 - **Bare fee wording does not fire.** `Do not forget the processing fee` and `Security deposit`.
 
+## Post-deploy manual test A3
+
+Checked again on 2026-11-08 against the local production build, with `redFlag.ts` at sha256 `789dc2b29a30940951257c677bddcb4eaf995bb8a187a19e3583ca51d1ebb76f`: score 20, band low, one finding (RF-003, quote `Send your passport copy`).
+
+- **Gap (GAP-7): a request for a photo of a bank card is missed.** Found by post-deploy manual test A3, synthetic text, not yet in any eval set. `Send your passport copy, Emirates ID and a photo of your bank card today, before any interview.` scores 20, Low, with RF-003 only. `photo of your bank card` matches no RF-002 pattern. RF-002 covers `card number` or `card details`, and a share verb followed by a password, a code, a card number or a PIN.
+- **Design question: the rules cannot see timing.** Found by post-deploy manual test A3, synthetic text, not yet in any eval set. A request made before an interview or a written offer reads the same to the rules as one made later. A single RF-003 match on its own stays below the 30-point medium threshold. This is a candidate for the Phase 8 rules cycle, with a fresh blind holdout 3.
+
+## Manual QA misses, 2026-11-08 (for the rules v2 cycle)
+
+Logged only. No rule changed: `redFlag.ts` stays sha256 `789dc2b29a30940951257c677bddcb4eaf995bb8a187a19e3583ca51d1ebb76f`. Results below are from probes run on 2026-11-08 against that file. Synthetic text.
+
+- **Design question (band design): one medium rule alone stays Low.** Each medium rule adds 20 points, and medium starts at 30, so a single medium match is always Low, whatever was asked for. A3 (GAP-7), A4 and B2 below all land there. Owner's position: a bank-details request should not read as a plain Low. The UI now shows such a result as "Low, review the findings below" (UX-1), but the band is unchanged. For Phase 8, with a fresh blind holdout 3.
+- **A3 (GAP-7): ID or passport copy requested, scored Low 20.** Already logged above under Post-deploy manual test A3. Linked to the band design question.
+- **A4: a vague request for documents with no context, scored Low.** Distinct from GAP-7, which is a missed bank-card photo. The exact A4 text is not recorded in the repo, and UX-1 records a different A4 text (urgency, `Reply within 2 hours or this offer is cancelled. Only 3 slots left.`). Two probes, `Send your documents.` and `Please share the documents.`, score 0 with no rule, because RF-003 fires only on a passport, an Emirates ID, bank details, a bank statement or an IBAN. If A4 scored 20, one medium rule fired and it belongs with the band design question. Its UI side is UX-1.
+- **B2: "send bank details, IBAN" scored Low 20.** Probe `Send your bank details, IBAN`: score 20, RF-003 only (quote `Send your bank details`); the credentials rule RF-002 did not fire. Linked to the band design question.
+- **C4: `we do not need a degree, but pass AED fee` scored 0.** A missed fee phrasing. Likely cause, from reading RF-001 (read only): "pass" is not one of its payment verbs, and "AED fee" has no amount after the currency, so neither the payment-verb nor the amount patterns can match. The "do not" sits in the clause before the comma, so negation is probably not the cause. Not confirmed by a run of each pattern. Retest with `pay AED 500 fee` after deploy.
+- **GAP-3: a negated ask verb can reach too far.** Exists: `docs/defects.md` GAP-3 and Known gaps from Step 1d above.
+- **GAP-7: a request for a photo of a bank card is missed.** Exists: `docs/defects.md` GAP-7 and Post-deploy manual test A3 above.
+
 ## QA defects deferred
 
 Numbers come from the Step 1c QA run.

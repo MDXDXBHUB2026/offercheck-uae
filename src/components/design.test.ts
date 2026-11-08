@@ -11,7 +11,7 @@ import { LEGIT_OFFER, SCAM_OFFER } from "@/lib/agents/fixtures";
 import { runManager } from "@/lib/agents/manager";
 import type { Finding, Severity } from "@/lib/types";
 import { readLimitations } from "./limitations";
-import { OfferChecker } from "./OfferChecker";
+import { OfferChecker, resultAnnouncement } from "./OfferChecker";
 import { ResultsPanel } from "./ResultsPanel";
 import { scoreArithmetic } from "./scoreArithmetic";
 import { ScoreGauge } from "./ScoreGauge";
@@ -67,6 +67,88 @@ describe("score gauge", () => {
   it("draws no value arc for a score of 0", () => {
     const risk = { score: 0, band: "low" as const, label: "No risk indicators found" };
     expect(renderToStaticMarkup(createElement(ScoreGauge, { risk }))).not.toContain("gauge-value");
+  });
+});
+
+// UX-1 (post-deploy manual test A4): a low band with a finding or a warning showed the green chip,
+// which can read as "safe". The green "No risk indicators found" chip is kept only for a score of
+// 0 with no finding and no warning. Synthetic texts.
+describe("score chip states (UX-1)", () => {
+  const A4_TEXT = "Reply within 2 hours or this offer is cancelled. Only 3 slots left.";
+  const WARNING_ONLY = "Beware of agents who charge a fee.";
+  const MEDIUM_TEXT = "Send your passport copy. Reply within 2 hours.";
+  const REVIEW = "Low, review the findings below";
+  const scoreSide = (html: string) => html.slice(html.indexOf("score-card"), html.indexOf("results-main"));
+  const chipOf = (text: string) => {
+    const result = runManager(text);
+    const side = scoreSide(renderToStaticMarkup(createElement(ResultsPanel, { result, ruleCount: 5 })));
+    return { result, side, chip: side.match(/<p class="chip score-label">([^<]*)<\/p>/)?.[1] };
+  };
+
+  it("A4 scores 20, low, with RF-004 only", () => {
+    const result = runManager(A4_TEXT);
+    expect(result.risk).toMatchObject({ score: 20, band: "low" });
+    expect(result.findings.filter((f) => f.severity !== "info").map((f) => f.source)).toEqual(["RF-004"]);
+  });
+
+  it("score 0, no finding, no warning: the green 'No risk indicators found' chip", () => {
+    const { result, side, chip } = chipOf(LEGIT_OFFER);
+    expect(result.risk.score).toBe(0);
+    expect(result.findings).toEqual([]);
+    expect(chip).toBe("No risk indicators found");
+    expect(side).not.toContain("score-caution");
+  });
+
+  it("low with a finding: the amber chip, never 'No risk indicators found'", () => {
+    const { result, side, chip } = chipOf(A4_TEXT);
+    expect(result.risk.band).toBe("low");
+    expect(chip).toBe(REVIEW);
+    expect(side).toContain("score-caution");
+    expect(side).not.toContain("No risk indicators found");
+    expect(side).not.toContain("Low risk indicators");
+  });
+
+  it("low with a warning only (score 0): the amber chip, never 'No risk indicators found'", () => {
+    const { result, side, chip } = chipOf(WARNING_ONLY);
+    expect(result.risk.score).toBe(0);
+    expect(result.findings.length).toBeGreaterThan(0);
+    expect(result.findings.every((f) => f.severity === "info" && f.source.endsWith("-W"))).toBe(true);
+    expect(chip).toBe(REVIEW);
+    expect(side).toContain("score-caution");
+    expect(side).not.toContain("No risk indicators found");
+  });
+
+  it("medium: the medium chip, unchanged", () => {
+    const { result, side, chip } = chipOf(MEDIUM_TEXT);
+    expect(result.risk.band).toBe("medium");
+    expect(chip).toBe("Medium risk indicators");
+    expect(side).not.toContain("score-caution");
+  });
+
+  it("high: the high chip, unchanged", () => {
+    const { result, side, chip } = chipOf(SCAM_OFFER);
+    expect(result.risk.band).toBe("high");
+    expect(chip).toBe("High risk indicators");
+    expect(side).not.toContain("score-caution");
+  });
+
+  it("keeps 'risk indicators, not a verdict' on the score card in every state", () => {
+    for (const text of [LEGIT_OFFER, A4_TEXT, WARNING_ONLY, MEDIUM_TEXT, SCAM_OFFER]) {
+      expect(chipOf(text).side).toContain("risk indicators, not a verdict");
+    }
+  });
+
+  it("announces the same wording as the chip to screen readers", () => {
+    for (const text of [LEGIT_OFFER, A4_TEXT, WARNING_ONLY, MEDIUM_TEXT, SCAM_OFFER]) {
+      const { result, chip } = chipOf(text);
+      expect(resultAnnouncement(result)).toBe(`Results ready. Score ${result.risk.score} of 100: ${chip}.`);
+    }
+  });
+
+  it("styles the caution chip and arc with the amber tokens", () => {
+    const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
+    expect(css).toMatch(/\.score-caution \.score-label \{\s*background: var\(--medium-bg\);\s*color: var\(--medium\);/);
+    expect(css).toMatch(/\.score-caution \.gauge-value \{\s*stroke: var\(--medium\);/);
   });
 });
 

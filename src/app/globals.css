@@ -864,6 +864,16 @@ button.sample:hover {
   color: var(--high);
 }
 
+/* UX-1: a low score with at least one matched rule is not "all clear", so no green. */
+.score-caution .score-label {
+  background: var(--medium-bg);
+  color: var(--medium);
+}
+
+.score-caution .gauge-value {
+  stroke: var(--medium);
+}
+
 .score-facts {
   margin: 24px 0 0;
   text-align: left;
@@ -1329,6 +1339,20 @@ main:focus {
 
 .site-nav a:hover {
   color: var(--ink);
+}
+
+/* A page not built yet. The link's accessible name says "coming soon", so the badge is hidden from
+   screen readers. Muted on fill is 4.5:1 or more (contrast test). */
+.nav-soon {
+  order: 1;
+  margin-left: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--fill);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 600;
 }
 
 /* The current page: ink text, bolder weight and a thin bar, not colour alone. */

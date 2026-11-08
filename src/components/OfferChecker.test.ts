@@ -5,20 +5,28 @@ import { draftReply } from "@/lib/agents/drafter";
 import { SCAM_OFFER } from "@/lib/agents/fixtures";
 import { runManager } from "@/lib/agents/manager";
 import { ApprovalPanel } from "./ApprovalPanel";
-import { checkBlockedReason, OfferChecker } from "./OfferChecker";
+import type { AnalyzeResponse } from "@/lib/audit";
+import { checkBlockedReason, OfferChecker, recordCheck } from "./OfferChecker";
 import { ResultsPanel } from "./ResultsPanel";
 import { ScoreGauge } from "./ScoreGauge";
 
 // The text the stubbed useState("") hands back, so a test can call the form's submit handler as if
 // the user had typed it. Every other hook keeps its real initial value and ignores updates.
-const typed = vi.hoisted(() => ({ text: "", stubbed: false }));
+// The checked result is a state of its own, made with the `noCheck` initializer: the stub hands back
+// typed.checked for it and records every value set, so a test can see what a check stored.
+const typed = vi.hoisted(() => ({ text: "", stubbed: false, checked: null as unknown, checkedSets: [] as unknown[] }));
 
 vi.mock("react", async (importOriginal) => {
   const real = await importOriginal<typeof import("react")>();
   return {
     ...real,
-    useState: <T,>(initial: T) =>
-      typed.stubbed ? [initial === "" ? typed.text : initial, () => {}] : real.useState(initial),
+    useState: <T,>(initial: T) => {
+      if (!typed.stubbed) return real.useState(initial);
+      if (typeof initial === "function" && initial.name === "noCheck") {
+        return [typed.checked, (value: unknown) => typed.checkedSets.push(value)];
+      }
+      return [initial === "" ? typed.text : initial, () => {}];
+    },
     useReducer: (reducer: unknown, initial: unknown) =>
       typed.stubbed ? [initial, () => {}] : (real.useReducer as (r: unknown, i: unknown) => unknown)(reducer, initial),
     useRef: <T,>(initial: T) => (typed.stubbed ? { current: initial } : real.useRef(initial)),
@@ -62,6 +70,82 @@ async function submitWith(text: string) {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  typed.checked = null;
+  typed.checkedSets = [];
+});
+
+// LANG-1: the language notice belongs to the checked result, never to the live text box.
+describe("language notice (LANG-1)", () => {
+  const ARABIC = "رسوم التأشيرة 750 درهم يجب دفعها اليوم";
+  const ENGLISH = "Pay the visa fee of AED 500 today.";
+  const MOST = "Most of this text is not in English.";
+  const PART = "Part of this text is not in English.";
+  const respond = (text: string): AnalyzeResponse => ({ ...runManager(text), runId: "run-1", audit: [] });
+  const scoreSide = (html: string) => html.slice(html.indexOf("score-card"), html.indexOf("results-main"));
+
+  function renderWith(liveText: string, checked: unknown) {
+    typed.text = liveText;
+    typed.checked = checked;
+    typed.stubbed = true;
+    try {
+      return renderToStaticMarkup(createElement(OfferChecker, { ruleCount: 5 }));
+    } finally {
+      typed.stubbed = false;
+    }
+  }
+
+  it("sets the flag from the text that was checked", () => {
+    expect(recordCheck(respond(ARABIC), ARABIC).languageNotice).toBe("most");
+    expect(recordCheck(respond(ENGLISH), ENGLISH).languageNotice).toBeNull();
+  });
+
+  it("does not change when the text is edited after a check", () => {
+    const arabicCheck = recordCheck(respond(ARABIC), ARABIC);
+    const englishCheck = recordCheck(respond(ENGLISH), ENGLISH);
+    expect(renderWith(ARABIC, arabicCheck)).toContain(MOST);
+    expect(renderWith(ENGLISH, arabicCheck)).toContain(MOST);
+    expect(renderWith("", arabicCheck)).toContain(MOST);
+    expect(renderWith(ENGLISH, englishCheck)).not.toContain("not in English");
+    expect(renderWith(ARABIC, englishCheck)).not.toContain("not in English");
+  });
+
+  it("clears the result when a new check starts, then stores the flag for the submitted text", async () => {
+    typed.checked = recordCheck(respond(ARABIC), ARABIC);
+    typed.checkedSets = [];
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify(respond(ENGLISH)), { status: 200 })));
+    typed.text = ENGLISH;
+    typed.stubbed = true;
+    let form: ReturnType<typeof findForm>;
+    try {
+      form = findForm(OfferChecker({ ruleCount: 5 }));
+    } finally {
+      typed.stubbed = false;
+    }
+    void form?.props.onSubmit?.({ preventDefault: () => {} });
+    await vi.waitFor(() => expect(typed.checkedSets).toHaveLength(2));
+    expect(typed.checkedSets[0]).toBeNull();
+    expect(typed.checkedSets.at(-1)).toMatchObject({ languageNotice: null, response: { runId: "run-1" } });
+  });
+
+  it.each([
+    ["most", MOST],
+    ["part", PART],
+  ] as const)("shows the %s notice in the score card in every band, with no offer text", (tier, wording) => {
+    for (const text of ["Hello", "Reply within 2 hours.", "Send your passport copy. Reply within 2 hours.", SCAM_OFFER]) {
+      const result = runManager(text);
+      const html = renderToStaticMarkup(createElement(ResultsPanel, { result, ruleCount: 5, languageNotice: tier }));
+      const side = scoreSide(html);
+      expect(side).toContain(wording);
+      expect(side).not.toContain(text);
+      const again = runManager(text);
+      expect({ risk: result.risk, findings: result.findings }).toEqual({ risk: again.risk, findings: again.findings });
+    }
+  });
+
+  it("shows no notice without a flag", () => {
+    const html = renderToStaticMarkup(createElement(ResultsPanel, { result: runManager(ENGLISH), ruleCount: 5 }));
+    expect(html).not.toContain("not in English");
+  });
 });
 
 describe("Check offer button (S4-1)", () => {

@@ -6,13 +6,17 @@ import { InfoIcon } from "@/components/icons";
 export const PROTOTYPE_NOTICE =
   "Prototype. Use synthetic or redacted offers only. The app does not store offer text.";
 
-export const NAV_ITEMS = [
+// soon: the page is still a placeholder (docs/product-roadmap-v2.md, Phases 2, 3 and 6), so the
+// link shows a "Soon" badge. Delete the flag when the page ships; a test fails if they disagree.
+export type NavItem = { href: string; label: string; soon?: true };
+
+export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/check", label: "Check" },
-  { href: "/how-it-works", label: "How it works" },
-  { href: "/lab", label: "Test Lab" },
-  { href: "/guide", label: "Guide" },
-  { href: "/about", label: "About and limits" },
-] as const;
+  { href: "/how-it-works", label: "How it works", soon: true },
+  { href: "/lab", label: "Test Lab", soon: true },
+  { href: "/guide", label: "Guide", soon: true },
+  { href: "/about", label: "About and limits", soon: true },
+];
 
 // The mark: a rounded square with a check, from two basic shapes.
 export function Mark() {

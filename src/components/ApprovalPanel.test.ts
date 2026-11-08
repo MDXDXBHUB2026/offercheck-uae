@@ -104,6 +104,22 @@ describe("ApprovalPanel", () => {
     expect(html).toContain(DRAFT_LINE);
   });
 
+  // After approval the pre-approval note no longer fits: say it was approved, and that nothing was sent.
+  it.each<[string, GateState, string]>([
+    ["copied", APPROVED, "Reply approved and copied. Offer Check has not sent anything."],
+    ["clipboard blocked", DENIED, "Reply approved. Offer Check has not sent anything."],
+  ])("after approval (%s), says it was approved and that nothing was sent", (_name, gate, wording) => {
+    const html = render(gate);
+    expect(html).toContain(wording);
+    expect(html).not.toContain("Nothing is sent until you approve");
+  });
+
+  it("keeps the pre-approval note before approval", () => {
+    expect(render(null)).toContain(NOTE);
+    expect(render(PENDING)).toContain(NOTE);
+    expect(render({ ...PENDING, editing: true })).toContain(NOTE);
+  });
+
   it("does not offer approval again once approved", () => {
     expect(render(APPROVED)).not.toContain("Approve and copy reply");
   });

@@ -21,7 +21,7 @@ export function HeroPreview({ sampleText }: { sampleText: string }) {
           <span />
         </div>
         <div className="screen-body">
-          <ScoreGauge risk={result.risk} />
+          <ScoreGauge risk={result.risk} findings={result.findings} />
           <ul className="screen-findings">
             {counted.map((finding) => (
               <li key={finding.source}>

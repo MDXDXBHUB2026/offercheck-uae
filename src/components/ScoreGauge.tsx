@@ -1,13 +1,17 @@
 import type { CSSProperties } from "react";
-import type { RiskScore } from "@/lib/types";
+import { scoreChip } from "@/components/scoreChip";
+import type { Finding, RiskScore } from "@/lib/types";
 
 // A semicircle filled to the score out of 100. It is decorative: the number and the band label
 // carry the same information as text, so nothing depends on colour or on the drawing. The arc
 // grows from 0 to the score once, over 600ms (0s with prefers-reduced-motion).
-export function ScoreGauge({ risk }: { risk: RiskScore }) {
+// A low band with a finding or a warning is not "all clear" (UX-1): its chip and arc use the amber
+// caution style. See scoreChip for the states.
+export function ScoreGauge({ risk, findings = [] }: { risk: RiskScore; findings?: Finding[] }) {
   const arc = "M 16 96 A 80 80 0 0 1 176 96";
+  const { label, caution } = scoreChip(risk, findings);
   return (
-    <div className={`score score-${risk.band}`}>
+    <div className={`score score-${risk.band}${caution ? " score-caution" : ""}`}>
       <div className="gauge-wrap">
         <svg className="gauge" viewBox="0 0 192 104" aria-hidden="true" focusable="false">
           <path className="gauge-track" d={arc} pathLength={100} />
@@ -25,7 +29,7 @@ export function ScoreGauge({ risk }: { risk: RiskScore }) {
           <span className="score-max">/ 100</span>
         </p>
       </div>
-      <p className="chip score-label">{risk.label}</p>
+      <p className="chip score-label">{label}</p>
     </div>
   );
 }

@@ -1,10 +1,10 @@
 # Test report
 
-As of 2026-11-08, updated after `d31f511` (Step 5 hero, background video and glass theme; pushed to `main`). Every number gives its source. No test here ran against a live URL; the Vercel deployment of `d31f511` was not verified.
+As of 2026-11-08, updated for the QA fix batch commit (see git log): UX-1, LANG-1, nav "Soon" badge, approval wording, on top of `7d861ee`. Every number gives its source. No automated test here ran against a live URL. The live site was checked by hand; see "Manual post-deploy QA (live site)" below.
 
 ## Unit and component tests per suite
 
-Source: `npx vitest run --reporter=json` on Windows 11, Node 24.19.0. Total: **779 tests in 21 files, 779 passed, 0 failed, 0 skipped**. (Step 3: 588 in 18 files. Step 4: 680 in 19 files. Phase 1: 755 in 21 files.)
+Source: `npx vitest run --reporter=json` on Windows 11, Node 24.19.0. Total: **832 tests in 22 files, 832 passed, 0 failed, 0 skipped**. (Step 3: 588 in 18 files. Step 4: 680 in 19 files. Phase 1: 755 in 21 files. After `d31f511`: 779 in 21 files.)
 
 | Suite | Tests | Passed | What it covers | What it does not cover |
 |---|---|---|---|---|
@@ -14,11 +14,12 @@ Source: `npx vitest run --reporter=json` on Windows 11, Node 24.19.0. Total: **7
 | `src/lib/approvalGate.test.ts` | 38 | 38 | Gate states, placeholder refusal, labels, events hold no draft, clipboard | The React wiring in `OfferChecker.tsx` |
 | `src/lib/agents/intake.test.ts` | 32 | 32 | Hidden characters removed, line joins, line endings | Look-alike letters and the hidden characters listed in QA-6 |
 | `src/lib/agents/drafter.test.ts` | 29 | 29 | The five draft cases, block order, no offer text in drafts, template wording with names filled | Tone or quality of the wording as read by a person |
-| `src/components/design.test.ts` | 89 | 89 | Arithmetic line agrees with the score on every fixture; gauge is decorative; only measured times; limitations text; sample buttons and their labelled group | Visual layout and real screen-reader output |
-| `src/app/page.test.ts` | 47 | 47 | The prototype notice in the site-wide strip and footer; `/` is the Check workspace; no console, logger, file write or browser storage in any source file (more files since Phase 1) | Logging added by the host or a proxy |
-| `src/app/routes.test.ts` | 67 | 67 | Every route has a title, description and one h1 and adds no landmark of its own; placeholders say "Not built yet" with no numbers; nav covers every route; layout has skip link and one main; header `aria-current`, no menu button without script, menu button `aria-expanded`/`aria-controls` with script; footer wording; error pages never show the error message or digest; not-found; loading; check-request failures never echo a server string; shared UI components; WCAG AA contrast of the token pairs in `globals.css`, including the glass sheen (`--surface-top`) and hero text over the video's 0.12 brightness limit; one dark theme; motion only without a reduced-motion preference; header action link; hero screen equals `runManager` on the synthetic fee-scam sample; backdrop video `aria-hidden`, muted, looping, no `autoplay` attribute, no button, no MP4 audio track, files under 1 MB | Real focus movement and the Escape key (checked by hand in Chrome, see the build log); contrast of colours not set by a token; the video's real brightness (the test pins the 0.12 limit as a constant; the decoded maxima were measured by a manual script, see `docs/build-log/2026-11-08.md`); playback in a browser |
-| `src/components/OfferChecker.test.ts` | 11 | 11 | Check offer is `aria-disabled` with a reason (S4-1); an empty or blank submit does not fetch, a filled one fetches once; character counter; results order; stub timeline; gauge `--score`; placeholder marks; approve reason under the actions | A real browser click and network failure (checked by hand) |
-| `src/components/ApprovalPanel.test.ts` | 20 | 20 | Markup per gate state, `aria-disabled`, reason live region, focusable buttons | Real focus movement and screen-reader output (no DOM in tests) |
+| `src/components/design.test.ts` | 98 | 98 | Arithmetic line agrees with the score on every fixture; gauge is decorative; only measured times; limitations text; sample buttons and their labelled group; score chip per state (UX-1: clean 0, low with a finding, low with a warning only, medium, high), the announcement uses the chip's wording, amber caution CSS | Visual layout and real screen-reader output |
+| `src/app/page.test.ts` | 49 | 49 | The prototype notice in the site-wide strip and footer; `/` is the Check workspace; no console, logger, file write or browser storage in any source file (one test per file, so new files add tests) | Logging added by the host or a proxy |
+| `src/app/routes.test.ts` | 70 | 70 | Every route has a title, description and one h1 and adds no landmark of its own; placeholders say "Not built yet" with no numbers; nav covers every route; layout has skip link and one main; header `aria-current`, no menu button without script, menu button `aria-expanded`/`aria-controls` with script; footer wording; error pages never show the error message or digest; not-found; loading; check-request failures never echo a server string; shared UI components; WCAG AA contrast of the token pairs in `globals.css`, including the glass sheen (`--surface-top`) and hero text over the video's 0.12 brightness limit; one dark theme; motion only without a reduced-motion preference; header action link; nav "Soon" badge and `<label>, coming soon` name exactly on the placeholder pages, and its muted-on-fill contrast; UX-1 caution chip contrast; hero screen equals `runManager` on the synthetic fee-scam sample; backdrop video `aria-hidden`, muted, looping, no `autoplay` attribute, no button, no MP4 audio track, files under 1 MB | Real focus movement and the Escape key (checked by hand in Chrome, see the build log); contrast of colours not set by a token; the video's real brightness (the test pins the 0.12 limit as a constant; the decoded maxima were measured by a manual script, see `docs/build-log/2026-11-08.md`); playback in a browser |
+| `src/components/OfferChecker.test.ts` | 17 | 17 | Check offer is `aria-disabled` with a reason (S4-1); an empty or blank submit does not fetch, a filled one fetches once; character counter; results order; stub timeline; gauge `--score`; placeholder marks; approve reason under the actions; LANG-1 notice belongs to the checked result (set from the submitted text, cleared when a new check starts, unchanged by later edits), shown in the score card in every band with no offer text | A real browser click and network failure (checked by hand) |
+| `src/components/ApprovalPanel.test.ts` | 23 | 23 | Markup per gate state, `aria-disabled`, reason live region, focusable buttons; pre-approval note kept, post-approval note for copied and clipboard-blocked | Real focus movement and screen-reader output (no DOM in tests) |
+| `src/lib/textScript.test.ts` | 30 | 30 | LANG-1 helper: tier boundaries at 49/50/51% and 9/10 letters, calibration sentences (letters recounted in code), English, empty, digits/emoji/punctuation only, injection-style text, other scripts, fixed wordings, not imported by rules, scoring or server; on the 77 eval cases tier 1 fires on S12 only and tier 2 on none | Real mixed-language offers; Latin-script non-English text; look-alike letters |
 | `src/app/api/analyze/route.test.ts` | 16 | 16 | 20,000-character limit, body cap, streamed and chunked bodies, false Content-Length, 20,000 control characters, no echo | A real socket. That was checked by hand once; see REV-L2 in `docs/defects.md`. Rate limiting does not exist (REV-O1) |
 | `src/lib/scoring.test.ts` | 14 | 14 | Weights, bands, score floor | Whether the weights are right for real offers |
 | `src/lib/agents/manager.test.ts` | 13 | 13 | Step order, stub statuses, durations | Real agents for verification and official-channel, which are not built |
@@ -39,9 +40,25 @@ Source: `npx vitest run --reporter=json` on Windows 11, Node 24.19.0. Total: **7
 - `redFlag.ts` sha256 `789dc2b29a30940951257c677bddcb4eaf995bb8a187a19e3583ca51d1ebb76f`, unchanged; `redFlag.ts` and `scoring.ts` have no diff against `7334612`.
 
 **Not covered by any suite:**
-- End-to-end browser journeys. Playwright is not set up, and there is no deployed URL.
+- End-to-end browser journeys. Playwright is not set up. The live site was checked by hand only (below).
 - Response time (plan acceptance criterion 1).
 - Real users and real offers.
+
+## Manual post-deploy QA (live site)
+
+Source: the owner's manual run on the live site (https://offercheck-uae.vercel.app/), reported on 2026-11-08. Not automated and not re-run here. "Owner-verified" means the owner checked it and no tool output is stored in the repo.
+
+- Sections A to F were run.
+- A to D: the misses found are logged in `docs/rules-backlog.md` › Manual QA misses, 2026-11-08, and in `docs/defects.md` (UX-1, LANG-1, GAP-7).
+- E1 to E9: pass (owner-verified).
+- F1 404 page: pass.
+- F2 keyboard: pass (owner-verified).
+- F3 reduced motion: pass (owner-verified). S5-1 (no pause control on the background video) is still open.
+- F4 390 px: pass on a phone (owner-verified), plus a measured Check-screen layout with no overflow.
+- F5 PageSpeed Insights, Mobile: Performance 97, Accessibility 100, Best Practices 100, SEO 100.
+- Four nav pages (How it works, Test Lab, Guide, About and limits) are placeholders by the roadmap. They now carry a "Soon" badge.
+
+These results are for the deployed build. The QA fix batch above is not deployed.
 
 ## Dev eval (tuned, not blind)
 

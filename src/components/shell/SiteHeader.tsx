@@ -60,8 +60,15 @@ export function SiteHeader() {
                 <Link
                   href={item.href}
                   aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
+                  aria-label={item.soon ? `${item.label}, coming soon` : undefined}
                   onClick={() => setOpen(false)}
                 >
+                  {/* First in the markup so the label ends the link; CSS shows it after the label. */}
+                  {item.soon && (
+                    <span className="nav-soon" aria-hidden="true">
+                      Soon
+                    </span>
+                  )}
                   {item.label}
                 </Link>
               </li>

@@ -5,6 +5,7 @@ import { scoreArithmetic } from "@/components/scoreArithmetic";
 import { ScoreGauge } from "@/components/ScoreGauge";
 import { Callout, Card, Chip, SectionHeader } from "@/components/ui";
 import { HIGH_BAND_MIN, MEDIUM_BAND_MIN, SEVERITY_WEIGHTS } from "@/lib/scoring";
+import { LANGUAGE_NOTICES, type LanguageNotice } from "@/lib/textScript";
 import type { AnalysisResult } from "@/lib/types";
 
 export const CHECK_LABELS: Record<string, string> = {
@@ -51,10 +52,13 @@ function Quotes({ quotes }: { quotes: string[] }) {
 export function ResultsPanel({
   result,
   ruleCount,
+  languageNotice = null,
   children,
 }: {
   result: AnalysisResult;
   ruleCount: number;
+  // LANG-1: set from the text that was checked, never from the live text box. Fixed wording only.
+  languageNotice?: LanguageNotice | null;
   children?: ReactNode;
 }) {
   const { risk, findings } = result;
@@ -68,7 +72,12 @@ export function ResultsPanel({
           <h2 id="results-heading" className="eyebrow">
             Risk indicators
           </h2>
-          <ScoreGauge risk={risk} />
+          <ScoreGauge risk={risk} findings={findings} />
+          {languageNotice && (
+            <Callout tone="neutral" role="note" className="language-notice">
+              <p>{LANGUAGE_NOTICES[languageNotice]}</p>
+            </Callout>
+          )}
           <dl className="score-facts">
             {arithmetic && (
               <div>

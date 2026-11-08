@@ -15,6 +15,8 @@ import {
   type AuditEntry,
   type AuditRecord,
 } from "@/lib/audit";
+import { scoreChip } from "@/components/scoreChip";
+import { languageNotice, type LanguageNotice } from "@/lib/textScript";
 import { MAX_OFFER_CHARS } from "@/lib/types";
 
 // A synthetic sample offer the user can load into the box with one button.
@@ -31,10 +33,29 @@ export function checkBlockedReason(text: string, hasSamples: boolean): string {
     : "Paste an offer, then check it.";
 }
 
+// LANG-1: a check's response together with the language notice for the text that was checked.
+// The flag is set once, at check time, and never follows the live text box.
+export type CheckedResult = { response: AnalyzeResponse; languageNotice: LanguageNotice | null };
+
+export function recordCheck(response: AnalyzeResponse, submittedText: string): CheckedResult {
+  return { response, languageNotice: languageNotice(submittedText) };
+}
+
+// The initial checked result: none.
+export function noCheck(): CheckedResult | null {
+  return null;
+}
+
+// The screen-reader announcement uses the chip's wording, so the two never disagree (UX-1).
+export function resultAnnouncement(result: Pick<AnalyzeResponse, "risk" | "findings">): string {
+  return `Results ready. Score ${result.risk.score} of 100: ${scoreChip(result.risk, result.findings).label}.`;
+}
+
 // ruleCount and samples come from the server page, so the rules themselves never ship to the browser.
 export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; samples?: Sample[] }) {
   const [text, setText] = useState("");
-  const [result, setResult] = useState<AnalyzeResponse | null>(null);
+  const [checked, setChecked] = useState<CheckedResult | null>(noCheck);
+  const result = checked?.response ?? null;
   const [failure, setFailure] = useState<CheckFailure | null>(null);
   const [loading, setLoading] = useState(false);
   const [gateFlow, dispatchGate] = useReducer(gateReducer, INITIAL_GATE_FLOW);
@@ -85,9 +106,11 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
   async function runCheck() {
     // The button is aria-disabled, not disabled, so a click or a retry can still arrive here.
     if (loading || reason) return;
+    // The text as sent: the language notice is decided from this, not from later edits.
+    const submitted = text;
     setLoading(true);
     setFailure(null);
-    setResult(null);
+    setChecked(null);
     dispatchGate({ type: "reset" });
     flowRef.current = INITIAL_GATE_FLOW;
     startAudit(null, []);
@@ -97,7 +120,7 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
         response = await fetch("/api/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text }),
+          body: JSON.stringify({ text: submitted }),
         });
       } catch {
         setFailure(networkFailure(typeof navigator === "undefined" || navigator.onLine !== false));
@@ -110,7 +133,7 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
         data = null;
       }
       if (response.ok && isAnalyzeResponse(data)) {
-        setResult(data);
+        setChecked(recordCheck(data, submitted));
         startAudit(data.runId, data.audit);
       } else {
         setFailure(responseFailure(response.ok ? 200 : response.status, data));
@@ -128,7 +151,7 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
   const announcement = loading
     ? "Checking the offer."
     : result
-      ? `Results ready. Score ${result.risk.score} of 100: ${result.risk.label}.`
+      ? resultAnnouncement(result)
       : "";
 
   return (
@@ -192,7 +215,7 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
         </Callout>
       )}
       {result && (
-        <ResultsPanel result={result} ruleCount={ruleCount}>
+        <ResultsPanel result={result} ruleCount={ruleCount} languageNotice={checked?.languageNotice ?? null}>
           <ApprovalPanel gate={gateFlow.gate} dispatch={dispatchWithAudit} />
           <AuditTrail entries={auditLog} failed={auditFailed} />
         </ResultsPanel>

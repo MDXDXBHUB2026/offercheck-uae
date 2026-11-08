@@ -82,7 +82,31 @@ describe("site header", () => {
     expect(html).toContain('<nav id="site-nav" aria-label="Main" class="site-nav">');
     for (const item of NAV_ITEMS) expect(html).toContain(`>${item.label}</a>`);
     expect(html.match(/aria-current="page"/g)).toHaveLength(1);
-    expect(html).toMatch(/<a aria-current="page" href="\/lab">Test Lab<\/a>/);
+    expect(html).toMatch(/<a aria-current="page" [^>]*href="\/lab"[^>]*>.*?Test Lab<\/a>/);
+  });
+
+  // Each nav item whose page is still a placeholder carries a "Soon" badge. Removing the `soon`
+  // flag when its phase ships removes the badge; this test fails if the flag and the page disagree.
+  it("marks each placeholder page with a Soon badge and the name '<label>, coming soon'", () => {
+    nav.pathname = "/check";
+    nav.scripted = false;
+    const header = renderToStaticMarkup(createElement(SiteHeader));
+    const html = header.slice(header.indexOf("<nav"), header.indexOf("</nav>"));
+    const soonHrefs = NAV_ITEMS.filter((item) => item.soon).map((item) => item.href);
+    expect([...soonHrefs].sort()).toEqual(["/about", "/guide", "/how-it-works", "/lab"]);
+    for (const item of NAV_ITEMS) {
+      const page = readFileSync(join(process.cwd(), "src/app", item.href, "page.tsx"), "utf8");
+      expect(page.includes("<Placeholder")).toBe(Boolean(item.soon));
+      const link = html.match(new RegExp(`<a [^>]*href="${item.href}"[^>]*>.*?</a>`))?.[0] ?? "";
+      expect(link).toContain(`>${item.label}</a>`);
+      if (item.soon) {
+        expect(link).toContain(`aria-label="${item.label}, coming soon"`);
+        expect(link).toContain('<span class="nav-soon" aria-hidden="true">Soon</span>');
+      } else {
+        expect(link).not.toContain("aria-label");
+        expect(link).not.toContain("nav-soon");
+      }
+    }
   });
 
   it("without its script, shows every link and no menu button", () => {
@@ -286,6 +310,17 @@ describe("colour contrast (WCAG AA, from the tokens in globals.css)", () => {
     expect((luminance(token(fg)) + 0.05) / (VIDEO_MAX_LUMINANCE + 0.05)).toBeGreaterThanOrEqual(4.5);
     expect(css).toMatch(/\.hero \.intro \{[^}]*color: var\(--ink\);/);
     expect(css).toMatch(/\.hero-caption \{\s*color: var\(--ink\);/);
+  });
+
+  it("nav Soon badge text muted on fill is at least 4.5:1", () => {
+    expect(ratio("muted", "fill")).toBeGreaterThanOrEqual(4.5);
+    expect(css).toMatch(/\.nav-soon \{[^}]*background: var\(--fill\);[^}]*color: var\(--muted\);/);
+  });
+
+  // UX-1: a low score with a finding or a warning shows the caution chip in the amber pair.
+  it("caution chip text medium on medium-bg is at least 4.5:1", () => {
+    expect(ratio("medium", "medium-bg")).toBeGreaterThanOrEqual(4.5);
+    expect(css).toMatch(/\.score-caution \.score-label \{\s*background: var\(--medium-bg\);\s*color: var\(--medium\);/);
   });
 
   it("control borders are at least 3:1 on the surface", () => {
