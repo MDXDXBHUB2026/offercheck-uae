@@ -74,7 +74,7 @@ One dark theme (`color-scheme: dark`); there is no light variant.
 | medium #FBBF24 | medium-bg #2A1A05 | 10.08 |
 | success #34D399 | success-bg #062419 | 8.57 |
 
-Non-text (needs 3:1): control border #64748B on surface 4.06. Text over glass cards is checked against `--surface` and against its lightest point `--surface-top` (ink 11.4, muted 6.8, primary 6.9, high 6.1); the aurora behind it is 10% opacity and does not change the result measurably.
+Non-text (needs 3:1): control border #64748B on surface 4.06. Text over glass cards is checked against `--surface` and against its lightest point `--surface-top` (ink 14.19, muted 6.82, primary 6.88, high 6.33); the aurora behind it is 10% opacity and does not change the result measurably.
 
 ## Layout
 
