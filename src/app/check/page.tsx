@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { HeroBackdrop } from "@/components/HeroBackdrop";
 import { HeroPreview } from "@/components/HeroPreview";
-import { readLimitations } from "@/components/limitations";
 import { LimitationsPanel } from "@/components/LimitationsPanel";
 import { OfferChecker, type Sample } from "@/components/OfferChecker";
 import { EVAL_OFFERS } from "@/lib/agents/eval/offers";
@@ -20,10 +19,9 @@ const SAMPLES: Sample[] = [
   { label: "Injection attempt", text: EVAL_OFFERS.find((offer) => offer.id === "A01")?.text ?? "" },
 ].filter((sample) => sample.text.length > 0);
 
-// A server component: RULES and the limitations file are read here, so the rule patterns stay out
-// of the client bundle. The layout supplies <main>.
+// A server component: RULES is read here, so the rule patterns stay out of the client bundle. The
+// limitations panel shows fixed public copy (COPY-1). The layout supplies <main>.
 export default function CheckPage() {
-  const limits = readLimitations();
   return (
     <>
       <section className="hero" aria-labelledby="page-title">
@@ -44,7 +42,7 @@ export default function CheckPage() {
         <HeroBackdrop />
       </section>
       <OfferChecker ruleCount={RULES.length} samples={SAMPLES} />
-      <LimitationsPanel intro={limits.intro} items={limits.items} />
+      <LimitationsPanel />
     </>
   );
 }

@@ -874,6 +874,17 @@ button.sample:hover {
   stroke: var(--medium);
 }
 
+/* LANG-2: mostly non-English text with nothing matched was not checked, so no green. The score
+   is 0 in this state, so no value arc is drawn; the arc rule keeps the tone if that ever changes. */
+.score-neutral .score-label {
+  background: var(--fill);
+  color: var(--ink);
+}
+
+.score-neutral .gauge-value {
+  stroke: var(--muted);
+}
+
 .score-facts {
   margin: 24px 0 0;
   text-align: left;

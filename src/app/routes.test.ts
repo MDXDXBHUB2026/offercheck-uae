@@ -323,6 +323,12 @@ describe("colour contrast (WCAG AA, from the tokens in globals.css)", () => {
     expect(css).toMatch(/\.score-caution \.score-label \{\s*background: var\(--medium-bg\);\s*color: var\(--medium\);/);
   });
 
+  // LANG-2: mostly non-English text with no finding shows a neutral chip, ink on fill.
+  it("neutral chip text ink on fill is at least 4.5:1", () => {
+    expect(ratio("ink", "fill")).toBeGreaterThanOrEqual(4.5);
+    expect(css).toMatch(/\.score-neutral \.score-label \{\s*background: var\(--fill\);\s*color: var\(--ink\);/);
+  });
+
   it("control borders are at least 3:1 on the surface", () => {
     expect(ratio("control-border", "surface")).toBeGreaterThanOrEqual(3);
   });

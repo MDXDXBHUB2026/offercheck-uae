@@ -1,32 +1,17 @@
-import { LIMITS_SECTION, type InlinePart } from "@/components/limitations";
+import { LIMITS_SECTION, PUBLIC_LIMITS, PUBLIC_LIMITS_INTRO } from "@/components/publicLimitations";
 import { Card, SectionHeader } from "@/components/ui";
 
-function Inline({ parts }: { parts: InlinePart[] }) {
-  return (
-    <>
-      {parts.map((part, index) =>
-        part.kind === "strong" ? (
-          <strong key={index}>{part.text}</strong>
-        ) : part.kind === "code" ? (
-          <code key={index}>{part.text}</code>
-        ) : (
-          <span key={index}>{part.text}</span>
-        ),
-      )}
-    </>
-  );
-}
-
-export function LimitationsPanel({ intro, items }: { intro: string; items: InlinePart[][] }) {
+// COPY-1: plain-language copy only. The internal limitations doc is not read for display.
+export function LimitationsPanel() {
   return (
     <section className="block limits" aria-labelledby="limits-heading">
       <SectionHeader id="limits-heading" title={LIMITS_SECTION} />
       <Card>
-        <p>{intro}</p>
+        <p>{PUBLIC_LIMITS_INTRO}</p>
         <ul>
-          {items.map((parts, index) => (
-            <li key={index}>
-              <Inline parts={parts} />
+          {PUBLIC_LIMITS.map((item) => (
+            <li key={item.title}>
+              <strong>{item.title}</strong> {item.text}
             </li>
           ))}
         </ul>

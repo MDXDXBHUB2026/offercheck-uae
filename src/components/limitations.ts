@@ -1,12 +1,13 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 
-// Server only: read by the page at build time, so the panel always says what
-// docs/known-limitations.md says and the browser never fetches the file.
+import { LIMITS_SECTION } from "@/components/publicLimitations";
+
+// Test only since COPY-1: the page shows the plain-language copy in publicLimitations.ts, and the
+// parity test uses this to count the bullets in the internal doc, so no limitation is dropped.
 export type InlinePart = { kind: "text" | "strong" | "code"; text: string };
 
 export const LIMITS_FILE = join("docs", "known-limitations.md");
-export const LIMITS_SECTION = "What this check cannot do";
 
 // Splits **bold** and `code` out of one line of Markdown. Nothing else is interpreted.
 export function inlineParts(line: string): InlinePart[] {

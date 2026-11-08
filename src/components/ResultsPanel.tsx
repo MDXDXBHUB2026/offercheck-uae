@@ -2,9 +2,11 @@ import type { ReactNode } from "react";
 import { AgentRun } from "@/components/AgentRun";
 import { CheckCircleIcon, QuoteGlyph } from "@/components/icons";
 import { scoreArithmetic } from "@/components/scoreArithmetic";
+import { NOT_CHECKED_LABEL } from "@/components/scoreChip";
 import { ScoreGauge } from "@/components/ScoreGauge";
 import { Callout, Card, Chip, SectionHeader } from "@/components/ui";
 import { HIGH_BAND_MIN, MEDIUM_BAND_MIN, SEVERITY_WEIGHTS } from "@/lib/scoring";
+import { OFFER_NOTICE, showOfferNotice, type OfferSignal } from "@/lib/offerLikeness";
 import { LANGUAGE_NOTICES, type LanguageNotice } from "@/lib/textScript";
 import type { AnalysisResult } from "@/lib/types";
 
@@ -53,18 +55,22 @@ export function ResultsPanel({
   result,
   ruleCount,
   languageNotice = null,
+  offerSignals = null,
   children,
 }: {
   result: AnalysisResult;
   ruleCount: number;
   // LANG-1: set from the text that was checked, never from the live text box. Fixed wording only.
   languageNotice?: LanguageNotice | null;
+  // Batch A case 4: also set at check time. null means not recorded, so no notice.
+  offerSignals?: readonly OfferSignal[] | null;
   children?: ReactNode;
 }) {
   const { risk, findings } = result;
   const riskFindings = findings.filter((finding) => finding.severity !== "info");
   const warningMentions = findings.filter((finding) => finding.severity === "info");
   const arithmetic = scoreArithmetic(findings, risk);
+  const notChecked = languageNotice === "most" && findings.length === 0;
   return (
     <div className="results">
       <div className="results-side">
@@ -72,10 +78,15 @@ export function ResultsPanel({
           <h2 id="results-heading" className="eyebrow">
             Risk indicators
           </h2>
-          <ScoreGauge risk={risk} findings={findings} />
+          <ScoreGauge risk={risk} findings={findings} languageNotice={languageNotice} />
           {languageNotice && (
             <Callout tone="neutral" role="note" className="language-notice">
               <p>{LANGUAGE_NOTICES[languageNotice]}</p>
+            </Callout>
+          )}
+          {offerSignals && showOfferNotice(offerSignals, risk.band, languageNotice) && (
+            <Callout tone="neutral" role="note" className="offer-notice">
+              <p>{OFFER_NOTICE}</p>
             </Callout>
           )}
           <dl className="score-facts">
@@ -106,11 +117,15 @@ export function ResultsPanel({
         <section className="block" aria-labelledby="findings-heading">
           <SectionHeader id="findings-heading" title="Findings" />
 
+          {/* LANG-2: when most of the text is not English and nothing matched, say the rules could
+              not read it, with no tick: "none matched" would imply they ran on readable text. */}
           {riskFindings.length === 0 && (
             <Card className="empty-state">
-              <CheckCircleIcon size={24} />
+              {!notChecked && <CheckCircleIcon size={24} />}
               <p className="no-match">
-                {warningMentions.length === 0
+                {notChecked
+                  ? `The ${ruleCount} rules read English only, so they could not check most of this text.`
+                  : warningMentions.length === 0
                   ? `None of the ${ruleCount} rules matched.`
                   : `None of the ${ruleCount} rules counted toward the score. The text mentions ${plural(warningMentions.length, "topic")} only in a warning, shown below.`}{" "}
                 This does not confirm that the offer is genuine.
@@ -148,7 +163,10 @@ export function ResultsPanel({
           )}
         </section>
 
-        <AgentRun trace={result.trace} />
+        <AgentRun
+          trace={result.trace}
+          aggregatorSummary={notChecked ? `Score ${risk.score} of 100. ${NOT_CHECKED_LABEL}.` : undefined}
+        />
 
         {children}
       </div>

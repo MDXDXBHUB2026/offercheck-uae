@@ -16,6 +16,7 @@ import {
   type AuditRecord,
 } from "@/lib/audit";
 import { scoreChip } from "@/components/scoreChip";
+import { offerSignals, type OfferSignal } from "@/lib/offerLikeness";
 import { languageNotice, type LanguageNotice } from "@/lib/textScript";
 import { MAX_OFFER_CHARS } from "@/lib/types";
 
@@ -35,10 +36,15 @@ export function checkBlockedReason(text: string, hasSamples: boolean): string {
 
 // LANG-1: a check's response together with the language notice for the text that was checked.
 // The flag is set once, at check time, and never follows the live text box.
-export type CheckedResult = { response: AnalyzeResponse; languageNotice: LanguageNotice | null };
+// Batch A case 4: the offer signals are recorded the same way, at check time.
+export type CheckedResult = {
+  response: AnalyzeResponse;
+  languageNotice: LanguageNotice | null;
+  offerSignals: OfferSignal[];
+};
 
 export function recordCheck(response: AnalyzeResponse, submittedText: string): CheckedResult {
-  return { response, languageNotice: languageNotice(submittedText) };
+  return { response, languageNotice: languageNotice(submittedText), offerSignals: offerSignals(submittedText) };
 }
 
 // The initial checked result: none.
@@ -46,9 +52,12 @@ export function noCheck(): CheckedResult | null {
   return null;
 }
 
-// The screen-reader announcement uses the chip's wording, so the two never disagree (UX-1).
-export function resultAnnouncement(result: Pick<AnalyzeResponse, "risk" | "findings">): string {
-  return `Results ready. Score ${result.risk.score} of 100: ${scoreChip(result.risk, result.findings).label}.`;
+// The screen-reader announcement uses the chip's wording, so the two never disagree (UX-1, LANG-2).
+export function resultAnnouncement(
+  result: Pick<AnalyzeResponse, "risk" | "findings">,
+  language: LanguageNotice | null = null,
+): string {
+  return `Results ready. Score ${result.risk.score} of 100: ${scoreChip(result.risk, result.findings, language).label}.`;
 }
 
 // ruleCount and samples come from the server page, so the rules themselves never ship to the browser.
@@ -151,7 +160,7 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
   const announcement = loading
     ? "Checking the offer."
     : result
-      ? resultAnnouncement(result)
+      ? resultAnnouncement(result, checked?.languageNotice ?? null)
       : "";
 
   return (
@@ -215,7 +224,12 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
         </Callout>
       )}
       {result && (
-        <ResultsPanel result={result} ruleCount={ruleCount} languageNotice={checked?.languageNotice ?? null}>
+        <ResultsPanel
+          result={result}
+          ruleCount={ruleCount}
+          languageNotice={checked?.languageNotice ?? null}
+          offerSignals={checked?.offerSignals ?? null}
+        >
           <ApprovalPanel gate={gateFlow.gate} dispatch={dispatchWithAudit} />
           <AuditTrail entries={auditLog} failed={auditFailed} />
         </ResultsPanel>

@@ -109,6 +109,16 @@ describe("language notice (LANG-1)", () => {
     expect(renderWith(ARABIC, englishCheck)).not.toContain("not in English");
   });
 
+  // LANG-2: the chip and the announcement follow the checked result's tier, not the live text box.
+  it("shows and announces the neutral chip from the checked result", () => {
+    const arabicCheck = recordCheck(respond(ARABIC), ARABIC);
+    const neutral = "Not checked: most of the text is not in English";
+    const html = renderWith(ENGLISH, arabicCheck);
+    expect(html).toContain(`<p class="chip score-label">${neutral}</p>`);
+    expect(html).toContain(`Results ready. Score 0 of 100: ${neutral}.`);
+    expect(renderWith(ARABIC, recordCheck(respond(ENGLISH), ENGLISH))).not.toContain(neutral);
+  });
+
   it("clears the result when a new check starts, then stores the flag for the submitted text", async () => {
     typed.checked = recordCheck(respond(ARABIC), ARABIC);
     typed.checkedSets = [];
@@ -145,6 +155,51 @@ describe("language notice (LANG-1)", () => {
   it("shows no notice without a flag", () => {
     const html = renderToStaticMarkup(createElement(ResultsPanel, { result: runManager(ENGLISH), ruleCount: 5 }));
     expect(html).not.toContain("not in English");
+  });
+});
+
+// Batch A case 4: the offer notice is set once, at check time, and never changes the score.
+describe("offer notice (Batch A case 4)", () => {
+  const NOT_AN_OFFER = "Hi, how are you? Call me back.";
+  const OFFER = "Salary AED 4,000 per month for the driver role.";
+  const NOTICE = "This text has no clear signs of a job offer";
+  const respond = (text: string): AnalyzeResponse => ({ ...runManager(text), runId: "run-1", audit: [] });
+  const panel = (text: string, checkedText = text, language: "most" | "part" | null = null) => {
+    const checked = recordCheck(respond(text), checkedText);
+    return renderToStaticMarkup(
+      createElement(ResultsPanel, {
+        result: checked.response,
+        ruleCount: 5,
+        languageNotice: language,
+        offerSignals: checked.offerSignals,
+      }),
+    );
+  };
+
+  it("records the signal groups of the text that was checked", () => {
+    expect(recordCheck(respond(NOT_AN_OFFER), NOT_AN_OFFER).offerSignals).toEqual([]);
+    expect(recordCheck(respond(OFFER), OFFER).offerSignals).toEqual(["role", "pay"]);
+  });
+
+  it("shows the notice for a low score with no signal, and not otherwise", () => {
+    expect(panel(NOT_AN_OFFER)).toContain(NOTICE);
+    expect(panel(OFFER)).not.toContain(NOTICE);
+    expect(panel("Pay AED 750 now.")).not.toContain(NOTICE);
+    expect(panel(NOT_AN_OFFER, NOT_AN_OFFER, "most")).not.toContain(NOTICE);
+    expect(panel(NOT_AN_OFFER, NOT_AN_OFFER, "part")).toContain(NOTICE);
+  });
+
+  it("shows no notice without a recorded value", () => {
+    const html = renderToStaticMarkup(createElement(ResultsPanel, { result: runManager(NOT_AN_OFFER), ruleCount: 5 }));
+    expect(html).not.toContain(NOTICE);
+  });
+
+  it("puts no offer text in the notice and leaves the score alone", () => {
+    const html = panel(NOT_AN_OFFER);
+    const notice = html.match(/class="[^"]*offer-notice[^"]*"[^>]*>(.*?)<\/div>/)?.[1] ?? "";
+    expect(notice).toContain(NOTICE);
+    expect(notice).not.toContain("Call me back");
+    expect(recordCheck(respond(NOT_AN_OFFER), NOT_AN_OFFER).response.risk).toEqual(runManager(NOT_AN_OFFER).risk);
   });
 });
 

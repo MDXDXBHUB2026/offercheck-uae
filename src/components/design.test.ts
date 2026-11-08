@@ -11,6 +11,7 @@ import { LEGIT_OFFER, SCAM_OFFER } from "@/lib/agents/fixtures";
 import { runManager } from "@/lib/agents/manager";
 import type { Finding, Severity } from "@/lib/types";
 import { readLimitations } from "./limitations";
+import { PUBLIC_LIMITS, PUBLIC_LIMITS_INTRO } from "./publicLimitations";
 import { OfferChecker, resultAnnouncement } from "./OfferChecker";
 import { ResultsPanel } from "./ResultsPanel";
 import { scoreArithmetic } from "./scoreArithmetic";
@@ -152,6 +153,113 @@ describe("score chip states (UX-1)", () => {
   });
 });
 
+// LANG-2 (live retest of an Arabic fee demand): mostly non-English text scored 0 and showed the green
+// "No risk indicators found" chip, which reads as "safe" although the rules could not read the text.
+// In tier 1 the green chip becomes a neutral one. Tier 2 and tier-free results are unchanged.
+describe("score chip with the language notice (LANG-2)", () => {
+  const ARABIC_FEE = "يرجى دفع 750 درهم لتأكيد الوظيفة";
+  const A4_TEXT = "Reply within 2 hours or this offer is cancelled. Only 3 slots left.";
+  const NEUTRAL = "Not checked: most of the text is not in English";
+  const REVIEW = "Low, review the findings below";
+  const scoreSide = (html: string) => html.slice(html.indexOf("score-card"), html.indexOf("results-main"));
+  const emptyCard = (html: string) => html.match(/class="[^"]*empty-state[^"]*">(.*?)<\/div>/)?.[1] ?? "";
+  const aggregatorRow = (html: string) =>
+    html.match(/<span class="trace-agent">Risk aggregator<\/span><span class="trace-summary">([^<]*)<\/span>/)?.[1] ?? "";
+  const render = (text: string, languageNotice: "most" | "part" | null) => {
+    const result = runManager(text);
+    const html = renderToStaticMarkup(createElement(ResultsPanel, { result, ruleCount: 5, languageNotice }));
+    const side = scoreSide(html);
+    return { result, html, side, chip: side.match(/<p class="chip score-label">([^<]*)<\/p>/)?.[1] };
+  };
+
+  it("tier 1 with no finding: the neutral chip, never the green one, and the empty line says the rules could not read it", () => {
+    for (const text of [ARABIC_FEE, EVAL_OFFERS.find((offer) => offer.id === "S12")!.text]) {
+      const { result, html, side, chip } = render(text, "most");
+      expect(result.risk.score).toBe(0);
+      expect(result.findings).toEqual([]);
+      expect(chip).toBe(NEUTRAL);
+      expect(side).toContain("score-neutral");
+      expect(side).not.toContain("score-caution");
+      expect(html).not.toContain("No risk indicators found");
+      // Round 2: the Risk aggregator row says the same as the chip. The server's trace is unchanged.
+      expect(aggregatorRow(html)).toContain(`Score 0 of 100. ${NEUTRAL}.`);
+      expect(result.trace.find((step) => step.agent === "risk_aggregator")?.summary).toBe(
+        "Score 0 of 100: No risk indicators found",
+      );
+      const empty = emptyCard(html);
+      expect(empty).toContain("The 5 rules read English only, so they could not check most of this text.");
+      expect(empty).toContain("This does not confirm that the offer is genuine.");
+      expect(empty).not.toContain("None of the 5 rules matched.");
+      // No green tick beside a line that says the text was not checked.
+      expect(empty).not.toContain("<svg");
+    }
+  });
+
+  it("the Risk aggregator row shows the server's summary in every other case", () => {
+    const cases: [string, "most" | "part" | null][] = [
+      [A4_TEXT, "most"],
+      [SCAM_OFFER, "most"],
+      [LEGIT_OFFER, "part"],
+      [ARABIC_FEE, "part"],
+      [LEGIT_OFFER, null],
+      [ARABIC_FEE, null],
+      [A4_TEXT, null],
+      [SCAM_OFFER, null],
+    ];
+    for (const [text, tier] of cases) {
+      const { result, html } = render(text, tier);
+      const summary = result.trace.find((step) => step.agent === "risk_aggregator")?.summary;
+      expect(summary).toMatch(/^Score \d+ of 100: /);
+      expect(aggregatorRow(html)).toBe(summary);
+    }
+  });
+
+  it("tier 1 leaves the score, band and findings unchanged", () => {
+    const plain = runManager(ARABIC_FEE);
+    const shown = render(ARABIC_FEE, "most").result;
+    expect({ risk: shown.risk, findings: shown.findings }).toEqual({ risk: plain.risk, findings: plain.findings });
+    expect(shown.risk.label).toBe("No risk indicators found");
+  });
+
+  it("tier 1 with a finding keeps the finding chip", () => {
+    expect(render(A4_TEXT, "most").chip).toBe(REVIEW);
+    expect(render(A4_TEXT, "most").side).toContain("score-caution");
+    expect(render(SCAM_OFFER, "most").chip).toBe("High risk indicators");
+    for (const text of [A4_TEXT, SCAM_OFFER]) expect(render(text, "most").side).not.toContain("score-neutral");
+  });
+
+  it("tier 2 keeps the current chip and empty line, plus the notice", () => {
+    const { side, html, chip } = render(LEGIT_OFFER, "part");
+    expect(chip).toBe("No risk indicators found");
+    expect(side).not.toContain("score-neutral");
+    expect(side).toContain("Part of this text is not in English.");
+    expect(emptyCard(html)).toContain("None of the 5 rules matched.");
+    expect(emptyCard(html)).toContain("<svg");
+    expect(render(A4_TEXT, "part").chip).toBe(REVIEW);
+  });
+
+  it("no notice keeps the current chip and empty line", () => {
+    const { side, html, chip } = render(LEGIT_OFFER, null);
+    expect(chip).toBe("No risk indicators found");
+    expect(side).not.toContain("score-neutral");
+    expect(emptyCard(html)).toContain("None of the 5 rules matched.");
+    expect(emptyCard(html)).toContain("<svg");
+  });
+
+  it("announces the neutral wording to screen readers in tier 1 only", () => {
+    const result = runManager(ARABIC_FEE);
+    expect(resultAnnouncement(result, "most")).toBe(`Results ready. Score 0 of 100: ${NEUTRAL}.`);
+    expect(resultAnnouncement(result, "part")).toBe("Results ready. Score 0 of 100: No risk indicators found.");
+    expect(resultAnnouncement(result)).toBe("Results ready. Score 0 of 100: No risk indicators found.");
+    expect(resultAnnouncement(runManager(A4_TEXT), "most")).toBe(`Results ready. Score 20 of 100: ${REVIEW}.`);
+  });
+
+  it("styles the neutral chip with ink on fill, no green", () => {
+    const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
+    expect(css).toMatch(/\.score-neutral \.score-label \{\s*background: var\(--fill\);\s*color: var\(--ink\);/);
+  });
+});
+
 describe("results panel design", () => {
   it("shows no time except the measured durations", () => {
     const result = runManager(SCAM_OFFER);
@@ -164,21 +272,41 @@ describe("results panel design", () => {
   });
 });
 
-describe("limitations panel", () => {
-  it("reads its text from docs/known-limitations.md", () => {
-    const doc = readFileSync(join(process.cwd(), "docs", "known-limitations.md"), "utf8");
-    const { intro, items } = readLimitations();
-    expect(doc).toContain(intro);
-    expect(items.length).toBeGreaterThan(0);
-    for (const part of items.flat()) expect(doc).toContain(part.text);
+// COPY-1: the page shows plain-language copy from publicLimitations.ts. The internal detail (file
+// paths, defect ids, phases) stays in docs/known-limitations.md.
+describe("limitations panel (COPY-1)", () => {
+  const publicText = [PUBLIC_LIMITS_INTRO, ...PUBLIC_LIMITS.flatMap((item) => [item.title, item.text])];
+  const FORBIDDEN = ["docs/", "QA defect", "Phase", "Intake v2", "RF-", "LANG-", "COPY-", "holdout", "rules-backlog", "known-limitations", "`"];
+
+  it.each(FORBIDDEN)("public text contains no %j", (term) => {
+    for (const text of publicText) expect(text.toLowerCase()).not.toContain(term.toLowerCase());
   });
 
-  it("is on the page", () => {
+  it("public text is plain ASCII: straight quotes and hyphens, no other script", () => {
+    for (const text of publicText) expect(text).toMatch(/^[\x20-\x7E]+$/);
+  });
+
+  it("has one public item per bullet in the doc section, so no limitation is dropped", () => {
+    expect(PUBLIC_LIMITS).toHaveLength(8);
+    expect(readLimitations().items).toHaveLength(PUBLIC_LIMITS.length);
+  });
+
+  it("the page shows the intro and all 8 items, and none of the doc's internal text", () => {
     const html = renderToStaticMarkup(createElement(Home));
-    expect(html).toContain("What this check cannot do");
-    expect(html).toContain("Look-alike letters can slip past cleaning.");
+    const panel = html.slice(html.indexOf('aria-labelledby="limits-heading"'));
+    expect(panel).toContain("What this check cannot do");
+    expect(panel).toContain(`<p>${escapeHtml(PUBLIC_LIMITS_INTRO)}</p>`);
+    for (const item of PUBLIC_LIMITS) {
+      expect(panel).toContain(`<li><strong>${escapeHtml(item.title)}</strong> ${escapeHtml(item.text)}</li>`);
+    }
+    expect(panel.match(/<li>/g)).toHaveLength(8);
+    for (const term of ["docs/", "QA defect", "Intake v2", "<code>"]) expect(panel).not.toContain(term);
   });
 });
+
+function escapeHtml(text: string): string {
+  return text.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("'", "&#x27;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+}
 
 describe("sample buttons", () => {
   it("are real buttons for the three synthetic samples", () => {

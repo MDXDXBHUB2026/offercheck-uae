@@ -10,8 +10,9 @@ const HOLDOUT_SHA256 = "6c7ed62f153e04169681e64c18d227dc5a2bb72e3488dbe12cf6626d
 // Holdout 1 is consumed: it ran once on 2026-11-06 against redFlag.ts sha256 f3570f8f1169ecb2...
 // Never run it again and never relabel it. Its result is reported two ways from now on.
 // H10 was a real miss, not a band dispute.
-// The hash above records the run, so it stays. redFlag.ts is now 789dc2b29a309409...: the latest
-// change was performance-only, and band, rule ids and info ids were verified identical on all cases.
+// The hash above records the run, so it stays. redFlag.ts is now c4abfc00e371ccfd... (Batch A.1,
+// 2026-11-08): score, band and rule ids were compared before and after on all 77 cases, and no
+// holdout 1 case changed. That comparison was a guard on the change, not a new holdout result.
 const HOLDOUT_1_RESULT = {
   status: "consumed",
   strict: "11 of 18",

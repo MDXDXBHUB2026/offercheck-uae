@@ -17,7 +17,9 @@ const STATUS_LABELS: Record<TraceStatus, string> = {
 };
 
 // The run as a timeline. Times are the measured durationMs values; a step that did not run says so.
-export function AgentRun({ trace }: { trace: TraceStep[] }) {
+// aggregatorSummary replaces only what the Risk aggregator row shows (LANG-2, tier 1 with no
+// finding), so it agrees with the chip. The trace itself, from the server, is unchanged.
+export function AgentRun({ trace, aggregatorSummary }: { trace: TraceStep[]; aggregatorSummary?: string }) {
   return (
     <section className="block agent-run" aria-labelledby="agent-run-heading">
       <SectionHeader id="agent-run-heading" title="Agent run" />
@@ -27,7 +29,7 @@ export function AgentRun({ trace }: { trace: TraceStep[] }) {
           title: AGENT_LABELS[step.agent] ?? step.agent,
           status: step.status,
           statusLabel: STATUS_LABELS[step.status],
-          detail: step.summary,
+          detail: step.agent === "risk_aggregator" && aggregatorSummary ? aggregatorSummary : step.summary,
           meta: step.durationMs === null ? "Not run" : `${step.durationMs.toFixed(2)} ms`,
         }))}
       />

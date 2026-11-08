@@ -44,7 +44,7 @@ const NEAR_MATCH_CHARS = 40;
 const NEGATED_AT_MATCH = new RegExp(`${NEGATOR}\\s+(?:ever\\s+)?(?:(?:need|have)\\s+to\\s+)?$`, "i");
 // On an ask verb earlier in the part: "We never ask candidates to pay any visa fee".
 const NEGATED_ASK = new RegExp(
-  `${NEGATOR}\\s+(?:ever\\s+)?(?:be\\s+)?(?:ask|charg|requir|request|collect|demand|need|pay|transfer|deposit|remit|${SHARE_VERB})\\w*`,
+  `${NEGATOR}\\s+(?:ever\\s+)?(?:be\\s+)?(?:ask|charg|requir|request|collect|demand|need|pay|transfer|deposit|remit|click|open|tap|${SHARE_VERB})\\w*`,
   "i",
 );
 // A new payment verb starts a new ask: "We do not require experience pay the fee".
@@ -111,17 +111,91 @@ function isCoveredByListEnd(part: string, following: string[], listEnd: RegExp):
   return false;
 }
 
+// "The company covers visa and medical fees of AED 500" (GAP-1): an employer named before the list
+// covers a cost item in it. Only an item the employer usually pays carries the cover, and a fee noun
+// always ends it. Every item from the head to the cost must be a bare noun phrase with no candidate
+// marker, in the same sentence and within reach. Any own verb, "you", "payable" etc. ends the list.
+const MAX_LIST_HEAD_REACH_CHARS = 160;
+const SENTENCE_STOP = /[!?;\n]|\.(?!\w)/g;
+const CANDIDATE_PAYS =
+  /\b(?:you|candidates?|applicants?|employees?|upfront|up-front|in advance|advance|before joining|before (?:the )?interview|refundable|deposited|transferred|remitted|by the candidate)\b/i;
+const EMPLOYER_PAID_COST =
+  /\b(?:visas?|work permits?|residence|residency|emirates id|medical|insurance|tickets?|flights?|air ?fares?|accommodation|housing|relocation|uniforms?|transport(?:ation)?)\b/i;
+const CANDIDATE_FEE =
+  /\b(?:processing|registration|administration|admin|application|security|deposits?|training|clearance|agency|service|handling|documentation|verification|courier)\b/i;
+
+// After the cost, in the same sentence: "medical fees of AED 500, refundable after joining".
+const CANDIDATE_ASK_AFTER =
+  /\b(?:payable|required|due|must|mandatory|charged|collected|deducted|to be paid|pay|transfer|deposit|remit|send|settle)\b/i;
+
+function isCoveredByListHead(text: string, partStart: number, part: string, listHead: RegExp): boolean {
+  if (!EMPLOYER_PAID_COST.test(part) || CANDIDATE_FEE.test(part)) return false;
+  const after = text.slice(partStart + part.length, partStart + part.length + MAX_LIST_HEAD_REACH_CHARS);
+  const sentenceEnd = after.search(/[!?;\n]|\.(?!\w)/);
+  const rest = sentenceEnd === -1 ? after : after.slice(0, sentenceEnd);
+  if (CANDIDATE_PAYS.test(rest) || CANDIDATE_ASK_AFTER.test(rest)) return false;
+  let window = text.slice(Math.max(0, partStart - MAX_LIST_HEAD_REACH_CHARS), partStart);
+  if (!AND_PART.test(part.trim()) && !/,\s*$/.test(window)) return false;
+  let stop = -1;
+  for (const found of window.matchAll(SENTENCE_STOP)) stop = found.index;
+  window = window.slice(stop + 1);
+  let headEnd = -1;
+  for (const found of window.matchAll(listHead)) headEnd = found.index + found[0].length;
+  if (headEnd === -1) return false;
+  return (window.slice(headEnd) + part)
+    .split(",")
+    .flatMap((item) => item.trim().split(CLAUSE_PART))
+    .map((item) => item.trim())
+    .filter((item) => item.length > 0)
+    .every((item) => !NOT_A_LIST_ITEM.test(item) && !CANDIDATE_PAYS.test(item));
+}
+
+// A pattern that counts only with a cue within 60 characters of it in the same sentence, across
+// commas and clause splits (A.1): "Send a photo of your card, front and back".
+type CuedPattern = { pattern: RegExp; cue: RegExp };
+type Pattern = RegExp | CuedPattern;
+const MAX_CUE_REACH_CHARS = 60;
+const SENTENCE_END = /[!?;\n]|\.(?!\w)/;
+
+function hasCueInSentence(text: string, start: number, end: number, cue: RegExp): boolean {
+  let before = text.slice(Math.max(0, start - MAX_CUE_REACH_CHARS), start);
+  let stop = -1;
+  for (const found of before.matchAll(SENTENCE_STOP)) stop = found.index;
+  before = before.slice(stop + 1);
+  let after = text.slice(end, end + MAX_CUE_REACH_CHARS);
+  const sentenceEnd = after.search(SENTENCE_END);
+  if (sentenceEnd !== -1) after = after.slice(0, sentenceEnd);
+  return cue.test(before) || cue.test(text.slice(start, end)) || cue.test(after);
+}
+
+// reachStart is where reach begins in the whole text, so a cue can be found beyond the clause.
+function execPattern(pattern: Pattern, reach: string, text: string, reachStart: number): RegExpExecArray | null {
+  if (pattern instanceof RegExp) return pattern.exec(reach);
+  const found = pattern.pattern.exec(reach);
+  if (!found) return null;
+  const start = reachStart + found.index;
+  return hasCueInSentence(text, start, start + found[0].length, pattern.cue) ? found : null;
+}
+
 // mention finds wording that is no request on its own, so it only ever counts when negated.
-function matchClauses(patterns: RegExp[], exclude?: RegExp, mention?: RegExp, listEnd?: RegExp) {
+function matchClauses(
+  patterns: Pattern[],
+  exclude?: RegExp,
+  mention?: RegExp,
+  listEnd?: RegExp,
+  listHead?: RegExp,
+) {
   return (text: string): Scan => {
     const scan: Scan = { evidence: [], warnings: [] };
     for (const raw of text.matchAll(CLAUSE)) {
       const clause = raw[0].trim();
       const parts = clause.split(CLAUSE_PART);
       let tail: string[] | undefined;
+      const clauseStart = raw.index + raw[0].length - raw[0].trimStart().length;
       // The list check is the slow step, so it runs only for a part with a hit: on "a, a, a, ..."
       // every clause would otherwise walk the same sentence tail.
-      const isCovered = (index: number, part: string) => {
+      const isCovered = (index: number, part: string, partStart: number) => {
+        if (listHead && isCoveredByListHead(text, partStart, part, listHead)) return true;
         if (!listEnd) return false;
         tail ??= listItemsAfter(text, raw.index + raw[0].length, listEnd);
         const following = [...parts.slice(index + 1, index + 1 + MAX_LIST_ITEMS), ...tail];
@@ -132,10 +206,10 @@ function matchClauses(patterns: RegExp[], exclude?: RegExp, mention?: RegExp, li
         if (!exclude?.test(part)) {
           const reach = withListTail(parts, index, exclude);
           const matches = patterns
-            .map((pattern) => pattern.exec(reach))
+            .map((pattern) => execPattern(pattern, reach, text, clauseStart + offset))
             .filter((found) => found !== null && found.index < part.length) as RegExpExecArray[];
           const mentioned = mention?.exec(part);
-          if ((matches.length > 0 || mentioned) && !isCovered(index, part)) {
+          if ((matches.length > 0 || mentioned) && !isCovered(index, part, clauseStart + offset)) {
             const request = matches.find(
               (found) =>
                 !isNegated(reach, found) && !THIRD_PARTY_WARNING.test(reach.slice(0, found.index)),
@@ -213,12 +287,22 @@ const EMPLOYER_COVERS_COST = new RegExp(
   ].join("|"),
   "i",
 );
+// GAP-1: the employer as the subject of a cover verb at the head of a list. Not "sponsors" (owner):
+// "The company sponsors your visa and processing charges AED 2,500" must stay High. A.1 adds
+// "provides", with the same cost-noun and fee-noun gate.
+const LIST_HEAD_EMPLOYER_COVERS = new RegExp(`${EMPLOYER}(?:covers?|pays?(?:\\s+for)?|bears?|provides?)\\b`, "gi");
 const EMPLOYER_SENDS = new RegExp(`${EMPLOYER}(?:send|give|confirm|provide|email|forward|share)\\b`, "i");
 // "You will receive a one-time password": a code coming to the candidate is not a request for it.
+// H21: right after "code", "we send" names the code being asked for, so it clears nothing.
+const AFTER_CODE = "(?<!\\b(?:code|pin|otp|passcode|password)\\s+(?:that\\s+|which\\s+)?)";
 const CREDENTIAL_NOT_ASKED = new RegExp(
-  `${EMPLOYER_SENDS.source}|\\byou(?:['’]ll|\\s+will)\\s+(?:receive|get)\\b`,
+  `${AFTER_CODE}${EMPLOYER_SENDS.source}|${AFTER_CODE}\\byou(?:['’]ll|\\s+will)\\s+(?:receive|get)\\b`,
   "i",
 );
+// GAP-7: an image of a payment card shows its number and expiry, and the back its CVV.
+const IMAGE_OF = "\\b(?:photos?|pictures?|pics?|images?|scans?|scanned copy|copy|copies|screenshots?|snaps?)\\s+of\\s+(?:the\\s+)?";
+const BOTH_SIDES = "(?:front\\s+(?:and|&)\\s+back|back\\s+(?:and|&)\\s+front)";
+const CARD_DETAIL = `(?:${BOTH_SIDES}|cvv|cvc|expiry|expiration|pin)`;
 
 export const RULES: Rule[] = [
   {
@@ -245,6 +329,7 @@ export const RULES: Rule[] = [
       EMPLOYER_COVERS_COST,
       /\b(?:charg\w*|fees?|deposits?)\b/i,
       new RegExp(COVERED_BY_EMPLOYER, "i"),
+      LIST_HEAD_EMPLOYER_COVERS,
     ),
   },
   {
@@ -266,6 +351,31 @@ export const RULES: Rule[] = [
           "i",
         ),
         new RegExp(`\\b${SHARE_VERB}\\b.{0,40}\\bcode\\b.{0,30}\\b(?:sent|got|receive|received)\\b`, "i"),
+        // H21: "Share the code we send you". Not "enter": a careers portal asks for that honestly.
+        new RegExp(
+          "\\b(?:send|share|forward|give|tell|whatsapp|email|reply with)\\b.{0,40}\\b(?:code|pin|otp|passcode)\\s+(?:that\\s+|which\\s+)?(?:we|i|hr|the company|our team|you)\\s+(?:will\\s+|['’]ll\\s+|just\\s+)?(?:send|text|sms|email|whatsapp|receive|get)\\b",
+          "i",
+        ),
+        // GAP-7: a photo of a named payment card. "visa" alone is the work visa, so only "visa card".
+        new RegExp(
+          `${IMAGE_OF}(?:(?:front|back)(?:\\s+(?:and|&)\\s+(?:front|back))?\\s+(?:side\\s+)?of\\s+)?(?:your\\s+|the\\s+)?(?:(?:bank|debit|credit|atm|visa)\\s+cards?|master\\s?cards?)\\b`,
+          "i",
+        ),
+        /\b(?:bank|debit|credit|atm)\s+cards?\s+(?:photo|picture|pic|image|scan|copy|screenshot|front|back)s?\b/i,
+        // GAP-7: a photo of "your card" only with a card detail within 60 characters.
+        new RegExp(`${IMAGE_OF}${BOTH_SIDES}\\s+(?:side\\s+)?of\\s+(?:your\\s+|the\\s+)?cards?\\b`, "i"),
+        // A.1: the detail may sit across a comma, anywhere in the same sentence.
+        {
+          pattern: new RegExp(`${IMAGE_OF}(?:your\\s+|the\\s+)?cards?\\b`, "i"),
+          cue: new RegExp(`\\b${CARD_DETAIL}\\b`, "i"),
+        },
+        // A.1: a code to enter, type, submit or input, with a link, URL, "click" or WhatsApp in the
+        // sentence. "Enter the code we send you on our portal" names none of them, so it stays clear.
+        {
+          pattern:
+            /\b(?:enter|type|submit|input)\s+(?:in\s+)?(?:the\s+|your\s+|this\s+|that\s+|a\s+)?(?:\d+[- ]digit\s+)?(?:verification\s+)?(?:code|otp|pin|passcode)\b/i,
+          cue: /\b(?:links?|urls?|click|whatsapp)\b|https?:\/\/|\bwww\./i,
+        },
       ],
       CREDENTIAL_NOT_ASKED,
     ),
