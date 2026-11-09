@@ -6,8 +6,9 @@ import { LIMITS_SECTION } from "@/components/publicLimitations";
 // Site-wide text and navigation. Server-safe: no hooks here.
 
 // True only while no server code logs or stores the request body. A test checks that.
+// BATCHB-2: translation sends the text to Google Cloud Translation, only after the user confirms.
 export const PROTOTYPE_NOTICE =
-  "Prototype. Use synthetic or redacted offers only. The app does not store offer text.";
+  "Prototype. Use synthetic or redacted offers only. The app does not store offer text. If you choose translation, Google Cloud Translation receives it.";
 
 // soon: the page is still a placeholder (docs/product-roadmap-v2.md, Phases 2, 3 and 6), so the
 // header and footer show it as plain text with a "Soon" badge, not a link (9a). Delete the flag
@@ -64,9 +65,9 @@ export function BrandBadge() {
 // UX-3: the footer chips. Each is true in the code today; the comment on its line names the file
 // that proves it, and a routes test checks the claim. If one stops being true, remove the chip.
 export const FOOTER_CHIPS = [
-  "English only", // src/lib/textScript.ts: text in another script gets a "not checked" notice
+  "English rules, translation first", // src/lib/coverage.ts: non-English text is detected; src/components/translateFlow.ts: it can be translated to English, after consent, before the rules read it
   "No sign-in", // package.json: no auth library; src/app/api/analyze/route.ts: no cookie or token read
-  "Offer text not stored", // src/lib/auditRun.ts: the run and its audit trail go back in the response; src/app/page.test.ts: no logging or storage
+  "Not stored by Offer Check", // src/lib/auditRun.ts: the run and its audit trail go back in the response; src/lib/translateServer.ts: the translation is returned, not kept; src/app/page.test.ts: no logging or storage
   "Human approval", // src/lib/approvalGate.ts: only the user's approve action approves a draft, which is then only copied
 ] as const;
 
@@ -133,7 +134,8 @@ export function SiteFooter() {
         </div>
         <div className="footer-bottom">
           <p className="footer-disclaimer">
-            A low score does not confirm an offer is genuine. Offer Check does not give legal advice.
+            A low score does not confirm an offer is genuine. Offer Check does not give legal advice. A
+            translation can lose or change meaning.
           </p>
           <p>
             Risk indicators, not a verdict. It has been tested on synthetic offers only, not validated

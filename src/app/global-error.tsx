@@ -14,7 +14,7 @@ export default function GlobalError({ retry }: { error: unknown; retry: () => vo
             <h1 id="page-title" className="page-title">
               Something went wrong
             </h1>
-            <p className="intro">Offer Check could not be shown. Your text was not saved anywhere.</p>
+            <p className="intro">Offer Check could not be shown. Offer Check did not save your text.</p>
             <p className="hero-actions">
               <button type="button" className="primary" onClick={() => retry()}>
                 Try again

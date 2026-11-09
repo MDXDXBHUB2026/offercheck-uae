@@ -6,7 +6,7 @@ export type PublicLimit = { title: string; text: string };
 export const LIMITS_SECTION = "What this check cannot do";
 
 export const PUBLIC_LIMITS_INTRO =
-  'Offer Check is an early prototype that reads English text only. A low score, or "No risk indicators found", does not mean an offer is genuine.';
+  'Offer Check is an early prototype that checks English text. Text in other languages can be machine translated first, and a translation can lose or change meaning. A low score, or "No risk indicators found", does not mean an offer is genuine.';
 
 export const PUBLIC_LIMITS: PublicLimit[] = [
   {
@@ -31,7 +31,7 @@ export const PUBLIC_LIMITS: PublicLimit[] = [
   },
   {
     title: "Other languages typed in English letters are only partly detected.",
-    text: "A word check catches common Hindi, Urdu, Arabic, Tagalog, Malayalam, Bengali, Tamil and French words written in English letters, and then shows the text as not checked. Messages under 6 words, and languages it has no words for, can still look like English to the check.",
+    text: "A word check catches common Hindi, Urdu, Arabic, Tagalog, Malayalam, Bengali, Tamil and French words written in English letters, and then shows the text as not checked. Messages under 6 words, and languages it has no words for, can still look like English to the check, and then no translation is offered.",
   },
   {
     title: "The language check uses simple cut-offs.",
@@ -40,5 +40,9 @@ export const PUBLIC_LIMITS: PublicLimit[] = [
   {
     title: "Look-alike letters can also keep the language notice away.",
     text: "A few of them stay below the cut-off, so no notice is shown.",
+  },
+  {
+    title: "A translation can change the meaning.",
+    text: "If you agree, text in other languages is sent to Google Cloud Translation, a machine translation service, and the rules read the English it returns. Scam wording can be lost or softened in translation. How well each language is translated has not been measured.",
   },
 ];

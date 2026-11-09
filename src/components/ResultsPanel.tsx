@@ -9,6 +9,7 @@ import { noticeForCoverage, type Coverage } from "@/lib/coverage";
 import { HIGH_BAND_MIN, MEDIUM_BAND_MIN, SEVERITY_WEIGHTS } from "@/lib/scoring";
 import { OFFER_NOTICE, showOfferNotice, type OfferSignal } from "@/lib/offerLikeness";
 import { LANGUAGE_NOTICES, type LanguageNotice } from "@/lib/textScript";
+import { languageName, TRANSLATION_PROVIDER_NAME } from "@/lib/translation";
 import type { AnalysisResult } from "@/lib/types";
 
 export const CHECK_LABELS: Record<string, string> = {
@@ -34,12 +35,18 @@ const CHECK_NOTES: Record<string, string> = {
 };
 
 // Batch B Stage 1: added to the Intake row of the Agent run for each state but full.
-const INTAKE_NOTES: Record<Coverage, string | undefined> = {
+// BATCHB-2: a translation names the provider and the source language, from fixed lists only.
+const INTAKE_NOTES: Record<Exclude<Coverage, "translated">, string | undefined> = {
   full: undefined,
-  translated: "Checked a machine translation into English.",
   partial: "Part of the text is not in English and was not checked.",
   unchecked: "Most of the text is not in English and was not checked.",
 };
+
+export function intakeNote(state: Coverage, sourceLang: string | null = null): string | undefined {
+  if (state !== "translated") return INTAKE_NOTES[state];
+  const name = sourceLang && sourceLang !== "en" ? languageName(sourceLang) : null;
+  return `Checked a machine translation into English${name ? ` from ${name}` : ""}, made by ${TRANSLATION_PROVIDER_NAME}.`;
+}
 
 function plural(count: number, word: string): string {
   return `${count} ${word}${count === 1 ? "" : "s"}`;
@@ -65,6 +72,7 @@ export function ResultsPanel({
   ruleCount,
   languageNotice: languageTier = null,
   coverage = null,
+  sourceLang = null,
   offerSignals = null,
   children,
 }: {
@@ -75,6 +83,9 @@ export function ResultsPanel({
   // Batch B Stage 1: the coverage state, set at check time. When given it decides the tier; without
   // it the tier above maps to a state (most: unchecked, part: partial, none: full).
   coverage?: Coverage | null;
+  // BATCHB-2: the source language code of a translation, from the fixed list. Names it in the
+  // Intake row only.
+  sourceLang?: string | null;
   // Batch A case 4: also set at check time. null means not recorded, so no notice.
   offerSignals?: readonly OfferSignal[] | null;
   children?: ReactNode;
@@ -197,7 +208,7 @@ export function ResultsPanel({
         <AgentRun
           trace={result.trace}
           aggregatorSummary={qualifiedSummary(risk, findings, notice) ?? undefined}
-          intakeNote={INTAKE_NOTES[state]}
+          intakeNote={intakeNote(state, sourceLang)}
         />
 
         {children}

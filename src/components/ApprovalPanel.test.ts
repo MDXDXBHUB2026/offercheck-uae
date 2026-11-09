@@ -106,8 +106,8 @@ describe("ApprovalPanel", () => {
 
   // After approval the pre-approval note no longer fits: say it was approved, and that nothing was sent.
   it.each<[string, GateState, string]>([
-    ["copied", APPROVED, "Reply approved and copied. Offer Check has not sent anything."],
-    ["clipboard blocked", DENIED, "Reply approved. Offer Check has not sent anything."],
+    ["copied", APPROVED, "Reply approved and copied. Offer Check has not sent this reply draft anywhere."],
+    ["clipboard blocked", DENIED, "Reply approved. Offer Check has not sent this reply draft anywhere."],
   ])("after approval (%s), says it was approved and that nothing was sent", (_name, gate, wording) => {
     const html = render(gate);
     expect(html).toContain(wording);

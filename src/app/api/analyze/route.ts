@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { runWithAudit } from "@/lib/auditRun";
+import { readCapped, TooLarge } from "@/lib/readCapped";
+import { parseTranslationRecord } from "@/lib/translation";
 import { MAX_OFFER_CHARS } from "@/lib/types";
 
 // 122,048 bytes: room for MAX_OFFER_CHARS at the worst case of JSON escaping, 6 bytes a character
@@ -12,34 +14,6 @@ function errorResponse(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
 
-class TooLarge extends Error {}
-
-// Reads the body as a stream and stops as soon as it passes the cap, without reading the rest.
-// A declared Content-Length is never trusted: a short claim on a long body is cut off the same way.
-async function readCapped(request: Request): Promise<string> {
-  if (!request.body) return "";
-  const reader = request.body.getReader();
-  const chunks: Uint8Array[] = [];
-  let size = 0;
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    size += value.byteLength;
-    if (size > MAX_BODY_BYTES) {
-      await reader.cancel().catch(() => {});
-      throw new TooLarge();
-    }
-    chunks.push(value);
-  }
-  const bytes = new Uint8Array(size);
-  let offset = 0;
-  for (const chunk of chunks) {
-    bytes.set(chunk, offset);
-    offset += chunk.byteLength;
-  }
-  return new TextDecoder().decode(bytes);
-}
-
 export async function POST(request: Request) {
   // A declared size over the cap is refused before anything is read. A request with no
   // Content-Length is read, and refused only if the body passes the cap.
@@ -49,7 +23,7 @@ export async function POST(request: Request) {
 
   let body: unknown;
   try {
-    body = JSON.parse(await readCapped(request));
+    body = JSON.parse(await readCapped(request, MAX_BODY_BYTES));
   } catch (error) {
     if (error instanceof TooLarge) return errorResponse(TOO_LONG, 413);
     return errorResponse("Request body must be JSON.", 400);
@@ -63,5 +37,8 @@ export async function POST(request: Request) {
     return errorResponse(TOO_LONG, 413);
   }
 
-  return NextResponse.json(await runWithAudit(text));
+  // BATCHB-2: after a translation the page sends a fixed-value record (the result and a language
+  // code from a fixed list) for the audit trail. It never changes the score or the findings.
+  const translation = parseTranslationRecord((body as { translation?: unknown } | null)?.translation);
+  return NextResponse.json(await runWithAudit(text, translation));
 }

@@ -14,7 +14,15 @@ import { ScoreGauge } from "./ScoreGauge";
 // the user had typed it. Every other hook keeps its real initial value and ignores updates.
 // The checked result is a state of its own, made with the `noCheck` initializer: the stub hands back
 // typed.checked for it and records every value set, so a test can see what a check stored.
-const typed = vi.hoisted(() => ({ text: "", stubbed: false, checked: null as unknown, checkedSets: [] as unknown[] }));
+// BATCHB-2: the translation flow is a state of its own too, made with the `idleFlow` initializer.
+const typed = vi.hoisted(() => ({
+  text: "",
+  stubbed: false,
+  checked: null as unknown,
+  checkedSets: [] as unknown[],
+  flow: { step: "idle" } as unknown,
+  flowSets: [] as unknown[],
+}));
 
 vi.mock("react", async (importOriginal) => {
   const real = await importOriginal<typeof import("react")>();
@@ -24,6 +32,9 @@ vi.mock("react", async (importOriginal) => {
       if (!typed.stubbed) return real.useState(initial);
       if (typeof initial === "function" && initial.name === "noCheck") {
         return [typed.checked, (value: unknown) => typed.checkedSets.push(value)];
+      }
+      if (typeof initial === "function" && initial.name === "idleFlow") {
+        return [typed.flow, (value: unknown) => typed.flowSets.push(value)];
       }
       return [initial === "" ? typed.text : initial, () => {}];
     },
@@ -72,6 +83,8 @@ afterEach(() => {
   vi.unstubAllGlobals();
   typed.checked = null;
   typed.checkedSets = [];
+  typed.flow = { step: "idle" };
+  typed.flowSets = [];
 });
 
 // LANG-1: the language notice belongs to the checked result, never to the live text box.
@@ -342,5 +355,148 @@ describe("draft placeholders", () => {
       createElement(ApprovalPanel, { gate: { status: "pending", draft: draftReply(), editing: false }, dispatch: () => {} }),
     );
     expect(html.indexOf('class="approval-actions"')).toBeLessThan(html.indexOf('id="approve-reason"'));
+  });
+});
+
+// BATCHB-2: the translation buttons, the consent gate and the failure path, on the real component.
+describe("translate to English and check (BATCHB-2)", () => {
+  const ARABIC = "رسوم التأشيرة 750 درهم يجب دفعها اليوم";
+  const ENGLISH = "Pay the visa fee of AED 500 today.";
+  const TRANSLATE = "Translate to English and check";
+  const ORIGINAL = "Check original anyway (not checked)";
+
+  type Props = { children?: ReactNode; onClick?: () => unknown; onConfirm?: () => unknown; type?: string };
+  function findAll(node: ReactNode, match: (element: ReactElement<Props>) => boolean): ReactElement<Props>[] {
+    if (Array.isArray(node)) return node.flatMap((child) => findAll(child, match));
+    if (!node || typeof node !== "object" || !("props" in node)) return [];
+    const element = node as ReactElement<Props>;
+    return [...(match(element) ? [element] : []), ...findAll(element.props.children, match)];
+  }
+  const label = (element: ReactElement<Props>) => [element.props.children].flat().filter((c) => typeof c === "string").join("");
+
+  function tree(text: string, flow: unknown) {
+    typed.text = text;
+    typed.flow = flow;
+    typed.stubbed = true;
+    try {
+      return OfferChecker({ ruleCount: 5 });
+    } finally {
+      typed.stubbed = false;
+    }
+  }
+
+  function html(text: string, flow: unknown) {
+    typed.text = text;
+    typed.flow = flow;
+    typed.stubbed = true;
+    try {
+      return renderToStaticMarkup(createElement(OfferChecker, { ruleCount: 5 }));
+    } finally {
+      typed.stubbed = false;
+    }
+  }
+
+  const calls = (fetchMock: ReturnType<typeof vi.fn>) =>
+    fetchMock.mock.calls.map(([url, init]) => [url, JSON.parse(String((init as RequestInit).body))]);
+
+  it("non-English or mixed text: Translate to English and check, then Check original anyway; English: Check offer only", () => {
+    for (const text of [ARABIC, "Aapka job confirm ho gaya hai. Visa ke liye abhi 2000 dirham bhejo, warna offer cancel ho jayega."]) {
+      const page = html(text, { step: "idle" });
+      const buttons = [...page.matchAll(/<button[^>]*>(.*?)<\/button>/g)].map((m) => m[1].replace(/<[^>]+>/g, ""));
+      expect(buttons.indexOf(TRANSLATE)).toBeGreaterThan(-1);
+      expect(buttons.indexOf(TRANSLATE)).toBeLessThan(buttons.indexOf(ORIGINAL));
+      expect(buttons).not.toContain("Check offer");
+    }
+    const english = html(ENGLISH, { step: "idle" });
+    expect(english).not.toContain(TRANSLATE);
+    expect(english).toContain(">Check offer<");
+  });
+
+  it("pressing Translate opens the consent box and sends nothing", () => {
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const [button] = findAll(tree(ARABIC, { step: "idle" }), (e) => label(e) === TRANSLATE);
+    button.props.onClick?.();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(typed.flowSets).toEqual([{ step: "consent" }]);
+    const page = html(ARABIC, { step: "consent" });
+    expect(page).toContain("Google Cloud Translation");
+    expect(page).toContain(">Send to Google and translate<");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("Confirm sends once; a failure shows the alert and never checks the original", async () => {
+    const fetchMock = vi.fn(async () => new Response(JSON.stringify({ error: "provider_timeout" }), { status: 503 }));
+    vi.stubGlobal("fetch", fetchMock);
+    const [consent] = findAll(tree(ARABIC, { step: "consent" }), (e) => typeof e.props.onConfirm === "function");
+    await consent.props.onConfirm?.();
+    await vi.waitFor(() => expect(typed.flowSets.at(-1)).toEqual({ step: "failed", code: "provider_timeout" }));
+    expect(calls(fetchMock)).toEqual([["/api/translate", { text: ARABIC, consent: true }]]);
+    expect(typed.checkedSets).toEqual([]);
+    // The two choices again, under an alert that says nothing was checked.
+    const page = html(ARABIC, { step: "failed", code: "provider_timeout" });
+    expect(page).toContain('role="alert"');
+    expect(page).toContain("Translation did not work, so nothing was checked.");
+    expect(page).toContain(TRANSLATE);
+    expect(page).toContain(ORIGINAL);
+  });
+
+  it("a failed request (network) never checks the original either", async () => {
+    const fetchMock = vi.fn(async () => {
+      throw new TypeError("Failed to fetch");
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const [consent] = findAll(tree(ARABIC, { step: "consent" }), (e) => typeof e.props.onConfirm === "function");
+    await consent.props.onConfirm?.();
+    await vi.waitFor(() => expect(typed.flowSets.at(-1)).toEqual({ step: "failed", code: "network" }));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(typed.checkedSets).toEqual([]);
+  });
+
+  it("on success, checks the English translation and records coverage translated", async () => {
+    const english = "Visa fees of 750 dirhams must be paid today.";
+    const fetchMock = vi.fn(async (url: string, init: RequestInit) => {
+      if (url === "/api/translate") return new Response(JSON.stringify({ translatedText: english, detectedSourceLanguage: "ar" }), { status: 200 });
+      const { text } = JSON.parse(String(init.body)) as { text: string };
+      return new Response(JSON.stringify({ ...runManager(text), runId: "run-t", audit: [] }), { status: 200 });
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const [consent] = findAll(tree(ARABIC, { step: "consent" }), (e) => typeof e.props.onConfirm === "function");
+    await consent.props.onConfirm?.();
+    await vi.waitFor(() => expect(typed.checkedSets).toHaveLength(2));
+    expect(calls(fetchMock)).toEqual([
+      ["/api/translate", { text: ARABIC, consent: true }],
+      ["/api/analyze", { text: english, translation: { result: "ok", sourceLang: "ar" } }],
+    ]);
+    expect(typed.flowSets).toContainEqual({ step: "idle" });
+    expect(typed.checkedSets.at(-1)).toMatchObject({
+      coverage: "translated",
+      languageNotice: null,
+      translation: { original: ARABIC, english, sourceLang: "ar" },
+    });
+    // The page then shows the original under its label and the English that was checked.
+    typed.checked = typed.checkedSets.at(-1);
+    const shown = html(ARABIC, { step: "idle" });
+    expect(shown).toContain("Original text (Arabic)");
+    expect(shown).toContain(english);
+    expect(shown).toContain("based on a machine translation");
+  });
+
+  it("Check original anyway after a failure checks the original and records the failure code", async () => {
+    const fetchMock = vi.fn(() => new Promise<never>(() => {}));
+    vi.stubGlobal("fetch", fetchMock);
+    const form = findForm(tree(ARABIC, { step: "failed", code: "provider_busy" }));
+    void form?.props.onSubmit?.({ preventDefault: () => {} });
+    await Promise.resolve();
+    expect(calls(fetchMock)).toEqual([["/api/analyze", { text: ARABIC, translation: { result: "provider_busy" } }]]);
+  });
+
+  it("translation_unavailable: no Translate button, the Stage 1 not-checked path unchanged", () => {
+    const page = html(ARABIC, { step: "unavailable", alert: true });
+    expect(page).not.toContain(TRANSLATE);
+    expect(page).toContain(ORIGINAL);
+    expect(page).toContain("The rules read English only, so the parts in other languages will not be checked.");
+    expect(page).toContain('role="alert"');
+    expect(html(ARABIC, { step: "unavailable", alert: false })).not.toContain('role="alert"');
   });
 });

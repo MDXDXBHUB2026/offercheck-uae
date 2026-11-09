@@ -6,7 +6,8 @@ import { describe, expect, it } from "vitest";
 import { NoticeStrip, SiteFooter } from "@/components/shell/site";
 import Home from "./page";
 
-const NOTICE = "Prototype. Use synthetic or redacted offers only. The app does not store offer text.";
+const NOTICE =
+  "Prototype. Use synthetic or redacted offers only. The app does not store offer text. If you choose translation, Google Cloud Translation receives it.";
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {

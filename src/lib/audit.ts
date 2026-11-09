@@ -1,4 +1,5 @@
 import type { Coverage, Detected } from "./coverage";
+import { TRANSLATION_PROVIDER, type TranslationRecord } from "./translation";
 import { planBlocks, renderBlocks, type BlockId } from "./agents/drafter";
 import { draftState, gateReducer, type GateAction, type GateFlow } from "./approvalGate";
 import type { Finding } from "./types";
@@ -116,9 +117,20 @@ function ms(durationMs: number | null): number | null {
 
 // One run: started, intake done, one entry per agent step, finished. Only lengths, statuses,
 // durations, rule ids and the score are kept, never the text or the evidence.
-// Batch B Stage 1: intake done also holds the coverage state and the detector's verdict, both fixed
-// values, and translation "none" (no translation runs). Never the text or a language name from it.
-export type RunLanguage = { coverage: Coverage; detected: Detected };
+// Batch B Stage 1: intake done also holds the coverage state and the detector's verdict (on the text
+// that was checked), both fixed values. Never the text or a language name from it.
+// BATCHB-2: and what happened to a translation, as fixed values: translation "server" or "none", the
+// provider as a fixed string, the result ("ok" or a failure code) and, on success, a language code
+// from the fixed list in translation.ts. With no translation tried: translation "none" only.
+export type RunLanguage = { coverage: Coverage; detected: Detected; translation?: TranslationRecord | null };
+
+function translationFields(record: TranslationRecord | null): Record<string, AuditValue> {
+  if (!record) return { translation: "none" };
+  if (record.result === "ok") {
+    return { translation: "server", provider: TRANSLATION_PROVIDER, translationResult: "ok", sourceLang: record.sourceLang };
+  }
+  return { translation: "none", provider: TRANSLATION_PROVIDER, translationResult: record.result };
+}
 
 export function runRecords(
   runId: string,
@@ -141,7 +153,7 @@ export function runRecords(
         runId,
         at: finishedAt,
         kind: "intake_done",
-        data: { ...timing, scope: "text_cleaning_only", ...coverage, translation: "none" },
+        data: { ...timing, scope: "text_cleaning_only", ...coverage, ...translationFields(language?.translation ?? null) },
       });
     } else {
       const extra: Record<string, AuditValue> =

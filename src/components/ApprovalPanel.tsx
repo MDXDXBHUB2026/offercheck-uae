@@ -5,12 +5,13 @@ import { copyText, unfilledPlaceholders, type GateAction, type GateState } from 
 
 const NOTHING_SENT = "Nothing is sent until you approve. Offer Check never sends messages for you.";
 
-// After approval: say what happened, and that nothing was sent. When the browser blocked the
-// clipboard, the reply was not copied, so the note does not say it was.
+// After approval: say what happened, and that the reply draft was not sent. When the browser blocked
+// the clipboard, the reply was not copied, so the note does not say it was. BATCHB-2: the note speaks
+// for the reply draft only, since a translation, if chosen, did send the offer text to Google.
 function approvedNote(copied: boolean): string {
   return copied
-    ? "Reply approved and copied. Offer Check has not sent anything."
-    : "Reply approved. Offer Check has not sent anything.";
+    ? "Reply approved and copied. Offer Check has not sent this reply draft anywhere."
+    : "Reply approved. Offer Check has not sent this reply draft anywhere.";
 }
 
 function listOf(items: string[]): string {

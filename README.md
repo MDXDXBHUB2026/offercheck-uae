@@ -19,11 +19,12 @@ Job seekers in the UAE who want to check an unsolicited job offer for common sca
 | Risk aggregator | Built: deterministic weights |
 | Drafter | Built: fixed template blocks, no LLM. Runs only after the user asks for a draft |
 | Audit trail | Built: page memory only, hash-chained, holds no offer or draft text |
-| Language notices | Built: when most or part of the text is not in English, including common Hindi, Urdu, Arabic, Tagalog, Malayalam, Bengali, Tamil or French words typed in English letters, a notice says that text was not checked. Mostly not English shows "Not checked" in place of the score; partly not English with no finding shows "Score 0 on the English part". Never an all-clear. The button then reads "Check original anyway (not checked)". Offline word lists, no translation |
+| Language notices | Built: when most or part of the text is not in English, including common Hindi, Urdu, Arabic, Tagalog, Malayalam, Bengali, Tamil or French words typed in English letters, a notice says that text was not checked. Mostly not English shows "Not checked" in place of the score; partly not English with no finding shows "Score 0 on the English part". Never an all-clear. Two buttons then: "Translate to English and check" and "Check original anyway (not checked)". Offline word lists |
+| Translation (optional) | Built: "Translate to English and check" opens a consent box; only its confirm button sends the text, every time, through `/api/translate` to Google Cloud Translation (Basic, v2). The English it returns is checked by the same fixed rules and shown read-only under the original, marked as a machine translation. With no finding the chip is grey, never green. A failure shows an alert and checks nothing. Without a server key the Translate button is hidden after the first try |
 | Offer-likeness notice | Built: a low-scoring text with no signs of a job offer gets a notice. With no finding, the chip reads "Score 0. This text does not look like a job offer." It never changes the score |
-| Limitations disclosure | Built: a short intro is always visible; the 8 limitations sit in a closed "What this check cannot do" section |
+| Limitations disclosure | Built: a short intro is always visible; the 9 limitations sit in a closed "What this check cannot do" section |
 | Shared header | Built: one header on every page, with the logo, the main navigation and a "Check an offer" link. Pages not built yet show as plain text with a "Soon" badge, not links |
-| Footer | Built: one footer on every page, with a "Check an offer" link, a link that opens the limitations, four fact chips (English only, No sign-in, Offer text not stored, Human approval) each checked by a test, and the disclaimer |
+| Footer | Built: one footer on every page, with a "Check an offer" link, a link that opens the limitations, four fact chips (English rules, translation first; No sign-in; Not stored by Offer Check; Human approval) each checked by a test, and the disclaimer |
 | Verification (domain and company checks) | Not built yet |
 | Official-channel guidance | Not built yet |
 
@@ -34,9 +35,9 @@ The checker is at `/check`. The pages `/about`, `/guide`, `/how-it-works` and `/
 - Claim extraction in the intake step.
 - Verification: no company, domain or offer number is checked.
 - Official-channel guidance.
-- Any LLM call. No model is called anywhere in the code today.
+- Any LLM call. No language model is called. The one outside service is Google Cloud Translation, a machine translation service, which the server calls only after the user asks for a translation and confirms. It never sets or changes the score.
 - Server-side storage of anything, including the audit trail.
-- Rate limits and a cost cap. The plan requires them before an AI endpoint is shared.
+- A real rate limit and cost cap. `/api/translate` has a best-effort throttle (10 requests a minute per client address, in server memory, per instance). The real spend limit is the quota set on the Google Cloud project.
 
 See [docs/known-limitations.md](docs/known-limitations.md) for what the current rules miss and over-match.
 
@@ -50,7 +51,9 @@ npm run dev     # dev server at http://localhost:3000
 npm run check   # tests, typecheck, lint, production build, no-bypass check
 ```
 
-On 2026-11-09, `npm run check` passed on Node v24.19.0 with npm 11.17.0: 26 test files, 1174 tests. Earlier, on 2026-11-08, one test in `src/lib/audit.test.ts` ("uses only fixed keys and fixed-vocabulary strings") hit its 5-second timeout on the first run of the day. It passed when the file was run alone and on the next full run.
+Translation is optional. To turn it on, set `GOOGLE_TRANSLATE_API_KEY` in the server environment (for example in the Vercel project settings, never in a `NEXT_PUBLIC_` variable or in the repo), and set a quota on the Google Cloud project, which is the real spend limit. Without the key the route answers `translation_unavailable` and the page keeps the "Check original anyway (not checked)" path.
+
+On 2026-11-09, `npm run check` passed on Node v24.19.0 with npm 11.17.0: 29 test files, 1289 tests. Earlier, on 2026-11-08, one test in `src/lib/audit.test.ts` ("uses only fixed keys and fixed-vocabulary strings") hit its 5-second timeout on the first run of the day. It passed when the file was run alone and on the next full run.
 
 ## Synthetic data only
 
@@ -59,14 +62,14 @@ Every offer in this repo, in the tests, the evaluation sets and the sample butto
 ## Privacy rules
 
 - Offer text is untrusted input. The rules treat it as data, and instructions inside it are not followed.
-- Offer text is never stored. The `/api/analyze` route processes it in memory and returns the result to the page. Nothing is written to disk, a database or browser storage.
+- Offer Check never stores offer text. The `/api/analyze` and `/api/translate` routes process it in memory and return the result to the page. Nothing is written to disk, a database or browser storage. Google's terms apply to text you send for translation.
 - Offer text is never logged and never put in error messages.
-- Offer text is never sent to a model or any third party. Today no model is called at all.
+- Offer text is sent to Google Cloud Translation only when you press "Translate to English and check" and then confirm, every time. It is sent to no one else, and no language model is called. Machine translation is lossy: the result says it is based on a machine translation and may be inexact.
 - The audit trail records each step, agent, status and approval, but no offer text, draft text or hash of either. It lives in page memory and is lost on reload.
 
 ## Deterministic score
 
-The risk score comes from fixed weights over the rules that fired, so the same English text always gets the same score. If an LLM is added later, it may explain or reword findings, but it may not set or change the score. Every finding carries the matched clause or clauses from the offer, up to 3 per finding.
+The risk score comes from fixed weights over the rules that fired, so the same English text always gets the same score. A translation may differ between versions of the translation service, so the English text that was checked is shown with the result. If an LLM is added later, it may explain or reword findings, but it may not set or change the score. Every finding carries the matched clause or clauses from the offer, up to 3 per finding.
 
 ## Docs
 

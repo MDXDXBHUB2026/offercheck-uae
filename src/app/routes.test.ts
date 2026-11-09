@@ -347,7 +347,7 @@ describe("footer", () => {
   });
 
   it("chips: listed in a constant, each with a comment naming the file that proves it", () => {
-    expect([...FOOTER_CHIPS]).toEqual(["English only", "No sign-in", "Offer text not stored", "Human approval"]);
+    expect([...FOOTER_CHIPS]).toEqual(["English rules, translation first", "No sign-in", "Not stored by Offer Check", "Human approval"]);
     const lines = read("src/components/shell/site.tsx").split(/\r?\n/);
     for (const chip of FOOTER_CHIPS) {
       expect(html).toContain(`<li class="footer-chip">${chip}</li>`);
@@ -358,29 +358,37 @@ describe("footer", () => {
       for (const file of files) expect(existsSync(join(process.cwd(), file)), `${chip}: ${file}`).toBe(true);
     }
     // 9b: the offer-text chip keeps its proof in the audit run.
-    expect(lines.find((l) => l.trim().startsWith('"Offer text not stored",'))).toContain("src/lib/auditRun.ts");
+    expect(lines.find((l) => l.trim().startsWith('"Not stored by Offer Check",'))).toContain("src/lib/auditRun.ts");
   });
 
   it("the chips are true in the code today", () => {
-    // English only: the rules read English; other scripts get a notice.
-    expect(PUBLIC_LIMITS_INTRO).toContain("reads English text only");
+    // English rules, translation first (BATCHB-2): the rules read English; other scripts get a
+    // notice, and the page offers a translation, after consent, before the rules read it.
+    expect(PUBLIC_LIMITS_INTRO).toContain("checks English text");
+    expect(PUBLIC_LIMITS_INTRO).toContain("machine translated first");
+    expect(read("src/components/OfferChecker.tsx")).toContain("TRANSLATE_BUTTON");
     expect(languageNotice("\u0648\u0638\u064a\u0641\u0629 \u0628\u0631\u0627\u062a\u0628 \u0639\u0627\u0644\u064a")).toBe("most");
-    // No sign-in: no auth library, no middleware or proxy, one API route that reads no cookie or token.
+    // No sign-in: no auth library, no middleware or proxy, and API routes that read no cookie or token.
     const pkg = JSON.parse(read("package.json")) as { dependencies: Record<string, string> };
     expect(Object.keys(pkg.dependencies).sort()).toEqual(["next", "react", "react-dom"]);
     for (const file of ["src/middleware.ts", "src/proxy.ts", "middleware.ts", "proxy.ts"]) expect(existsSync(join(process.cwd(), file)), file).toBe(false);
-    expect(readdirSync(join(process.cwd(), "src/app/api"))).toEqual(["analyze"]);
+    expect(readdirSync(join(process.cwd(), "src/app/api"))).toEqual(["analyze", "translate"]);
     const route = read("src/app/api/analyze/route.ts");
-    expect(route).not.toMatch(/cookies|authorization|session|token/i);
-    // Offer text not stored: the run and its audit trail go back in the response; no module keeps them.
-    expect(route).toContain("return NextResponse.json(await runWithAudit(text));");
-    for (const file of ["src/lib/auditRun.ts", "src/lib/audit.ts", "src/app/api/analyze/route.ts"]) {
+    const translate = read("src/app/api/translate/route.ts");
+    for (const source of [route, translate]) expect(source).not.toMatch(/cookies|authorization|session|token/i);
+    // Not stored by Offer Check: the run and its audit trail go back in the response; the translation
+    // goes back to the page; no module keeps either.
+    expect(route).toContain("return NextResponse.json(await runWithAudit(text, translation));");
+    expect(translate).toContain("{ translatedText: result.translatedText, detectedSourceLanguage: result.detectedSourceLanguage }");
+    for (const file of ["src/lib/auditRun.ts", "src/lib/audit.ts", "src/app/api/analyze/route.ts", "src/app/api/translate/route.ts"]) {
       expect(read(file), file).not.toMatch(/^(?:let|var) |new (?:Map|Set)\(|globalThis\.(?!crypto)/m);
     }
-    // Human approval: the browser's only request is the analysis; a draft is only ever copied.
-    const browser = ["src/components/OfferChecker.tsx", "src/components/ApprovalPanel.tsx", "src/lib/approvalGate.ts"].map(read).join("\n");
-    expect(browser.match(/fetch\(/g)).toHaveLength(1);
+    // Human approval: the browser's requests are the analysis and, after consent, the translation;
+    // a draft is only ever copied.
+    const browser = ["src/components/OfferChecker.tsx", "src/components/ApprovalPanel.tsx", "src/lib/approvalGate.ts", "src/components/translateRequest.ts"].map(read).join("\n");
+    expect(browser.match(/fetch(?:Impl)?\(/g)).toHaveLength(2);
     expect(browser).toContain('fetch("/api/analyze"');
+    expect(browser).toContain('fetchImpl("/api/translate"');
     expect(browser).not.toMatch(/mailto:|sendMessage|navigator\.share/);
   });
 
@@ -406,6 +414,9 @@ describe("error, not-found and loading states", () => {
     const html = renderToStaticMarkup(createElement(ErrorPage, { error, retry: () => {} }));
     expect(html).toContain("Something went wrong");
     expect(html).toContain("Try again");
+    // BATCHB-2: a claim for Offer Check only; a translation, if chosen, went to Google.
+    expect(html).toContain("Offer Check did not save your text.");
+    expect(html).not.toContain("not saved anywhere");
     expect(html).not.toContain("CANARY");
     expect(html).not.toContain("digest-123");
   });
@@ -414,6 +425,8 @@ describe("error, not-found and loading states", () => {
     const html = renderToStaticMarkup(createElement(GlobalError, { error: new Error(CANARY), retry: () => {} }));
     expect(html).toMatch(/^<html lang="en">/);
     expect(html).toContain("<title>Something went wrong · Offer Check UAE</title>");
+    expect(html).toContain("Offer Check did not save your text.");
+    expect(html).not.toContain("not saved anywhere");
     expect(html).not.toContain("CANARY");
   });
 

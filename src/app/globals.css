@@ -835,6 +835,42 @@ button.sample:hover {
   margin-top: 8px;
 }
 
+/* BATCHB-2: the consent box, the translation failure alert and the translated text. */
+.translate-consent,
+.translate-failure {
+  margin-top: 12px;
+}
+
+.translate-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.translation-card {
+  margin-top: 24px;
+}
+
+.translation-label {
+  margin: 16px 0 8px;
+  font-size: 1rem;
+  color: var(--heading);
+}
+
+.translation-text {
+  max-height: 12rem;
+  overflow: auto;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--fill);
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  unicode-bidi: plaintext;
+}
+
 /* Results */
 
 .results {

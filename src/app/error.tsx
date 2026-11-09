@@ -11,7 +11,7 @@ export default function ErrorPage({ retry }: { error: unknown; retry: () => void
       <h1 id="page-title" className="page-title">
         Something went wrong
       </h1>
-      <p className="intro">This page could not be shown. Your text was not saved anywhere.</p>
+      <p className="intro">This page could not be shown. Offer Check did not save your text.</p>
       <p className="hero-actions">
         <Button onClick={() => retry()}>Try again</Button>
         <Link className="button-link secondary" href="/check">

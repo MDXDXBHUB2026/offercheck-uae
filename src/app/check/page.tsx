@@ -30,8 +30,9 @@ export default function CheckPage() {
             Check a job offer before you pay or share anything.
           </h1>
           <p className="intro">
-            Paste a job offer to check it against {RULES.length} fixed rules. English text only. No
-            AI is used yet, and your text is not saved.
+            Paste a job offer to check it against {RULES.length} fixed rules. The rules read English.
+            Other languages can be translated by Google Cloud Translation if you agree. The score is set
+            by fixed rules, not AI. Offer Check does not save your text.
           </p>
           <a className="button-link button-light" href="#offer">
             Check an offer

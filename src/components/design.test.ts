@@ -511,11 +511,11 @@ describe("limitations panel (COPY-1)", () => {
   });
 
   it("has one public item per bullet in the doc section, so no limitation is dropped", () => {
-    expect(PUBLIC_LIMITS).toHaveLength(8);
+    expect(PUBLIC_LIMITS).toHaveLength(9);
     expect(readLimitations().items).toHaveLength(PUBLIC_LIMITS.length);
   });
 
-  it("the page shows the intro and all 8 items, and none of the doc's internal text", () => {
+  it("the page shows the intro and all 9 items, and none of the doc's internal text", () => {
     const html = renderToStaticMarkup(createElement(Home));
     const panel = html.slice(html.indexOf('aria-labelledby="limits-heading"'));
     expect(panel).toContain("What this check cannot do");
@@ -523,12 +523,12 @@ describe("limitations panel (COPY-1)", () => {
     for (const item of PUBLIC_LIMITS) {
       expect(panel).toContain(`<li><strong>${escapeHtml(item.title)}</strong> ${escapeHtml(item.text)}</li>`);
     }
-    expect(panel.match(/<li>/g)).toHaveLength(8);
+    expect(panel.match(/<li>/g)).toHaveLength(9);
     for (const term of ["docs/", "QA defect", "Intake v2", "<code>"]) expect(panel).not.toContain(term);
   });
 
-  // 5b: the intro pair stays visible; the 8 items sit in a native details element, closed on load.
-  it("keeps the intro visible and puts the 8 items in a closed details element with a visible summary", () => {
+  // 5b: the intro pair stays visible; the items (9 since BATCHB-2) sit in a native details element, closed on load.
+  it("keeps the intro visible and puts the 9 items in a closed details element with a visible summary", () => {
     const html = renderToStaticMarkup(createElement(Home));
     const panel = html.slice(html.indexOf('aria-labelledby="limits-heading"'));
     const details = panel.match(/<details[^>]*>(.*?)<\/details>/)?.[0] ?? "";
@@ -539,7 +539,7 @@ describe("limitations panel (COPY-1)", () => {
     // The summary is a native, keyboard-focusable control with the visible text.
     expect(details).toMatch(/^<details[^>]*><summary><span id="limits-heading" class="limits-summary">What this check cannot do<\/span><\/summary>/);
     expect(details).not.toMatch(/<summary[^>]*(hidden|tabindex="-1"|visually-hidden)/);
-    expect(details.match(/<li>/g)).toHaveLength(8);
+    expect(details.match(/<li>/g)).toHaveLength(9);
     for (const item of PUBLIC_LIMITS) expect(details).toContain(escapeHtml(item.title));
     // The intro pair is outside the details element, so it is never hidden.
     const intro = panel.indexOf(`<p>${escapeHtml(PUBLIC_LIMITS_INTRO)}</p>`);

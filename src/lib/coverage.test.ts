@@ -181,7 +181,8 @@ describe("coverage on the page", () => {
     expect(emptyCard(html)).toContain(
       "None of the 5 rules matched in the English translation. A translation can change the meaning, so this does not confirm that the offer is genuine.",
     );
-    expect(row(html, "Intake (text cleaning only)")).toContain("Checked a machine translation into English.");
+    // BATCHB-2: the note now names the provider.
+    expect(row(html, "Intake (text cleaning only)")).toContain("Checked a machine translation into English, made by Google Cloud Translation.");
     expect(row(html, "Risk aggregator")).toBe("Score 0 of 100 on the English translation. A translation can change the meaning.");
     expect(announcement).toBe("Results ready. Score 0 of 100 on the English translation. A translation can change the meaning.");
   });

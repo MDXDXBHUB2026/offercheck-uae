@@ -1,6 +1,6 @@
 # Batch B design: non-English text, translate before checking
 
-Status: design only, 2026-11-09. No code has changed. Nothing here is built.
+Status: Stage 1 built (BATCHB-1). Option (b), server translation through Google Cloud Translation (Basic, v2), built as BATCHB-2 at the owner's request, ahead of stages 2 and 3; see the Decisions section and `docs/defects.md`. Stages 2, 3 and 5 are not built.
 
 ## 0. What the owner asked for, and the fixed constraints
 
@@ -199,3 +199,11 @@ Owner decisions, 2026-11-09.
 5. Translated text with no matches: a neutral grey chip, with wording that says a translation may change the meaning. Never green.
 6. The calibration set is written by the owner's assistant and kept outside the repo.
 7. Languages first: Arabic, Hindi, Urdu, Malayalam, Tagalog, Bengali; plus Hinglish and romanised Arabic as detector tests.
+
+BATCHB-2 build notes, 2026-11-09:
+
+- Built option (b) with Google Cloud Translation (Basic, v2 REST) on the owner's instruction, ahead of stages 2 and 3. Consent before every send, no logging, no storage, the key only in the server environment.
+- The daily cost cap is the quota on the Google Cloud project, set by the owner. The app has only a best-effort in-memory throttle (10 requests a minute per client address).
+- Section 3 asked for "one retry at most" and a kill switch. The route makes no retry. Removing the key is the kill switch: the route then answers `translation_unavailable` and the page hides the Translate button.
+- Section 4 put the English translation into the box. Instead, the box keeps the original, and the original and the English are shown read-only under it, as the BATCHB-2 task asked.
+- `LANGUAGE_NOTICES` (section 5) are unchanged. They describe a check of the original, which is still right when translation is off.
