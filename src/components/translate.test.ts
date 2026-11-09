@@ -9,6 +9,7 @@ import { scoreChip, TRANSLATED_NONE_LABEL } from "./scoreChip";
 import {
   failureForCheck,
   idleFlow,
+  TRANSLATE_BUTTON,
   TRANSLATE_CONSENT_TEXT,
   TRANSLATE_FAILED_TITLE,
   translateFailureMessage,
@@ -17,7 +18,7 @@ import {
   type TranslateFlow,
 } from "./translateFlow";
 import { requestTranslation } from "./translateRequest";
-import { TranslateConsent, TranslateFailureAlert, TranslationShown } from "./TranslationPanels";
+import { TranslateFailureAlert, TranslationShown } from "./TranslationPanels";
 
 // BATCHB-2: the page side of the translation. fetch is always mocked.
 const ARABIC = "رسوم التأشيرة 750 درهم يجب دفعها اليوم";
@@ -75,63 +76,64 @@ describe("requestTranslation (the page's only translation request)", () => {
   });
 });
 
-describe("consent gate: one explicit confirm per send, no auto-send", () => {
+// One click: the disclosure is always on screen, and pressing the labelled button is the consent.
+describe("consent: one press of the labelled button per send, no auto-send", () => {
   const step = (flow: TranslateFlow, ...actions: Parameters<typeof translateFlowReducer>[1][]) =>
     actions.reduce(translateFlowReducer, flow);
 
-  it("Translate opens the consent box; only Confirm from the consent box starts a send", () => {
+  it("Send to Google and translate starts a send from idle or after a failure; nothing else does", () => {
     expect(idleFlow()).toEqual({ step: "idle" });
-    expect(step(idleFlow(), { type: "ask" })).toEqual({ step: "consent" });
-    expect(step(idleFlow(), { type: "ask" }, { type: "confirm" })).toEqual({ step: "sending" });
-    // Confirm without the consent box open does nothing.
-    for (const flow of [idleFlow(), { step: "failed", code: "provider_error" } as const, { step: "unavailable", alert: true } as const]) {
-      expect(step(flow, { type: "confirm" })).toEqual(flow);
+    expect(step(idleFlow(), { type: "send" })).toEqual({ step: "sending" });
+    expect(step({ step: "failed", code: "provider_error" }, { type: "send" })).toEqual({ step: "sending" });
+    const off = { step: "unavailable", alert: true } as const;
+    expect(step(off, { type: "send" })).toBe(off);
+    for (const action of [{ type: "reset" }, { type: "checked" }, { type: "done" }] as const) {
+      expect(step(idleFlow(), action).step).not.toBe("sending");
     }
   });
 
-  it("a second Confirm while sending does not start another send", () => {
-    const sending = step(idleFlow(), { type: "ask" }, { type: "confirm" });
-    expect(step(sending, { type: "confirm" })).toBe(sending);
-    expect(step(sending, { type: "ask" })).toBe(sending);
+  it("a second press while sending does not start another send", () => {
+    const sending = step(idleFlow(), { type: "send" });
+    expect(step(sending, { type: "send" })).toBe(sending);
   });
 
-  it("consent is not remembered: after a success or a failure, the next send needs a new confirm", () => {
-    const done = step(idleFlow(), { type: "ask" }, { type: "confirm" }, { type: "done" });
+  it("nothing is remembered: after a success or a failure, the next send needs a new press", () => {
+    const done = step(idleFlow(), { type: "send" }, { type: "done" });
     expect(done).toEqual({ step: "idle" });
-    expect(step(done, { type: "confirm" })).toEqual({ step: "idle" });
-    const failed = step(idleFlow(), { type: "ask" }, { type: "confirm" }, { type: "failed", code: "provider_busy" });
+    const failed = step(idleFlow(), { type: "send" }, { type: "failed", code: "provider_busy" });
     expect(failed).toEqual({ step: "failed", code: "provider_busy" });
-    expect(step(failed, { type: "confirm" })).toEqual(failed);
-    expect(step(failed, { type: "ask" })).toEqual({ step: "consent" });
+    for (const action of [{ type: "done" }, { type: "checked" }, { type: "reset" }] as const) {
+      expect(step(failed, action).step).not.toBe("sending");
+    }
   });
 
-  it("Cancel closes the consent box without sending", () => {
-    expect(step(idleFlow(), { type: "ask" }, { type: "cancel" })).toEqual({ step: "idle" });
+  it("STALE-1: an edit while sending ends the send (the page aborts it); a check does not", () => {
+    const sending = step(idleFlow(), { type: "send" });
+    expect(step(sending, { type: "reset" })).toEqual({ step: "idle" });
+    expect(step(sending, { type: "checked" })).toBe(sending);
   });
 
   it("translation_unavailable turns translation off for the visit; an edit or a check keeps it off", () => {
-    const off = step(idleFlow(), { type: "ask" }, { type: "confirm" }, { type: "failed", code: "translation_unavailable" });
+    const off = step(idleFlow(), { type: "send" }, { type: "failed", code: "translation_unavailable" });
     expect(off).toEqual({ step: "unavailable", alert: true });
     expect(step(off, { type: "reset" })).toEqual({ step: "unavailable", alert: false });
     expect(step(off, { type: "checked" })).toEqual({ step: "unavailable", alert: false });
-    expect(step(off, { type: "ask" })).toBe(off);
+    expect(step(off, { type: "send" })).toBe(off);
   });
 
   it("a check of the original carries the failure code, for the audit trail only", () => {
     expect(failureForCheck({ step: "failed", code: "provider_timeout" })).toEqual({ result: "provider_timeout" });
     expect(failureForCheck({ step: "unavailable", alert: false })).toEqual({ result: "translation_unavailable" });
     expect(failureForCheck(idleFlow())).toBeNull();
-    expect(failureForCheck({ step: "consent" })).toBeNull();
+    expect(failureForCheck({ step: "sending" })).toBeNull();
   });
 
-  it("the consent box names Google Cloud Translation, says the app does not store the text, and has confirm and cancel", () => {
-    const html = renderToStaticMarkup(createElement(TranslateConsent, { onConfirm: () => {}, onCancel: () => {} }));
-    expect(TRANSLATE_CONSENT_TEXT).toContain("Google Cloud Translation");
-    expect(TRANSLATE_CONSENT_TEXT).toContain("Offer Check does not store it");
-    expect(html).toContain('role="group"');
-    expect(html).toContain(">Send to Google and translate<");
-    expect(html).toContain(">Cancel<");
+  it("the disclosure keeps its wording, names Google, says the app does not store the text; the button says where the text goes", () => {
+    expect(TRANSLATE_CONSENT_TEXT).toBe(
+      "To translate, Offer Check sends the text in the box to Google Cloud Translation, a machine translation service run by Google. Offer Check does not store it; Google's terms apply to the text it receives. Remove names, phone numbers and other personal details first.",
+    );
     expect(TRANSLATE_CONSENT_TEXT).toMatch(/^[\x20-\x7e]+$/);
+    expect(TRANSLATE_BUTTON).toBe("Send to Google and translate");
   });
 });
 

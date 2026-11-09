@@ -1,8 +1,5 @@
-import { Button, Callout } from "@/components/ui";
+import { Callout } from "@/components/ui";
 import {
-  TRANSLATE_CONFIRM,
-  TRANSLATE_CONSENT_TEXT,
-  TRANSLATE_CONSENT_TITLE,
   TRANSLATE_FAILED_TITLE,
   TRANSLATE_UNAVAILABLE_TITLE,
   translateFailureMessage,
@@ -10,26 +7,6 @@ import {
   type ShownTranslation,
 } from "@/components/translateFlow";
 import { languageName, UNKNOWN_LANGUAGE, type TranslateFailure } from "@/lib/translation";
-
-// BATCHB-2: the consent box. Shown before every send; only its confirm button sends the text.
-export function TranslateConsent({ onConfirm, onCancel }: { onConfirm: () => void; onCancel: () => void }) {
-  return (
-    <div className="callout callout-neutral translate-consent" role="group" aria-labelledby="translate-consent-title">
-      <div className="callout-body">
-        <p id="translate-consent-title" className="callout-title">
-          {TRANSLATE_CONSENT_TITLE}
-        </p>
-        <p>{TRANSLATE_CONSENT_TEXT}</p>
-        <div className="translate-actions">
-          <Button onClick={onConfirm}>{TRANSLATE_CONFIRM}</Button>
-          <Button variant="secondary" onClick={onCancel}>
-            Cancel
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 // A failed translation: fixed wording only, never the text or the provider's reply.
 export function TranslateFailureAlert({ code }: { code: TranslateFailure }) {

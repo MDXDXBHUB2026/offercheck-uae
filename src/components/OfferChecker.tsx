@@ -16,20 +16,22 @@ import {
   type AuditRecord,
 } from "@/lib/audit";
 import { noticeFor, qualifiedSummary, scoreChip, type Notice } from "@/components/scoreChip";
-import { coverageOf, detectLanguage, noticeForCoverage, type Coverage } from "@/lib/coverage";
+import { coverageOf, detectLanguage, isUncertainEnglish, noticeForCoverage, type Coverage } from "@/lib/coverage";
 import { offerSignals, type OfferSignal } from "@/lib/offerLikeness";
 import {
   failureForCheck,
   idleFlow,
   LANGUAGE_GATE_TRANSLATE_NOTE,
+  LANGUAGE_GATE_UNCERTAIN_NOTE,
   TRANSLATE_BUTTON,
+  TRANSLATE_CONSENT_TEXT,
   translateFlowReducer,
   type ShownTranslation,
   type TranslateAction,
   type TranslateFlow,
 } from "@/components/translateFlow";
 import { requestTranslation } from "@/components/translateRequest";
-import { TranslateConsent, TranslateFailureAlert, TranslationShown } from "@/components/TranslationPanels";
+import { TranslateFailureAlert, TranslationShown } from "@/components/TranslationPanels";
 import type { TranslationRecord } from "@/lib/translation";
 import type { LanguageNotice } from "@/lib/textScript";
 import { MAX_OFFER_CHARS } from "@/lib/types";
@@ -54,7 +56,10 @@ export function checkBlockedReason(text: string, hasSamples: boolean): string {
 // Batch B Stage 1: the coverage state too, from the offline detector. The tier follows from it.
 // BATCHB-2: after a translation, the checked text is the English translation, the coverage is
 // "translated", and the original and the English are kept with the result to show under it.
+// STALE-1: boxText is the text that was in the box when the check was asked for (the original, also
+// after a translation). The result is shown only while the box holds exactly that text.
 export type CheckedResult = {
+  boxText: string;
   response: AnalyzeResponse;
   coverage: Coverage;
   languageNotice: LanguageNotice | null;
@@ -69,6 +74,7 @@ export function recordCheck(
 ): CheckedResult {
   const coverage = translation ? "translated" : coverageOf(detectLanguage(submittedText));
   return {
+    boxText: translation ? translation.original : submittedText,
     response,
     coverage,
     languageNotice: noticeForCoverage(coverage),
@@ -82,10 +88,21 @@ export function recordCheck(
 export const LANGUAGE_GATE_NOTE =
   "This text does not look like English, or only part of it does. The rules read English only, so the parts in other languages will not be checked.";
 export const LANGUAGE_GATE_BUTTON = "Check original anyway (not checked)";
+// STALE-1: announced in the status region when an edit removes a result. No offer text.
+export const RESULT_CLEARED = "Result cleared because the text changed.";
 
 // The initial checked result: none.
 export function noCheck(): CheckedResult | null {
   return null;
+}
+
+// The initial check failure (none) and STALE-1 notice (off). Named, so a test can recognise them.
+function noFailure(): CheckFailure | null {
+  return null;
+}
+
+function notCleared(): boolean {
+  return false;
 }
 
 // The screen-reader announcement uses the chip's wording, so the two never disagree (UX-1, LANG-2).
@@ -110,8 +127,10 @@ export function resultAnnouncement(
 export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; samples?: Sample[] }) {
   const [text, setText] = useState("");
   const [checked, setChecked] = useState<CheckedResult | null>(noCheck);
-  const result = checked?.response ?? null;
-  const [failure, setFailure] = useState<CheckFailure | null>(null);
+  // STALE-1: never show a result for text other than the text now in the box.
+  const result = checked && checked.boxText === text ? checked.response : null;
+  const [cleared, setCleared] = useState(notCleared);
+  const [failure, setFailure] = useState<CheckFailure | null>(noFailure);
   const [loading, setLoading] = useState(false);
   const [gateFlow, dispatchGate] = useReducer(gateReducer, INITIAL_GATE_FLOW);
   const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
@@ -126,6 +145,10 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
   const translateRef = useRef<TranslateFlow>(translateFlow);
   // The last check request, so "Try again" repeats it exactly (a translated check stays translated).
   const lastRequest = useRef<{ submitted: string; translation: TranslationRecord | null; shown: ShownTranslation | null } | null>(null);
+  // STALE-1: the request in flight (a translation or a check) and a counter. Each request takes the
+  // next id; an edit aborts the request and moves the counter on, so a late reply is ignored.
+  const inFlight = useRef<AbortController | null>(null);
+  const requestSeq = useRef(0);
 
   const reason = checkBlockedReason(text, samples.length > 0);
   const overLimit = text.length > MAX_OFFER_CHARS;
@@ -133,6 +156,12 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
   const languageGate = text.trim().length > 0 && detectLanguage(text) !== "en";
   // BATCHB-2: the Translate button, unless the server said translation is not available.
   const canTranslate = languageGate && translateFlow.step !== "unavailable";
+  // LANG-4: the uncertain band (English-word share 0.15 up to 0.30) has its own explanation.
+  const gateNote = !canTranslate
+    ? LANGUAGE_GATE_NOTE
+    : isUncertainEnglish(text)
+      ? LANGUAGE_GATE_UNCERTAIN_NOTE
+      : LANGUAGE_GATE_TRANSLATE_NOTE;
   const sending = translateFlow.step === "sending";
 
   function moveTranslate(action: TranslateAction): TranslateFlow {
@@ -144,8 +173,38 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
     return next;
   }
 
-  function editText(value: string) {
+  function beginRequest(): { id: number; signal: AbortSignal } {
+    inFlight.current?.abort();
+    const controller = new AbortController();
+    inFlight.current = controller;
+    requestSeq.current += 1;
+    return { id: requestSeq.current, signal: controller.signal };
+  }
+
+  const isCurrent = (id: number) => requestSeq.current === id;
+
+  // STALE-1: the text changed, so everything from the previous check goes: the result (score,
+  // findings, Agent run, translation panel, draft), the approval gate and its audit chain, and any
+  // failure alert. A request in flight is aborted and its reply ignored. Focus is not moved.
+  function clearForEdit() {
+    const hadSomething = checked !== null || loading || translateRef.current.step === "sending" || failure !== null;
+    inFlight.current?.abort();
+    inFlight.current = null;
+    requestSeq.current += 1;
+    setChecked(null);
+    setFailure(null);
+    setLoading(false);
+    dispatchGate({ type: "reset" });
+    flowRef.current = INITIAL_GATE_FLOW;
+    lastRequest.current = null;
+    startAudit(null, []);
+    if (hadSomething) setCleared(true);
+  }
+
+  // Typing, pasting or a sample button. A sample always clears, even when it fills in the same text.
+  function editText(value: string, fromSample = false) {
     setText(value);
+    if (fromSample || value !== text) clearForEdit();
     if (translateRef.current.step !== "idle") moveTranslate({ type: "reset" });
   }
 
@@ -194,6 +253,8 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
     if (loading || reason || submitted.trim().length === 0) return;
     lastRequest.current = { submitted, translation, shown };
     if (!shown) moveTranslate({ type: "checked" });
+    const { id, signal } = beginRequest();
+    setCleared(false);
     setLoading(true);
     setFailure(null);
     setChecked(null);
@@ -207,8 +268,11 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(translation ? { text: submitted, translation } : { text: submitted }),
+          signal,
         });
       } catch {
+        // Aborted by an edit, or replaced by a newer request: no result and no alert.
+        if (!isCurrent(id)) return;
         setFailure(networkFailure(typeof navigator === "undefined" || navigator.onLine !== false));
         return;
       }
@@ -218,6 +282,7 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
       } catch {
         data = null;
       }
+      if (!isCurrent(id)) return;
       if (response.ok && isAnalyzeResponse(data)) {
         setChecked(recordCheck(data, submitted, shown));
         startAudit(data.runId, data.audit);
@@ -225,7 +290,10 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
         setFailure(responseFailure(response.ok ? 200 : response.status, data));
       }
     } finally {
-      setLoading(false);
+      if (isCurrent(id)) {
+        inFlight.current = null;
+        setLoading(false);
+      }
     }
   }
 
@@ -236,13 +304,20 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
     void runCheck(text, failureForCheck(translateRef.current));
   }
 
-  // BATCHB-2: the consent box's confirm button, and nothing else, sends the text for translation.
-  // A failure shows an alert and checks nothing; the user chooses again.
-  async function confirmTranslation() {
-    if (loading || translateRef.current.step !== "consent") return;
+  // BATCHB-2: the "Send to Google and translate" button, and nothing else, sends the text for
+  // translation, once per press; the disclosure is on screen before the press. The ref makes a
+  // double click send once. A failure shows an alert and checks nothing; the user chooses again.
+  async function sendTranslation() {
+    const step = translateRef.current.step;
+    if (loading || (step !== "idle" && step !== "failed")) return;
     const original = text;
-    moveTranslate({ type: "confirm" });
-    const outcome = await requestTranslation(original);
+    moveTranslate({ type: "send" });
+    setCleared(false);
+    const { id, signal } = beginRequest();
+    const outcome = await requestTranslation(original, undefined, signal);
+    // STALE-1: the text changed while translating: the request was aborted. Show nothing.
+    if (!isCurrent(id)) return;
+    inFlight.current = null;
     if (!outcome.ok) {
       moveTranslate({ type: "failed", code: outcome.code });
       return;
@@ -264,7 +339,9 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
           result,
           noticeFor(checked?.coverage ?? "full", checked?.offerSignals ?? null, result.risk.band),
         )
-      : "";
+      : cleared
+        ? RESULT_CLEARED
+        : "";
 
   return (
     <>
@@ -284,7 +361,59 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
           onChange={(event) => editText(event.target.value)}
           placeholder="Paste the WhatsApp message, email or LinkedIn text here"
         />
+        {/* The action area, then the samples: the tab order follows the page (text box, actions, samples). */}
         <div className="input-foot">
+          {languageGate ? (
+            // Not clearly English: one banner under the box. The explanation, the disclosure (always
+            // shown, before any click, while translation is on), any alert, then exactly two buttons.
+            // BATCHB-2: "Send to Google and translate" sends at once, once per press.
+            <Callout tone="neutral" className="language-banner">
+              <p id="language-gate" className="language-gate">
+                {gateNote}
+              </p>
+              {canTranslate && (
+                <p id="translate-disclosure" className="translate-disclosure">
+                  {TRANSLATE_CONSENT_TEXT}
+                </p>
+              )}
+              {translateFlow.step === "failed" && <TranslateFailureAlert code={translateFlow.code} />}
+              {translateFlow.step === "unavailable" && translateFlow.alert && (
+                <TranslateFailureAlert code="translation_unavailable" />
+              )}
+              <div className="gate-actions">
+                {canTranslate && (
+                  <Button
+                    blocked={Boolean(reason) || loading}
+                    reasonId="check-reason"
+                    busy={sending}
+                    onClick={() => void sendTranslation()}
+                    aria-describedby="translate-disclosure"
+                  >
+                    {sending ? "Translating..." : TRANSLATE_BUTTON}
+                  </Button>
+                )}
+                <Button
+                  type="submit"
+                  variant={canTranslate ? "secondary" : "primary"}
+                  blocked={Boolean(reason) || sending}
+                  reasonId="check-reason"
+                  busy={loading}
+                  aria-describedby="language-gate"
+                >
+                  {loading ? "Checking..." : LANGUAGE_GATE_BUTTON}
+                </Button>
+              </div>
+              <HelperText id="check-reason">{reason}</HelperText>
+            </Callout>
+          ) : (
+            // English or empty: one primary button, nothing about translation.
+            <div className="submit">
+              <Button type="submit" blocked={Boolean(reason) || sending} reasonId="check-reason" busy={loading}>
+                {loading ? "Checking..." : "Check offer"}
+              </Button>
+              <HelperText id="check-reason">{reason}</HelperText>
+            </div>
+          )}
           {samples.length > 0 && (
             <div className="samples" role="group" aria-labelledby="samples-label">
               <span id="samples-label" className="samples-label">
@@ -296,7 +425,7 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
                     key={sample.label}
                     type="button"
                     className="sample"
-                    onClick={() => editText(sample.text)}
+                    onClick={() => editText(sample.text, true)}
                   >
                     <span>{sample.label}</span>
                     <span className="sample-tag">Synthetic</span>
@@ -305,44 +434,6 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
               </div>
             </div>
           )}
-          <div className="submit">
-            {/* BATCHB-2: Translate first, then Check original anyway. Translate only opens the
-                consent box; nothing is sent until the user confirms there. */}
-            {canTranslate && translateFlow.step !== "consent" && (
-              <Button
-                blocked={Boolean(reason) || loading}
-                reasonId="check-reason"
-                busy={sending}
-                onClick={() => moveTranslate({ type: "ask" })}
-                aria-describedby="language-gate"
-              >
-                {sending ? "Translating..." : TRANSLATE_BUTTON}
-              </Button>
-            )}
-            <Button
-              type="submit"
-              variant={canTranslate ? "secondary" : "primary"}
-              blocked={Boolean(reason) || sending}
-              reasonId="check-reason"
-              busy={loading}
-              {...(languageGate ? { "aria-describedby": "language-gate" } : {})}
-            >
-              {loading ? "Checking..." : languageGate ? LANGUAGE_GATE_BUTTON : "Check offer"}
-            </Button>
-            <HelperText id="check-reason">{reason}</HelperText>
-            {languageGate && (
-              <p id="language-gate" className="helper language-gate">
-                {canTranslate ? LANGUAGE_GATE_TRANSLATE_NOTE : LANGUAGE_GATE_NOTE}
-              </p>
-            )}
-            {canTranslate && translateFlow.step === "consent" && (
-              <TranslateConsent onConfirm={() => void confirmTranslation()} onCancel={() => moveTranslate({ type: "cancel" })} />
-            )}
-            {languageGate && translateFlow.step === "failed" && <TranslateFailureAlert code={translateFlow.code} />}
-            {translateFlow.step === "unavailable" && translateFlow.alert && (
-              <TranslateFailureAlert code="translation_unavailable" />
-            )}
-          </div>
         </div>
       </form>
       <p className="visually-hidden" role="status">

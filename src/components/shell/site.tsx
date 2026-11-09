@@ -6,7 +6,7 @@ import { LIMITS_SECTION } from "@/components/publicLimitations";
 // Site-wide text and navigation. Server-safe: no hooks here.
 
 // True only while no server code logs or stores the request body. A test checks that.
-// BATCHB-2: translation sends the text to Google Cloud Translation, only after the user confirms.
+// BATCHB-2: translation sends the text to Google Cloud Translation, only when the user presses "Send to Google and translate".
 export const PROTOTYPE_NOTICE =
   "Prototype. Use synthetic or redacted offers only. The app does not store offer text. If you choose translation, Google Cloud Translation receives it.";
 

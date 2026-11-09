@@ -207,3 +207,8 @@ BATCHB-2 build notes, 2026-11-09:
 - Section 3 asked for "one retry at most" and a kill switch. The route makes no retry. Removing the key is the kill switch: the route then answers `translation_unavailable` and the page hides the Translate button.
 - Section 4 put the English translation into the box. Instead, the box keeps the original, and the original and the English are shown read-only under it, as the BATCHB-2 task asked.
 - `LANGUAGE_NOTICES` (section 5) are unchanged. They describe a check of the original, which is still right when translation is off.
+
+Owner changes, 2026-11-09 (after BATCHB-2):
+
+- One click instead of two. The disclosure is always shown in the banner, before any click, and the banner has exactly two buttons: "Send to Google and translate" (sends at once, once per press) and "Check original anyway (not checked)". The consent box and its separate confirm step are removed. The route's consent flag stays; it now means the user pressed the labelled button. Section 3's wording "every time" still holds: each send needs its own press.
+- STALE-1. A result belongs to the text that was checked. Any edit, or a sample button, clears the result, the translation panel, the draft and the approval gate, aborts a request in flight (AbortController) and ignores a late reply (per-request id). The page announces "Result cleared because the text changed." The audit trail belongs to one check, as before: a new check or an edit starts it again; it never holds offer text.

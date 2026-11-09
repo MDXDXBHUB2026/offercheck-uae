@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   const { text, consent } = body as { text?: unknown; consent?: unknown };
   if (typeof text !== "string" || text.trim().length === 0) return fail("invalid_request");
   if (text.length > TRANSLATE_MAX_CHARS) return fail("text_too_long");
-  // The page sends this only from the consent box's confirm button.
+  // The page sends this only when the user presses "Send to Google and translate", next to the disclosure.
   if (consent !== true) return fail("consent_required");
 
   if (!translateThrottle.allow(clientAddress(request.headers))) return fail("rate_limited");

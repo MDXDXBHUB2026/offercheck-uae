@@ -164,7 +164,8 @@ describe("translation claims (BATCHB-2)", () => {
     expect(site).toContain("If you choose translation, Google Cloud Translation receives it.");
     expect(site).toContain("translation can lose or change meaning");
     const readme = read("README.md");
-    expect(readme).toContain('Offer text is sent to Google Cloud Translation only when you press "Translate to English and check" and then confirm, every time.');
+    expect(readme).toContain('Offer text is sent to Google Cloud Translation only when you press "Send to Google and translate", every time.');
+    expect(readme).not.toMatch(/Translate to English and check|then confirm/);
     expect(readme).toContain("Machine translation is lossy");
     expect(readme).not.toMatch(/No model is called anywhere|never sent to a model or any third party|Offline word lists, no translation/);
   });
@@ -178,6 +179,7 @@ describe("translation claims (BATCHB-2)", () => {
       flow.TRANSLATE_CONSENT_TEXT,
       flow.TRANSLATION_NOTE,
       flow.LANGUAGE_GATE_TRANSLATE_NOTE,
+      flow.LANGUAGE_GATE_UNCERTAIN_NOTE,
       flow.TRANSLATE_FAILED_TITLE,
       flow.TRANSLATE_UNAVAILABLE_TITLE,
     ];

@@ -2,13 +2,18 @@ import { isTranslateFailure, sourceLanguage, TRANSLATE_MAX_CHARS, type Translate
 import { MAX_OFFER_CHARS } from "@/lib/types";
 
 // BATCHB-2: the page's only translation request, to this app's own /api/translate route (which calls
-// Google Cloud Translation). OfferChecker calls it only from the consent box's confirm button, once
-// per click. It sends the text and the consent flag, nothing else, and keeps neither.
+// Google Cloud Translation). OfferChecker calls it only from the "Send to Google and translate"
+// button, once per press. It sends the text and the consent flag (the user pressed that labelled
+// button), nothing else, and keeps neither. STALE-1: signal lets the page abort it when the text changes.
 export type TranslateOutcome =
   | { ok: true; translatedText: string; sourceLang: string }
   | { ok: false; code: TranslateFailure };
 
-export async function requestTranslation(text: string, fetchImpl: typeof fetch = globalThis.fetch): Promise<TranslateOutcome> {
+export async function requestTranslation(
+  text: string,
+  fetchImpl: typeof fetch = globalThis.fetch,
+  signal?: AbortSignal,
+): Promise<TranslateOutcome> {
   if (text.length > TRANSLATE_MAX_CHARS) return { ok: false, code: "text_too_long" };
   let response: Response;
   try {
@@ -16,6 +21,7 @@ export async function requestTranslation(text: string, fetchImpl: typeof fetch =
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ text, consent: true }),
+      signal,
     });
   } catch {
     return { ok: false, code: typeof navigator !== "undefined" && navigator.onLine === false ? "offline" : "network" };

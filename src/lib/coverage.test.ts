@@ -26,9 +26,17 @@ import {
   detectLanguage,
   latinVerdict,
   LATIN_MIN_WORDS,
+  MIXED_MIN_DISTINCT,
+  MIXED_MIN_FOREIGN_SHARE,
+  NON_EN_MAX_ENGLISH_SHARE,
+  NON_EN_MIN_DISTINCT,
+  NON_EN_MIN_FOREIGN_SHARE,
+  isUncertainEnglish,
   noticeForCoverage,
+  UNCERTAIN_MAX_ENGLISH_SHARE,
   type Coverage,
 } from "./coverage";
+import { ENGLISH_EDGE_CASES, LATIN_NON_ENGLISH, ROMAN_ARABIC_FEE_SCAM } from "./languageSamples";
 import { ENGLISH_WORDS, FOREIGN_MARKERS } from "./languageWords";
 import { offerSignals } from "./offerLikeness";
 import { languageNotice } from "./textScript";
@@ -290,5 +298,116 @@ describe("isolation: the rules and the scoring never see the detector", () => {
     expect(imports).toEqual(["./languageWords", "./textScript"]);
     expect(source).not.toMatch(/fetch\(|XMLHttpRequest|WebSocket|navigator\./);
     expect(readFileSync(join(process.cwd(), "src/lib/languageWords.ts"), "utf8")).not.toMatch(/\bimport\b|fetch\(/);
+  });
+});
+
+// LANG-4: two bands for the share of common English words. Under 0.15: clearly not English,
+// unchecked. From 0.15 up to 0.30: uncertain, partial (a score from the English words found).
+// Marker-word and script-tier results are unchanged. The measured outcome of every synthetic text is
+// pinned here (src/lib/languageSamples.ts; synthetic, not native-speaker validated).
+describe("LANG-4: two bands for the English-word share", () => {
+  const share = (text: string) => {
+    const tokens = (text.match(/\p{Script=Latin}+/gu) ?? []).map((token) => token.toLowerCase());
+    return tokens.filter((token) => ENGLISH_WORDS.has(token)).length / tokens.length;
+  };
+  // rule: which check decided. "below-0.15" (band 1), "uncertain" (band 2, share alone), "markers"
+  // (the marker-word rules, before or instead of the share), "english" (no banner).
+  type Rule = "below-0.15" | "uncertain" | "markers" | "english";
+  function expectOutcome(text: string, rule: Rule, coverage: Coverage) {
+    const detected = detectLanguage(text);
+    expect(coverageOf(detected)).toBe(coverage);
+    expect(isUncertainEnglish(text)).toBe(rule === "uncertain");
+    if (rule === "below-0.15") expect(share(text)).toBeLessThan(0.15);
+    if (rule === "uncertain") {
+      expect(share(text)).toBeGreaterThanOrEqual(0.15);
+      expect(share(text)).toBeLessThan(0.3);
+    }
+    if (rule === "english") expect(share(text)).toBeGreaterThanOrEqual(0.3);
+  }
+
+  it("cut-offs 0.15 and 0.30; the marker-word rules and the 6-word floor are unchanged", () => {
+    expect(NON_EN_MAX_ENGLISH_SHARE).toBe(0.15);
+    expect(UNCERTAIN_MAX_ENGLISH_SHARE).toBe(0.3);
+    expect([LATIN_MIN_WORDS, NON_EN_MIN_DISTINCT, NON_EN_MIN_FOREIGN_SHARE, MIXED_MIN_DISTINCT, MIXED_MIN_FOREIGN_SHARE]).toEqual([6, 2, 0.3, 3, 0.1]);
+    // Under 6 words nothing is judged, however few English words there are.
+    expect(latinVerdict("Yalla idfa3 rusoom al iqama")).toBeNull();
+    expect(detectLanguage("Yalla idfa3 rusoom al iqama")).toBe("en");
+    expect(isUncertainEnglish("Yalla idfa3 rusoom al iqama")).toBe(false);
+  });
+
+  it("all 76 Latin-script eval cases stay clearly English (no banner); S12 is still caught by the script check", () => {
+    const latin = ALL_EVAL.filter((offer) => languageNotice(offer.text) === null);
+    expect(latin).toHaveLength(76);
+    for (const offer of latin) expect(detectLanguage(offer.text), offer.id).toBe("en");
+    expect(Math.min(...latin.map((offer) => share(offer.text)))).toBeGreaterThan(0.44);
+    for (const offer of ALL_EVAL) expect(isUncertainEnglish(offer.text), offer.id).toBe(false);
+    const script = ALL_EVAL.filter((offer) => languageNotice(offer.text) !== null);
+    expect(script.map((offer) => offer.id)).toEqual(["S12"]);
+    expect(languageNotice(script[0].text)).toBe("most");
+    expect(detectLanguage(script[0].text)).toBe("non_en");
+  });
+
+  it("a script tier keeps its state; the uncertain flag is for Latin-only text", () => {
+    const tier2 = `${ROMAN_ARABIC_FEE_SCAM.text}\nيرجى دفع 750 درهم لتأكيد الوظيفة`;
+    expect(languageNotice(tier2)).toBe("part");
+    expect(detectLanguage(tier2)).toBe("mixed");
+    expect(isUncertainEnglish(tier2)).toBe(false);
+  });
+
+  it("the romanised Arabic fee scam is in the uncertain band: banner, then partial coverage", () => {
+    expect(share(ROMAN_ARABIC_FEE_SCAM.text)).toBeCloseTo(0.239, 3);
+    expectOutcome(ROMAN_ARABIC_FEE_SCAM.text, "uncertain", "partial");
+  });
+
+  // Measured: EN-08 (business jargon, 0.257) and EN-10 (African names, 0.273) are in the uncertain
+  // band: they get the banner, and checking the original gives a score with partial coverage.
+  it.each([
+    ["EN-01", "english", "full"],
+    ["EN-02", "english", "full"],
+    ["EN-03", "english", "full"],
+    ["EN-04", "english", "full"],
+    ["EN-05", "english", "full"],
+    ["EN-06", "english", "full"],
+    ["EN-07", "english", "full"],
+    ["EN-08", "uncertain", "partial"],
+    ["EN-09", "english", "full"],
+    ["EN-10", "uncertain", "partial"],
+  ] as const)("English edge case %s: %s, %s", (id, rule, coverage) => {
+    const sample = ENGLISH_EDGE_CASES.find((entry) => entry.id === id);
+    expect(sample).toBeDefined();
+    expectOutcome(sample?.text ?? "", rule, coverage);
+  });
+
+  // Measured: none of the 15 passes as English. 6 are below 0.15 (unchecked); 3 are uncertain by
+  // their share alone (partial); 6 are decided by marker words as before (UR-01 and HI-01 unchecked;
+  // TL-01, ML-01, TL-02 and HG-01 partial).
+  it.each([
+    ["ES-01", "below-0.15", "unchecked"],
+    ["FR-01", "below-0.15", "unchecked"],
+    ["AR-02", "below-0.15", "unchecked"],
+    ["FR-02", "below-0.15", "unchecked"],
+    ["SW-01", "below-0.15", "unchecked"],
+    ["AR-01", "below-0.15", "unchecked"],
+    ["MS-01", "uncertain", "partial"],
+    ["ID-01", "uncertain", "partial"],
+    ["TA-01", "uncertain", "partial"],
+    ["UR-01", "markers", "unchecked"],
+    ["HI-01", "markers", "unchecked"],
+    ["TL-01", "markers", "partial"],
+    ["ML-01", "markers", "partial"],
+    ["TL-02", "markers", "partial"],
+    ["HG-01", "markers", "partial"],
+  ] as const)("non-English text %s: %s, %s", (id, rule, coverage) => {
+    const sample = LATIN_NON_ENGLISH.find((entry) => entry.id === id);
+    expect(sample).toBeDefined();
+    expectOutcome(sample?.text ?? "", rule, coverage);
+  });
+
+  it("the fixture holds 10 English edge cases and 15 other texts, all labelled synthetic", () => {
+    expect(ENGLISH_EDGE_CASES).toHaveLength(10);
+    expect(LATIN_NON_ENGLISH).toHaveLength(15);
+    const source = readFileSync(join(process.cwd(), "src/lib/languageSamples.ts"), "utf8");
+    expect(source).toContain("SYNTHETIC");
+    expect(source).toContain("NOT validated by a native speaker");
   });
 });
