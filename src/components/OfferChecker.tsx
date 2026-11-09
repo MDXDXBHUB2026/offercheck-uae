@@ -15,7 +15,7 @@ import {
   type AuditEntry,
   type AuditRecord,
 } from "@/lib/audit";
-import { qualifiedSummary, scoreChip } from "@/components/scoreChip";
+import { activeNotice, qualifiedSummary, scoreChip, type Notice } from "@/components/scoreChip";
 import { offerSignals, type OfferSignal } from "@/lib/offerLikeness";
 import { languageNotice, type LanguageNotice } from "@/lib/textScript";
 import { MAX_OFFER_CHARS } from "@/lib/types";
@@ -55,13 +55,14 @@ export function noCheck(): CheckedResult | null {
 // The screen-reader announcement uses the chip's wording, so the two never disagree (UX-1, LANG-2).
 export function resultAnnouncement(
   result: Pick<AnalyzeResponse, "risk" | "findings">,
-  language: LanguageNotice | null = null,
+  notice: Notice | null = null,
 ): string {
-  // LANG-3: tier 2 with nothing matched reads as one qualified sentence, as in the Risk aggregator row.
-  if (language === "part" && result.findings.length === 0) {
-    return `Results ready. ${qualifiedSummary(result.risk, result.findings, language)}`;
+  // LANG-3 and OFFER-1: tier 2 or the offer-likeness notice with nothing matched reads as one
+  // qualified sentence, as in the Risk aggregator row.
+  if ((notice === "part" || notice === "offer") && result.findings.length === 0) {
+    return `Results ready. ${qualifiedSummary(result.risk, result.findings, notice)}`;
   }
-  return `Results ready. Score ${result.risk.score} of 100: ${scoreChip(result.risk, result.findings, language).label}.`;
+  return `Results ready. Score ${result.risk.score} of 100: ${scoreChip(result.risk, result.findings, notice).label}.`;
 }
 
 // ruleCount and samples come from the server page, so the rules themselves never ship to the browser.
@@ -164,7 +165,10 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
   const announcement = loading
     ? "Checking the offer."
     : result
-      ? resultAnnouncement(result, checked?.languageNotice ?? null)
+      ? resultAnnouncement(
+          result,
+          activeNotice(checked?.languageNotice ?? null, checked?.offerSignals ?? null, result.risk.band),
+        )
       : "";
 
   return (

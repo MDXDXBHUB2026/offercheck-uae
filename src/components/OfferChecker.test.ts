@@ -212,6 +212,23 @@ describe("offer notice (Batch A case 4)", () => {
     expect(notice).not.toContain("Call me back");
     expect(recordCheck(respond(NOT_AN_OFFER), NOT_AN_OFFER).response.risk).toEqual(runManager(NOT_AN_OFFER).risk);
   });
+
+  // OFFER-1: the whole rendered page, draft and audit included, never says all clear with the notice.
+  it("OFFER-1: no all-clear wording anywhere on the page, qualified chip and announcement", () => {
+    const check = recordCheck(respond(NOT_AN_OFFER), NOT_AN_OFFER);
+    typed.text = NOT_AN_OFFER;
+    typed.checked = check;
+    typed.stubbed = true;
+    let html = "";
+    try {
+      html = renderToStaticMarkup(createElement(OfferChecker, { ruleCount: 5 }));
+    } finally {
+      typed.stubbed = false;
+    }
+    expect(html).not.toContain("No risk indicators found");
+    expect(html).toContain('<p class="chip score-label">Score 0. This text does not look like a job offer.</p>');
+    expect(html).toContain("Results ready. Score 0 of 100. This text does not look like a job offer.");
+  });
 });
 
 describe("Check offer button (S4-1)", () => {

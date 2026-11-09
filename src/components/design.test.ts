@@ -11,6 +11,8 @@ import { LEGIT_OFFER, SCAM_OFFER } from "@/lib/agents/fixtures";
 import { runManager } from "@/lib/agents/manager";
 import type { Finding, Severity } from "@/lib/types";
 import { languageNotice } from "@/lib/textScript";
+import { offerSignals } from "@/lib/offerLikeness";
+import { activeNotice } from "./scoreChip";
 import { readLimitations } from "./limitations";
 import { PUBLIC_LIMITS, PUBLIC_LIMITS_INTRO } from "./publicLimitations";
 import { OfferChecker, resultAnnouncement } from "./OfferChecker";
@@ -353,6 +355,120 @@ describe("tier 2 with no finding is qualified, not all clear (LANG-3)", () => {
   it("styles the info icon in the muted colour, not green", () => {
     const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
     expect(css).toMatch(/\.empty-state \.icon-info \{\s*color: var\(--muted\);/);
+  });
+});
+
+// OFFER-1 (live site): "Hi, how are you? Call me back." showed the offer-likeness notice next to
+// the green "No risk indicators found" chip, the green tick and the all-clear announcement.
+// Display only: the score, band, findings and server trace are unchanged.
+describe("the offer-likeness notice is qualified, not all clear (OFFER-1)", () => {
+  const NOT_AN_OFFER = "Hi, how are you? Call me back.";
+  const WARNING_ONLY = "Hi, how are you? Never pay a fee to anyone.";
+  const ARABIC_FEE = "يرجى دفع 750 درهم لتأكيد الوظيفة";
+  const TIER_2 = `${LEGIT_OFFER}\n${ARABIC_FEE}`;
+  const ALL_CLEAR = "No risk indicators found";
+  const OFFER_CHIP = "Score 0. This text does not look like a job offer.";
+  const OFFER_EMPTY =
+    "None of the 5 rules matched. This text has no clear signs of a job offer, and this does not confirm that the offer is genuine.";
+  const OFFER_SUMMARY = "Score 0 of 100. This text does not look like a job offer.";
+  const TICK = 'd="M6.5 10.5l2.5 2.5 4.5-5"';
+  const scoreSide = (html: string) => html.slice(html.indexOf("score-card"), html.indexOf("results-main"));
+  const emptyCard = (html: string) => html.match(/class="[^"]*empty-state[^"]*">(.*?)<\/div>/)?.[1] ?? "";
+  const aggregatorRow = (html: string) =>
+    html.match(/<span class="trace-agent">Risk aggregator<\/span><span class="trace-summary">([^<]*)<\/span>/)?.[1] ?? "";
+  // Everything recorded at check time, as OfferChecker records it.
+  const render = (text: string) => {
+    const result = runManager(text);
+    const language = languageNotice(text);
+    const signals = offerSignals(text);
+    const html = renderToStaticMarkup(
+      createElement(ResultsPanel, { result, ruleCount: 5, languageNotice: language, offerSignals: signals }),
+    );
+    const side = scoreSide(html);
+    const notice = activeNotice(language, signals, result.risk.band);
+    return {
+      result,
+      html,
+      side,
+      notice,
+      chip: side.match(/<p class="chip score-label">([^<]*)<\/p>/)?.[1],
+      announcement: resultAnnouncement(result, notice),
+    };
+  };
+
+  it("the test texts are in the states they name", () => {
+    expect([languageNotice(NOT_AN_OFFER), offerSignals(NOT_AN_OFFER), runManager(NOT_AN_OFFER).findings]).toEqual([null, [], []]);
+    expect(runManager(WARNING_ONLY).findings.map((f) => f.severity)).toEqual(["info"]);
+    expect(render(NOT_AN_OFFER).notice).toBe("offer");
+    expect(render(WARNING_ONLY).notice).toBe("offer");
+    expect(render(ARABIC_FEE).notice).toBe("most");
+    expect(render(TIER_2).notice).toBe("part");
+    expect(render(LEGIT_OFFER).notice).toBeNull();
+  });
+
+  it("offer notice, no finding: grey neutral chip with the qualified wording", () => {
+    const { side, chip } = render(NOT_AN_OFFER);
+    expect(chip).toBe(OFFER_CHIP);
+    expect(side).toContain("score-neutral");
+    expect(side).toContain("This text has no clear signs of a job offer");
+  });
+
+  it("offer notice, no finding: info icon, no tick, the qualified line", () => {
+    const empty = emptyCard(render(NOT_AN_OFFER).html);
+    expect(empty).toBe(`${empty.slice(0, empty.indexOf("<p"))}<p class="no-match">${OFFER_EMPTY}</p>`);
+    expect(empty).toContain('class="icon icon-info"');
+    expect(empty).not.toContain(TICK);
+  });
+
+  it("offer notice, no finding: the Risk aggregator row and the announcement say the same", () => {
+    const { result, html, announcement } = render(NOT_AN_OFFER);
+    expect(aggregatorRow(html)).toBe(OFFER_SUMMARY);
+    expect(announcement).toBe(`Results ready. ${OFFER_SUMMARY}`);
+    // The server's trace is unchanged.
+    expect(result.trace.find((step) => step.agent === "risk_aggregator")?.summary).toBe(`Score 0 of 100: ${ALL_CLEAR}`);
+  });
+
+  it("offer notice with a warning only: amber chip and warning line kept, info icon instead of the tick", () => {
+    const { side, html, chip } = render(WARNING_ONLY);
+    expect(chip).toBe("Low, review the findings below");
+    expect(side).toContain("score-caution");
+    expect(emptyCard(html)).toContain("None of the 5 rules counted toward the score.");
+    expect(aggregatorRow(html)).toBe("Score 0 of 100: Low, review the findings below");
+    expect(emptyCard(html)).toContain('class="icon icon-info"');
+    expect(emptyCard(html)).not.toContain(TICK);
+  });
+
+  // The one invariant over every notice: with any notice active, no all-clear wording is rendered
+  // or announced and there is no green tick. With no notice, the Clean offer keeps both.
+  it("with any notice active, no all-clear wording and no tick; the Clean offer keeps its green signals", () => {
+    for (const text of [ARABIC_FEE, TIER_2, NOT_AN_OFFER, WARNING_ONLY]) {
+      const { html, announcement, notice } = render(text);
+      expect(notice).not.toBeNull();
+      expect(html).not.toContain(ALL_CLEAR);
+      expect(announcement).not.toContain(ALL_CLEAR);
+      expect(html).not.toContain(TICK);
+    }
+    const clean = render(LEGIT_OFFER);
+    expect(clean.chip).toBe(ALL_CLEAR);
+    expect(clean.side).not.toContain("score-neutral");
+    expect(emptyCard(clean.html)).toContain(TICK);
+    expect(emptyCard(clean.html)).toContain("None of the 5 rules matched. This does not confirm that the offer is genuine.");
+    expect(aggregatorRow(clean.html)).toBe(`Score 0 of 100: ${ALL_CLEAR}`);
+    expect(clean.announcement).toBe(`Results ready. Score 0 of 100: ${ALL_CLEAR}.`);
+  });
+
+  it("tier 2 with no offer signal keeps the tier 2 wording", () => {
+    const text = `Thank you for applying. We will be in touch.\n${ARABIC_FEE}`;
+    expect(offerSignals(text)).toEqual([]);
+    const { chip, notice, announcement } = render(text);
+    expect(notice).toBe("part");
+    expect(chip).toBe("Score 0 on the English part. Part of the text was not checked.");
+    expect(announcement).toBe("Results ready. Score 0 of 100 on the English part. Part of the text was not checked.");
+  });
+
+  it("leaves the score, band and findings unchanged", () => {
+    const plain = runManager(NOT_AN_OFFER);
+    expect(render(NOT_AN_OFFER).result).toMatchObject({ risk: plain.risk, findings: plain.findings });
   });
 });
 

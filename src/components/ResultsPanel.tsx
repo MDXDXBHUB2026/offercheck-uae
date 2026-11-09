@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { AgentRun } from "@/components/AgentRun";
 import { CheckCircleIcon, InfoIcon, QuoteGlyph } from "@/components/icons";
 import { scoreArithmetic } from "@/components/scoreArithmetic";
-import { qualifiedSummary } from "@/components/scoreChip";
+import { activeNotice, allClearShown, qualifiedSummary } from "@/components/scoreChip";
 import { ScoreGauge } from "@/components/ScoreGauge";
 import { Callout, Card, Chip, SectionHeader } from "@/components/ui";
 import { HIGH_BAND_MIN, MEDIUM_BAND_MIN, SEVERITY_WEIGHTS } from "@/lib/scoring";
@@ -72,7 +72,9 @@ export function ResultsPanel({
   const arithmetic = scoreArithmetic(findings, risk);
   const notChecked = languageNotice === "most" && findings.length === 0;
   const partNotChecked = languageNotice === "part" && findings.length === 0;
-  const partlyChecked = notChecked || partNotChecked;
+  // OFFER-1: one notice for the chip, the Findings card, the Risk aggregator row and the icon.
+  const notice = activeNotice(languageNotice, offerSignals, risk.band);
+  const offerUnlike = notice === "offer" && findings.length === 0;
   return (
     <div className="results">
       <div className="results-side">
@@ -80,7 +82,7 @@ export function ResultsPanel({
           <h2 id="results-heading" className="eyebrow">
             Risk indicators
           </h2>
-          <ScoreGauge risk={risk} findings={findings} languageNotice={languageNotice} />
+          <ScoreGauge risk={risk} findings={findings} notice={notice} />
           {languageNotice && (
             <Callout tone="neutral" role="note" className="language-notice">
               <p>{LANGUAGE_NOTICES[languageNotice]}</p>
@@ -121,15 +123,18 @@ export function ResultsPanel({
 
           {/* LANG-2: when most of the text is not English and nothing matched, say the rules could
               not read it. LANG-3: with part of it not English, say only the English part matched
-              nothing. Either way no green tick, which would read as all clear: a neutral info icon. */}
+              nothing. OFFER-1: with the offer-likeness notice, say the text has no clear signs of a
+              job offer. With any notice no green tick, which would read as all clear: an info icon. */}
           {riskFindings.length === 0 && (
             <Card className="empty-state">
-              {partlyChecked ? <InfoIcon size={24} className="icon icon-info" /> : <CheckCircleIcon size={24} />}
+              {allClearShown(notice) ? <CheckCircleIcon size={24} /> : <InfoIcon size={24} className="icon icon-info" />}
               <p className="no-match">
                 {notChecked
                   ? `The ${ruleCount} rules read English only, so they could not check most of this text. This does not confirm that the offer is genuine.`
                   : partNotChecked
                   ? `None of the ${ruleCount} rules matched in the English part. Part of the text was not checked, and this does not confirm that the offer is genuine.`
+                  : offerUnlike
+                  ? `None of the ${ruleCount} rules matched. This text has no clear signs of a job offer, and this does not confirm that the offer is genuine.`
                   : `${
                       warningMentions.length === 0
                         ? `None of the ${ruleCount} rules matched.`
@@ -171,7 +176,7 @@ export function ResultsPanel({
 
         <AgentRun
           trace={result.trace}
-          aggregatorSummary={qualifiedSummary(risk, findings, languageNotice) ?? undefined}
+          aggregatorSummary={qualifiedSummary(risk, findings, notice) ?? undefined}
         />
 
         {children}
