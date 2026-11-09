@@ -514,11 +514,244 @@ describe("limitations panel (COPY-1)", () => {
     expect(panel.match(/<li>/g)).toHaveLength(8);
     for (const term of ["docs/", "QA defect", "Intake v2", "<code>"]) expect(panel).not.toContain(term);
   });
+
+  // 5b: the intro pair stays visible; the 8 items sit in a native details element, closed on load.
+  it("keeps the intro visible and puts the 8 items in a closed details element with a visible summary", () => {
+    const html = renderToStaticMarkup(createElement(Home));
+    const panel = html.slice(html.indexOf('aria-labelledby="limits-heading"'));
+    const details = panel.match(/<details[^>]*>(.*?)<\/details>/)?.[0] ?? "";
+    const opening = details.match(/<details[^>]*>/)?.[0] ?? "";
+    // UX-3: the id is the footer link's target (#limits); the element is still closed on load.
+    expect(opening).toBe('<details id="limits" class="card disclosure limits-details">');
+    expect(opening).not.toContain("open");
+    // The summary is a native, keyboard-focusable control with the visible text.
+    expect(details).toMatch(/^<details[^>]*><summary><span id="limits-heading" class="limits-summary">What this check cannot do<\/span><\/summary>/);
+    expect(details).not.toMatch(/<summary[^>]*(hidden|tabindex="-1"|visually-hidden)/);
+    expect(details.match(/<li>/g)).toHaveLength(8);
+    for (const item of PUBLIC_LIMITS) expect(details).toContain(escapeHtml(item.title));
+    // The intro pair is outside the details element, so it is never hidden.
+    const intro = panel.indexOf(`<p>${escapeHtml(PUBLIC_LIMITS_INTRO)}</p>`);
+    expect(intro).toBeGreaterThan(-1);
+    expect(intro).toBeLessThan(panel.indexOf("<details"));
+    expect(details).not.toContain(escapeHtml(PUBLIC_LIMITS_INTRO));
+    const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
+    expect(css).not.toMatch(/\.limits[^{]*summary[^{]*\{[^}]*display:\s*none/);
+  });
+
+  it("shows the intro on the empty state and after the results, below the checker", () => {
+    const html = renderToStaticMarkup(createElement(Home));
+    const form = html.indexOf('class="card input-card"');
+    const limits = html.indexOf('aria-labelledby="limits-heading"');
+    expect(form).toBeGreaterThan(-1);
+    expect(limits).toBeGreaterThan(form);
+    expect(html.slice(limits)).toContain(escapeHtml(PUBLIC_LIMITS_INTRO));
+    // The panel is a sibling of the checker on the page, so it stays under every result.
+    const page = readFileSync(join(process.cwd(), "src/app/check/page.tsx"), "utf8");
+    expect(page).toMatch(/<OfferChecker [^>]*\/>\s*<LimitationsPanel \/>/);
+  });
 });
 
 function escapeHtml(text: string): string {
   return text.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("'", "&#x27;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
+
+// UX-2: the header and the top navigation, checked on the stylesheet (no layout engine here).
+describe("header and nav (UX-2)", () => {
+  const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8").replace(/\r\n/g, "\n");
+  // Every innermost rule as { selector, body, at }, comments removed from the selector.
+  const rules = [...css.matchAll(/([^{}]+)\{([^{}]*)\}/g)].map((m) => ({
+    selector: m[1].replace(/\/\*[\s\S]*?\*\//g, "").trim(),
+    body: m[2],
+    at: m.index ?? 0,
+  }));
+  const rule = (selector: string) => {
+    const found = rules.find((r) => r.selector === selector);
+    expect(found, selector).toBeDefined();
+    return found?.body ?? "";
+  };
+  // The block of an at-rule, by brace matching.
+  const block = (head: string) => {
+    const start = css.indexOf(`${head} {`);
+    expect(start, head).toBeGreaterThan(-1);
+    let depth = 0;
+    for (let i = css.indexOf("{", start); i < css.length; i += 1) {
+      if (css[i] === "{") depth += 1;
+      if (css[i] === "}" && --depth === 0) return { start, end: i, text: css.slice(start, i + 1) };
+    }
+    throw new Error(head);
+  };
+  const motion = block("@media (prefers-reduced-motion: no-preference)");
+  const inMotion = (at: number) => at > motion.start && at < motion.end;
+  const HOVER = '.site-nav a:not([aria-current="page"]):hover,\n.site-nav a:not([aria-current="page"]):focus-visible';
+  // 9a: Soon items are plain text (span[data-soon]) and share the tab's base look.
+  const BASE = ".site-nav a,\n.site-nav [data-soon]";
+  const SIZE = ["font-weight", "width", "height", "padding", "border", "font-size", "margin", "letter-spacing"];
+
+  it("tab text is weight 700 in the base rule and no other tab rule changes the weight", () => {
+    expect(rule(BASE)).toMatch(/font-weight: 700;/);
+    for (const r of rules.filter((r) => r.selector.includes(".site-nav a") && r.selector !== BASE)) {
+      expect(r.body, r.selector).not.toContain("font-weight");
+    }
+  });
+
+  it("hover and focus-visible: tint, 1px lift and the underline, with no size change", () => {
+    const hover = rule(HOVER);
+    expect(hover).toMatch(/background: var\(--primary-tint\);/);
+    expect(hover).toMatch(/transform: translateY\(-1px\);/);
+    for (const prop of SIZE) expect(hover).not.toContain(prop);
+    expect(rule(".site-nav a::after")).toMatch(/transform: scaleX\(0\);/);
+    expect(rule(".site-nav a::after")).toMatch(/transform-origin: left;/);
+    expect(rule(".site-nav a::after")).toMatch(/background: var\(--primary\);/);
+    expect(rule(HOVER.replace(":hover,", ":hover::after,") + "::after")).toMatch(/transform: scaleX\(1\);/);
+  });
+
+  it("Soon items get neither the tint nor the underline, no lift and a default cursor", () => {
+    // Hover, focus and the underline only ever select anchors; a Soon item is a span.
+    for (const r of rules.filter((r) => /:hover|:focus-visible|::after/.test(r.selector) && r.selector.includes(".site-nav"))) {
+      for (const part of r.selector.split(",").map((x) => x.trim()).filter((x) => /^\.site-nav/.test(x) && /:hover|:focus-visible|::after/.test(x))) {
+        expect(part, r.selector).toMatch(/^\.site-nav a[:\[]/);
+      }
+    }
+    const soonRules = rules.filter((r) => /\[data-soon\]/.test(r.selector));
+    expect(soonRules.length).toBeGreaterThan(0);
+    for (const r of soonRules) {
+      expect(r.body, r.selector).not.toContain("primary-tint");
+      expect(r.body, r.selector).not.toContain("scaleX(1)");
+      expect(r.body, r.selector).not.toContain("translateY");
+    }
+    expect(rule(".site-nav [data-soon]")).toMatch(/cursor: default;/);
+  });
+
+  it("keeps the keyboard focus ring: no tab or brand rule removes the outline", () => {
+    expect(rule(":focus-visible")).toMatch(/outline: 3px solid var\(--primary\);/);
+    for (const r of rules.filter((r) => /\.site-nav|\.wordmark|\.brand/.test(r.selector))) {
+      expect(r.body, r.selector).not.toMatch(/outline:\s*(none|0)/);
+    }
+  });
+
+  it("the tabs sit in a rounded capsule with a border token and a translucent background", () => {
+    const capsule = rule(".site-nav ul");
+    expect(capsule).toMatch(/border: 1px solid var\(--border\);/);
+    expect(capsule).toMatch(/background: var\(--card-bg\);/);
+    expect(capsule).toMatch(/border-radius: var\(--radius-pill\);/);
+  });
+
+  it("the brand block: a 40px badge with a border and inner glow; hover and focus give the tabs' tint and lift", () => {
+    const badge = rule(".brand-badge");
+    expect(badge).toMatch(/width: 40px;/);
+    expect(badge).toMatch(/height: 40px;/);
+    expect(badge).toMatch(/border: 1px solid var\(--border\);/);
+    expect(badge).toMatch(/box-shadow: inset /);
+    const hover = rule(".wordmark:hover,\n.wordmark:focus-visible");
+    expect(hover).toMatch(/background: var\(--primary-tint\);/);
+    expect(hover).toMatch(/transform: translateY\(-1px\);/);
+    for (const prop of SIZE) expect(hover).not.toContain(prop);
+    const glow = rule(".wordmark:hover .brand-badge,\n.wordmark:focus-visible .brand-badge");
+    expect(glow).toMatch(/box-shadow: /);
+    for (const prop of SIZE) expect(glow).not.toContain(prop);
+  });
+
+  it("the aurora sits only behind the header and the title area, and is contained in them", () => {
+    const ALLOWED = [".site-header::before", ".hero-copy::before", ".placeholder::before"];
+    const auroraRules = rules.filter((r) => r.selector !== ":root" && /aurora/.test(r.body));
+    expect(auroraRules.length).toBeGreaterThan(0);
+    for (const r of auroraRules) expect(ALLOWED, r.selector).toContain(r.selector);
+    // The header and title glows fill their own box, with no blur that could spread onto the form.
+    for (const selector of [".site-header::before", ".hero-copy::before"]) {
+      const body = rule(selector);
+      expect(body, selector).toMatch(/inset: 0;/);
+      expect(body, selector).toMatch(/background: var\(--aurora\);/);
+      expect(body, selector).not.toContain("blur");
+    }
+    // Nothing on the form, the score, the findings or the draft reply uses it.
+    for (const r of rules.filter((r) => /input-card|\.results|\.score|\.finding|\.draft|\.approval/.test(r.selector))) {
+      expect(r.body, r.selector).not.toMatch(/aurora/);
+    }
+  });
+
+  it("all motion is inside the no-preference block: tab transitions and the aurora drift", () => {
+    const drift = rules.filter((r) => /aurora-drift/.test(r.body));
+    expect(drift.map((r) => r.selector).sort()).toEqual([".hero-copy::before", ".site-header::before"]);
+    for (const r of drift) expect(inMotion(r.at), r.selector).toBe(true);
+    expect(inMotion(css.indexOf("@keyframes aurora-drift"))).toBe(true);
+    const moving = rules.filter((r) => /\.site-nav|\.wordmark|\.brand|\.site-header/.test(r.selector) && /transition|animation/.test(r.body));
+    expect(moving.length).toBeGreaterThan(0);
+    for (const r of moving) expect(inMotion(r.at), r.selector).toBe(true);
+    expect(motion.text).toMatch(/\.site-nav a,\s*\.site-nav a::after,\s*\.wordmark,\s*\.brand-badge \{\s*transition: transform 200ms ease-out, background-color 200ms ease-out, color 200ms ease-out, box-shadow 200ms ease-out;/);
+  });
+
+  // No layout engine here, so the 375px check is on the rules: no fixed width in the header that a
+  // 375px screen (327px inside the 24px gutters) cannot hold, a shrinkable first column, wrapping tabs.
+  it("has no horizontal overflow at 375px: shrinkable columns, wrapping capsule, no wide fixed widths", () => {
+    const narrow = block("@media (max-width: 767px)").text;
+    expect(narrow).toMatch(/\.site-header-inner \{[^}]*grid-template-columns: minmax\(0, 1fr\) auto;/);
+    expect(rule(".site-nav ul")).toMatch(/flex-wrap: wrap;/);
+    expect(rule(".brand-text")).toMatch(/min-width: 0;/);
+    expect(rule(".brand-caption")).toMatch(/overflow-wrap: anywhere;/);
+    for (const r of rules.filter((r) => /\.site-header|\.site-nav|\.wordmark|\.brand|\.nav-/.test(r.selector))) {
+      for (const m of r.body.matchAll(/(?:^|[\s;])(?:min-)?width:\s*(\d+)px/g)) {
+        expect(Number(m[1]), `${r.selector} width`).toBeLessThanOrEqual(327);
+      }
+      expect(r.body, r.selector).not.toMatch(/white-space: nowrap/);
+    }
+    expect(rule(".wordmark")).toMatch(/min-width: 0;/);
+  });
+
+  // UX-3: the footer, in the same visual language. Checked on the stylesheet like the header.
+  describe("footer (UX-3)", () => {
+    const footerRules = () => rules.filter((r) => /footer/.test(r.selector));
+
+    it("a thin top border from the border token, a dark palette background, and no aurora", () => {
+      const footer = rule(".site-footer");
+      expect(footer).toMatch(/border-top: 1px solid var\(--border\);/);
+      expect(footer).toMatch(/background: var\(--surface\);/);
+      expect(footerRules().length).toBeGreaterThan(5);
+      for (const r of footerRules()) {
+        expect(r.body, r.selector).not.toMatch(/aurora|gradient/);
+        expect(r.selector).not.toContain("::before");
+      }
+    });
+
+    it("four columns on desktop that stack on narrow screens, with no overflow at 375px", () => {
+      expect(rule(".footer-cols")).toMatch(/grid-template-columns: repeat\(4, minmax\(0, 1fr\)\);/);
+      expect(css).toMatch(/@media \(max-width: 1023px\) \{\s*\.footer-cols \{\s*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/);
+      expect(css).toMatch(/@media \(max-width: 599px\) \{\s*\.footer-cols \{\s*grid-template-columns: minmax\(0, 1fr\);/);
+      expect(rule(".footer-col")).toMatch(/min-width: 0;/);
+      expect(rule(".footer-col")).toMatch(/overflow-wrap: anywhere;/);
+      expect(rule(".footer-chips ul")).toMatch(/flex-wrap: wrap;/);
+      for (const r of footerRules()) {
+        for (const m of r.body.matchAll(/(?:^|[\s;])(?:min-)?width:\s*(\d+)px/g)) {
+          expect(Number(m[1]), `${r.selector} width`).toBeLessThanOrEqual(327);
+        }
+        expect(r.body, r.selector).not.toMatch(/white-space: nowrap/);
+      }
+    });
+
+    it("motion: only the link underline slides, and only inside the no-preference block", () => {
+      expect(rule(".footer-link::after")).toMatch(/transform: scaleX\(0\);/);
+      expect(rule(".footer-link::after")).toMatch(/transform-origin: left;/);
+      expect(rule(".footer-link:hover::after,\n.footer-link:focus-visible::after")).toMatch(/transform: scaleX\(1\);/);
+      const moving = footerRules().filter((r) => /transition|animation/.test(r.body));
+      expect(moving.map((r) => r.selector)).toEqual([".footer-link::after"]);
+      for (const r of moving) {
+        expect(inMotion(r.at), r.selector).toBe(true);
+        expect(r.body.trim()).toBe("transition: transform 200ms ease-out;");
+      }
+      // Hover changes nothing but the underline: no tint, lift or colour change on the link itself.
+      for (const r of footerRules().filter((r) => /:hover|:focus-visible/.test(r.selector))) {
+        expect(r.selector).toMatch(/::after/);
+      }
+    });
+
+    it("keeps the focus ring, and Soon items look like text, not links", () => {
+      for (const r of footerRules()) expect(r.body, r.selector).not.toMatch(/outline:\s*(none|0)/);
+      expect(rule(".footer-soon")).toMatch(/cursor: default;/);
+      expect(rule(".footer-soon")).toMatch(/color: var\(--muted\);/);
+      expect(rule(".footer-chip")).toMatch(/border: 1px solid var\(--border\);/);
+      expect(rule(".footer-chip")).toMatch(/border-radius: var\(--radius-pill\);/);
+    });
+  });
+});
 
 describe("sample buttons", () => {
   it("are real buttons for the three synthetic samples", () => {

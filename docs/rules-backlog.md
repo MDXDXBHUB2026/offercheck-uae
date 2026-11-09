@@ -4,7 +4,7 @@ Open items only.
 
 ## Holdout 1 (consumed)
 
-Source: one run of `src/lib/agents/eval/holdout.ts` on 2026-11-06, with `redFlag.ts` at sha256 `f3570f8f1169ecb248dad6447deeb149010c23109bc6aee8936031122c729972`.
+Source: one run of `src/lib/agents/eval/holdout.ts` on 2026-11-06, with `redFlag.ts` at sha256 prefix `f3570f8f1169ecb2` (first 16 hex characters).
 
 Reported two ways: strict 11 of 18, and right rule counted as a pass 15 of 18. H10 was a real miss, not a band dispute.
 
@@ -14,7 +14,7 @@ H02, H10 and H18 are fixed and live on as dev regression cases R02, R10 and R18.
 
 ## Holdout 2
 
-Source: one run of `src/lib/agents/eval/holdout2.ts` on 2026-11-06, with `redFlag.ts` at sha256 `05d05e13d896352e32624e905fd271fb88a4ada86549ff1dbd522cbda23d41ef`. The set was read only after the rules were frozen. 15 of 16 passed, and no rule, regex, label or threshold changed afterwards until Batch A (2026-11-08). After tuning, H21 also passes; that is a tuned result, not a blind one, and the blind result stays 15 of 16.
+Source: one run of `src/lib/agents/eval/holdout2.ts` on 2026-11-06, with `redFlag.ts` at sha256 prefix `05d05e13d896352e` (first 16 hex characters). The set was read only after the rules were frozen. 15 of 16 passed, and no rule, regex, label or threshold changed afterwards until Batch A (2026-11-08). After tuning, H21 also passes; that is a tuned result, not a blind one, and the blind result stays 15 of 16.
 
 - **H21: `Share the 6-digit code we send you` is missed. Fixed by tuning in Batch A (2026-11-08): now 60, High, RF-002.** Expected high with RF-002. Got score 0 in the blind run. A live scam wording scores 0 here. The code pattern needs `sent`, `got` or `receive` after "code", and "we send" also matches the employer-sends exclusion for the whole part.
 - **H30 passed, but this does not show that look-alike letters are handled.** The Cyrillic letter sits in "visa", and RF-001 fired on "fee of AED 500", which has none. QA defect 6 stays open.
@@ -30,14 +30,14 @@ Source: one run of `src/lib/agents/eval/holdout2.ts` on 2026-11-06, with `redFla
 
 ## Post-deploy manual test A3
 
-Checked again on 2026-11-08 against the local production build, with `redFlag.ts` at sha256 `789dc2b29a30940951257c677bddcb4eaf995bb8a187a19e3583ca51d1ebb76f`: score 20, band low, one finding (RF-003, quote `Send your passport copy`).
+Checked again on 2026-11-08 against the local production build, with `redFlag.ts` at sha256 prefix `789dc2b29a309409` (first 16 hex characters): score 20, band low, one finding (RF-003, quote `Send your passport copy`).
 
 - **Gap (GAP-7): a request for a photo of a bank card is missed. Fixed in Batch A: RF-002 now fires, and the A3 text scores 60, High (RF-002 and RF-003).** Found by post-deploy manual test A3, synthetic text, not yet in any eval set. `Send your passport copy, Emirates ID and a photo of your bank card today, before any interview.` scores 20, Low, with RF-003 only. `photo of your bank card` matches no RF-002 pattern. RF-002 covers `card number` or `card details`, and a share verb followed by a password, a code, a card number or a PIN.
 - **Design question: the rules cannot see timing.** Found by post-deploy manual test A3, synthetic text, not yet in any eval set. A request made before an interview or a written offer reads the same to the rules as one made later. A single RF-003 match on its own stays below the 30-point medium threshold. This is a candidate for the Phase 8 rules cycle, with a fresh blind holdout 3.
 
 ## Manual QA misses, 2026-11-08 (for the rules v2 cycle)
 
-Logged only. No rule changed: `redFlag.ts` stays sha256 `789dc2b29a30940951257c677bddcb4eaf995bb8a187a19e3583ca51d1ebb76f`. Results below are from probes run on 2026-11-08 against that file. Synthetic text.
+Logged only. No rule changed: `redFlag.ts` stays sha256 prefix `789dc2b29a309409` (first 16 hex characters). Results below are from probes run on 2026-11-08 against that file. Synthetic text.
 
 - **Design question (band design): one medium rule alone stays Low.** Each medium rule adds 20 points, and medium starts at 30, so a single medium match is always Low, whatever was asked for. A3 (GAP-7), A4 and B2 below all land there. Owner's position: a bank-details request should not read as a plain Low. The UI now shows such a result as "Low, review the findings below" (UX-1), but the band is unchanged. For Phase 8, with a fresh blind holdout 3.
 - **Band design: decided, no threshold change; UX-1 amber chip covers a Low score with a finding.** Owner decision, Batch A (2026-11-08). Lowering medium to 20 was measured on the 77 cases: it would only move L09 and L10, two honest cases expected Low, to Medium. A3 is fixed by GAP-7 instead. A4 and B2 stay Low 20 with the amber chip.
@@ -56,10 +56,19 @@ Numbers come from the Step 1c QA run.
 11. **Hidden-only input gets a result.** It should get the empty-input error, because the check runs before cleaning.
 13. **Wrong error for escaped input.** 20,000 control characters returned the over-limit 413. Fixed on 2026-11-07: the body cap is now 122,048 bytes (20,000 characters at 6 bytes each for JSON `\uXXXX` escapes, plus 2,048), so any offer within the character limit fits. See `docs/defects.md`.
 14. **Minor over-matches.** `Do not trust anyone using hr.fake@gmail.com` fires RF-005. `Please reply today if you have any questions about the benefits` fires RF-004.
-16. **Thin timing margin on the maximum-size test.** Input of `"a, "` repeated takes about 580ms alone, against the 1000ms test limit. It failed in 3 of 12 full parallel runs during Step 2 (1,281ms and 1,248ms measured; the third value was not captured) and passed 3 of 3 runs alone. Cause: RF-001 split the rest of the sentence into list items for every clause, so cost grew with clauses times list items. Fixed on 2026-11-06 with a performance-only guard, and the test limit did not change. The list check now runs only for a part with a hit and only when a payer appears in that tail. `redFlag.ts` is now sha256 `789dc2b29a30940951257c677bddcb4eaf995bb8a187a19e3583ca51d1ebb76f`. Band, rule ids and info ids were identical before and after on all 77 cases.
+16. **Thin timing margin on the maximum-size test.** Input of `"a, "` repeated takes about 580ms alone, against the 1000ms test limit. It failed in 3 of 12 full parallel runs during Step 2 (1,281ms and 1,248ms measured; the third value was not captured) and passed 3 of 3 runs alone. Cause: RF-001 split the rest of the sentence into list items for every clause, so cost grew with clauses times list items. Fixed on 2026-11-06 with a performance-only guard, and the test limit did not change. The list check now runs only for a part with a hit and only when a payer appears in that tail. `redFlag.ts` is now sha256 prefix `789dc2b29a309409` (first 16 hex characters). Band, rule ids and info ids were identical before and after on all 77 cases.
 
 Defects 7, 8, 9, 12 and 15 were fixed on 2026-11-07 in the UI and tests only. `redFlag.ts` did not change.
 
 ## Evidence quotes
 
 Quotes are whole clauses, so a quote can hold more than the matched phrase.
+
+## Roadmap
+
+| ID | Item | When | Notes |
+|---|---|---|---|
+| COPY-2 | Plain-language Findings wording: no rule counts in the Findings card ("None of the 5 rules matched" and the like). Rule detail stays in the Agent run section. Keep the "does not confirm that the offer is genuine" sentence. | Once, after Batch B | Every Findings string is pinned by tests, so the wording changes in one pass after Batch B. No Findings wording was changed for COPY-2 in OFFER-1. |
+| LIMITS-1 | Move the full list of limitations to the Phase 2 "About and limits" page, and link to it from the check page. The check page keeps the intro pair visible. | Phase 2, with the About and limits page | Until then the 8 items stay on the check page in a closed details element ("What this check cannot do"), with the parity, ASCII-only and forbidden-term tests. |
+| FOOTER-1 | Footer: add verified UAE scam-reporting channels after source check. | After each channel is checked against its official source | Item 8 (UX-3) left them out on purpose: no contact details until a source is checked. |
+| HOSTLOG-1 | About and limits page: say that the host may keep its own request logs, which contain no offer text. | Phase 2, with the About and limits page | 9b: the footer chip is "Offer text not stored" because the app's code stores no offer text; the host's own logs are outside the code. |

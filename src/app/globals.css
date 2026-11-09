@@ -39,7 +39,11 @@
   --not-built: #94a3b8;
   --not-built-bg: #0f172a;
   --header-bg: rgba(2, 6, 23, 0.7);
-  --aurora: linear-gradient(to right, rgba(6, 182, 212, 0.1), rgba(99, 102, 241, 0.1), rgba(37, 99, 235, 0.1));
+  /* UX-2: the aurora is two palette colours at a low percentage (contrast test checks text over it). */
+  --aurora-a: color-mix(in srgb, var(--primary) 12%, transparent);
+  --aurora-b: color-mix(in srgb, var(--action) 12%, transparent);
+  --aurora: radial-gradient(45% 140% at 15% 50%, var(--aurora-a), transparent 70%),
+    radial-gradient(45% 140% at 85% 50%, var(--aurora-b), transparent 70%);
   --radius-card: 22px;
   --radius-control: 14px;
   --radius-pill: 9999px;
@@ -50,7 +54,7 @@
   --font-mono: ui-monospace, "SF Mono", "Cascadia Mono", Consolas, monospace;
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --hover: 300ms var(--ease-out);
-  --header-height: 52px;
+  --header-height: 64px;
 }
 
 *,
@@ -135,6 +139,19 @@ p {
   backdrop-filter: saturate(180%) blur(20px);
 }
 
+/* UX-2: a slow, low-contrast aurora behind the header only. It fills the header box and sits under
+   its content (the sticky header is its own stacking context). It drifts only without a
+   reduced-motion preference. */
+.site-header::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--aurora);
+  background-size: 200% 100%;
+  pointer-events: none;
+}
+
 /* Without the blur the translucent bar would let text show through, so it turns solid. */
 @supports not ((backdrop-filter: blur(24px)) or (-webkit-backdrop-filter: blur(24px))) {
   .site-header {
@@ -156,10 +173,63 @@ p {
   justify-self: start;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  min-width: 0;
   font-size: 17px;
   line-height: 22px;
   font-weight: 600;
+}
+
+/* UX-2: the logo badge, a rounded square with a hairline border and a faint inner glow. */
+.brand-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--fill);
+  box-shadow: inset 0 0 10px color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.brand-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.brand-name {
+  color: var(--heading);
+  font-size: 16px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+/* Muted on the header and on the hover tint is 4.5:1 or more. */
+.brand-chip {
+  padding: 0 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 16px;
+  font-weight: 700;
+}
+
+.brand-caption {
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 14px;
+  font-weight: 400;
+  overflow-wrap: anywhere;
 }
 
 .site-nav {
@@ -171,8 +241,19 @@ p {
   justify-self: end;
 }
 
+/* UX-2: the logo. The shield is --primary (at least 3:1 on the badge, contrast test); the check
+   and the magnifier are cut out in --fill, the badge colour. */
 .mark {
-  color: var(--ink);
+  color: var(--primary);
+  flex-shrink: 0;
+}
+
+.logo-cut {
+  stroke: var(--fill);
+}
+
+.logo-cut-fill {
+  fill: var(--fill);
 }
 
 .tagline {
@@ -237,17 +318,21 @@ p {
 }
 
 /* A soft glow behind both columns; it drifts slowly when motion is allowed. */
-.hero::before {
+.hero-copy {
+  position: relative;
+  isolation: isolate;
+}
+
+/* UX-2: the title-area glow, behind the heading and intro only (not the example result next to
+   them, nor the form below). It fills its own box, with no blur that could spread further. */
+.hero-copy::before {
   content: "";
   position: absolute;
+  inset: 0;
   z-index: -1;
-  top: 25%;
-  right: 25%;
-  width: 500px;
-  height: 500px;
-  border-radius: 9999px;
-  background: linear-gradient(to right, rgba(37, 99, 235, 0.1), rgba(79, 70, 229, 0.1));
-  filter: blur(120px);
+  border-radius: var(--radius-card);
+  background: var(--aurora);
+  background-size: 200% 100%;
   pointer-events: none;
 }
 
@@ -1289,8 +1374,21 @@ code {
 .limits ul {
   display: grid;
   gap: 8px;
-  margin: 16px 0 0;
+  margin: 0;
   padding-left: 24px;
+}
+
+/* 5b: the intro pair stays visible; the 8 items open from a native summary, closed on load. */
+.limits-details {
+  margin-top: 16px;
+}
+
+.limits-summary {
+  color: var(--ink);
+  font-family: var(--font-head);
+  font-size: 17px;
+  line-height: 24px;
+  font-weight: 600;
 }
 
 .limits code {
@@ -1325,40 +1423,90 @@ main:focus {
 
 .wordmark {
   min-height: 44px;
+  margin-left: -8px;
+  padding: 2px 8px;
+  border-radius: var(--radius-control);
   color: var(--ink);
   text-decoration: none;
 }
 
+/* UX-2: the brand block gets the tabs' tint and lift, and its badge glows. No size change. */
+.wordmark:hover,
+.wordmark:focus-visible {
+  background: var(--primary-tint);
+  transform: translateY(-1px);
+}
+
+.wordmark:hover .brand-badge,
+.wordmark:focus-visible .brand-badge {
+  box-shadow: inset 0 0 12px color-mix(in srgb, var(--primary) 35%, transparent), 0 0 16px color-mix(in srgb, var(--primary) 30%, transparent);
+}
+
+/* UX-2: the tabs sit in a rounded capsule: a hairline border and a translucent background. */
 .site-nav ul {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 0 4px;
+  gap: 2px;
   margin: 0;
-  padding: 0;
+  padding: 3px;
   list-style: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--card-bg);
 }
 
-.site-nav a {
+/* UX-2: bold at all times, so hover changes no width. Hover and keyboard focus slide an underline
+   in from the left, tint the background and lift the tab 1px; the motion itself is in the
+   no-preference block at the end. Text pairs are in the contrast test. */
+.site-nav a,
+.site-nav [data-soon] {
+  position: relative;
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  padding: 8px 10px;
-  border-radius: var(--radius-control);
+  min-height: 40px;
+  padding: 8px 12px;
+  border-radius: var(--radius-pill);
   color: var(--muted);
   font-size: 12px;
   line-height: 16px;
-  font-weight: 400;
+  font-weight: 700;
   text-decoration: none;
-  transition: all var(--hover);
 }
 
-.site-nav a:hover {
+.site-nav a::after {
+  content: "";
+  position: absolute;
+  left: 10px;
+  right: 10px;
+  bottom: 6px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--primary);
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.site-nav a:not([aria-current="page"]):hover,
+.site-nav a:not([aria-current="page"]):focus-visible {
+  background: var(--primary-tint);
   color: var(--ink);
+  transform: translateY(-1px);
 }
 
-/* A page not built yet. The link's accessible name says "coming soon", so the badge is hidden from
-   screen readers. Muted on fill is 4.5:1 or more (contrast test). */
+.site-nav a:not([aria-current="page"]):hover::after,
+.site-nav a:not([aria-current="page"]):focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* 9a: a page not built yet is plain text (a span), so the hover, focus and underline rules, which
+   select anchors only, never reach it: no tint, no lift, no underline. Default cursor. */
+.site-nav [data-soon] {
+  cursor: default;
+}
+
+/* A page not built yet. A visually hidden " (coming soon)" is read instead, so the badge is hidden
+   from screen readers. Muted on fill is 4.5:1 or more (contrast test). */
 .nav-soon {
   order: 1;
   margin-left: 6px;
@@ -1371,12 +1519,11 @@ main:focus {
   font-weight: 600;
 }
 
-/* The current page: ink text, bolder weight and a thin bar, not colour alone. */
+/* The current page: a filled pill in the accent colour, white text (AA, contrast test). Same
+   weight as the other tabs, so nothing shifts. */
 .site-nav a[aria-current="page"] {
-  color: var(--ink);
-  font-weight: 600;
-  box-shadow: inset 0 -2px 0 var(--ink);
-  border-radius: 0;
+  background: var(--action);
+  color: var(--on-primary);
 }
 
 .nav-toggle {
@@ -1384,27 +1531,138 @@ main:focus {
   padding-inline: 16px;
 }
 
+/* UX-3: the footer, in the header's language: a hairline border token, the logo badge, pill chips.
+   A dark palette background and no aurora. Text pairs are in the contrast test. */
 .site-footer {
-  border-top: 1px solid var(--header-border);
-  background: var(--bg);
+  border-top: 1px solid var(--border);
+  background: var(--surface);
 }
 
 .footer-inner {
   display: grid;
-  gap: 8px;
+  gap: 32px;
   padding-block: 40px;
   color: var(--muted);
   font-size: 14px;
   line-height: 20px;
 }
 
-.footer-lead {
-  color: var(--ink);
-  font-family: var(--font-head);
-  font-size: 17px;
-  line-height: 24px;
+.footer-cols {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 32px 24px;
+}
+
+.footer-col {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.footer-col p {
+  margin: 0;
+}
+
+.footer-col ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.footer-heading {
+  margin: 0 0 12px;
+  color: var(--heading);
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 700;
+}
+
+.footer-brand-name {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+}
+
+/* Hover and keyboard focus slide an underline in from the left; nothing else changes. The slide
+   itself is in the no-preference block at the end. */
+.footer-link {
+  position: relative;
+  color: var(--primary);
   font-weight: 600;
-  letter-spacing: -0.022em;
+  text-decoration: none;
+}
+
+.footer-link::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -2px;
+  height: 1px;
+  background: currentColor;
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+.footer-link:hover::after,
+.footer-link:focus-visible::after {
+  transform: scaleX(1);
+}
+
+/* A page not built yet: plain text with the Soon badge, not a link. */
+.footer-soon {
+  display: inline-flex;
+  align-items: center;
+  color: var(--muted);
+  cursor: default;
+}
+
+.footer-chips ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.footer-chip {
+  padding: 2px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  background: var(--fill);
+  color: var(--ink);
+  font-size: 12px;
+  line-height: 18px;
+  font-weight: 600;
+}
+
+.footer-bottom {
+  display: grid;
+  gap: 6px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  overflow-wrap: anywhere;
+}
+
+.footer-bottom p {
+  margin: 0;
+}
+
+.footer-disclaimer {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+@media (max-width: 1023px) {
+  .footer-cols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 599px) {
+  .footer-cols {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 /* The footer sits at the bottom of short pages. */
@@ -1627,16 +1885,14 @@ a {
 
   .site-nav ul {
     flex-direction: column;
-    padding-bottom: 8px;
+    margin-bottom: 8px;
+    border-radius: var(--radius-card);
   }
 
-  .site-nav a {
+  .site-nav a,
+  .site-nav [data-soon] {
     width: 100%;
     font-size: 16px;
-  }
-
-  .site-nav a[aria-current="page"] {
-    box-shadow: inset 2px 0 0 var(--ink);
   }
 }
 
@@ -1797,22 +2053,41 @@ a {
     transform: scale(0.95);
   }
 
+  /* UX-2: the aurora drifts slowly inside its own box (background position only). */
   @keyframes aurora-drift {
     to {
-      transform: translate(-60px, 40px) scale(1.1);
+      background-position: 100% 50%;
     }
   }
 
-  .hero::before {
-    animation: aurora-drift 18s ease-in-out infinite alternate;
+  .site-header::before {
+    animation: aurora-drift 24s ease-in-out infinite alternate;
+  }
+
+  .hero-copy::before {
+    animation: aurora-drift 24s ease-in-out infinite alternate;
   }
 
   .disclosure {
     transition: all var(--hover);
   }
 
+  /* UX-2: the tab underline, tint and lift, and the brand block's lift and badge glow. Under reduce
+     there is no transition, so the final state shows at once. */
+  .site-nav a,
+  .site-nav a::after,
+  .wordmark,
+  .brand-badge {
+    transition: transform 200ms ease-out, background-color 200ms ease-out, color 200ms ease-out, box-shadow 200ms ease-out;
+  }
+
   .disclosure:not([open]):hover {
     transform: scale(1.01);
+  }
+
+  /* UX-3: the footer's only motion, the link underline slide. */
+  .footer-link::after {
+    transition: transform 200ms ease-out;
   }
 
   /* Cards further down the page float up as they scroll into view, where supported. */

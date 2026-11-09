@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState, useSyncExternalStore, type KeyboardEvent } from "react";
-import { Mark, NAV_ITEMS } from "@/components/shell/site";
+import { BrandBadge, NAV_ITEMS, SoonItem } from "@/components/shell/site";
 
 const noSubscribe = () => () => {};
 
@@ -30,9 +30,18 @@ export function SiteHeader() {
   return (
     <header className="site-header" onKeyDown={closeOnEscape}>
       <div className="shell site-header-inner">
+        {/* UX-2: a logo badge, the name with a "UAE" chip, and a caption. The caption is hidden from
+            assistive tech so the link's accessible name stays "Offer Check UAE". */}
         <Link href="/check" className="wordmark">
-          <Mark />
-          <span>Offer Check UAE</span>
+          <BrandBadge />
+          <span className="brand-text">
+            <span className="brand-line">
+              <span className="brand-name">Offer Check</span> <span className="brand-chip">UAE</span>
+            </span>
+            <span className="brand-caption" aria-hidden="true">
+              UAE job offer scam check
+            </span>
+          </span>
         </Link>
         {scripted && (
           <button
@@ -57,20 +66,18 @@ export function SiteHeader() {
           <ul>
             {NAV_ITEMS.map((item) => (
               <li key={item.href}>
-                <Link
-                  href={item.href}
-                  aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
-                  aria-label={item.soon ? `${item.label}, coming soon` : undefined}
-                  onClick={() => setOpen(false)}
-                >
-                  {/* First in the markup so the label ends the link; CSS shows it after the label. */}
-                  {item.soon && (
-                    <span className="nav-soon" aria-hidden="true">
-                      Soon
-                    </span>
-                  )}
-                  {item.label}
-                </Link>
+                {/* 9a: a page not built yet is plain text with a Soon badge, not a link. */}
+                {item.soon ? (
+                  <SoonItem label={item.label} className="nav-item" />
+                ) : (
+                  <Link
+                    href={item.href}
+                    aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
+                    onClick={() => setOpen(false)}
+                  >
+                    {item.label}
+                  </Link>
+                )}
               </li>
             ))}
           </ul>
