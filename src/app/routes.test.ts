@@ -303,7 +303,7 @@ describe("footer", () => {
   });
 
   it("Trust and limits: two lines that hold in the code, and a link to the limitations", () => {
-    expect(html).toContain("Rule-based score: the same text gives the same score");
+    expect(html).toContain("Rule-based score: the same English text gives the same score");
     expect(html).toContain("A person approves any reply draft");
     expect(html).toMatch(/<a [^>]*href="\/check#limits"[^>]*>What this check cannot do<\/a>/);
     expect(LIMITS_SECTION).toBe("What this check cannot do");

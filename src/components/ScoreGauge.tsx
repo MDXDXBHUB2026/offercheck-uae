@@ -8,7 +8,8 @@ import type { Finding, RiskScore } from "@/lib/types";
 // A low band with a finding or a warning is not "all clear" (UX-1): its chip and arc use the amber
 // caution style. With a notice (tier 1, tier 2 or the offer-likeness notice) and nothing matched it
 // gets the neutral style (LANG-2, LANG-3, OFFER-1).
-// See scoreChip for the states.
+// See scoreChip for the states. Batch B decision 4: when most of the text is not in English (tier 1)
+// the gauge shows "Not checked" in place of the number, with no "/ 100" and no arc.
 export function ScoreGauge({
   risk,
   findings = [],
@@ -20,12 +21,13 @@ export function ScoreGauge({
 }) {
   const arc = "M 16 96 A 80 80 0 0 1 176 96";
   const { label, tone } = scoreChip(risk, findings, notice);
+  const notChecked = notice === "most";
   return (
     <div className={`score score-${risk.band}${tone === "band" ? "" : ` score-${tone}`}`}>
       <div className="gauge-wrap">
         <svg className="gauge" viewBox="0 0 192 104" aria-hidden="true" focusable="false">
           <path className="gauge-track" d={arc} pathLength={100} />
-          {risk.score > 0 && (
+          {risk.score > 0 && !notChecked && (
             <path
               className="gauge-value"
               d={arc}
@@ -35,8 +37,14 @@ export function ScoreGauge({
           )}
         </svg>
         <p className="score-text">
-          <span className="score-value">{risk.score}</span>
-          <span className="score-max">/ 100</span>
+          {notChecked ? (
+            <span className="score-value score-not-checked">Not checked</span>
+          ) : (
+            <>
+              <span className="score-value">{risk.score}</span>
+              <span className="score-max">/ 100</span>
+            </>
+          )}
         </p>
       </div>
       <p className="chip score-label">{label}</p>

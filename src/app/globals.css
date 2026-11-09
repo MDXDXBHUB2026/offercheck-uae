@@ -921,6 +921,12 @@ button.sample:hover {
   font-variant-numeric: tabular-nums;
 }
 
+/* Batch B decision 4: "Not checked" in place of the number for mostly non-English text. */
+.score-value.score-not-checked {
+  font-size: 28px;
+  line-height: 36px;
+}
+
 .score-max {
   color: var(--muted);
   font-size: 14px;

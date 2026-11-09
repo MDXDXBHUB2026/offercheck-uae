@@ -2,9 +2,10 @@ import type { ReactNode } from "react";
 import { AgentRun } from "@/components/AgentRun";
 import { CheckCircleIcon, InfoIcon, QuoteGlyph } from "@/components/icons";
 import { scoreArithmetic } from "@/components/scoreArithmetic";
-import { activeNotice, allClearShown, qualifiedSummary } from "@/components/scoreChip";
+import { allClearShown, noticeFor, qualifiedSummary } from "@/components/scoreChip";
 import { ScoreGauge } from "@/components/ScoreGauge";
 import { Callout, Card, Chip, SectionHeader } from "@/components/ui";
+import { noticeForCoverage, type Coverage } from "@/lib/coverage";
 import { HIGH_BAND_MIN, MEDIUM_BAND_MIN, SEVERITY_WEIGHTS } from "@/lib/scoring";
 import { OFFER_NOTICE, showOfferNotice, type OfferSignal } from "@/lib/offerLikeness";
 import { LANGUAGE_NOTICES, type LanguageNotice } from "@/lib/textScript";
@@ -32,6 +33,14 @@ const CHECK_NOTES: Record<string, string> = {
   free_email_contact: "Recruiters for a registered company usually write from the company's own domain.",
 };
 
+// Batch B Stage 1: added to the Intake row of the Agent run for each state but full.
+const INTAKE_NOTES: Record<Coverage, string | undefined> = {
+  full: undefined,
+  translated: "Checked a machine translation into English.",
+  partial: "Part of the text is not in English and was not checked.",
+  unchecked: "Most of the text is not in English and was not checked.",
+};
+
 function plural(count: number, word: string): string {
   return `${count} ${word}${count === 1 ? "" : "s"}`;
 }
@@ -54,7 +63,8 @@ function Quotes({ quotes }: { quotes: string[] }) {
 export function ResultsPanel({
   result,
   ruleCount,
-  languageNotice = null,
+  languageNotice: languageTier = null,
+  coverage = null,
   offerSignals = null,
   children,
 }: {
@@ -62,6 +72,9 @@ export function ResultsPanel({
   ruleCount: number;
   // LANG-1: set from the text that was checked, never from the live text box. Fixed wording only.
   languageNotice?: LanguageNotice | null;
+  // Batch B Stage 1: the coverage state, set at check time. When given it decides the tier; without
+  // it the tier above maps to a state (most: unchecked, part: partial, none: full).
+  coverage?: Coverage | null;
   // Batch A case 4: also set at check time. null means not recorded, so no notice.
   offerSignals?: readonly OfferSignal[] | null;
   children?: ReactNode;
@@ -69,11 +82,16 @@ export function ResultsPanel({
   const { risk, findings } = result;
   const riskFindings = findings.filter((finding) => finding.severity !== "info");
   const warningMentions = findings.filter((finding) => finding.severity === "info");
-  const arithmetic = scoreArithmetic(findings, risk);
+  const state: Coverage =
+    coverage ?? (languageTier === "most" ? "unchecked" : languageTier === "part" ? "partial" : "full");
+  const languageNotice = noticeForCoverage(state);
+  // OFFER-1: one notice for the chip, the Findings card, the Risk aggregator row and the icon.
+  const notice = noticeFor(state, offerSignals, risk.band);
+  // Batch B decision 4: no points sum when the text was not checked.
+  const arithmetic = notice === "most" ? null : scoreArithmetic(findings, risk);
   const notChecked = languageNotice === "most" && findings.length === 0;
   const partNotChecked = languageNotice === "part" && findings.length === 0;
-  // OFFER-1: one notice for the chip, the Findings card, the Risk aggregator row and the icon.
-  const notice = activeNotice(languageNotice, offerSignals, risk.band);
+  const translatedNone = notice === "translated" && findings.length === 0;
   const offerUnlike = notice === "offer" && findings.length === 0;
   return (
     <div className="results">
@@ -133,6 +151,8 @@ export function ResultsPanel({
                   ? `The ${ruleCount} rules read English only, so they could not check most of this text. This does not confirm that the offer is genuine.`
                   : partNotChecked
                   ? `None of the ${ruleCount} rules matched in the English part. Part of the text was not checked, and this does not confirm that the offer is genuine.`
+                  : translatedNone
+                  ? `None of the ${ruleCount} rules matched in the English translation. A translation can change the meaning, so this does not confirm that the offer is genuine.`
                   : offerUnlike
                   ? `None of the ${ruleCount} rules matched. This text has no clear signs of a job offer, and this does not confirm that the offer is genuine.`
                   : `${
@@ -177,6 +197,7 @@ export function ResultsPanel({
         <AgentRun
           trace={result.trace}
           aggregatorSummary={qualifiedSummary(risk, findings, notice) ?? undefined}
+          intakeNote={INTAKE_NOTES[state]}
         />
 
         {children}

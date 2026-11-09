@@ -1,3 +1,4 @@
+import { noticeForCoverage, type Coverage } from "@/lib/coverage";
 import { showOfferNotice, type OfferSignal } from "@/lib/offerLikeness";
 import type { LanguageNotice } from "@/lib/textScript";
 import type { Finding, RiskBand, RiskScore } from "@/lib/types";
@@ -6,13 +7,17 @@ import type { Finding, RiskBand, RiskScore } from "@/lib/types";
 export type ScoreChip = { label: string; tone: "band" | "caution" | "neutral" };
 
 // The notice that qualifies a result, recorded at check time: tier 1 ("most"), tier 2 ("part"),
-// or the offer-likeness notice ("offer"). null: no notice.
-export type Notice = LanguageNotice | "offer";
+// the offer-likeness notice ("offer"), or a check of an English translation ("translated", Batch B;
+// no translation runs in Stage 1). null: no notice.
+export type Notice = LanguageNotice | "offer" | "translated";
 
 export const LOW_REVIEW_LABEL = "Low, review the findings below";
 export const NOT_CHECKED_LABEL = "Not checked: most of the text is not in English";
 export const PART_CHECKED_LABEL = "Score 0 on the English part. Part of the text was not checked.";
 export const OFFER_UNLIKE_LABEL = "Score 0. This text does not look like a job offer.";
+// Batch B decision 5: a translation with no match gets a neutral grey chip, never green.
+export const TRANSLATED_NONE_LABEL = "Score 0 on the English translation. A translation can change the meaning.";
+const TRANSLATED_SUMMARY = "on the English translation. A translation can change the meaning.";
 const PART_CHECKED_SUMMARY = "on the English part. Part of the text was not checked.";
 const OFFER_UNLIKE_SUMMARY = "This text does not look like a job offer.";
 
@@ -29,6 +34,17 @@ export function activeNotice(
   return null;
 }
 
+// Batch B Stage 1: the notice for a coverage state. A translation comes first; otherwise the
+// coverage state's language tier, then the offer-likeness notice, exactly as activeNotice.
+export function noticeFor(
+  coverage: Coverage,
+  signals: readonly OfferSignal[] | null,
+  band: RiskBand,
+): Notice | null {
+  if (coverage === "translated") return "translated";
+  return activeNotice(noticeForCoverage(coverage), signals, band);
+}
+
 // The invariant, in one place: with any notice active, nothing says all clear. No green tick in
 // the Findings card (this function), and no "No risk indicators found" in the chip, the Risk
 // aggregator row or the announcement (scoreChip and qualifiedSummary below).
@@ -40,12 +56,18 @@ export function allClearShown(notice: Notice | null): boolean {
 // chip says instead of the server's "No risk indicators found". With a notice and a warning only
 // (score 0, an info finding), the row takes the chip's amber wording for the same reason.
 // null: show the server's summary.
+// Batch B decision 4: tier 1 shows no number. With a finding, the row says what matched.
 export function qualifiedSummary(risk: RiskScore, findings: Finding[], notice: Notice | null): string | null {
   if (notice === null) return null;
+  if (notice === "most") {
+    return findings.length > 0
+      ? `${NOT_CHECKED_LABEL}. Rules matched in its English words: ${scoreChip(risk, findings, notice).label}.`
+      : `${NOT_CHECKED_LABEL}.`;
+  }
   if (findings.length > 0) {
     return risk.score === 0 ? `Score 0 of 100: ${scoreChip(risk, findings, notice).label}` : null;
   }
-  if (notice === "most") return `Score ${risk.score} of 100. ${NOT_CHECKED_LABEL}.`;
+  if (notice === "translated") return `Score ${risk.score} of 100 ${TRANSLATED_SUMMARY}`;
   if (notice === "part") return `Score ${risk.score} of 100 ${PART_CHECKED_SUMMARY}`;
   return `Score ${risk.score} of 100. ${OFFER_UNLIKE_SUMMARY}`;
 }
@@ -64,5 +86,6 @@ export function scoreChip(risk: RiskScore, findings: Finding[], notice: Notice |
   if (findings.length === 0 && notice === "most") return { label: NOT_CHECKED_LABEL, tone: "neutral" };
   if (findings.length === 0 && notice === "part") return { label: PART_CHECKED_LABEL, tone: "neutral" };
   if (findings.length === 0 && notice === "offer") return { label: OFFER_UNLIKE_LABEL, tone: "neutral" };
+  if (findings.length === 0 && notice === "translated") return { label: TRANSLATED_NONE_LABEL, tone: "neutral" };
   return { label: risk.label, tone: "band" };
 }

@@ -113,7 +113,7 @@ export function SiteFooter() {
           <div className="footer-col">
             <h2 className="footer-heading">Trust and limits</h2>
             <ul>
-              <li>Rule-based score: the same text gives the same score</li>
+              <li>Rule-based score: the same English text gives the same score</li>
               <li>A person approves any reply draft</li>
               <li>
                 <LimitsLink>{LIMITS_SECTION}</LimitsLink>

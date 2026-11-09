@@ -186,7 +186,9 @@ describe("score chip with the language notice (LANG-2)", () => {
       expect(side).not.toContain("score-caution");
       expect(html).not.toContain("No risk indicators found");
       // Round 2: the Risk aggregator row says the same as the chip. The server's trace is unchanged.
-      expect(aggregatorRow(html)).toContain(`Score 0 of 100. ${NEUTRAL}.`);
+      // Batch B Stage 1, decision 4: no number for unchecked text.
+      expect(aggregatorRow(html)).toBe(`${NEUTRAL}.`);
+      expect(side).toContain('<span class="score-value score-not-checked">Not checked</span>');
       expect(result.trace.find((step) => step.agent === "risk_aggregator")?.summary).toBe(
         "Score 0 of 100: No risk indicators found",
       );
@@ -202,8 +204,6 @@ describe("score chip with the language notice (LANG-2)", () => {
 
   it("the Risk aggregator row shows the server's summary in every other case", () => {
     const cases: [string, "most" | "part" | null][] = [
-      [A4_TEXT, "most"],
-      [SCAM_OFFER, "most"],
       [A4_TEXT, "part"],
       [SCAM_OFFER, "part"],
       [LEGIT_OFFER, null],
@@ -216,6 +216,16 @@ describe("score chip with the language notice (LANG-2)", () => {
       const summary = result.trace.find((step) => step.agent === "risk_aggregator")?.summary;
       expect(summary).toMatch(/^Score \d+ of 100: /);
       expect(aggregatorRow(html)).toBe(summary);
+    }
+  });
+
+  // Batch B Stage 1, decision 4: tier 1 with a finding lists the matches but shows no number.
+  it("tier 1 with a finding: the row says not checked, then what matched, with no number", () => {
+    for (const text of [A4_TEXT, SCAM_OFFER]) {
+      const { result, html, side, chip } = render(text, "most");
+      expect(result.findings.length).toBeGreaterThan(0);
+      expect(aggregatorRow(html)).toBe(`${NEUTRAL}. Rules matched in its English words: ${chip}.`);
+      expect(side).not.toMatch(/<span class="score-value">\d/);
     }
   });
 
@@ -247,12 +257,14 @@ describe("score chip with the language notice (LANG-2)", () => {
 
   it("announces the qualified wording to screen readers with a notice", () => {
     const result = runManager(ARABIC_FEE);
-    expect(resultAnnouncement(result, "most")).toBe(`Results ready. Score 0 of 100: ${NEUTRAL}.`);
+    expect(resultAnnouncement(result, "most")).toBe(`Results ready. ${NEUTRAL}.`);
     expect(resultAnnouncement(result, "part")).toBe(
       "Results ready. Score 0 of 100 on the English part. Part of the text was not checked.",
     );
     expect(resultAnnouncement(result)).toBe("Results ready. Score 0 of 100: No risk indicators found.");
-    expect(resultAnnouncement(runManager(A4_TEXT), "most")).toBe(`Results ready. Score 20 of 100: ${REVIEW}.`);
+    expect(resultAnnouncement(runManager(A4_TEXT), "most")).toBe(
+      `Results ready. ${NEUTRAL}. Rules matched in its English words: ${REVIEW}.`,
+    );
   });
 
   it("styles the neutral chip with ink on fill, no green", () => {

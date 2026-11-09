@@ -1,5 +1,6 @@
 import { runManager } from "./agents/manager";
 import { appendEntries, runRecords, type AuditEntry } from "./audit";
+import { coverageOf, detectLanguage } from "./coverage";
 import type { AnalysisResult } from "./types";
 
 export type AuditedAnalysis = AnalysisResult & { runId: string; audit: AuditEntry[] };
@@ -11,6 +12,9 @@ export async function runWithAudit(offerText: string): Promise<AuditedAnalysis> 
   const startedAt = new Date().toISOString();
   const result = runManager(offerText);
   const finishedAt = new Date().toISOString();
-  const audit = await appendEntries([], runRecords(runId, offerText.length, result, startedAt, finishedAt));
+  // Batch B Stage 1: the coverage state, from the same offline detector as the page. Fixed values.
+  const detected = detectLanguage(offerText);
+  const language = { coverage: coverageOf(detected), detected };
+  const audit = await appendEntries([], runRecords(runId, offerText.length, result, startedAt, finishedAt, language));
   return { ...result, runId, audit };
 }

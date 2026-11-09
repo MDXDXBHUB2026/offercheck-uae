@@ -1,3 +1,4 @@
+import type { Coverage, Detected } from "./coverage";
 import { planBlocks, renderBlocks, type BlockId } from "./agents/drafter";
 import { draftState, gateReducer, type GateAction, type GateFlow } from "./approvalGate";
 import type { Finding } from "./types";
@@ -115,12 +116,17 @@ function ms(durationMs: number | null): number | null {
 
 // One run: started, intake done, one entry per agent step, finished. Only lengths, statuses,
 // durations, rule ids and the score are kept, never the text or the evidence.
+// Batch B Stage 1: intake done also holds the coverage state and the detector's verdict, both fixed
+// values, and translation "none" (no translation runs). Never the text or a language name from it.
+export type RunLanguage = { coverage: Coverage; detected: Detected };
+
 export function runRecords(
   runId: string,
   offerLength: number,
   result: AnalysisResult,
   startedAt: string,
   finishedAt: string,
+  language: RunLanguage | null = null,
 ): AuditRecord[] {
   const records: AuditRecord[] = [{ runId, at: startedAt, kind: "run_started", data: { offerLength } }];
   let total: number | null = null;
@@ -130,7 +136,13 @@ export function runRecords(
       total = timing.durationMs;
     } else if (step.agent === "intake") {
       // Intake only cleans the text so far. Claim extraction is not implemented yet.
-      records.push({ runId, at: finishedAt, kind: "intake_done", data: { ...timing, scope: "text_cleaning_only" } });
+      const coverage: Record<string, AuditValue> = language ? { coverage: language.coverage, detected: language.detected } : {};
+      records.push({
+        runId,
+        at: finishedAt,
+        kind: "intake_done",
+        data: { ...timing, scope: "text_cleaning_only", ...coverage, translation: "none" },
+      });
     } else {
       const extra: Record<string, AuditValue> =
         step.agent === "red_flag"

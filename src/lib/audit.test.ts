@@ -27,6 +27,10 @@ const OFFERS = [SCAM_OFFER, LEGIT_OFFER, ...[...EVAL_OFFERS, ...HOLDOUT_OFFERS].
 const ALLOWED_KEYS = new Set([
   "offerLength",
   "scope",
+  // Batch B Stage 1: fixed values only (full, partial, unchecked; en, mixed, non_en; none).
+  "coverage",
+  "detected",
+  "translation",
   "status",
   "durationMs",
   "agent",
@@ -102,7 +106,7 @@ describe("run records", () => {
       official_channel: "not_implemented",
       risk_aggregator: "completed",
     });
-    expect(audit[1].data).toMatchObject({ status: "completed", scope: "text_cleaning_only" });
+    expect(audit[1].data).toMatchObject({ status: "completed", scope: "text_cleaning_only", translation: "none" });
     for (const entry of audit.filter((e) => e.data.status === "not_implemented")) {
       expect(entry.kind).toBe("agent_step");
       expect(entry.data.durationMs).toBeNull();

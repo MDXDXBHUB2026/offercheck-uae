@@ -15,7 +15,8 @@ export const PART_MIN_NON_LATIN_LETTERS = 10;
 
 // Fixed wording. Nothing from the offer text is ever put into a notice.
 export const LANGUAGE_NOTICES: Record<LanguageNotice, string> = {
-  most: "Most of this text is not in English. This check reads English text only, so a low score or a score of 0 does not mean the offer is safe.",
+  // Batch B decision 4: tier 1 shows "Not checked" in place of the number.
+  most: "Most of this text is not in English. This check reads English only, so the text was not checked and no score is shown.",
   part: "Part of this text is not in English. This check reads English only, so those parts were not checked.",
 };
 

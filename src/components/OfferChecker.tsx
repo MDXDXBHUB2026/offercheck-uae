@@ -15,9 +15,10 @@ import {
   type AuditEntry,
   type AuditRecord,
 } from "@/lib/audit";
-import { activeNotice, qualifiedSummary, scoreChip, type Notice } from "@/components/scoreChip";
+import { noticeFor, qualifiedSummary, scoreChip, type Notice } from "@/components/scoreChip";
+import { coverageOf, detectLanguage, noticeForCoverage, type Coverage } from "@/lib/coverage";
 import { offerSignals, type OfferSignal } from "@/lib/offerLikeness";
-import { languageNotice, type LanguageNotice } from "@/lib/textScript";
+import type { LanguageNotice } from "@/lib/textScript";
 import { MAX_OFFER_CHARS } from "@/lib/types";
 
 // A synthetic sample offer the user can load into the box with one button.
@@ -37,15 +38,23 @@ export function checkBlockedReason(text: string, hasSamples: boolean): string {
 // LANG-1: a check's response together with the language notice for the text that was checked.
 // The flag is set once, at check time, and never follows the live text box.
 // Batch A case 4: the offer signals are recorded the same way, at check time.
+// Batch B Stage 1: the coverage state too, from the offline detector. The tier follows from it.
 export type CheckedResult = {
   response: AnalyzeResponse;
+  coverage: Coverage;
   languageNotice: LanguageNotice | null;
   offerSignals: OfferSignal[];
 };
 
 export function recordCheck(response: AnalyzeResponse, submittedText: string): CheckedResult {
-  return { response, languageNotice: languageNotice(submittedText), offerSignals: offerSignals(submittedText) };
+  const coverage = coverageOf(detectLanguage(submittedText));
+  return { response, coverage, languageNotice: noticeForCoverage(coverage), offerSignals: offerSignals(submittedText) };
 }
+
+// Batch B decision 4: shown under the button when the live text is not all English. Fixed wording.
+export const LANGUAGE_GATE_NOTE =
+  "This text does not look like English, or only part of it does. The rules read English only, so the parts in other languages will not be checked.";
+export const LANGUAGE_GATE_BUTTON = "Check original anyway (not checked)";
 
 // The initial checked result: none.
 export function noCheck(): CheckedResult | null {
@@ -58,9 +67,14 @@ export function resultAnnouncement(
   notice: Notice | null = null,
 ): string {
   // LANG-3 and OFFER-1: tier 2 or the offer-likeness notice with nothing matched reads as one
-  // qualified sentence, as in the Risk aggregator row.
-  if ((notice === "part" || notice === "offer") && result.findings.length === 0) {
+  // qualified sentence, as in the Risk aggregator row. Batch B decision 4: tier 1 has no number.
+  // Decision 5: a translation with nothing matched is qualified the same way.
+  if (notice === "most") return `Results ready. ${qualifiedSummary(result.risk, result.findings, notice)}`;
+  if ((notice === "part" || notice === "offer" || notice === "translated") && result.findings.length === 0) {
     return `Results ready. ${qualifiedSummary(result.risk, result.findings, notice)}`;
+  }
+  if (notice === "translated") {
+    return `Results ready. Checked an English translation. Score ${result.risk.score} of 100: ${scoreChip(result.risk, result.findings, notice).label}.`;
   }
   return `Results ready. Score ${result.risk.score} of 100: ${scoreChip(result.risk, result.findings, notice).label}.`;
 }
@@ -83,6 +97,8 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
 
   const reason = checkBlockedReason(text, samples.length > 0);
   const overLimit = text.length > MAX_OFFER_CHARS;
+  // Batch B decision 4: the live text is not all English. The button keeps working, renamed.
+  const languageGate = text.trim().length > 0 && detectLanguage(text) !== "en";
 
   function startAudit(runId: string | null, log: AuditEntry[]) {
     runIdRef.current = runId;
@@ -167,7 +183,7 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
     : result
       ? resultAnnouncement(
           result,
-          activeNotice(checked?.languageNotice ?? null, checked?.offerSignals ?? null, result.risk.band),
+          noticeFor(checked?.coverage ?? "full", checked?.offerSignals ?? null, result.risk.band),
         )
       : "";
 
@@ -211,10 +227,21 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
             </div>
           )}
           <div className="submit">
-            <Button type="submit" blocked={Boolean(reason)} reasonId="check-reason" busy={loading}>
-              {loading ? "Checking..." : "Check offer"}
+            <Button
+              type="submit"
+              blocked={Boolean(reason)}
+              reasonId="check-reason"
+              busy={loading}
+              {...(languageGate ? { "aria-describedby": "language-gate" } : {})}
+            >
+              {loading ? "Checking..." : languageGate ? LANGUAGE_GATE_BUTTON : "Check offer"}
             </Button>
             <HelperText id="check-reason">{reason}</HelperText>
+            {languageGate && (
+              <p id="language-gate" className="helper language-gate">
+                {LANGUAGE_GATE_NOTE}
+              </p>
+            )}
           </div>
         </div>
       </form>
@@ -236,6 +263,7 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
           result={result}
           ruleCount={ruleCount}
           languageNotice={checked?.languageNotice ?? null}
+          coverage={checked?.coverage ?? null}
           offerSignals={checked?.offerSignals ?? null}
         >
           <ApprovalPanel gate={gateFlow.gate} dispatch={dispatchWithAudit} />

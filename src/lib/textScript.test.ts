@@ -101,13 +101,23 @@ describe("languageNotice (LANG-1)", () => {
       "Part of this text is not in English. This check reads English only, so those parts were not checked.",
     );
     expect(LANGUAGE_NOTICES.most).toBe(
-      "Most of this text is not in English. This check reads English text only, so a low score or a score of 0 does not mean the offer is safe.",
+      // Batch B Stage 1, decision 4: tier 1 shows "Not checked" in place of the number.
+      "Most of this text is not in English. This check reads English only, so the text was not checked and no score is shown.",
     );
   });
 
   it("is not used by the rules, the scoring or the server", () => {
     for (const file of ["src/lib/agents/redFlag.ts", "src/lib/scoring.ts", "src/lib/agents/manager.ts", "src/lib/agents/intake.ts", "src/app/api/analyze/route.ts"]) {
       expect(readFileSync(join(process.cwd(), file), "utf8")).not.toContain("textScript");
+    }
+  });
+
+  // Batch B Stage 1: the rules and the scoring do not import the new detector or its word lists.
+  it("the rules and the scoring do not import the Stage 1 detector", () => {
+    for (const file of ["src/lib/agents/redFlag.ts", "src/lib/scoring.ts", "src/lib/agents/manager.ts", "src/lib/agents/intake.ts"]) {
+      const source = readFileSync(join(process.cwd(), file), "utf8");
+      expect(source, file).not.toMatch(/from\s+["'][^"']*\b(?:coverage|languageWords)["']/);
+      expect(source, file).not.toMatch(/\b(?:detectLanguage|latinVerdict|coverageOf|ENGLISH_WORDS|FOREIGN_MARKERS)\b/);
     }
   });
 });

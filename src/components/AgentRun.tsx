@@ -18,8 +18,17 @@ const STATUS_LABELS: Record<TraceStatus, string> = {
 
 // The run as a timeline. Times are the measured durationMs values; a step that did not run says so.
 // aggregatorSummary replaces only what the Risk aggregator row shows (LANG-2, tier 1 with no
-// finding), so it agrees with the chip. The trace itself, from the server, is unchanged.
-export function AgentRun({ trace, aggregatorSummary }: { trace: TraceStep[]; aggregatorSummary?: string }) {
+// finding), so it agrees with the chip. Batch B Stage 1: intakeNote is added to the Intake row to say
+// which part of the text was not checked. The trace itself, from the server, is unchanged.
+export function AgentRun({
+  trace,
+  aggregatorSummary,
+  intakeNote,
+}: {
+  trace: TraceStep[];
+  aggregatorSummary?: string;
+  intakeNote?: string;
+}) {
   return (
     <section className="block agent-run" aria-labelledby="agent-run-heading">
       <SectionHeader id="agent-run-heading" title="Agent run" />
@@ -29,7 +38,12 @@ export function AgentRun({ trace, aggregatorSummary }: { trace: TraceStep[]; agg
           title: AGENT_LABELS[step.agent] ?? step.agent,
           status: step.status,
           statusLabel: STATUS_LABELS[step.status],
-          detail: step.agent === "risk_aggregator" && aggregatorSummary ? aggregatorSummary : step.summary,
+          detail:
+            step.agent === "risk_aggregator" && aggregatorSummary
+              ? aggregatorSummary
+              : step.agent === "intake" && intakeNote
+                ? `${step.summary} ${intakeNote}`
+                : step.summary,
           meta: step.durationMs === null ? "Not run" : `${step.durationMs.toFixed(2)} ms`,
         }))}
       />

@@ -30,12 +30,12 @@ export const PUBLIC_LIMITS: PublicLimit[] = [
     text: "When a low-scoring text shows no sign of a job offer, such as a role, a salary or an employer, a notice says so. The score still comes only from the fixed rules.",
   },
   {
-    title: "Other languages typed in English letters are not detected.",
-    text: "French, Tagalog, or Arabic or Hindi written in English letters look like English to the check, so no notice is shown even though the rules do not understand the text.",
+    title: "Other languages typed in English letters are only partly detected.",
+    text: "A word check catches common Hindi, Urdu, Arabic, Tagalog, Malayalam, Bengali, Tamil and French words written in English letters, and then shows the text as not checked. Messages under 6 words, and languages it has no words for, can still look like English to the check.",
   },
   {
-    title: "The language notice uses a simple cut-off.",
-    text: "It appears when at least half of the letters come from another alphabet, or when at least 10 do. Very short non-English text, such as a single name, may get no notice. The cut-off is a design choice and has not been tested on real offers.",
+    title: "The language check uses simple cut-offs.",
+    text: "Text counts as not English when at least half of its letters come from another alphabet, or when too few of its words are common English words or too many are common words from other languages. Fewer such letters or words, but still some, mark it as partly English. Very short non-English text, such as a single name, may get no notice. The cut-offs are a design choice and have not been tested on real offers.",
   },
   {
     title: "Look-alike letters can also keep the language notice away.",

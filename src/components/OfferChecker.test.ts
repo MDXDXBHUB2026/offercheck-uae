@@ -115,7 +115,7 @@ describe("language notice (LANG-1)", () => {
     const neutral = "Not checked: most of the text is not in English";
     const html = renderWith(ENGLISH, arabicCheck);
     expect(html).toContain(`<p class="chip score-label">${neutral}</p>`);
-    expect(html).toContain(`Results ready. Score 0 of 100: ${neutral}.`);
+    expect(html).toContain(`Results ready. ${neutral}.`);
     expect(renderWith(ARABIC, recordCheck(respond(ENGLISH), ENGLISH))).not.toContain(neutral);
   });
 
@@ -128,6 +128,35 @@ describe("language notice (LANG-1)", () => {
     const html = renderWith(tier2, check);
     expect(html).not.toContain("No risk indicators found");
     expect(html).toContain("Results ready. Score 0 of 100 on the English part. Part of the text was not checked.");
+  });
+
+  // Batch B Stage 1: the coverage state is recorded with the result, from the submitted text.
+  it("records the coverage state of the submitted text", () => {
+    expect(recordCheck(respond(ARABIC), ARABIC).coverage).toBe("unchecked");
+    expect(recordCheck(respond(ENGLISH), ENGLISH).coverage).toBe("full");
+    const hinglish = "Aapka job confirm ho gaya hai. Visa ke liye abhi 2000 dirham bhejo, warna offer cancel ho jayega.";
+    const check = recordCheck(respond(hinglish), hinglish);
+    expect(check.coverage).toBe("unchecked");
+    expect(check.languageNotice).toBe("most");
+    const html = renderWith(hinglish, check);
+    expect(html).toContain('<span class="score-value score-not-checked">Not checked</span>');
+    expect(html).not.toContain("No risk indicators found");
+  });
+
+  // Batch B Stage 1, decision 4: non-English or mixed live text keeps the button, renamed, with a note.
+  it("names the button 'Check original anyway (not checked)' for non-English or mixed live text", () => {
+    const button = (html: string) => html.match(/<button[^>]*type="submit"[^>]*>(.*?)<\/button>/)?.[0] ?? "";
+    for (const text of [ARABIC, "Aapka job confirm ho gaya hai. Visa ke liye abhi 2000 dirham bhejo, warna offer cancel ho jayega."]) {
+      const html = renderWith(text, null);
+      expect(button(html)).toContain("Check original anyway (not checked)");
+      expect(button(html)).toContain('aria-describedby="language-gate"');
+      expect(html).toContain('id="language-gate"');
+    }
+    for (const text of [ENGLISH, ""]) {
+      const html = renderWith(text, null);
+      expect(button(html)).toContain(">Check offer<");
+      expect(html).not.toContain("language-gate");
+    }
   });
 
   it("clears the result when a new check starts, then stores the flag for the submitted text", async () => {

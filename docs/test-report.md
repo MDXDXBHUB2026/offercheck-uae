@@ -4,7 +4,7 @@ As of 2026-11-08, updated for QA round 2 (LANG-2 and COPY-1, the QA round 2 comm
 
 ## Unit and component tests per suite
 
-Source: `npx vitest run --reporter=json` on Windows 11, Node 24.19.0. Total: **1055 tests in 25 files, 1055 passed, 0 failed, 0 skipped** (after items 5b to 9, not yet committed). (Step 3: 588 in 18 files. Step 4: 680 in 19 files. Phase 1: 755 in 21 files. After `d31f511`: 779 in 21 files. QA fix batch `34903e2`: 832 in 22 files. QA round 2 and COPY-1: 855 in 22 files. Batch A: 957 in 24 files. Batch A and A.1 commit `e244723`: 1003 in 25 files. LANG-3 commit `ef47902`: 1014 in 25 files. OFFER-1: 1023 in 25 files. Items 5b, 6 and 7: 1037. Item 8: 1053.)
+Source: `npx vitest run --reporter=json` on Windows 11, Node 24.19.0. Total: **1174 tests in 26 files, 1174 passed, 0 failed, 0 skipped** (Batch B Stage 1, `npm run check` on 2026-11-09). (Step 3: 588 in 18 files. Step 4: 680 in 19 files. Phase 1: 755 in 21 files. After `d31f511`: 779 in 21 files. QA fix batch `34903e2`: 832 in 22 files. QA round 2 and COPY-1: 855 in 22 files. Batch A: 957 in 24 files. Batch A and A.1 commit `e244723`: 1003 in 25 files. LANG-3 commit `ef47902`: 1014 in 25 files. OFFER-1: 1023 in 25 files. Items 5b, 6 and 7: 1037. Item 8: 1053. Items 5b to 9: 1055 in 25 files.)
 
 | Suite | Tests | Passed | What it covers | What it does not cover |
 |---|---|---|---|---|
