@@ -57,7 +57,9 @@ describe("routes", () => {
     expect(html).not.toMatch(/<main[\s>]|<header[\s>]|<footer[\s>]/);
   });
 
-  it.each([howItWorks, lab, guide, about].map((module) => [module.metadata.title, module] as const))(
+  // Phases 2 and 3 shipped How it works, About and limits and Test Lab; their own tests are in
+  // docPages.test.ts and src/lib/labData.test.ts. Only the Guide is still a placeholder.
+  it.each([guide].map((module) => [module.metadata.title, module] as const))(
     "%s says plainly that it is not built yet, and shows no numbers",
     (_title, module) => {
       const html = renderToStaticMarkup(createElement(module.default));
@@ -93,7 +95,7 @@ describe("site header", () => {
 
   // 9a: a placeholder page has no link in the nav, so on its route no tab is marked current.
   it("on a placeholder route no tab is marked current", () => {
-    nav.pathname = "/lab";
+    nav.pathname = "/guide";
     nav.scripted = false;
     try {
       expect(renderToStaticMarkup(createElement(SiteHeader))).not.toContain("aria-current");
@@ -113,7 +115,7 @@ describe("site header", () => {
       const header = renderToStaticMarkup(createElement(SiteHeader));
       const html = header.slice(header.indexOf("<nav"), header.indexOf("</nav>"));
       const soonHrefs = NAV_ITEMS.filter((item) => item.soon).map((item) => item.href);
-      expect([...soonHrefs].sort()).toEqual(["/about", "/guide", "/how-it-works", "/lab"]);
+      expect([...soonHrefs].sort()).toEqual(["/guide"]);
       for (const item of NAV_ITEMS) {
         // The placeholder routes stay.
         const page = readFileSync(join(process.cwd(), "src/app", item.href, "page.tsx"), "utf8");
@@ -286,10 +288,10 @@ describe("footer", () => {
     expect(read("src/components/shell/site.tsx").match(/<svg className="mark logo"/g)).toHaveLength(1);
   });
 
-  it("Product: Check an offer links to the check route; pages not built yet are plain text with Soon and hidden ' (coming soon)'", () => {
+  it("Product: Check an offer and the built pages are links; pages not built yet are plain text with Soon and hidden ' (coming soon)'", () => {
     expect(html).toMatch(/<a [^>]*href="\/check"[^>]*>Check an offer<\/a>/);
     const soon = NAV_ITEMS.filter((item) => item.soon);
-    expect(soon.map((item) => item.label)).toEqual(["How it works", "Test Lab", "Guide", "About and limits"]);
+    expect(soon.map((item) => item.label)).toEqual(["Guide"]);
     for (const item of soon) {
       expect(html).toContain(`<span class="footer-soon" data-soon="true">${item.label}<span class="visually-hidden"> (coming soon)</span><span class="nav-soon" aria-hidden="true">Soon</span></span>`);
       expect(html).not.toContain(`href="${item.href}"`);
@@ -298,8 +300,12 @@ describe("footer", () => {
     // The only anchors in the footer.
     expect([...html.matchAll(/<a\b[^>]*>([\s\S]*?)<\/a>/g)].map((m) => text(m[1]))).toEqual([
       "Check an offer",
+      ...NAV_ITEMS.filter((item) => item.href !== "/check" && !item.soon).map((item) => item.label),
       "What this check cannot do",
     ]);
+    for (const item of NAV_ITEMS.filter((entry) => entry.href !== "/check" && !entry.soon)) {
+      expect(html).toContain(`<a class="footer-link" href="${item.href}">${item.label}</a>`);
+    }
   });
 
   it("Trust and limits: two lines that hold in the code, and a link to the limitations", () => {
@@ -394,7 +400,11 @@ describe("footer", () => {
 
   it("links stay inside the site; no address, phone, payment or warranty wording; ASCII-only copy", () => {
     const hrefs = [...html.matchAll(/href="([^"]*)"/g)].map((m) => m[1]);
-    expect(hrefs).toEqual(["/check", "/check#limits"]);
+    expect(hrefs).toEqual([
+      "/check",
+      ...NAV_ITEMS.filter((item) => item.href !== "/check" && !item.soon).map((item) => item.href),
+      "/check#limits",
+    ]);
     expect(html).not.toMatch(/<address|tel:|mailto:|https?:|www\./i);
     const copy = text(html);
     expect(copy).toMatch(/^[\x20-\x7e]*$/);

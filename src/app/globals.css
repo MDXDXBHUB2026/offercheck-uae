@@ -2183,3 +2183,215 @@ a {
     }
   }
 }
+
+/* Roadmap Phases 2 and 3: How it works, About and limits, Test Lab. Tokens only. */
+.doc-hero {
+  margin-bottom: 40px;
+}
+
+.doc-section {
+  margin-top: 48px;
+}
+
+.doc-prose {
+  display: grid;
+  gap: 12px;
+  max-width: 760px;
+}
+
+.doc-list {
+  display: grid;
+  gap: 10px;
+  max-width: 760px;
+  padding-left: 20px;
+  list-style: disc;
+  overflow-wrap: anywhere;
+}
+
+.doc-list li::marker {
+  color: var(--muted);
+}
+
+.doc-section .callout {
+  max-width: 760px;
+  margin-top: 16px;
+}
+
+.doc-section .table-wrap + .table-wrap,
+.doc-section .table-wrap + .doc-prose,
+.doc-section .doc-prose + .table-wrap {
+  margin-top: 24px;
+}
+
+.doc-prose .table-wrap {
+  max-width: 420px;
+}
+
+.pipeline-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 24px;
+}
+
+@media (min-width: 1024px) {
+  .pipeline-layout {
+    grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.pipeline-figure {
+  display: flex;
+  justify-content: center;
+  margin: 0;
+}
+
+.pipeline-diagram {
+  width: 100%;
+  max-width: 340px;
+  height: auto;
+}
+
+.pipeline-node rect {
+  fill: var(--surface);
+  stroke: var(--control-border);
+  stroke-width: 1.5;
+}
+
+.pipeline-partial rect {
+  stroke-dasharray: 2 3;
+}
+
+.pipeline-not-built rect {
+  fill: var(--not-built-bg);
+  stroke-dasharray: 6 4;
+}
+
+.pipeline-label {
+  fill: var(--heading);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.pipeline-status {
+  fill: var(--muted);
+  font-size: 12px;
+}
+
+.pipeline-arrow line,
+.pipeline-arrow path {
+  fill: none;
+  stroke: var(--muted);
+  stroke-width: 1.5;
+}
+
+.pipeline-list {
+  display: grid;
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.pipeline-item {
+  padding: 14px 18px;
+  border-radius: var(--radius-control);
+  background: var(--fill);
+}
+
+.pipeline-item-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.pipeline-item-label {
+  color: var(--heading);
+  font-weight: 600;
+}
+
+.pipeline-item p {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.technical-group + .technical-group {
+  margin-top: 20px;
+}
+
+.technical-title {
+  margin-bottom: 8px;
+  font-size: 17px;
+  line-height: 25px;
+  font-weight: 600;
+}
+
+.lab-figures {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+
+.lab-figures .card h3 {
+  margin-bottom: 8px;
+  font-size: 17px;
+  line-height: 25px;
+  font-weight: 600;
+}
+
+.lab-figures .card p {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 22px;
+}
+
+.lab-figures .card .lab-figure {
+  color: var(--heading);
+  font-size: 28px;
+  line-height: 34px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.lab-holdout + .lab-holdout {
+  margin-top: 24px;
+}
+
+.lab-holdout h3 {
+  margin-bottom: 8px;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+}
+
+.lab-download {
+  margin-top: 16px;
+}
+
+/* /about#report-fraud: each official channel with its source link. The links are 44px tall targets;
+   focus uses the global focus ring. */
+.authority-source {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+}
+
+.source-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  overflow-wrap: anywhere;
+}
+
+/* Medium and high results only: one static sentence linking to the official reporting channels. */
+.report-link {
+  margin-top: 12px;
+}
+
+.report-link a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}

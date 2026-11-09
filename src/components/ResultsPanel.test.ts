@@ -87,6 +87,9 @@ describe("UI text", () => {
     "src/app/check/page.tsx",
     "src/components/OfferChecker.tsx",
     "src/components/ResultsPanel.tsx",
+    "src/app/how-it-works/page.tsx",
+    "src/app/about/page.tsx",
+    "src/app/lab/page.tsx",
   ])(
     "%s has no literal rule count",
     (file) => {
@@ -95,7 +98,7 @@ describe("UI text", () => {
     },
   );
 
-  it.each(["src/app/page.tsx", "src/app/check/page.tsx"])(
+  it.each(["src/app/page.tsx", "src/app/check/page.tsx", "src/app/how-it-works/page.tsx", "src/app/lab/page.tsx"])(
     "%s stays a server component, so the rules stay out of the client bundle",
     (file) => {
       const source = readFileSync(join(process.cwd(), file), "utf8");

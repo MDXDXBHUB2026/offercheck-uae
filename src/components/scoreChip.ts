@@ -52,6 +52,13 @@ export function allClearShown(notice: Notice | null): boolean {
   return notice === null;
 }
 
+// The link to the official reporting channels (/about#report-fraud): medium and high results only,
+// and not when the text was not checked (tier 1 shows no score). Display only: it never changes the
+// score, the chip or the announcement.
+export function reportLinkShown(band: RiskBand, notice: Notice | null): boolean {
+  return (band === "medium" || band === "high") && notice !== "most";
+}
+
 // LANG-2, LANG-3 and OFFER-1: with a notice and no finding, the Risk aggregator row says what the
 // chip says instead of the server's "No risk indicators found". With a notice and a warning only
 // (score 0, an info finding), the row takes the chip's amber wording for the same reason.

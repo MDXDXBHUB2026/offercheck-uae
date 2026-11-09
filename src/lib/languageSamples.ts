@@ -1,7 +1,8 @@
 // LANG-4: texts used to set and pin the "clearly English" cut-off in src/lib/coverage.ts.
 // Every text here is SYNTHETIC, written for this test, and NOT validated by a native speaker. They
 // are a small sample: the measured results describe these texts only, not real offers or languages.
-// Test data only: nothing in the app imports this file.
+// Imported by the coverage tests and, since roadmap Phase 3, by src/lib/labData.ts, which shows the
+// state each text gets on the Test Lab page. Nothing sends these texts to the browser or the network.
 
 export const SYNTHETIC_NOTE = "synthetic, not native-speaker validated";
 

@@ -41,6 +41,8 @@ Build:
 - /about: intended use, who it is for, what it does not do, known limitations read from docs/known-limitations.md at build time, the synthetic-data statement, "not legal advice", and how to report a problem.
 Done when: a test fails if the registry and the diagram disagree, and if any limitation in docs/known-limitations.md is missing from /about.
 
+Status (2026-11-09, committed locally, not pushed): built, together with Phase 3 in one task (owner decision). Tests in `src/app/docPages.test.ts` and `src/lib/authorities.test.ts`. "How to report a problem" above is intentionally dropped by the owner: the public does not report problems with Offer Check through any contact. Instead /about lists official UAE places to report a suspected scam (`src/lib/authorities.ts`). See `docs/build-log/2026-11-09.md`.
+
 ## Phase 3: Test Lab (evaluation transparency)
 
 Build /lab, rendered on the server by running the real engine over the case files at request or build time (never hard-coded numbers; never ship rule patterns to the client):
@@ -49,6 +51,8 @@ Build /lab, rendered on the server by running the real engine over the case file
 - A "What this does not prove" panel: synthetic data, small sample, rules tuned on the dev set, no real-world validation.
 - Download of the results as JSON.
 Done when: a test recomputes the numbers independently and compares; changing a rule or case changes the page; the page works with no JavaScript for the main tables.
+
+Status (2026-11-09, committed locally, not pushed): built, computed at build time. The dev eval runs through the real rules; holdouts 1 and 2 are consumed and are shown as recorded (`src/lib/agents/eval/records.ts`), not re-run. Tests in `src/lib/labData.test.ts` and `src/lib/agents/eval/records.test.ts`.
 
 ## Phase 4: Intake v2 (structured extraction, deterministic)
 

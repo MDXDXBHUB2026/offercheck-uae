@@ -25,10 +25,13 @@ Job seekers in the UAE who want to check an unsolicited job offer for common sca
 | Limitations disclosure | Built: a short intro is always visible; the 9 limitations sit in a closed "What this check cannot do" section |
 | Shared header | Built: one header on every page, with the logo, the main navigation and a "Check an offer" link. Pages not built yet show as plain text with a "Soon" badge, not links |
 | Footer | Built: one footer on every page, with a "Check an offer" link, a link that opens the limitations, four fact chips (English rules, translation first; No sign-in; Not stored by Offer Check; Human approval) each checked by a test, and the disclaimer |
+| How it works page | Built (`/how-it-works`): a diagram and a text list of the ten steps with a status read from one registry (`src/lib/pipeline.ts`), the rules by id and plain name, the weights and bands, the language states and the trust boundaries, all read from the code |
+| About and limits page | Built (`/about`): intended use, who it is for, what it does not do, the synthetic-data and legal-advice wording, the public limits, every item of `docs/known-limitations.md` as technical detail, and official UAE places to report a suspected scam (`src/lib/authorities.ts`), each linked to its official page with the date it was last verified and no phone number or email address. Medium and High results on `/check` link there |
+| Test Lab page | Built (`/lab`): the dev eval run through the real rules when the site is built (per group, confusion table, precision, recall, per-rule hits, every case), the two consumed holdouts as recorded, the synthetic language samples, what this does not prove, and a JSON download (`/lab/results.json`). No rule pattern or case text reaches the browser |
 | Verification (domain and company checks) | Not built yet |
 | Official-channel guidance | Not built yet |
 
-The checker is at `/check`. The pages `/about`, `/guide`, `/how-it-works` and `/lab` are placeholders marked "Not built yet". The header and footer do not link to them.
+The checker is at `/check`. The other pages are `/how-it-works`, `/lab` and `/about`, all static. `/guide` is a placeholder marked "Not built yet"; the header and footer show it as plain text with a "Soon" badge, not a link.
 
 ## Not built yet
 
@@ -53,7 +56,7 @@ npm run check   # tests, typecheck, lint, production build, no-bypass check
 
 Translation is optional. To turn it on, set `GOOGLE_TRANSLATE_API_KEY` in the server environment (for example in the Vercel project settings, never in a `NEXT_PUBLIC_` variable or in the repo), and set a quota on the Google Cloud project, which is the real spend limit. Without the key the route answers `translation_unavailable` and the page keeps the "Check original anyway (not checked)" path.
 
-On 2026-11-09, `npm run check` passed on Node v24.19.0 with npm 11.17.0: 29 test files, 1345 tests. Earlier, on 2026-11-08, one test in `src/lib/audit.test.ts` ("uses only fixed keys and fixed-vocabulary strings") hit its 5-second timeout on the first run of the day. It passed when the file was run alone and on the next full run.
+On 2026-11-09, `npm run check` passed on Node v24.19.0 with npm 11.17.0: 33 test files, 1410 tests (roadmap Phases 2 and 3 with the fraud-reporting references, committed locally, not pushed; 29 files and 1345 tests before them). Earlier, on 2026-11-08, one test in `src/lib/audit.test.ts` ("uses only fixed keys and fixed-vocabulary strings") hit its 5-second timeout on the first run of the day. It passed when the file was run alone and on the next full run.
 
 ## Synthetic data only
 

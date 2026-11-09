@@ -10,18 +10,25 @@ import { LIMITS_SECTION } from "@/components/publicLimitations";
 export const PROTOTYPE_NOTICE =
   "Prototype. Use synthetic or redacted offers only. The app does not store offer text. If you choose translation, Google Cloud Translation receives it.";
 
-// soon: the page is still a placeholder (docs/product-roadmap-v2.md, Phases 2, 3 and 6), so the
+// soon: the page is still a placeholder (docs/product-roadmap-v2.md, Phase 6 for the Guide), so the
 // header and footer show it as plain text with a "Soon" badge, not a link (9a). Delete the flag
-// when the page ships; a test fails if they disagree.
+// when the page ships; a test fails if they disagree. Phases 2 and 3 shipped How it works, Test Lab
+// and About and limits.
 export type NavItem = { href: string; label: string; soon?: true };
 
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/check", label: "Check" },
-  { href: "/how-it-works", label: "How it works", soon: true },
-  { href: "/lab", label: "Test Lab", soon: true },
+  { href: "/how-it-works", label: "How it works" },
+  { href: "/lab", label: "Test Lab" },
   { href: "/guide", label: "Guide", soon: true },
-  { href: "/about", label: "About and limits", soon: true },
+  { href: "/about", label: "About and limits" },
 ];
+
+// The footer's closing lines, also shown on /about so the wording stays one copy.
+export const FOOTER_DISCLAIMER =
+  "A low score does not confirm an offer is genuine. Offer Check does not give legal advice. A translation can lose or change meaning.";
+export const SYNTHETIC_STATEMENT =
+  "Risk indicators, not a verdict. It has been tested on synthetic offers only, not validated on real scam data.";
 
 // UX-2: the logo, an original mark from basic shapes. A shield (currentColor, set to --primary in
 // CSS) with a check and a small magnifier cut out in the badge colour (--fill). Inline and
@@ -104,9 +111,15 @@ export function SiteFooter() {
                   Check an offer
                 </Link>
               </li>
-              {NAV_ITEMS.filter((item) => item.soon).map((item) => (
+              {NAV_ITEMS.filter((item) => item.href !== "/check").map((item) => (
                 <li key={item.href}>
-                  <SoonItem label={item.label} className="footer-soon" />
+                  {item.soon ? (
+                    <SoonItem label={item.label} className="footer-soon" />
+                  ) : (
+                    <Link href={item.href} className="footer-link">
+                      {item.label}
+                    </Link>
+                  )}
                 </li>
               ))}
             </ul>
@@ -133,14 +146,8 @@ export function SiteFooter() {
           </div>
         </div>
         <div className="footer-bottom">
-          <p className="footer-disclaimer">
-            A low score does not confirm an offer is genuine. Offer Check does not give legal advice. A
-            translation can lose or change meaning.
-          </p>
-          <p>
-            Risk indicators, not a verdict. It has been tested on synthetic offers only, not validated
-            on real scam data.
-          </p>
+          <p className="footer-disclaimer">{FOOTER_DISCLAIMER}</p>
+          <p>{SYNTHETIC_STATEMENT}</p>
           <p>{PROTOTYPE_NOTICE}</p>
         </div>
       </div>

@@ -2,9 +2,10 @@ import type { ReactNode } from "react";
 import { AgentRun } from "@/components/AgentRun";
 import { CheckCircleIcon, InfoIcon, QuoteGlyph } from "@/components/icons";
 import { scoreArithmetic } from "@/components/scoreArithmetic";
-import { allClearShown, noticeFor, qualifiedSummary } from "@/components/scoreChip";
+import { allClearShown, noticeFor, qualifiedSummary, reportLinkShown } from "@/components/scoreChip";
 import { ScoreGauge } from "@/components/ScoreGauge";
 import { Callout, Card, Chip, SectionHeader } from "@/components/ui";
+import { REPORT_FRAUD_ID, REPORT_LINK_SENTENCE } from "@/lib/authorities";
 import { noticeForCoverage, type Coverage } from "@/lib/coverage";
 import { HIGH_BAND_MIN, MEDIUM_BAND_MIN, SEVERITY_WEIGHTS } from "@/lib/scoring";
 import { OFFER_NOTICE, showOfferNotice, type OfferSignal } from "@/lib/offerLikeness";
@@ -143,6 +144,11 @@ export function ResultsPanel({
               anything, confirm the offer through official government channels.
             </p>
           </Callout>
+          {reportLinkShown(risk.band, notice) && (
+            <p className="report-link">
+              <a href={`/about#${REPORT_FRAUD_ID}`}>{REPORT_LINK_SENTENCE}</a>
+            </p>
+          )}
         </section>
       </div>
 
