@@ -19,10 +19,15 @@ Job seekers in the UAE who want to check an unsolicited job offer for common sca
 | Risk aggregator | Built: deterministic weights |
 | Drafter | Built: fixed template blocks, no LLM. Runs only after the user asks for a draft |
 | Audit trail | Built: page memory only, hash-chained, holds no offer or draft text |
+| Language notices | Built: when most or part of the text is not in English, a notice says that text was not checked. With no finding, the score chip says "Not checked" (mostly not English) or "Score 0 on the English part" (partly), never an all-clear |
+| Offer-likeness notice | Built: a low-scoring text with no signs of a job offer gets a notice. With no finding, the chip reads "Score 0. This text does not look like a job offer." It never changes the score |
+| Limitations disclosure | Built: a short intro is always visible; the 8 limitations sit in a closed "What this check cannot do" section |
+| Shared header | Built: one header on every page, with the logo, the main navigation and a "Check an offer" link. Pages not built yet show as plain text with a "Soon" badge, not links |
+| Footer | Built: one footer on every page, with a "Check an offer" link, a link that opens the limitations, four fact chips (English only, No sign-in, Offer text not stored, Human approval) each checked by a test, and the disclaimer |
 | Verification (domain and company checks) | Not built yet |
 | Official-channel guidance | Not built yet |
 
-The checker is at `/check`. The pages `/about`, `/guide`, `/how-it-works` and `/lab` are placeholders marked "Not built yet".
+The checker is at `/check`. The pages `/about`, `/guide`, `/how-it-works` and `/lab` are placeholders marked "Not built yet". The header and footer do not link to them.
 
 ## Not built yet
 
@@ -45,7 +50,7 @@ npm run dev     # dev server at http://localhost:3000
 npm run check   # tests, typecheck, lint, production build, no-bypass check
 ```
 
-On 2026-11-08, `npm run check` passed on Node v24.19.0 with npm 11.17.0: 21 test files, 779 tests. On the first run that day, one test in `src/lib/audit.test.ts` ("uses only fixed keys and fixed-vocabulary strings") hit its 5-second timeout. It passed when the file was run alone and on the next full run.
+On 2026-11-09, `npm run check` passed on Node v24.19.0 with npm 11.17.0: 25 test files, 1055 tests. Earlier, on 2026-11-08, one test in `src/lib/audit.test.ts` ("uses only fixed keys and fixed-vocabulary strings") hit its 5-second timeout on the first run of the day. It passed when the file was run alone and on the next full run.
 
 ## Synthetic data only
 
