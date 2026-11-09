@@ -1,4 +1,4 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -87,9 +87,8 @@ describe("UI text", () => {
     "src/app/check/page.tsx",
     "src/components/OfferChecker.tsx",
     "src/components/ResultsPanel.tsx",
-    "src/app/how-it-works/page.tsx",
     "src/app/about/page.tsx",
-    "src/app/lab/page.tsx",
+    "src/app/guide/page.tsx",
   ])(
     "%s has no literal rule count",
     (file) => {
@@ -98,11 +97,48 @@ describe("UI text", () => {
     },
   );
 
-  it.each(["src/app/page.tsx", "src/app/check/page.tsx", "src/app/how-it-works/page.tsx", "src/app/lab/page.tsx"])(
+  it.each(["src/app/page.tsx", "src/app/check/page.tsx", "src/app/about/page.tsx", "src/app/guide/page.tsx"])(
     "%s stays a server component, so the rules stay out of the client bundle",
     (file) => {
       const source = readFileSync(join(process.cwd(), file), "utf8");
       expect(source).not.toContain('"use client"');
     },
   );
+
+  // The check that no rule pattern reaches a client file (kept when the Test Lab and its source scan
+  // were removed, 2026-11-09): from every "use client" module, follow its value imports through the
+  // source tree; none may reach the rules module. Type-only imports are erased and are skipped.
+  it("no client module imports the rules, directly or through other modules", () => {
+    const RULES_FILE = "src/lib/agents/redFlag.ts";
+    const walk = (dir: string): string[] =>
+      readdirSync(join(process.cwd(), dir), { withFileTypes: true }).flatMap((entry) =>
+        entry.isDirectory() ? walk(`${dir}/${entry.name}`) : /\.tsx?$/.test(entry.name) && !/\.test\.tsx?$/.test(entry.name) ? [`${dir}/${entry.name}`] : [],
+      );
+    const files = walk("src");
+    const source = (file: string) => readFileSync(join(process.cwd(), file), "utf8");
+    const resolve = (from: string, spec: string): string | null => {
+      const base = spec.startsWith("@/") ? `src/${spec.slice(2)}` : spec.startsWith(".") ? join(from, "..", spec).replaceAll("\\", "/") : null;
+      if (!base) return null;
+      return [base, `${base}.ts`, `${base}.tsx`, `${base}/index.ts`, `${base}/index.tsx`].find((path) => files.includes(path)) ?? null;
+    };
+    const imports = (file: string) =>
+      [...source(file).matchAll(/^\s*(?:import|export)\s+(?!type\b)(?:[^;]*?\sfrom\s+)?["']([^"']+)["']/gm)]
+        .map((m) => resolve(file, m[1]))
+        .filter((path): path is string => path !== null);
+    const clients = files.filter((file) => /^\s*["']use client["']/m.test(source(file)));
+    expect(clients).toContain("src/components/OfferChecker.tsx");
+    for (const client of clients) {
+      const seen = new Set<string>([client]);
+      const queue = [client];
+      while (queue.length > 0) {
+        for (const next of imports(queue.shift() as string)) {
+          if (!seen.has(next)) {
+            seen.add(next);
+            queue.push(next);
+          }
+        }
+      }
+      expect(seen.has(RULES_FILE), `${client} reaches ${RULES_FILE}`).toBe(false);
+    }
+  });
 });

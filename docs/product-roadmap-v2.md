@@ -33,6 +33,8 @@ Build:
 - App-level error boundary, not-found page, loading states, and an offline/error state for the check request. None of them may echo offer text.
 Done when: all existing behaviour and tests still pass, every route has a title, metadata and landmark structure, keyboard navigation works through the header on mobile (menu button with correct aria).
 
+Status (2026-11-09, owner decision, committed locally, not pushed): deviation from the nav list above. The public site has three items: Check, Warning signs (`/guide`) and About. How it works and Test Lab are not in the navigation, and no item shows "Soon". See `docs/build-log/2026-11-09.md`.
+
 ## Phase 2: How it works and About pages (content from the code, not invented)
 
 Build:
@@ -42,6 +44,8 @@ Build:
 Done when: a test fails if the registry and the diagram disagree, and if any limitation in docs/known-limitations.md is missing from /about.
 
 Status (2026-11-09, committed locally, not pushed): built, together with Phase 3 in one task (owner decision). Tests in `src/app/docPages.test.ts` and `src/lib/authorities.test.ts`. "How to report a problem" above is intentionally dropped by the owner: the public does not report problems with Offer Check through any contact. Instead /about lists official UAE places to report a suspected scam (`src/lib/authorities.ts`). See `docs/build-log/2026-11-09.md`.
+
+Status update (2026-11-09, owner decision, committed locally, not pushed): removed from the app. `/how-it-works` is deleted; its step list, statuses and the known limitations are copied to `docs/technical-evidence.md`, which the app does not serve (tests in `src/lib/technicalEvidence.test.ts`). `/about` is rewritten in plain language and links only the four main reporting channels.
 
 ## Phase 3: Test Lab (evaluation transparency)
 
@@ -53,6 +57,8 @@ Build /lab, rendered on the server by running the real engine over the case file
 Done when: a test recomputes the numbers independently and compares; changing a rule or case changes the page; the page works with no JavaScript for the main tables.
 
 Status (2026-11-09, committed locally, not pushed): built, computed at build time. The dev eval runs through the real rules; holdouts 1 and 2 are consumed and are shown as recorded (`src/lib/agents/eval/records.ts`), not re-run. Tests in `src/lib/labData.test.ts` and `src/lib/agents/eval/records.test.ts`.
+
+Status update (2026-11-09, owner decision, committed locally, not pushed): removed from the app. `/lab`, `/lab/results.json`, `src/lib/labData.ts` and its test are deleted. The dev-set confusion counts and the recorded holdout results are copied to `docs/technical-evidence.md`; a test recomputes the counts from `offers.ts` and compares the holdout lines with `records.ts`. The eval files under `src/lib/agents/eval/` are unchanged.
 
 ## Phase 4: Intake v2 (structured extraction, deterministic)
 
@@ -81,6 +87,8 @@ Build the mechanism, not the content:
 - The agent maps findings to guidance deterministically (no model).
 - Content for the library will be supplied by the owner after separate research with citations. Ship the mechanism with an empty or clearly marked sample set that is NOT displayed to users until the owner supplies reviewed content. Do not invent legal or regulatory statements.
 Done when: with an empty library the UI shows "Guidance not available yet" honestly, tests cover the refusal rules and the mapping.
+
+Status (2026-11-09, owner decision, committed locally, not pushed): partly built: warning signs only. `/guide` ("Warning signs") shows eight owner-approved signs from `src/lib/warningSigns.ts`, paraphrased from one official page (UAE Government Portal, "Tips to avoid labour and visa fraud"). The typed library, loader refusal rules and finding-to-guidance mapping above are not built.
 
 ## Phase 7: Orchestrator v2 (manager with a visible plan)
 

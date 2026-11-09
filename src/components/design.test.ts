@@ -595,8 +595,8 @@ describe("header and nav (UX-2)", () => {
   const motion = block("@media (prefers-reduced-motion: no-preference)");
   const inMotion = (at: number) => at > motion.start && at < motion.end;
   const HOVER = '.site-nav a:not([aria-current="page"]):hover,\n.site-nav a:not([aria-current="page"]):focus-visible';
-  // 9a: Soon items are plain text (span[data-soon]) and share the tab's base look.
-  const BASE = ".site-nav a,\n.site-nav [data-soon]";
+  // Every tab is a link (no Soon items since 2026-11-09).
+  const BASE = ".site-nav a";
   const SIZE = ["font-weight", "width", "height", "padding", "border", "font-size", "margin", "letter-spacing"];
 
   it("tab text is weight 700 in the base rule and no other tab rule changes the weight", () => {
@@ -615,23 +615,6 @@ describe("header and nav (UX-2)", () => {
     expect(rule(".site-nav a::after")).toMatch(/transform-origin: left;/);
     expect(rule(".site-nav a::after")).toMatch(/background: var\(--primary\);/);
     expect(rule(HOVER.replace(":hover,", ":hover::after,") + "::after")).toMatch(/transform: scaleX\(1\);/);
-  });
-
-  it("Soon items get neither the tint nor the underline, no lift and a default cursor", () => {
-    // Hover, focus and the underline only ever select anchors; a Soon item is a span.
-    for (const r of rules.filter((r) => /:hover|:focus-visible|::after/.test(r.selector) && r.selector.includes(".site-nav"))) {
-      for (const part of r.selector.split(",").map((x) => x.trim()).filter((x) => /^\.site-nav/.test(x) && /:hover|:focus-visible|::after/.test(x))) {
-        expect(part, r.selector).toMatch(/^\.site-nav a[:\[]/);
-      }
-    }
-    const soonRules = rules.filter((r) => /\[data-soon\]/.test(r.selector));
-    expect(soonRules.length).toBeGreaterThan(0);
-    for (const r of soonRules) {
-      expect(r.body, r.selector).not.toContain("primary-tint");
-      expect(r.body, r.selector).not.toContain("scaleX(1)");
-      expect(r.body, r.selector).not.toContain("translateY");
-    }
-    expect(rule(".site-nav [data-soon]")).toMatch(/cursor: default;/);
   });
 
   it("keeps the keyboard focus ring: no tab or brand rule removes the outline", () => {
@@ -664,7 +647,7 @@ describe("header and nav (UX-2)", () => {
   });
 
   it("the aurora sits only behind the header and the title area, and is contained in them", () => {
-    const ALLOWED = [".site-header::before", ".hero-copy::before", ".placeholder::before"];
+    const ALLOWED = [".site-header::before", ".hero-copy::before"];
     const auroraRules = rules.filter((r) => r.selector !== ":root" && /aurora/.test(r.body));
     expect(auroraRules.length).toBeGreaterThan(0);
     for (const r of auroraRules) expect(ALLOWED, r.selector).toContain(r.selector);
@@ -755,10 +738,9 @@ describe("header and nav (UX-2)", () => {
       }
     });
 
-    it("keeps the focus ring, and Soon items look like text, not links", () => {
+    it("keeps the focus ring, and has no Soon item rules left", () => {
       for (const r of footerRules()) expect(r.body, r.selector).not.toMatch(/outline:\s*(none|0)/);
-      expect(rule(".footer-soon")).toMatch(/cursor: default;/);
-      expect(rule(".footer-soon")).toMatch(/color: var\(--muted\);/);
+      expect(rules.filter((r) => /footer-soon|nav-soon|data-soon/.test(r.selector))).toEqual([]);
       expect(rule(".footer-chip")).toMatch(/border: 1px solid var\(--border\);/);
       expect(rule(".footer-chip")).toMatch(/border-radius: var\(--radius-pill\);/);
     });

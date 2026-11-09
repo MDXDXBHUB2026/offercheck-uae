@@ -23,15 +23,14 @@ Job seekers in the UAE who want to check an unsolicited job offer for common sca
 | Translation (optional) | Built: for text that is not clearly English, a notice says what translation sends and to whom, before any click; only the "Send to Google and translate" button sends the text, once per press, every time, through `/api/translate` to Google Cloud Translation (Basic, v2). The English it returns is checked by the same fixed rules and shown read-only under the original, marked as a machine translation. With no finding the chip is grey, never green. A failure shows an alert and checks nothing. Without a server key the send button is hidden after the first try. Editing the text clears the previous result and stops a request in flight |
 | Offer-likeness notice | Built: a low-scoring text with no signs of a job offer gets a notice. With no finding, the chip reads "Score 0. This text does not look like a job offer." It never changes the score |
 | Limitations disclosure | Built: a short intro is always visible; the 9 limitations sit in a closed "What this check cannot do" section |
-| Shared header | Built: one header on every page, with the logo, the main navigation and a "Check an offer" link. Pages not built yet show as plain text with a "Soon" badge, not links |
+| Shared header | Built: one header on every page, with the logo, the main navigation (Check, Warning signs, About) and a "Check an offer" link |
 | Footer | Built: one footer on every page, with a "Check an offer" link, a link that opens the limitations, four fact chips (English rules, translation first; No sign-in; Not stored by Offer Check; Human approval) each checked by a test, and the disclaimer |
-| How it works page | Built (`/how-it-works`): a diagram and a text list of the ten steps with a status read from one registry (`src/lib/pipeline.ts`), the rules by id and plain name, the weights and bands, the language states and the trust boundaries, all read from the code |
-| About and limits page | Built (`/about`): intended use, who it is for, what it does not do, the synthetic-data and legal-advice wording, the public limits, every item of `docs/known-limitations.md` as technical detail, and official UAE places to report a suspected scam (`src/lib/authorities.ts`), each linked to its official page with the date it was last verified and no phone number or email address. Medium and High results on `/check` link there |
-| Test Lab page | Built (`/lab`): the dev eval run through the real rules when the site is built (per group, confusion table, precision, recall, per-rule hits, every case), the two consumed holdouts as recorded, the synthetic language samples, what this does not prove, and a JSON download (`/lab/results.json`). No rule pattern or case text reaches the browser |
+| Warning signs page | Built (`/guide`): eight warning signs of labour and visa fraud, each with why it matters and what to do, paraphrased from one official page (UAE Government Portal, "Tips to avoid labour and visa fraud"), linked at the bottom |
+| About page | Built (`/about`): in plain language, what Offer Check is, the problem, what it does and does not do, who it is for, privacy, and the synthetic-data and legal-advice note; a short "If you think it is a scam" box links four official UAE channels (`src/lib/authorities.ts`), with no phone number or email address. Medium and High results on `/check` link there |
 | Verification (domain and company checks) | Not built yet |
 | Official-channel guidance | Not built yet |
 
-The checker is at `/check`. The other pages are `/how-it-works`, `/lab` and `/about`, all static. `/guide` is a placeholder marked "Not built yet"; the header and footer show it as plain text with a "Soon" badge, not a link.
+The checker is at `/check`. The other pages are `/guide` (Warning signs) and `/about`, both static. Technical evidence (the steps and their status, the dev-set counts, the recorded holdout results and the known limitations) is in [docs/technical-evidence.md](docs/technical-evidence.md), which the site does not serve.
 
 ## Not built yet
 
@@ -56,7 +55,7 @@ npm run check   # tests, typecheck, lint, production build, no-bypass check
 
 Translation is optional. To turn it on, set `GOOGLE_TRANSLATE_API_KEY` in the server environment (for example in the Vercel project settings, never in a `NEXT_PUBLIC_` variable or in the repo), and set a quota on the Google Cloud project, which is the real spend limit. Without the key the route answers `translation_unavailable` and the page keeps the "Check original anyway (not checked)" path.
 
-On 2026-11-09, `npm run check` passed on Node v24.19.0 with npm 11.17.0: 33 test files, 1410 tests (roadmap Phases 2 and 3 with the fraud-reporting references, committed locally, not pushed; 29 files and 1345 tests before them). Earlier, on 2026-11-08, one test in `src/lib/audit.test.ts` ("uses only fixed keys and fixed-vocabulary strings") hit its 5-second timeout on the first run of the day. It passed when the file was run alone and on the next full run.
+On 2026-11-09, `npm run check` passed on Node v24.19.0 with npm 11.17.0: 33 test files, 1383 tests (public-only site: Check, Warning signs, About, committed locally, not pushed; 1410 tests with the technical pages before the owner removed them). Earlier, on 2026-11-08, one test in `src/lib/audit.test.ts` ("uses only fixed keys and fixed-vocabulary strings") hit its 5-second timeout on the first run of the day. It passed when the file was run alone and on the next full run.
 
 ## Synthetic data only
 

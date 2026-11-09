@@ -90,6 +90,19 @@ export function shownAuthorities(list: readonly Authority[] = AUTHORITIES): Auth
   );
 }
 
+// The main channels /about shows as links in a small box (owner decision, 2026-11-09). The dates,
+// reviewer and source text stay in the list above and are not shown on the page. MOHRE links to
+// its own site; the others to the UAE Government Portal page that lists them.
+export const MAIN_CHANNEL_IDS = ["moi_ecrimes", "dubai_police_ecrime", "abu_dhabi_aman", "mohre_verify"] as const;
+
+export function mainChannels(list: readonly Authority[] = AUTHORITIES): { id: string; name: string; url: string }[] {
+  const shown = shownAuthorities(list);
+  return MAIN_CHANNEL_IDS.flatMap((id) => {
+    const entry = shown.find((item) => item.id === id);
+    return entry ? [{ id: entry.id, name: entry.name, url: entry.alsoSee?.url ?? entry.sourceUrl }] : [];
+  });
+}
+
 export const REPORT_FRAUD_ID = "report-fraud";
 
 export const REPORT_FRAUD_NOTE =

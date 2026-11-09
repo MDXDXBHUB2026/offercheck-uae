@@ -22,14 +22,12 @@ import * as check from "./check/page";
 import ErrorPage from "./error";
 import GlobalError from "./global-error";
 import * as guide from "./guide/page";
-import * as howItWorks from "./how-it-works/page";
-import * as lab from "./lab/page";
 import Loading from "./loading";
 import NotFound, { metadata as notFoundMetadata } from "./not-found";
 import * as root from "./page";
 
 // The header reads the current path, and decides whether its script is running. Both are set here.
-const nav = vi.hoisted(() => ({ pathname: "/lab", scripted: false }));
+const nav = vi.hoisted(() => ({ pathname: "/check", scripted: false }));
 vi.mock("next/navigation", () => ({ usePathname: () => nav.pathname }));
 vi.mock("react", async (importOriginal) => {
   const real = await importOriginal<typeof import("react")>();
@@ -41,10 +39,8 @@ const CANARY = "CANARY-offer-text Desert Star hr@example.test";
 const ROUTES = [
   { path: "/", module: root, title: "Check an offer" },
   { path: "/check", module: check, title: "Check an offer" },
-  { path: "/how-it-works", module: howItWorks, title: "How it works" },
-  { path: "/lab", module: lab, title: "Test Lab" },
-  { path: "/guide", module: guide, title: "Guide" },
-  { path: "/about", module: about, title: "About and limits" },
+  { path: "/guide", module: guide, title: "Warning signs" },
+  { path: "/about", module: about, title: "About" },
 ];
 
 describe("routes", () => {
@@ -57,17 +53,11 @@ describe("routes", () => {
     expect(html).not.toMatch(/<main[\s>]|<header[\s>]|<footer[\s>]/);
   });
 
-  // Phases 2 and 3 shipped How it works, About and limits and Test Lab; their own tests are in
-  // docPages.test.ts and src/lib/labData.test.ts. Only the Guide is still a placeholder.
-  it.each([guide].map((module) => [module.metadata.title, module] as const))(
-    "%s says plainly that it is not built yet, and shows no numbers",
-    (_title, module) => {
-      const html = renderToStaticMarkup(createElement(module.default));
-      expect(html).toContain("Not built yet");
-      expect(html).toContain("This page is not built yet.");
-      expect(html.replace(/<[^>]+>/g, "")).not.toMatch(/\d/);
-    },
-  );
+  // Owner decision, 2026-11-09: the public site has three pages. The technical pages are gone.
+  it("has exactly three pages besides the root, and no /how-it-works or /lab route", () => {
+    expect(NAV_ITEMS.map((item) => item.href)).toEqual(["/check", "/guide", "/about"]);
+    for (const dir of ["how-it-works", "lab"]) expect(existsSync(join(process.cwd(), "src/app", dir)), dir).toBe(false);
+  });
 
   it("every navigation item has a page", () => {
     expect(NAV_ITEMS.map((item) => item.href).sort()).toEqual(ROUTES.slice(1).map((route) => route.path).sort());
@@ -83,56 +73,45 @@ describe("routes", () => {
 });
 
 describe("site header", () => {
-  it("marks the current page and lists the five sections in a named nav", () => {
+  it("marks the current page and lists the three pages in a named nav", () => {
     nav.pathname = "/check";
     nav.scripted = false;
     const html = renderToStaticMarkup(createElement(SiteHeader));
     expect(html).toContain('<nav id="site-nav" aria-label="Main" class="site-nav">');
-    for (const item of NAV_ITEMS) expect(html).toContain(item.soon ? `>${item.label}<span class="visually-hidden">` : `>${item.label}</a>`);
+    for (const item of NAV_ITEMS) expect(html).toContain(`>${item.label}</a>`);
     expect(html.match(/aria-current="page"/g)).toHaveLength(1);
     expect(html).toMatch(/<a aria-current="page" [^>]*href="\/check"[^>]*>Check<\/a>/);
   });
 
-  // 9a: a placeholder page has no link in the nav, so on its route no tab is marked current.
-  it("on a placeholder route no tab is marked current", () => {
+  it("on /guide, Warning signs is the one current tab", () => {
     nav.pathname = "/guide";
     nav.scripted = false;
     try {
-      expect(renderToStaticMarkup(createElement(SiteHeader))).not.toContain("aria-current");
+      const html = renderToStaticMarkup(createElement(SiteHeader));
+      expect(html.match(/aria-current="page"/g)).toHaveLength(1);
+      expect(html).toMatch(/<a aria-current="page" [^>]*href="\/guide"[^>]*>Warning signs<\/a>/);
     } finally {
       nav.pathname = "/check";
     }
   });
 
-  // Each nav item whose page is still a placeholder carries a "Soon" badge. Removing the `soon`
-  // flag when its phase ships removes the badge; this test fails if the flag and the page disagree.
-  // 9a: a placeholder page is plain text in the nav (header and mobile menu panel, one list): the
-  // label, a visually hidden " (coming soon)" and the Soon badge. Not a link, no aria-disabled.
-  it.each([false, true])("shows each placeholder page as plain text with a Soon badge and hidden ' (coming soon)' (scripted: %s)", (scripted) => {
+  // Owner decision, 2026-11-09: header and mobile menu (one list) are exactly Check, Warning signs,
+  // About, every one a link. No Soon badge, no plain-text item.
+  it.each([false, true])("header links are exactly Check, Warning signs and About, with no Soon item (scripted: %s)", (scripted) => {
     nav.pathname = "/check";
     nav.scripted = scripted;
     try {
       const header = renderToStaticMarkup(createElement(SiteHeader));
       const html = header.slice(header.indexOf("<nav"), header.indexOf("</nav>"));
-      const soonHrefs = NAV_ITEMS.filter((item) => item.soon).map((item) => item.href);
-      expect([...soonHrefs].sort()).toEqual(["/guide"]);
-      for (const item of NAV_ITEMS) {
-        // The placeholder routes stay.
-        const page = readFileSync(join(process.cwd(), "src/app", item.href, "page.tsx"), "utf8");
-        expect(page.includes("<Placeholder")).toBe(Boolean(item.soon));
-        if (item.soon) {
-          expect(html).toContain(`<span class="nav-item" data-soon="true">${item.label}<span class="visually-hidden"> (coming soon)</span><span class="nav-soon" aria-hidden="true">Soon</span></span>`);
-          expect(html).not.toContain(`href="${item.href}"`);
-        } else {
-          const link = html.match(new RegExp(`<a [^>]*href="${item.href}"[^>]*>.*?</a>`))?.[0] ?? "";
-          expect(link).toContain(`>${item.label}</a>`);
-          expect(link).not.toContain("aria-label");
-          expect(link).not.toContain("nav-soon");
-        }
-      }
+      const links = [...html.matchAll(/<a [^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/g)].map((m) => [m[2], m[1]]);
+      expect(links).toEqual([
+        ["Check", "/check"],
+        ["Warning signs", "/guide"],
+        ["About", "/about"],
+      ]);
+      expect(header).not.toMatch(/Soon|coming soon|data-soon|nav-soon/);
+      expect(header).not.toMatch(/how-it-works|"\/lab/);
       expect(html).not.toContain("aria-disabled");
-      expect(html).not.toContain("coming soon\"");
-      expect(html.match(/<a\b/g)).toHaveLength(NAV_ITEMS.filter((item) => !item.soon).length);
     } finally {
       nav.scripted = false;
     }
@@ -193,21 +172,9 @@ describe("site header", () => {
     expect(html).not.toMatch(/<a class="wordmark"[^>]*aria-label/);
   });
 
-  it("Soon items carry data-soon and are not anchors; built tabs are anchors without it", () => {
-    nav.pathname = "/check";
-    nav.scripted = false;
-    const header = renderToStaticMarkup(createElement(SiteHeader));
-    for (const item of NAV_ITEMS) {
-      const link = header.match(new RegExp(`<a [^>]*href="${item.href}"[^>]*>`))?.[0] ?? "";
-      if (item.soon) expect(link).toBe("");
-      else expect(link).not.toContain("data-soon");
-    }
-    expect(header.match(/<span class="nav-item" data-soon="true">/g)).toHaveLength(NAV_ITEMS.filter((item) => item.soon).length);
-  });
-
   it("treats / as the Check page", () => {
     expect(isCurrent("/", "/check")).toBe(true);
-    expect(isCurrent("/", "/lab")).toBe(false);
+    expect(isCurrent("/", "/guide")).toBe(false);
     expect(isCurrent("/about", "/about")).toBe(true);
   });
 });
@@ -288,24 +255,19 @@ describe("footer", () => {
     expect(read("src/components/shell/site.tsx").match(/<svg className="mark logo"/g)).toHaveLength(1);
   });
 
-  it("Product: Check an offer and the built pages are links; pages not built yet are plain text with Soon and hidden ' (coming soon)'", () => {
-    expect(html).toMatch(/<a [^>]*href="\/check"[^>]*>Check an offer<\/a>/);
-    const soon = NAV_ITEMS.filter((item) => item.soon);
-    expect(soon.map((item) => item.label)).toEqual(["Guide"]);
-    for (const item of soon) {
-      expect(html).toContain(`<span class="footer-soon" data-soon="true">${item.label}<span class="visually-hidden"> (coming soon)</span><span class="nav-soon" aria-hidden="true">Soon</span></span>`);
-      expect(html).not.toContain(`href="${item.href}"`);
-    }
-    expect(html).not.toContain("aria-disabled");
+  it("Product: the same three pages as the header, all links, with no Soon item", () => {
+    const product = html.slice(html.indexOf(">Product</h2>"), html.indexOf("</ul>", html.indexOf(">Product</h2>")));
+    expect([...product.matchAll(/<a class="footer-link" href="([^"]*)">([^<]*)<\/a>/g)].map((m) => [m[2], m[1]])).toEqual([
+      ["Check", "/check"],
+      ["Warning signs", "/guide"],
+      ["About", "/about"],
+    ]);
+    expect(html).not.toMatch(/Soon|coming soon|data-soon|footer-soon|aria-disabled/);
     // The only anchors in the footer.
     expect([...html.matchAll(/<a\b[^>]*>([\s\S]*?)<\/a>/g)].map((m) => text(m[1]))).toEqual([
-      "Check an offer",
-      ...NAV_ITEMS.filter((item) => item.href !== "/check" && !item.soon).map((item) => item.label),
+      ...NAV_ITEMS.map((item) => item.label),
       "What this check cannot do",
     ]);
-    for (const item of NAV_ITEMS.filter((entry) => entry.href !== "/check" && !entry.soon)) {
-      expect(html).toContain(`<a class="footer-link" href="${item.href}">${item.label}</a>`);
-    }
   });
 
   it("Trust and limits: two lines that hold in the code, and a link to the limitations", () => {
@@ -400,11 +362,8 @@ describe("footer", () => {
 
   it("links stay inside the site; no address, phone, payment or warranty wording; ASCII-only copy", () => {
     const hrefs = [...html.matchAll(/href="([^"]*)"/g)].map((m) => m[1]);
-    expect(hrefs).toEqual([
-      "/check",
-      ...NAV_ITEMS.filter((item) => item.href !== "/check" && !item.soon).map((item) => item.href),
-      "/check#limits",
-    ]);
+    expect(hrefs).toEqual([...NAV_ITEMS.map((item) => item.href), "/check#limits"]);
+    expect(html).not.toMatch(/how-it-works|"\/lab/);
     expect(html).not.toMatch(/<address|tel:|mailto:|https?:|www\./i);
     const copy = text(html);
     expect(copy).toMatch(/^[\x20-\x7e]*$/);
@@ -538,11 +497,6 @@ describe("colour contrast (WCAG AA, from the tokens in globals.css)", () => {
     expect(css).toMatch(/\.hero-caption \{\s*color: var\(--ink\);/);
   });
 
-  it("nav Soon badge text muted on fill is at least 4.5:1", () => {
-    expect(ratio("muted", "fill")).toBeGreaterThanOrEqual(4.5);
-    expect(css).toMatch(/\.nav-soon \{[^}]*background: var\(--fill\);[^}]*color: var\(--muted\);/);
-  });
-
   // UX-1: a low score with a finding or a warning shows the caution chip in the amber pair.
   it("caution chip text medium on medium-bg is at least 4.5:1", () => {
     expect(ratio("medium", "medium-bg")).toBeGreaterThanOrEqual(4.5);
@@ -599,14 +553,14 @@ describe("colour contrast (WCAG AA, from the tokens in globals.css)", () => {
     expect(ratio("primary", "fill")).toBeGreaterThanOrEqual(3);
     expect(ratio("primary", "bg")).toBeGreaterThanOrEqual(3);
     // The bindings these numbers are for.
-    expect(css).toMatch(/\.site-nav a,\s*\.site-nav \[data-soon\] \{[^}]*color: var\(--muted\);/);
+    expect(css).toMatch(/\.site-nav a \{[^}]*color: var\(--muted\);/);
     expect(css).toMatch(/\.site-nav a\[aria-current="page"\] \{\s*background: var\(--action\);\s*color: var\(--on-primary\);/);
     expect(css).toMatch(/\.mark \{\s*color: var\(--primary\);/);
     expect(css).toMatch(/\.brand-badge \{[^}]*background: var\(--fill\);/);
   });
 
-  // UX-3: the footer sits on --surface. Link and chip text, headings and the Soon badge pass AA.
-  it("footer: text, links, headings, chips and the Soon badge pass AA", () => {
+  // UX-3: the footer sits on --surface. Link and chip text and headings pass AA.
+  it("footer: text, links, headings and chips pass AA", () => {
     for (const [fg, bg] of [
       ["muted", "surface"],
       ["ink", "surface"],

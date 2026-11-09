@@ -3,7 +3,8 @@
 // docs/test-report.md ("Holdout 1 (consumed)", "Holdout 2 (consumed) and the locked pass bar") and
 // docs/holdout2-pass-bar.md; records.test.ts fails if one is missing from those files. Hash prefixes
 // only (the first 8 hex characters, as in the test report): the full hashes stay in the holdout tests.
-// Moved here from holdout.test.ts and holdout2.test.ts so the Test Lab can show them.
+// Moved here from holdout.test.ts and holdout2.test.ts; docs/technical-evidence.md copies them, and
+// src/lib/technicalEvidence.test.ts checks that copy.
 
 export type PassBarRow = { item: string; required: string; count: string; source: string };
 

@@ -11,6 +11,7 @@ import { runManager } from "./agents/manager";
 import { RULES } from "./agents/redFlag";
 import {
   AUTHORITIES,
+  mainChannels,
   REPORT_FRAUD_ID,
   REPORT_FRAUD_NOTE,
   REPORT_LINK_SENTENCE,
@@ -91,15 +92,23 @@ describe("/about#report-fraud", () => {
     );
   });
 
-  it("lists every entry with name, purpose, source link and the last-verified date", () => {
+  // Owner decision, 2026-11-09: a small box with the four main channels as links. The dates, the
+  // reviewer and the source text stay in authorities.ts and are not shown.
+  it("links the four main channels, and shows no dates, reviewer or source text", () => {
     const text = decode(section);
-    for (const entry of AUTHORITIES) {
-      expect(text).toContain(entry.name);
-      expect(text).toContain(entry.purpose);
-      expect(section).toContain(`<a class="source-link" href="${entry.sourceUrl}" rel="noreferrer">`);
-      if (entry.alsoSee) expect(section).toContain(`href="${entry.alsoSee.url}"`);
+    expect(mainChannels().map((channel) => channel.id)).toEqual(["moi_ecrimes", "dubai_police_ecrime", "abu_dhabi_aman", "mohre_verify"]);
+    for (const channel of mainChannels()) {
+      expect(section).toContain(`<a class="source-link" href="${channel.url}" rel="noreferrer">${channel.name}</a>`);
     }
-    expect(text.match(/Last verified 2026-11-09\./g)).toHaveLength(AUTHORITIES.length);
+    expect(mainChannels().find((channel) => channel.id === "mohre_verify")?.url).toBe("https://www.mohre.gov.ae");
+    expect(section.match(/<a /g)).toHaveLength(4);
+    expect(text).not.toMatch(/Last verified|approved|2026-11-09/);
+    for (const entry of AUTHORITIES) expect(text).not.toContain(entry.sourceName);
+  });
+
+  it("mainChannels drops a channel whose entry has no source link or date", () => {
+    const list = AUTHORITIES.map((entry) => (entry.id === "dubai_police_ecrime" ? { ...entry, lastVerified: "" } : entry));
+    expect(mainChannels(list).map((channel) => channel.id)).toEqual(["moi_ecrimes", "abu_dhabi_aman", "mohre_verify"]);
   });
 
   it("shows no phone number, email address, tel: or mailto: link", () => {

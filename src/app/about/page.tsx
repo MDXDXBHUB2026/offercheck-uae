@@ -1,56 +1,50 @@
 import type { Metadata } from "next";
-import { inlineParts, readAllLimitations, type InlinePart } from "@/components/limitations";
-import { PUBLIC_LIMITS, PUBLIC_LIMITS_INTRO } from "@/components/publicLimitations";
+import { LimitsLink } from "@/components/LimitsLink";
+import { LIMITS_SECTION } from "@/components/publicLimitations";
 import { FOOTER_DISCLAIMER, SYNTHETIC_STATEMENT } from "@/components/shell/site";
-import { Callout, Disclosure, SectionHeader } from "@/components/ui";
-import { REPORT_FRAUD_ID, REPORT_FRAUD_NOTE, shownAuthorities } from "@/lib/authorities";
+import { TRANSLATE_BUTTON } from "@/components/translateFlow";
+import { Callout, SectionHeader } from "@/components/ui";
+import { mainChannels, REPORT_FRAUD_ID, REPORT_FRAUD_NOTE } from "@/lib/authorities";
 
 export const metadata: Metadata = {
-  title: "About and limits",
-  description: "What Offer Check is for, who it is for, what it does not do, and every known limitation.",
+  title: "About",
+  description: "What Offer Check UAE is, what it does and does not do, who it is for, and where to report a job scam.",
 };
 
-// Built at deploy time: docs/known-limitations.md is read during the build, because docs/ may not be
-// present on the server at runtime. No request data is read, so the page is static.
+// Static: fixed text only, no request data. Plain language for the public (owner decision,
+// 2026-11-09); the technical detail is in docs/technical-evidence.md, which the app does not serve.
 export const dynamic = "force-static";
 
-function Inline({ parts }: { parts: InlinePart[] }) {
-  return (
-    <>
-      {parts.map((part, index) =>
-        part.kind === "strong" ? (
-          <strong key={index}>{part.text}</strong>
-        ) : part.kind === "code" ? (
-          <code key={index}>{part.text}</code>
-        ) : (
-          <span key={index}>{part.text}</span>
-        ),
-      )}
-    </>
-  );
-}
-
 export default function AboutPage() {
-  const sections = readAllLimitations();
-  const technicalCount = sections.reduce((sum, section) => sum + section.items.length, 0);
   return (
-    <div className="doc-page">
+    <div className="doc-page doc-column">
       <div className="doc-hero">
         <h1 id="page-title" className="page-title">
-          About and limits
+          About Offer Check UAE
         </h1>
         <p className="intro">
-          Offer Check looks for common warning signs in a job offer before you pay or share anything. It
-          shows risk indicators with the words that matched, not a verdict.
+          Offer Check UAE is a free tool that looks for common warning signs in a job offer before you pay or share
+          anything.
         </p>
       </div>
 
       <section className="doc-section">
-        <SectionHeader id="use-heading" title="Who it is for" />
+        <SectionHeader id="problem-heading" title="The problem" />
         <div className="doc-prose">
           <p>
-            People in the UAE who receive a job offer by WhatsApp, email or LinkedIn and want to check it for
-            warning signs, such as a request for a fee, a code or identity documents.
+            Some job offers sent in the UAE by WhatsApp, email or LinkedIn are fake or risky. They may ask you to pay a
+            fee, share a code or send your identity documents before you have a real job.
+          </p>
+        </div>
+      </section>
+
+      <section className="doc-section">
+        <SectionHeader id="does-heading" title="What it does" />
+        <div className="doc-prose">
+          <p>
+            It reads the offer text you paste and points out warning signs in plain words, with the words that
+            matched. It shows how worrying the signs are as low, medium or high. These are warning signs, not a
+            verdict on any company.
           </p>
         </div>
       </section>
@@ -63,88 +57,60 @@ export default function AboutPage() {
           <li>It does not store your text.</li>
           <li>It does not use an AI model to score your text.</li>
           <li>
-            Its rules read English only. Words in other languages are not checked unless you choose machine
-            translation first.
+            It reads English only. Words in other languages are not checked unless you choose machine translation
+            first.
           </li>
           <li>It does not give legal advice.</li>
         </ul>
+        <p className="doc-more">
+          <LimitsLink>{LIMITS_SECTION}</LimitsLink>
+        </p>
       </section>
 
       <section className="doc-section">
-        <SectionHeader id="data-heading" title="Synthetic data and legal advice" />
+        <SectionHeader id="for-heading" title="Who it is for" />
         <div className="doc-prose">
-          <p>{SYNTHETIC_STATEMENT}</p>
-          <p>{FOOTER_DISCLAIMER}</p>
+          <p>
+            People in the UAE who receive a job offer by WhatsApp, email or LinkedIn and want to check it for warning
+            signs, such as a request for a fee, a code or identity documents.
+          </p>
         </div>
       </section>
 
-      {/* Owner decision: no contact for reporting problems with Offer Check. Official channels only,
-          each linked to its official page, with no phone number or email address. */}
-      <section className="doc-section" id={REPORT_FRAUD_ID}>
-        <SectionHeader id="report-fraud-heading" title="If you think it is a scam" description={REPORT_FRAUD_NOTE} />
-        <ul className="doc-list authority-list">
-          {shownAuthorities().map((entry) => (
-            <li key={entry.id}>
-              <strong>{entry.name}</strong> {entry.purpose}
-              <span className="authority-source">
-                Source:{" "}
-                <a className="source-link" href={entry.sourceUrl} rel="noreferrer">
-                  {entry.sourceName}
-                </a>
-                {entry.alsoSee && (
-                  <>
-                    {" "}
-                    and{" "}
-                    <a className="source-link" href={entry.alsoSee.url} rel="noreferrer">
-                      {entry.alsoSee.name}
-                    </a>
-                  </>
-                )}
-                . Last verified {entry.lastVerified}.
-              </span>
-            </li>
-          ))}
-        </ul>
-      </section>
-
       <section className="doc-section">
-        <SectionHeader id="limits-heading" title="Limits" description={PUBLIC_LIMITS_INTRO} />
-        <ul className="doc-list limits-list">
-          {PUBLIC_LIMITS.map((limit) => (
-            <li key={limit.title}>
-              <strong>{limit.title}</strong> {limit.text}
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="doc-section">
-        <SectionHeader
-          id="technical-heading"
-          title="Technical detail"
-          description="Every item in the project's internal limitations list, as written for the people who build Offer Check. Read from the project's documentation when the site is built."
-        />
-        <Disclosure summary={`Show all ${technicalCount} technical items`}>
-          {sections.map((section) => (
-            <div key={section.title ?? "general"} className="technical-group">
-              <h3 className="technical-title">
-                <Inline parts={inlineParts(section.title ?? "General")} />
-              </h3>
-              <ul className="doc-list technical-list">
-                {section.items.map((item, index) => (
-                  <li key={index}>
-                    <Inline parts={item} />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </Disclosure>
-        <Callout tone="neutral">
+        <SectionHeader id="privacy-heading" title="Your privacy" />
+        <div className="doc-prose">
           <p>
-            Some technical items name files and test cases in the project. They describe the same limits as the
-            list above, in more detail.
+            Offer Check does not store the text you paste. Your text is sent to Google, for machine translation, only
+            if you press “{TRANSLATE_BUTTON}”.
           </p>
+        </div>
+      </section>
+
+      <section className="doc-section">
+        <SectionHeader id="data-heading" title="Example offers and legal advice" />
+        <div className="doc-prose">
+          <p>
+            {SYNTHETIC_STATEMENT} {FOOTER_DISCLAIMER}
+          </p>
+        </div>
+      </section>
+
+      <section className="doc-section" id={REPORT_FRAUD_ID}>
+        <Callout tone="neutral" className="report-box">
+          <h2 id="report-fraud-heading" className="report-box-title">
+            If you think it is a scam
+          </h2>
+          <p>{REPORT_FRAUD_NOTE}</p>
+          <ul className="report-box-list">
+            {mainChannels().map((channel) => (
+              <li key={channel.id}>
+                <a className="source-link" href={channel.url} rel="noreferrer">
+                  {channel.name}
+                </a>
+              </li>
+            ))}
+          </ul>
         </Callout>
       </section>
     </div>

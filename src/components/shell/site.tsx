@@ -10,18 +10,14 @@ import { LIMITS_SECTION } from "@/components/publicLimitations";
 export const PROTOTYPE_NOTICE =
   "Prototype. Use synthetic or redacted offers only. The app does not store offer text. If you choose translation, Google Cloud Translation receives it.";
 
-// soon: the page is still a placeholder (docs/product-roadmap-v2.md, Phase 6 for the Guide), so the
-// header and footer show it as plain text with a "Soon" badge, not a link (9a). Delete the flag
-// when the page ships; a test fails if they disagree. Phases 2 and 3 shipped How it works, Test Lab
-// and About and limits.
-export type NavItem = { href: string; label: string; soon?: true };
+// The public site has three pages (owner decision, 2026-11-09): the check, the warning signs and
+// About. The header, the mobile menu and the footer's Product column all use this one list.
+export type NavItem = { href: string; label: string };
 
 export const NAV_ITEMS: readonly NavItem[] = [
   { href: "/check", label: "Check" },
-  { href: "/how-it-works", label: "How it works" },
-  { href: "/lab", label: "Test Lab" },
-  { href: "/guide", label: "Guide", soon: true },
-  { href: "/about", label: "About and limits" },
+  { href: "/guide", label: "Warning signs" },
+  { href: "/about", label: "About" },
 ];
 
 // The footer's closing lines, also shown on /about so the wording stays one copy.
@@ -42,21 +38,6 @@ export function Mark() {
       <circle cx="20.5" cy="20.5" r="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
       <path d="M22.7 22.7l3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
     </svg>
-  );
-}
-
-// 9a: a page not built yet, in the header and the footer. Plain text, not a link: the label, a
-// visually hidden " (coming soon)" for screen readers, and the visible Soon badge (hidden from
-// them, so it is not read twice). No aria-disabled: there is no control to disable.
-export function SoonItem({ label, className }: { label: string; className: string }) {
-  return (
-    <span className={className} data-soon="true">
-      {label}
-      <span className="visually-hidden">{" (coming soon)"}</span>
-      <span className="nav-soon" aria-hidden="true">
-        Soon
-      </span>
-    </span>
   );
 }
 
@@ -89,8 +70,8 @@ export function NoticeStrip() {
   );
 }
 
-// UX-3: four columns (brand, Product, Trust and limits, chips), then the disclaimer. Pages not built
-// yet are plain text, not links. Every line is true in the code today (routes test).
+// UX-3: four columns (brand, Product, Trust and limits, chips), then the disclaimer. Product lists the
+// same three pages as the header. Every line is true in the code today (routes test).
 export function SiteFooter() {
   return (
     <footer className="site-footer">
@@ -106,20 +87,11 @@ export function SiteFooter() {
           <div className="footer-col">
             <h2 className="footer-heading">Product</h2>
             <ul>
-              <li>
-                <Link href="/check" className="footer-link">
-                  Check an offer
-                </Link>
-              </li>
-              {NAV_ITEMS.filter((item) => item.href !== "/check").map((item) => (
+              {NAV_ITEMS.map((item) => (
                 <li key={item.href}>
-                  {item.soon ? (
-                    <SoonItem label={item.label} className="footer-soon" />
-                  ) : (
-                    <Link href={item.href} className="footer-link">
-                      {item.label}
-                    </Link>
-                  )}
+                  <Link href={item.href} className="footer-link">
+                    {item.label}
+                  </Link>
                 </li>
               ))}
             </ul>

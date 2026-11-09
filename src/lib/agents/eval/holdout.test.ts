@@ -14,8 +14,8 @@ const HOLDOUT_SHA256 = "6c7ed62f153e04169681e64c18d227dc5a2bb72e3488dbe12cf6626d
 // The hash above records the run, so it stays. redFlag.ts is now c4abfc00e371ccfd... (Batch A.1,
 // 2026-11-08): score, band and rule ids were compared before and after on all 77 cases, and no
 // holdout 1 case changed. That comparison was a guard on the change, not a new holdout result.
-// HOLDOUT_1_RESULT (status, run date, rules hash prefix, both results) lives in records.ts, so the
-// Test Lab shows the same record; records.test.ts keeps it equal to docs/test-report.md.
+// HOLDOUT_1_RESULT (status, run date, rules hash prefix, both results) lives in records.ts, which
+// docs/technical-evidence.md copies; records.test.ts keeps it equal to docs/test-report.md.
 const REGRESSION_CASES_IN_DEV_EVAL = ["H02", "H10", "H18"];
 
 // This test guards the set only. It never runs the rules: the holdout stays out of the test suite

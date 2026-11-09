@@ -3,157 +3,72 @@ import { join } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { PipelineDiagram } from "@/components/PipelineDiagram";
-import { PUBLIC_LIMITS, PUBLIC_LIMITS_INTRO } from "@/components/publicLimitations";
-import { CHECK_LABELS } from "@/components/ResultsPanel";
 import { FOOTER_DISCLAIMER, SYNTHETIC_STATEMENT } from "@/components/shell/site";
 import { TRANSLATE_BUTTON } from "@/components/translateFlow";
-import { runManager } from "@/lib/agents/manager";
-import { SCAM_OFFER } from "@/lib/agents/fixtures";
-import { RULES } from "@/lib/agents/redFlag";
-import { COVERAGES } from "@/lib/coverage";
-import { PIPELINE, PIPELINE_STATUS_TEXT } from "@/lib/pipeline";
-import { HIGH_BAND_MIN, MEDIUM_BAND_MIN, SEVERITY_WEIGHTS } from "@/lib/scoring";
+import { AUTHORITIES, mainChannels, REPORT_FRAUD_ID, REPORT_FRAUD_NOTE } from "@/lib/authorities";
+import { WARNING_SIGNS, WARNING_SIGNS_SOURCE } from "@/lib/warningSigns";
 import * as about from "./about/page";
-import * as howItWorks from "./how-it-works/page";
+import * as guide from "./guide/page";
 
-// Roadmap Phase 2: How it works and About and limits. Every figure is read from the code.
-const read = (file: string) => readFileSync(join(process.cwd(), file), "utf8");
+// The public doc pages: About and Warning signs (/guide). Plain language, static, fixed text only.
+const read = (file: string) => readFileSync(join(process.cwd(), file), "utf8").replaceAll("\r\n", "\n");
 const render = (page: () => React.ReactNode) => renderToStaticMarkup(createElement(page));
 const decode = (html: string) =>
   html
-    .replace(/<[^>]+>/g, "")
+    .replace(/<[^>]+>/g, " ")
     .replaceAll("&amp;", "&")
     .replaceAll("&quot;", '"')
     .replaceAll("&#x27;", "'")
     .replaceAll("&lt;", "<")
-    .replaceAll("&gt;", ">");
-const HOW = render(howItWorks.default);
+    .replaceAll("&gt;", ">")
+    .replace(/\s+/g, " ");
 const ABOUT = render(about.default);
-
-describe("pipeline registry", () => {
-  it("has the ten steps in order with the statuses of the app today", () => {
-    expect(PIPELINE.map((node) => [node.id, node.label, node.status])).toEqual([
-      ["manager", "Manager", "built"],
-      ["intake", "Intake", "partial"],
-      ["red_flag", "Red-flag", "built"],
-      ["verification", "Verification", "not built"],
-      ["official_channel", "Official channel", "not built"],
-      ["risk_aggregator", "Risk aggregator", "built"],
-      ["explainer", "Explainer", "not built"],
-      ["drafter", "Drafter", "built"],
-      ["approval_gate", "Approval gate", "built"],
-      ["audit_trail", "Audit trail", "built"],
-    ]);
-    expect(PIPELINE_STATUS_TEXT["not built"]).toBe("Not implemented yet");
-    for (const node of PIPELINE) expect(node.description.length).toBeGreaterThan(0);
-  });
-
-  it("agrees with the steps runManager reports: not implemented in the trace if and only if not built here", () => {
-    const trace = runManager(SCAM_OFFER).trace;
-    expect(trace.map((step) => step.agent)).toEqual([
-      "manager",
-      "intake",
-      "red_flag",
-      "verification",
-      "official_channel",
-      "risk_aggregator",
-    ]);
-    for (const step of trace) {
-      const node = PIPELINE.find((entry) => entry.id === step.agent);
-      expect(node, step.agent).toBeDefined();
-      expect(step.status === "not_implemented", step.agent).toBe(node?.status === "not built");
-    }
-  });
-});
-
-describe("pipeline diagram", () => {
-  const svg = renderToStaticMarkup(createElement(PipelineDiagram));
-
-  it("is one image with a title and a description", () => {
-    expect(svg).toMatch(/^<svg class="pipeline-diagram" role="img" aria-labelledby="pipeline-title pipeline-desc"/);
-    expect(svg).toContain('<title id="pipeline-title">');
-    expect(svg).toContain('<desc id="pipeline-desc">');
-  });
-
-  it("shows every registry label and status, in order, and no other text", () => {
-    const texts = [...svg.matchAll(/<text[^>]*>(.*?)<\/text>/g)].map((m) => m[1]);
-    expect(texts).toEqual(PIPELINE.flatMap((node) => [node.label, PIPELINE_STATUS_TEXT[node.status]]));
-  });
-
-  it("marks a step that is not built with a dashed edge as well as its text", () => {
-    expect(svg.match(/class="pipeline-node pipeline-not-built"/g)).toHaveLength(
-      PIPELINE.filter((node) => node.status === "not built").length,
-    );
-    expect(read("src/app/globals.css")).toMatch(/\.pipeline-not-built rect \{[^}]*stroke-dasharray/);
-  });
-});
-
-describe("/how-it-works", () => {
-  it("has the diagram and a text list of the same steps with a status word", () => {
-    expect(HOW).toContain('<svg class="pipeline-diagram"');
-    const list = HOW.slice(HOW.indexOf('<ol class="pipeline-list">'), HOW.indexOf("</ol>", HOW.indexOf("pipeline-list")));
-    for (const node of PIPELINE) {
-      expect(list).toContain(`<span class="pipeline-item-label">${node.label}</span>`);
-      expect(decode(list)).toContain(node.description);
-    }
-    expect(list.match(/<li class="pipeline-item">/g)).toHaveLength(PIPELINE.length);
-    expect(list.match(/>Not implemented yet</g)).toHaveLength(PIPELINE.filter((node) => node.status === "not built").length);
-  });
-
-  it("lists every rule by id and plain name with its points, and never a pattern", () => {
-    for (const rule of RULES) {
-      expect(HOW).toContain(`<td>${rule.id}</td><td>${CHECK_LABELS[rule.check]}</td>`);
-    }
-    expect(decode(HOW)).toContain(`${RULES.length} fixed rules read English text.`);
-    expect(HOW).not.toMatch(/\\b|\(\?:|\(\?<|\\s/);
-  });
-
-  it("reads the weights, the floor and the band edges from the scoring constants", () => {
-    const text = decode(HOW);
-    for (const points of Object.values(SEVERITY_WEIGHTS)) expect(HOW).toContain(`<td class="numeric">${points}</td>`);
-    expect(text).toContain(`Any high finding puts the score at ${HIGH_BAND_MIN} or more on its own.`);
-    expect(text).toContain(`High: a score of ${HIGH_BAND_MIN} or more.`);
-    expect(text).toContain(`Medium: ${MEDIUM_BAND_MIN} or more, below ${HIGH_BAND_MIN}.`);
-    expect(text).toContain(`Low: below ${MEDIUM_BAND_MIN}.`);
-    expect(read("src/app/how-it-works/page.tsx")).not.toMatch(/\b(?:40|20|10|60|30)\b/);
-  });
-
-  it("names the four coverage states from the coverage code", () => {
-    expect(COVERAGES).toHaveLength(4);
-    for (const coverage of COVERAGES) expect(HOW).toContain(`<code>${coverage}</code>`);
-  });
-
-  it("states the trust boundaries: fixed rules, no AI scoring, Google only on the button press, no storage, audit, approval", () => {
-    const text = decode(HOW);
-    expect(text).toContain(`The score is set only by the ${RULES.length} fixed rules`);
-    expect(text).toContain("No AI model scores your text, and Offer Check runs no AI model of its own.");
-    expect(text).toContain(
-      `The only third party that can receive your text is Google Cloud Translation, and only when you press “${TRANSLATE_BUTTON}”, every time, after the notice next to the button.`,
-    );
-    expect(text).toContain("Offer Check does not store your text.");
-    expect(text).toContain("tamper-evident, not tamper-proof");
-    expect(text).toContain("page memory only");
-    expect(text).toContain("A person approves any reply draft before it can be copied.");
-  });
-});
+const GUIDE = render(guide.default);
 
 describe("/about", () => {
-  const bullets = read("docs/known-limitations.md")
-    .replaceAll("\r\n", "\n")
-    .split("\n")
-    .filter((line) => line.startsWith("- "));
-
-  it("says what Offer Check is for, who it is for and what it does not do", () => {
+  it("says what Offer Check UAE is, the problem, what it does, who it is for", () => {
     const text = decode(ABOUT);
+    expect(text).toContain("Offer Check UAE is a free tool that looks for common warning signs in a job offer");
+    expect(text).toContain("Some job offers sent in the UAE by WhatsApp, email or LinkedIn are fake or risky.");
+    expect(text).toContain("It reads the offer text you paste and points out warning signs in plain words");
     expect(text).toContain("People in the UAE who receive a job offer by WhatsApp, email or LinkedIn");
-    expect(text).toContain("It does not check whether a company, a sender or an offer is real.");
-    expect(text).toContain("It does not give legal advice.");
   });
 
-  it("reuses the footer's synthetic-data and legal-advice wording", () => {
-    expect(decode(ABOUT)).toContain(SYNTHETIC_STATEMENT);
-    expect(decode(ABOUT)).toContain(FOOTER_DISCLAIMER);
+  it("keeps the six 'what it does not do' bullets", () => {
+    const list = ABOUT.slice(ABOUT.indexOf('id="not-heading"'), ABOUT.indexOf("</ul>", ABOUT.indexOf('id="not-heading"')));
+    expect(list.match(/<li>/g)).toHaveLength(6);
+    const text = decode(list);
+    for (const line of [
+      "It does not check whether a company, a sender or an offer is real.",
+      "It does not contact anyone or send any message for you.",
+      "It does not store your text.",
+      "It does not use an AI model to score your text.",
+      "It reads English only.",
+      "It does not give legal advice.",
+    ]) {
+      expect(text).toContain(line);
+    }
+  });
+
+  it("has one privacy paragraph that stays true: Google only when the person presses translate", () => {
+    const text = decode(ABOUT);
+    expect(text).toContain(`Offer Check does not store the text you paste. Your text is sent to Google, for machine translation, only if you press “${TRANSLATE_BUTTON}”.`);
+  });
+
+  it("puts the footer's synthetic-data and legal-advice wording in one paragraph", () => {
+    expect(ABOUT).toContain(`<p>${SYNTHETIC_STATEMENT} ${FOOTER_DISCLAIMER}</p>`);
+  });
+
+  it("uses no technical terms", () => {
+    expect(decode(ABOUT)).not.toMatch(/\b(?:pipeline|deterministic|hash|audit|agents?|tests?)\b/i);
+  });
+
+  it("no longer shows the technical limitation list (it lives in docs/technical-evidence.md)", () => {
+    expect(ABOUT).not.toContain("Technical detail");
+    expect(ABOUT).not.toContain("technical-title");
+    const first = read("docs/known-limitations.md").match(/^- \*\*([^*]+)\*\*/m)?.[1] ?? "";
+    expect(first.length).toBeGreaterThan(0);
+    expect(decode(ABOUT)).not.toContain(first);
   });
 
   it("has no contact for reporting problems with Offer Check (owner decision): no section, no address, no phone", () => {
@@ -163,39 +78,107 @@ describe("/about", () => {
     expect(ABOUT).not.toMatch(/mailto:|tel:/);
   });
 
-  it("shows the public limits from publicLimitations.ts, unchanged", () => {
-    const text = decode(ABOUT);
-    expect(text).toContain(PUBLIC_LIMITS_INTRO);
-    for (const limit of PUBLIC_LIMITS) expect(text).toContain(`${limit.title} ${limit.text}`);
-  });
-
-  it("shows every bullet of docs/known-limitations.md as technical detail, in every section", () => {
-    const technical = ABOUT.slice(ABOUT.indexOf('id="technical-heading"'));
-    const items = technical.match(/<li>/g) ?? [];
-    expect(items).toHaveLength(bullets.length);
-    expect(technical).toContain(`Show all ${bullets.length} technical items`);
-    const text = decode(technical);
-    for (const bullet of bullets) {
-      const lead = bullet.match(/^- \*\*([^*]+)\*\*/)?.[1];
-      expect(lead, bullet.slice(0, 60)).toBeDefined();
-      expect(text).toContain(lead);
-    }
-    for (const section of ["General", "What this check cannot do", "Known misses in the eval set"]) {
-      expect(technical).toContain(`<h3 class="technical-title"><span>${section}</span></h3>`);
-    }
+  it("keeps the report-fraud anchor, as a small box with the four main channels as links and no dates", () => {
+    const start = ABOUT.indexOf(`id="${REPORT_FRAUD_ID}"`);
+    expect(start).toBeGreaterThan(-1);
+    const box = ABOUT.slice(start, ABOUT.indexOf("</section>", start));
+    expect(box).toContain(">If you think it is a scam</h2>");
+    expect(decode(box)).toContain(REPORT_FRAUD_NOTE);
+    const links = [...box.matchAll(/<a class="source-link" href="([^"]+)" rel="noreferrer">([^<]+)<\/a>/g)].map((m) => [m[2], m[1]]);
+    expect(links).toEqual(mainChannels().map((channel) => [channel.name, channel.url]));
+    expect(links.map(([name]) => name)).toEqual([
+      "Ministry of Interior eCrimes platform",
+      "Dubai Police eCrime website",
+      "Abu Dhabi Police Aman service",
+      "Ministry of Human Resources and Emiratisation (MOHRE)",
+    ]);
+    expect(box).toContain('href="https://www.mohre.gov.ae"');
+    expect(box).not.toMatch(/Last verified|approved|Source:|\d{4}-\d{2}-\d{2}/);
+    for (const entry of AUTHORITIES) expect(box).not.toContain(entry.sourceName);
   });
 });
 
-describe("Phase 2 pages: static, one h1, no landmark of their own", () => {
+describe("/guide (Warning signs)", () => {
+  const IDS = ["offer-letter", "reference-number", "entry-permit-check", "tourist-visa", "recruitment-fees", "company-lookup", "permit-source", "residency-abroad"];
+
+  it("has the eight entries, in order, each an article with its fixed id", () => {
+    expect(WARNING_SIGNS.map((entry) => entry.id)).toEqual(IDS);
+    const articles = [...GUIDE.matchAll(/<article id="([^"]+)" class="card sign"/g)].map((m) => m[1]);
+    expect(articles).toEqual(IDS);
+  });
+
+  it("each entry has a short heading, why it matters and one 'what to do' line", () => {
+    for (const entry of WARNING_SIGNS) {
+      const start = GUIDE.indexOf(`<article id="${entry.id}"`);
+      const article = GUIDE.slice(start, GUIDE.indexOf("</article>", start));
+      expect(article).toContain(`<h2 id="${entry.id}-title" class="sign-title">${entry.sign.replaceAll("'", "&#x27;")}</h2>`);
+      expect(decode(article)).toContain(entry.why);
+      expect(decode(article)).toContain(`What to do: ${entry.whatToDo}`);
+      expect(article.match(/What to do:/g)).toHaveLength(1);
+      expect(entry.sign.split(" ").length).toBeLessThanOrEqual(10);
+      expect(entry.why.split(/(?<=\.)\s/).length).toBeLessThanOrEqual(2);
+      expect(entry.whatToDo.split(/(?<=\.)\s/)).toHaveLength(1);
+    }
+  });
+
+  it("shows one source line at the bottom, with the single source link", () => {
+    expect([...GUIDE.matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual([WARNING_SIGNS_SOURCE.url]);
+    expect(GUIDE.lastIndexOf("</article>")).toBeLessThan(GUIDE.indexOf('class="doc-source"'));
+    expect(decode(GUIDE)).toContain(
+      `Source: UAE Government Portal, “Tips to avoid labour and visa fraud” , page last updated 24 Sep 2026.`,
+    );
+    expect(WARNING_SIGNS_SOURCE.url).toBe(
+      "https://u.ae/en/information-and-services/visa-and-emirates-id/Visa-information/tips-to-avoid-labour-and-visa-fraud",
+    );
+  });
+
+  it("has no phone number, email address, tel: or mailto:, and no other URL", () => {
+    expect(GUIDE).not.toMatch(/tel:|mailto:|@/);
+    const text = WARNING_SIGNS.map((entry) => `${entry.sign} ${entry.why} ${entry.whatToDo}`).join(" ");
+    expect(text).not.toMatch(/\d/);
+    expect(text).not.toMatch(/https?:|www\./);
+  });
+
+  it("is no longer a placeholder", () => {
+    expect(GUIDE).not.toContain("Not built yet");
+    expect(existsSync(join(process.cwd(), "src/components/shell/Placeholder.tsx"))).toBe(false);
+  });
+});
+
+describe("doc pages: static, one h1, no landmark of their own, readable type", () => {
   it.each([
-    ["src/app/how-it-works/page.tsx", HOW],
     ["src/app/about/page.tsx", ABOUT],
+    ["src/app/guide/page.tsx", GUIDE],
   ])("%s", (file, html) => {
     const source = read(file);
     expect(source).toContain('export const dynamic = "force-static";');
-    expect(source).not.toMatch(/next\/headers|cookies\(|headers\(|searchParams|"use client"/);
+    expect(source).not.toMatch(/next\/headers|cookies\(|headers\(|searchParams|"use client"|dangerouslySetInnerHTML/);
     expect(html.match(/<h1[\s>]/g)).toHaveLength(1);
+    expect(html).toMatch(/^<div class="doc-page doc-column"><div class="doc-hero"><h1 id="page-title" class="page-title">/);
     expect(html).not.toMatch(/<(?:main|header|footer|nav|aside|form)[\s>]|role="region"|<section[^>]*aria-label/);
     expect(html).not.toMatch(/<textarea|<input/);
+  });
+
+  it("the doc h1 is 32px (28px under 768px), not the 60px page title, in one centred 720px column", () => {
+    const css = read("src/app/globals.css");
+    const rule = (selector: string, from = 0) => {
+      const at = css.indexOf(`${selector} {`, from);
+      expect(at, selector).toBeGreaterThan(-1);
+      return css.slice(at, css.indexOf("}", at));
+    };
+    expect(rule(".doc-hero .page-title")).toMatch(/font-size: 32px;\s*line-height: 38px;/);
+    const small = css.indexOf("@media (max-width: 767px) {\n  .doc-hero .page-title {");
+    expect(small).toBeGreaterThan(-1);
+    expect(rule("  .doc-hero .page-title", small)).toMatch(/font-size: 28px;\s*line-height: 34px;/);
+    for (const r of css.matchAll(/\.doc-hero \.page-title \{([^}]*)\}/g)) expect(r[1]).not.toContain("60px");
+    expect(rule(".doc-column")).toMatch(/max-width: 720px;\s*margin-inline: auto;/);
+    expect(rule(".doc-hero")).toMatch(/margin-bottom: 24px;/);
+    expect(rule(".doc-section")).toMatch(/margin-top: 32px;/);
+    expect(rule(".doc-hero .intro")).toMatch(/font-size: 17px;\s*line-height: 26px;/);
+    expect(rule(".doc-page p,\n.doc-page li")).toMatch(/font-size: 16px;\s*line-height: 24px;/);
+    expect(rule(".doc-page table")).toMatch(/font-size: 14px;\s*line-height: 20px;/);
+    expect(rule(".doc-page .section-title,\n.doc-page .sign-title,\n.doc-page .report-box-title")).toMatch(/font-size: 20px;\s*line-height: 28px;/);
+    // 44px targets for the source and channel links.
+    expect(rule(".source-link")).toMatch(/min-height: 44px;/);
   });
 });

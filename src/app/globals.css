@@ -287,24 +287,9 @@ p {
 }
 
 /* The heading area carries a faint aurora glow behind it. */
-.hero,
-.placeholder {
+.hero {
   position: relative;
   isolation: isolate;
-}
-
-.placeholder::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  top: -120px;
-  left: -10%;
-  width: 120%;
-  height: 420px;
-  border-radius: 9999px;
-  background: var(--aurora);
-  filter: blur(120px);
-  pointer-events: none;
 }
 
 /* Hero: copy on the left, a screen showing a real example result on the right (one column on
@@ -1535,8 +1520,7 @@ main:focus {
 /* UX-2: bold at all times, so hover changes no width. Hover and keyboard focus slide an underline
    in from the left, tint the background and lift the tab 1px; the motion itself is in the
    no-preference block at the end. Text pairs are in the contrast test. */
-.site-nav a,
-.site-nav [data-soon] {
+.site-nav a {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -1573,26 +1557,6 @@ main:focus {
 .site-nav a:not([aria-current="page"]):hover::after,
 .site-nav a:not([aria-current="page"]):focus-visible::after {
   transform: scaleX(1);
-}
-
-/* 9a: a page not built yet is plain text (a span), so the hover, focus and underline rules, which
-   select anchors only, never reach it: no tint, no lift, no underline. Default cursor. */
-.site-nav [data-soon] {
-  cursor: default;
-}
-
-/* A page not built yet. A visually hidden " (coming soon)" is read instead, so the badge is hidden
-   from screen readers. Muted on fill is 4.5:1 or more (contrast test). */
-.nav-soon {
-  order: 1;
-  margin-left: 6px;
-  padding: 0 6px;
-  border-radius: 999px;
-  background: var(--fill);
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 16px;
-  font-weight: 600;
 }
 
 /* The current page: a filled pill in the accent colour, white text (AA, contrast test). Same
@@ -1685,14 +1649,6 @@ main:focus {
 .footer-link:hover::after,
 .footer-link:focus-visible::after {
   transform: scaleX(1);
-}
-
-/* A page not built yet: plain text with the Soon badge, not a link. */
-.footer-soon {
-  display: inline-flex;
-  align-items: center;
-  color: var(--muted);
-  cursor: default;
 }
 
 .footer-chips ul {
@@ -1911,15 +1867,6 @@ body {
   margin-top: 24px;
 }
 
-.placeholder {
-  display: grid;
-  justify-items: start;
-  gap: 16px;
-}
-
-.placeholder .callout {
-  max-width: 640px;
-}
 
 .loading {
   display: flex;
@@ -1965,8 +1912,7 @@ a {
     border-radius: var(--radius-card);
   }
 
-  .site-nav a,
-  .site-nav [data-soon] {
+  .site-nav a {
     width: 100%;
     font-size: 16px;
   }
@@ -2104,7 +2050,6 @@ a {
   }
 
   .hero,
-  .placeholder,
   .input-card,
   .limits,
   .results {
@@ -2184,25 +2129,59 @@ a {
   }
 }
 
-/* Roadmap Phases 2 and 3: How it works, About and limits, Test Lab. Tokens only. */
+/* The doc pages (/about and /guide): one centred column. Tokens only; the /check hero is not
+   affected (these rules select .doc-* and the page's own classes only). */
+.doc-column {
+  max-width: 720px;
+  margin-inline: auto;
+}
+
 .doc-hero {
-  margin-bottom: 40px;
+  margin-bottom: 24px;
+}
+
+.doc-hero .page-title {
+  font-size: 32px;
+  line-height: 38px;
+}
+
+.doc-hero .intro {
+  font-size: 17px;
+  line-height: 26px;
 }
 
 .doc-section {
-  margin-top: 48px;
+  margin-top: 32px;
+}
+
+.doc-page .section-title,
+.doc-page .sign-title,
+.doc-page .report-box-title {
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.doc-page p,
+.doc-page li {
+  font-size: 16px;
+  line-height: 24px;
+}
+
+.doc-page table {
+  font-size: 14px;
+  line-height: 20px;
 }
 
 .doc-prose {
   display: grid;
   gap: 12px;
-  max-width: 760px;
 }
 
 .doc-list {
   display: grid;
   gap: 10px;
-  max-width: 760px;
   padding-left: 20px;
   list-style: disc;
   overflow-wrap: anywhere;
@@ -2212,177 +2191,56 @@ a {
   color: var(--muted);
 }
 
-.doc-section .callout {
-  max-width: 760px;
-  margin-top: 16px;
+.doc-more {
+  margin-top: 12px;
 }
 
-.doc-section .table-wrap + .table-wrap,
-.doc-section .table-wrap + .doc-prose,
-.doc-section .doc-prose + .table-wrap {
-  margin-top: 24px;
-}
-
-.doc-prose .table-wrap {
-  max-width: 420px;
-}
-
-.pipeline-layout {
+.sign-list {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 24px;
-}
-
-@media (min-width: 1024px) {
-  .pipeline-layout {
-    grid-template-columns: minmax(0, 380px) minmax(0, 1fr);
-    align-items: start;
-  }
-}
-
-.pipeline-figure {
-  display: flex;
-  justify-content: center;
-  margin: 0;
-}
-
-.pipeline-diagram {
-  width: 100%;
-  max-width: 340px;
-  height: auto;
-}
-
-.pipeline-node rect {
-  fill: var(--surface);
-  stroke: var(--control-border);
-  stroke-width: 1.5;
-}
-
-.pipeline-partial rect {
-  stroke-dasharray: 2 3;
-}
-
-.pipeline-not-built rect {
-  fill: var(--not-built-bg);
-  stroke-dasharray: 6 4;
-}
-
-.pipeline-label {
-  fill: var(--heading);
-  font-size: 15px;
-  font-weight: 600;
-}
-
-.pipeline-status {
-  fill: var(--muted);
-  font-size: 12px;
-}
-
-.pipeline-arrow line,
-.pipeline-arrow path {
-  fill: none;
-  stroke: var(--muted);
-  stroke-width: 1.5;
-}
-
-.pipeline-list {
-  display: grid;
-  gap: 12px;
-  padding: 0;
-  list-style: none;
-}
-
-.pipeline-item {
-  padding: 14px 18px;
-  border-radius: var(--radius-control);
-  background: var(--fill);
-}
-
-.pipeline-item-head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 12px;
-}
-
-.pipeline-item-label {
-  color: var(--heading);
-  font-weight: 600;
-}
-
-.pipeline-item p {
-  margin-top: 4px;
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 22px;
-}
-
-.technical-group + .technical-group {
-  margin-top: 20px;
-}
-
-.technical-title {
-  margin-bottom: 8px;
-  font-size: 17px;
-  line-height: 25px;
-  font-weight: 600;
-}
-
-.lab-figures {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 16px;
 }
 
-.lab-figures .card h3 {
+.sign-title {
   margin-bottom: 8px;
-  font-size: 17px;
-  line-height: 25px;
-  font-weight: 600;
 }
 
-.lab-figures .card p {
-  color: var(--muted);
-  font-size: 14px;
-  line-height: 22px;
+.sign p + p {
+  margin-top: 8px;
 }
 
-.lab-figures .card .lab-figure {
+.sign-action strong {
   color: var(--heading);
-  font-size: 28px;
-  line-height: 34px;
-  font-weight: 600;
-  font-variant-numeric: tabular-nums;
 }
 
-.lab-holdout + .lab-holdout {
-  margin-top: 24px;
-}
-
-.lab-holdout h3 {
-  margin-bottom: 8px;
-  font-size: 20px;
-  line-height: 28px;
-  font-weight: 600;
-}
-
-.lab-download {
-  margin-top: 16px;
-}
-
-/* /about#report-fraud: each official channel with its source link. The links are 44px tall targets;
-   focus uses the global focus ring. */
-.authority-source {
-  display: block;
-  margin-top: 4px;
+.doc-source {
+  margin-top: 32px;
   color: var(--muted);
 }
 
+.report-box-title {
+  margin-bottom: 8px;
+  color: var(--heading);
+}
+
+.report-box-list {
+  margin-top: 8px;
+  padding-left: 20px;
+  list-style: disc;
+}
+
+/* Source and channel links are 44px tall targets; focus uses the global focus ring. */
 .source-link {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
   overflow-wrap: anywhere;
+}
+
+@media (max-width: 767px) {
+  .doc-hero .page-title {
+    font-size: 28px;
+    line-height: 34px;
+  }
 }
 
 /* Medium and high results only: one static sentence linking to the official reporting channels. */

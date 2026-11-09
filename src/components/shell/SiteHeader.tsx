@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useRef, useState, useSyncExternalStore, type KeyboardEvent } from "react";
-import { BrandBadge, NAV_ITEMS, SoonItem } from "@/components/shell/site";
+import { BrandBadge, NAV_ITEMS } from "@/components/shell/site";
 
 const noSubscribe = () => () => {};
 
@@ -66,18 +66,13 @@ export function SiteHeader() {
           <ul>
             {NAV_ITEMS.map((item) => (
               <li key={item.href}>
-                {/* 9a: a page not built yet is plain text with a Soon badge, not a link. */}
-                {item.soon ? (
-                  <SoonItem label={item.label} className="nav-item" />
-                ) : (
-                  <Link
-                    href={item.href}
-                    aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
-                    onClick={() => setOpen(false)}
-                  >
-                    {item.label}
-                  </Link>
-                )}
+                <Link
+                  href={item.href}
+                  aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
+                  onClick={() => setOpen(false)}
+                >
+                  {item.label}
+                </Link>
               </li>
             ))}
           </ul>
