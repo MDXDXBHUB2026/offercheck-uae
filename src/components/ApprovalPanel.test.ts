@@ -43,7 +43,7 @@ describe("ApprovalPanel", () => {
   it("blocks approval for a blank draft and says why", () => {
     const html = render({ ...PENDING, editing: true, draft: "  " });
     expect(html).toMatch(
-      /<button type="button" aria-disabled="true" aria-describedby="approve-reason">Approve and copy reply/,
+      /<button type="button" class="btn btn-primary" aria-disabled="true" aria-describedby="approve-reason">Approve and copy reply/,
     );
     expect(html).toContain("Write the reply before you approve.");
   });
@@ -54,7 +54,7 @@ describe("ApprovalPanel", () => {
       "Choose Edit draft and replace [Recipient name] and [Your name] with the real details before you approve.",
     );
     expect(html).toMatch(
-      /<button type="button" aria-disabled="true" aria-describedby="approve-reason">Approve and copy reply/,
+      /<button type="button" class="btn btn-primary" aria-disabled="true" aria-describedby="approve-reason">Approve and copy reply/,
     );
   });
 
@@ -88,7 +88,7 @@ describe("ApprovalPanel", () => {
     const filled = draftReply().replace("[Recipient name]", "Ms Example").replace("[Your name]", "Sam");
     const html = render({ ...PENDING, editing: true, draft: filled });
     expect(html).toContain('<p id="approve-reason" class="placeholder-note" role="status"></p>');
-    expect(html).toMatch(/<button type="button">Approve and copy reply/);
+    expect(html).toMatch(/<button type="button" class="btn btn-primary">Approve and copy reply/);
   });
 
   it("confirms the copy when the clipboard works", () => {

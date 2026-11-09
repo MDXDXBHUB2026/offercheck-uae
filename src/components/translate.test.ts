@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { runManager } from "@/lib/agents/manager";
 import { TRANSLATE_FAILURES, type TranslateFailure } from "@/lib/translation";
 import { resultAnnouncement } from "./OfferChecker";
-import { ResultsPanel } from "./ResultsPanel";
+import { ResultCard as ResultsPanel } from "./ResultCard";
 import { scoreChip, TRANSLATED_NONE_LABEL } from "./scoreChip";
 import {
   failureForCheck,

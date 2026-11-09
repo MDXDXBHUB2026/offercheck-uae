@@ -5,7 +5,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { resultAnnouncement } from "@/components/OfferChecker";
 import { PUBLIC_LIMITS } from "@/components/publicLimitations";
-import { ResultsPanel } from "@/components/ResultsPanel";
+import { ResultCard as ResultsPanel } from "@/components/ResultCard";
 import {
   activeNotice,
   NOT_CHECKED_LABEL,
@@ -160,11 +160,12 @@ describe("Stage 1 gate: the 77 eval cases keep their current results", () => {
 // Each state on the chip, the Findings card, the Agent run Intake row, the Risk aggregator row and
 // the announcement.
 describe("coverage on the page", () => {
-  const scoreSide = (html: string) => html.slice(html.indexOf("score-card"), html.indexOf("results-main"));
-  const chipOf = (html: string) => scoreSide(html).match(/<p class="chip score-label">([^<]*)<\/p>/)?.[1];
+  // The redesign: the score is the result card's banner, which ends where the result-view tabs start.
+  const scoreSide = (html: string) => html.slice(html.indexOf("score-card"), html.indexOf('role="tablist"'));
+  const chipOf = (html: string) => scoreSide(html).match(/<p class="chip chip-\w+ score-label">([^<]*)<\/p>/)?.[1];
   const row = (html: string, agent: string) =>
-    html.match(new RegExp(`<span class="trace-agent">${agent.replace(/[()]/g, "\\$&")}</span><span class="trace-summary">([^<]*)</span>`))?.[1] ?? "";
-  const emptyCard = (html: string) => html.match(/class="[^"]*empty-state[^"]*">(.*?)<\/div>/)?.[1] ?? "";
+    html.match(new RegExp(`<span class="trace-agent">${agent.replace(/[()]/g, "\\$&")}</span></span><span class="trace-summary">([^<]*)</span>`))?.[1] ?? "";
+  const emptyCard = (html: string) => html.match(/<div class="empty stack-sm">(.*?)<\/div>/)?.[1] ?? "";
   const render = (text: string, coverage: Coverage) => {
     const result = runManager(text);
     const html = renderToStaticMarkup(createElement(ResultsPanel, { result, ruleCount: 5, coverage, offerSignals: offerSignals(text) }));
@@ -214,7 +215,7 @@ describe("coverage on the page", () => {
     const side = scoreSide(html);
     expect(side).toContain('<span class="score-value score-not-checked">Not checked</span>');
     expect(side).not.toContain("/ 100");
-    expect(side).not.toContain("gauge-value");
+    expect(side).not.toMatch(/<span class="score-value">\d/);
     expect(chipOf(html)).toBe(NOT_CHECKED_LABEL);
     expect(row(html, "Intake (text cleaning only)")).toContain("Most of the text is not in English and was not checked.");
     expect(row(html, "Risk aggregator")).toBe(`${NOT_CHECKED_LABEL}.`);
@@ -229,7 +230,7 @@ describe("coverage on the page", () => {
     expect(row(html, "Risk aggregator")).toBe(`${NOT_CHECKED_LABEL}. Rules matched in its English words: ${label}.`);
     expect(announcement).toBe(`Results ready. ${NOT_CHECKED_LABEL}. Rules matched in its English words: ${label}.`);
     expect(announcement).not.toMatch(/Score \d/);
-    expect(html).toContain('class="card finding');
+    expect(html).toContain('class="stack findings"');
   });
 
   // Never a green chip or a safe-looking number unless coverage is full.
@@ -238,7 +239,8 @@ describe("coverage on the page", () => {
       const { result, html, announcement } = render(text, coverage);
       expect(html).not.toContain("No risk indicators found");
       expect(announcement).not.toContain("No risk indicators found");
-      expect(emptyCard(html)).not.toContain('d="M6.5 10.5l2.5 2.5 4.5-5"');
+      // No green tick: the all-clear icon is the only green one in the empty state.
+      expect(emptyCard(html)).not.toContain("text-green");
       if (coverage === "unchecked") {
         expect(scoreSide(html)).not.toMatch(/<span class="score-value">\d/);
         expect(announcement).not.toMatch(/Score \d/);
@@ -246,7 +248,7 @@ describe("coverage on the page", () => {
       }
       if (result.findings.length === 0) expect(scoreSide(html)).toContain("score-neutral");
     }
-  });
+  }, 20_000); // Renders the full result card for every eval case three times.
 });
 
 describe("coverage in the audit trail", () => {

@@ -6,14 +6,15 @@ import { describe, expect, it } from "vitest";
 import { runManager } from "@/lib/agents/manager";
 import { RULES } from "@/lib/agents/redFlag";
 import { AgentRun } from "./AgentRun";
-import { ResultsPanel } from "./ResultsPanel";
+import { ResultCard as ResultsPanel } from "./ResultCard";
 
 function render(offerText: string, ruleCount = RULES.length): string {
   const result = runManager(offerText);
   return renderToStaticMarkup(createElement(ResultsPanel, { result, ruleCount }));
 }
 
-describe("ResultsPanel", () => {
+// The redesign: ResultsPanel became the reference-style ResultCard; the wording rules are unchanged.
+describe("ResultCard", () => {
   // Defect 7: the score-0 screen said no rules matched while showing a warning mention.
   it("does not say no rules matched when it shows a warning mention", () => {
     const text = "Beware of agents who charge a fee";
@@ -86,9 +87,11 @@ describe("UI text", () => {
     "src/app/page.tsx",
     "src/app/check/page.tsx",
     "src/components/OfferChecker.tsx",
-    "src/components/ResultsPanel.tsx",
-    "src/app/about/page.tsx",
-    "src/app/guide/page.tsx",
+    "src/components/ResultCard.tsx",
+    "src/app/legal/page.tsx",
+    "src/app/portals/page.tsx",
+    "src/app/radar/page.tsx",
+    "src/app/vault/page.tsx",
   ])(
     "%s has no literal rule count",
     (file) => {
@@ -97,7 +100,14 @@ describe("UI text", () => {
     },
   );
 
-  it.each(["src/app/page.tsx", "src/app/check/page.tsx", "src/app/about/page.tsx", "src/app/guide/page.tsx"])(
+  it.each([
+    "src/app/page.tsx",
+    "src/app/check/page.tsx",
+    "src/app/legal/page.tsx",
+    "src/app/portals/page.tsx",
+    "src/app/radar/page.tsx",
+    "src/app/vault/page.tsx",
+  ])(
     "%s stays a server component, so the rules stay out of the client bundle",
     (file) => {
       const source = readFileSync(join(process.cwd(), file), "utf8");

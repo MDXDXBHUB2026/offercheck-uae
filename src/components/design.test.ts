@@ -12,13 +12,13 @@ import { runManager } from "@/lib/agents/manager";
 import type { Finding, Severity } from "@/lib/types";
 import { languageNotice } from "@/lib/textScript";
 import { offerSignals } from "@/lib/offerLikeness";
+import { SAMPLE_OFFERS } from "@/data/sampleOffers";
 import { activeNotice } from "./scoreChip";
 import { readLimitations } from "./limitations";
 import { PUBLIC_LIMITS, PUBLIC_LIMITS_INTRO } from "./publicLimitations";
 import { OfferChecker, resultAnnouncement } from "./OfferChecker";
-import { ResultsPanel } from "./ResultsPanel";
+import { ResultCard as ResultsPanel } from "./ResultCard";
 import { scoreArithmetic } from "./scoreArithmetic";
-import { ScoreGauge } from "./ScoreGauge";
 
 const ALL_TEXTS = [
   SCAM_OFFER,
@@ -59,18 +59,26 @@ describe("score arithmetic", () => {
   });
 });
 
-describe("score gauge", () => {
-  it("is decorative, and the score and band are text", () => {
-    const risk = { score: 80, band: "high" as const, label: "High risk indicators" };
-    const html = renderToStaticMarkup(createElement(ScoreGauge, { risk }));
-    expect(html).toMatch(/<svg[^>]*aria-hidden="true"/);
-    expect(html).toContain(">80<");
-    expect(html).toContain("High risk indicators");
+// The redesign replaced the gauge with the reference risk banner: the score and band are text,
+// and the colour only repeats what the words say.
+describe("risk banner", () => {
+  it("shows the score and the band as text, with the red-flag count", () => {
+    const result = runManager(SCAM_OFFER);
+    const html = renderToStaticMarkup(createElement(ResultsPanel, { result, ruleCount: 5 }));
+    const banner = html.slice(html.indexOf("score-card"), html.indexOf('role="tablist"'));
+    expect(banner).toContain(`<span class="score-value">${result.risk.score}</span> <span class="score-max">/ 100</span>`);
+    expect(banner).toContain(result.risk.label);
+    const counted = result.findings.filter((f) => f.severity !== "info").length;
+    expect(banner).toMatch(new RegExp(`${counted} red flags?`));
+    // Every icon in it is decorative.
+    for (const svg of banner.match(/<svg[^>]*>/g) ?? []) expect(svg).toContain('aria-hidden="true"');
   });
 
-  it("draws no value arc for a score of 0", () => {
-    const risk = { score: 0, band: "low" as const, label: "No risk indicators found" };
-    expect(renderToStaticMarkup(createElement(ScoreGauge, { risk }))).not.toContain("gauge-value");
+  it("is green only for a score of 0 with no finding and no warning", () => {
+    const clean = renderToStaticMarkup(createElement(ResultsPanel, { result: runManager(LEGIT_OFFER), ruleCount: 5 }));
+    expect(clean).toMatch(/<section class="card tone-green banner result-head score-card/);
+    const scam = renderToStaticMarkup(createElement(ResultsPanel, { result: runManager(SCAM_OFFER), ruleCount: 5 }));
+    expect(scam).toMatch(/<section class="card tone-high banner result-head score-card/);
   });
 });
 
@@ -82,11 +90,11 @@ describe("score chip states (UX-1)", () => {
   const WARNING_ONLY = "Beware of agents who charge a fee.";
   const MEDIUM_TEXT = "Send your passport copy. Reply within 2 hours.";
   const REVIEW = "Low, review the findings below";
-  const scoreSide = (html: string) => html.slice(html.indexOf("score-card"), html.indexOf("results-main"));
+  const scoreSide = (html: string) => html.slice(html.indexOf("score-card"), html.indexOf('role="tablist"'));
   const chipOf = (text: string) => {
     const result = runManager(text);
     const side = scoreSide(renderToStaticMarkup(createElement(ResultsPanel, { result, ruleCount: 5 })));
-    return { result, side, chip: side.match(/<p class="chip score-label">([^<]*)<\/p>/)?.[1] };
+    return { result, side, chip: side.match(/<p class="chip chip-\w+ score-label">([^<]*)<\/p>/)?.[1] };
   };
 
   it("A4 scores 20, low, with RF-004 only", () => {
@@ -149,10 +157,12 @@ describe("score chip states (UX-1)", () => {
     }
   });
 
-  it("styles the caution chip and arc with the amber tokens", () => {
+  it("styles the caution chip and banner with the amber tokens", () => {
     const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
-    expect(css).toMatch(/\.score-caution \.score-label \{\s*background: var\(--medium-bg\);\s*color: var\(--medium\);/);
-    expect(css).toMatch(/\.score-caution \.gauge-value \{\s*stroke: var\(--medium\);/);
+    expect(css).toMatch(/\.chip-caution \{\s*border-color: var\(--amber-line\);\s*background: var\(--amber-bg\);\s*color: var\(--amber-soft\);/);
+    expect(css).toMatch(/\.banner\.tone-medium \{\s*background: linear-gradient\(90deg, var\(--amber-bg\)/);
+    const { side } = chipOf(A4_TEXT);
+    expect(side).toContain('class="chip chip-caution score-label"');
   });
 });
 
@@ -164,16 +174,16 @@ describe("score chip with the language notice (LANG-2)", () => {
   const A4_TEXT = "Reply within 2 hours or this offer is cancelled. Only 3 slots left.";
   const NEUTRAL = "Not checked: most of the text is not in English";
   const REVIEW = "Low, review the findings below";
-  const TICK = 'd="M6.5 10.5l2.5 2.5 4.5-5"';
-  const scoreSide = (html: string) => html.slice(html.indexOf("score-card"), html.indexOf("results-main"));
-  const emptyCard = (html: string) => html.match(/class="[^"]*empty-state[^"]*">(.*?)<\/div>/)?.[1] ?? "";
+  const TICK = "icon icon-xl text-green";
+  const scoreSide = (html: string) => html.slice(html.indexOf("score-card"), html.indexOf('role="tablist"'));
+  const emptyCard = (html: string) => html.match(/<div class="empty stack-sm">(.*?)<\/div>/)?.[1] ?? "";
   const aggregatorRow = (html: string) =>
-    html.match(/<span class="trace-agent">Risk aggregator<\/span><span class="trace-summary">([^<]*)<\/span>/)?.[1] ?? "";
+    html.match(/<span class="trace-agent">Risk aggregator<\/span><\/span><span class="trace-summary">([^<]*)<\/span>/)?.[1] ?? "";
   const render = (text: string, languageNotice: "most" | "part" | null) => {
     const result = runManager(text);
     const html = renderToStaticMarkup(createElement(ResultsPanel, { result, ruleCount: 5, languageNotice }));
     const side = scoreSide(html);
-    return { result, html, side, chip: side.match(/<p class="chip score-label">([^<]*)<\/p>/)?.[1] };
+    return { result, html, side, chip: side.match(/<p class="chip chip-\w+ score-label">([^<]*)<\/p>/)?.[1] };
   };
 
   it("tier 1 with no finding: the neutral chip, never the green one, and the empty line says the rules could not read it", () => {
@@ -198,7 +208,7 @@ describe("score chip with the language notice (LANG-2)", () => {
       expect(empty).not.toContain("None of the 5 rules matched.");
       // No green tick beside a line that says the text was not checked; the neutral info icon (LANG-3).
       expect(empty).not.toContain(TICK);
-      expect(empty).toContain('class="icon icon-info"');
+      expect(empty).toContain("icon-info muted");
     }
   });
 
@@ -267,9 +277,9 @@ describe("score chip with the language notice (LANG-2)", () => {
     );
   });
 
-  it("styles the neutral chip with ink on fill, no green", () => {
+  it("styles the neutral chip with ink on a raised surface, no green", () => {
     const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
-    expect(css).toMatch(/\.score-neutral \.score-label \{\s*background: var\(--fill\);\s*color: var\(--ink\);/);
+    expect(css).toMatch(/\.chip-neutral \{\s*border-color: var\(--border-strong\);\s*background: var\(--surface-raised\);\s*color: var\(--ink\);/);
   });
 });
 
@@ -286,17 +296,17 @@ describe("tier 2 with no finding is qualified, not all clear (LANG-3)", () => {
   const PART_EMPTY =
     "None of the 5 rules matched in the English part. Part of the text was not checked, and this does not confirm that the offer is genuine.";
   const PART_SUMMARY = "Score 0 of 100 on the English part. Part of the text was not checked.";
-  const TICK = 'd="M6.5 10.5l2.5 2.5 4.5-5"';
-  const scoreSide = (html: string) => html.slice(html.indexOf("score-card"), html.indexOf("results-main"));
-  const emptyCard = (html: string) => html.match(/class="[^"]*empty-state[^"]*">(.*?)<\/div>/)?.[1] ?? "";
+  const TICK = "icon icon-xl text-green";
+  const scoreSide = (html: string) => html.slice(html.indexOf("score-card"), html.indexOf('role="tablist"'));
+  const emptyCard = (html: string) => html.match(/<div class="empty stack-sm">(.*?)<\/div>/)?.[1] ?? "";
   const aggregatorRow = (html: string) =>
-    html.match(/<span class="trace-agent">Risk aggregator<\/span><span class="trace-summary">([^<]*)<\/span>/)?.[1] ?? "";
+    html.match(/<span class="trace-agent">Risk aggregator<\/span><\/span><span class="trace-summary">([^<]*)<\/span>/)?.[1] ?? "";
   const render = (text: string) => {
     const result = runManager(text);
     const tier = languageNotice(text);
     const html = renderToStaticMarkup(createElement(ResultsPanel, { result, ruleCount: 5, languageNotice: tier }));
     const side = scoreSide(html);
-    return { result, tier, html, side, chip: side.match(/<p class="chip score-label">([^<]*)<\/p>/)?.[1] };
+    return { result, tier, html, side, chip: side.match(/<p class="chip chip-\w+ score-label">([^<]*)<\/p>/)?.[1] };
   };
 
   it("the test texts are tier 2, one with no finding and one with a finding", () => {
@@ -315,7 +325,7 @@ describe("tier 2 with no finding is qualified, not all clear (LANG-3)", () => {
   it("tier 2, no finding: the Findings card has the info icon, no tick, and the qualified line", () => {
     const empty = emptyCard(render(TIER_2).html);
     expect(empty).toContain(PART_EMPTY);
-    expect(empty).toContain('class="icon icon-info"');
+    expect(empty).toContain("icon-info muted");
     expect(empty).not.toContain(TICK);
     expect(empty).not.toContain("None of the 5 rules matched.");
   });
@@ -341,8 +351,8 @@ describe("tier 2 with no finding is qualified, not all clear (LANG-3)", () => {
     const { side, html, chip, result } = render(TIER_2_FINDING);
     expect(chip).toBe("Low, review the findings below");
     expect(side).toContain("score-caution");
-    expect(html).toContain('class="findings"');
-    expect(html).not.toContain("empty-state");
+    expect(html).toContain('class="stack findings"');
+    expect(html).not.toContain('class="empty stack-sm"');
     expect(html).not.toContain(ALL_CLEAR);
     expect(html).not.toContain(PART_CHIP);
     expect(resultAnnouncement(result, "part")).toBe("Results ready. Score 20 of 100: Low, review the findings below.");
@@ -366,7 +376,8 @@ describe("tier 2 with no finding is qualified, not all clear (LANG-3)", () => {
 
   it("styles the info icon in the muted colour, not green", () => {
     const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
-    expect(css).toMatch(/\.empty-state \.icon-info \{\s*color: var\(--muted\);/);
+    expect(css).toMatch(/\.muted \{\s*color: var\(--muted\);/);
+    expect(css).not.toMatch(/\.icon-info \{[^}]*--green/);
   });
 });
 
@@ -383,11 +394,11 @@ describe("the offer-likeness notice is qualified, not all clear (OFFER-1)", () =
   const OFFER_EMPTY =
     "None of the 5 rules matched. This text has no clear signs of a job offer, and this does not confirm that the offer is genuine.";
   const OFFER_SUMMARY = "Score 0 of 100. This text does not look like a job offer.";
-  const TICK = 'd="M6.5 10.5l2.5 2.5 4.5-5"';
-  const scoreSide = (html: string) => html.slice(html.indexOf("score-card"), html.indexOf("results-main"));
-  const emptyCard = (html: string) => html.match(/class="[^"]*empty-state[^"]*">(.*?)<\/div>/)?.[1] ?? "";
+  const TICK = "icon icon-xl text-green";
+  const scoreSide = (html: string) => html.slice(html.indexOf("score-card"), html.indexOf('role="tablist"'));
+  const emptyCard = (html: string) => html.match(/<div class="empty stack-sm">(.*?)<\/div>/)?.[1] ?? "";
   const aggregatorRow = (html: string) =>
-    html.match(/<span class="trace-agent">Risk aggregator<\/span><span class="trace-summary">([^<]*)<\/span>/)?.[1] ?? "";
+    html.match(/<span class="trace-agent">Risk aggregator<\/span><\/span><span class="trace-summary">([^<]*)<\/span>/)?.[1] ?? "";
   // Everything recorded at check time, as OfferChecker records it.
   const render = (text: string) => {
     const result = runManager(text);
@@ -403,7 +414,7 @@ describe("the offer-likeness notice is qualified, not all clear (OFFER-1)", () =
       html,
       side,
       notice,
-      chip: side.match(/<p class="chip score-label">([^<]*)<\/p>/)?.[1],
+      chip: side.match(/<p class="chip chip-\w+ score-label">([^<]*)<\/p>/)?.[1],
       announcement: resultAnnouncement(result, notice),
     };
   };
@@ -427,8 +438,8 @@ describe("the offer-likeness notice is qualified, not all clear (OFFER-1)", () =
 
   it("offer notice, no finding: info icon, no tick, the qualified line", () => {
     const empty = emptyCard(render(NOT_AN_OFFER).html);
-    expect(empty).toBe(`${empty.slice(0, empty.indexOf("<p"))}<p class="no-match">${OFFER_EMPTY}</p>`);
-    expect(empty).toContain('class="icon icon-info"');
+    expect(empty).toBe(`${empty.slice(0, empty.indexOf("<p "))}<p class="no-match">${OFFER_EMPTY}</p>`);
+    expect(empty).toContain("icon-info muted");
     expect(empty).not.toContain(TICK);
   });
 
@@ -446,7 +457,7 @@ describe("the offer-likeness notice is qualified, not all clear (OFFER-1)", () =
     expect(side).toContain("score-caution");
     expect(emptyCard(html)).toContain("None of the 5 rules counted toward the score.");
     expect(aggregatorRow(html)).toBe("Score 0 of 100: Low, review the findings below");
-    expect(emptyCard(html)).toContain('class="icon icon-info"');
+    expect(emptyCard(html)).toContain("icon-info muted");
     expect(emptyCard(html)).not.toContain(TICK);
   });
 
@@ -519,7 +530,7 @@ describe("limitations panel (COPY-1)", () => {
     const html = renderToStaticMarkup(createElement(Home));
     const panel = html.slice(html.indexOf('aria-labelledby="limits-heading"'));
     expect(panel).toContain("What this check cannot do");
-    expect(panel).toContain(`<p>${escapeHtml(PUBLIC_LIMITS_INTRO)}</p>`);
+    expect(panel).toContain(`<p class="small">${escapeHtml(PUBLIC_LIMITS_INTRO)}</p>`);
     for (const item of PUBLIC_LIMITS) {
       expect(panel).toContain(`<li><strong>${escapeHtml(item.title)}</strong> ${escapeHtml(item.text)}</li>`);
     }
@@ -534,7 +545,7 @@ describe("limitations panel (COPY-1)", () => {
     const details = panel.match(/<details[^>]*>(.*?)<\/details>/)?.[0] ?? "";
     const opening = details.match(/<details[^>]*>/)?.[0] ?? "";
     // UX-3: the id is the footer link's target (#limits); the element is still closed on load.
-    expect(opening).toBe('<details id="limits" class="card disclosure limits-details">');
+    expect(opening).toBe('<details id="limits" class="card accordion limits-details">');
     expect(opening).not.toContain("open");
     // The summary is a native, keyboard-focusable control with the visible text.
     expect(details).toMatch(/^<details[^>]*><summary><span id="limits-heading" class="limits-summary">What this check cannot do<\/span><\/summary>/);
@@ -542,7 +553,7 @@ describe("limitations panel (COPY-1)", () => {
     expect(details.match(/<li>/g)).toHaveLength(9);
     for (const item of PUBLIC_LIMITS) expect(details).toContain(escapeHtml(item.title));
     // The intro pair is outside the details element, so it is never hidden.
-    const intro = panel.indexOf(`<p>${escapeHtml(PUBLIC_LIMITS_INTRO)}</p>`);
+    const intro = panel.indexOf(`<p class="small">${escapeHtml(PUBLIC_LIMITS_INTRO)}</p>`);
     expect(intro).toBeGreaterThan(-1);
     expect(intro).toBeLessThan(panel.indexOf("<details"));
     expect(details).not.toContain(escapeHtml(PUBLIC_LIMITS_INTRO));
@@ -552,7 +563,7 @@ describe("limitations panel (COPY-1)", () => {
 
   it("shows the intro on the empty state and after the results, below the checker", () => {
     const html = renderToStaticMarkup(createElement(Home));
-    const form = html.indexOf('class="card input-card"');
+    const form = html.indexOf('class="card stack input-card"');
     const limits = html.indexOf('aria-labelledby="limits-heading"');
     expect(form).toBeGreaterThan(-1);
     expect(limits).toBeGreaterThan(form);
@@ -567,7 +578,7 @@ function escapeHtml(text: string): string {
   return text.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("'", "&#x27;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
 }
 
-// UX-2: the header and the top navigation, checked on the stylesheet (no layout engine here).
+// UX-2 (redesign): the header and the five tabs, checked on the stylesheet (no layout engine here).
 describe("header and nav (UX-2)", () => {
   const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8").replace(/\r\n/g, "\n");
   // Every innermost rule as { selector, body, at }, comments removed from the selector.
@@ -582,8 +593,8 @@ describe("header and nav (UX-2)", () => {
     return found?.body ?? "";
   };
   // The block of an at-rule, by brace matching.
-  const block = (head: string) => {
-    const start = css.indexOf(`${head} {`);
+  const block = (head: string, from = 0) => {
+    const start = css.indexOf(`${head} {`, from);
     expect(start, head).toBeGreaterThan(-1);
     let depth = 0;
     for (let i = css.indexOf("{", start); i < css.length; i += 1) {
@@ -594,175 +605,138 @@ describe("header and nav (UX-2)", () => {
   };
   const motion = block("@media (prefers-reduced-motion: no-preference)");
   const inMotion = (at: number) => at > motion.start && at < motion.end;
-  const HOVER = '.site-nav a:not([aria-current="page"]):hover,\n.site-nav a:not([aria-current="page"]):focus-visible';
-  // Every tab is a link (no Soon items since 2026-11-09).
-  const BASE = ".site-nav a";
-  const SIZE = ["font-weight", "width", "height", "padding", "border", "font-size", "margin", "letter-spacing"];
+  const HEADER = /\.site-header|\.header-|\.brand|\.nav-|\.dropdown|\.flag-ribbon/;
+  const SIZE = ["font-weight", "width", "height", "padding", "border-width", "font-size", "margin", "letter-spacing"];
 
-  it("tab text is weight 700 in the base rule and no other tab rule changes the weight", () => {
-    expect(rule(BASE)).toMatch(/font-weight: 700;/);
-    for (const r of rules.filter((r) => r.selector.includes(".site-nav a") && r.selector !== BASE)) {
-      expect(r.body, r.selector).not.toContain("font-weight");
+  it("the tabs share the one .tab style: weight 600, a 44px target, and the current page in green", () => {
+    const tab = rule(".tab");
+    expect(tab).toMatch(/font-weight: 600;/);
+    expect(tab).toMatch(/min-height: var\(--target\);/);
+    expect(rule('.tab[aria-selected="true"],\n.tab[aria-current="page"],\n.tab[aria-pressed="true"]')).toMatch(
+      /border-color: var\(--green-line\);\s*background: var\(--green-bg\);\s*color: var\(--green-soft\);/,
+    );
+    // No header rule restyles a tab: one tab style everywhere.
+    for (const r of rules.filter((r) => /\.nav-\w+ \.tab/.test(r.selector))) {
+      expect(r.body, r.selector).not.toMatch(/background|color:|border-color/);
     }
   });
 
-  it("hover and focus-visible: tint, 1px lift and the underline, with no size change", () => {
-    const hover = rule(HOVER);
-    expect(hover).toMatch(/background: var\(--primary-tint\);/);
-    expect(hover).toMatch(/transform: translateY\(-1px\);/);
+  it("hover changes only the colours, with no size change", () => {
+    const hover = rule(".tab:hover");
+    expect(hover).toMatch(/background: var\(--surface-raised\);/);
     for (const prop of SIZE) expect(hover).not.toContain(prop);
-    expect(rule(".site-nav a::after")).toMatch(/transform: scaleX\(0\);/);
-    expect(rule(".site-nav a::after")).toMatch(/transform-origin: left;/);
-    expect(rule(".site-nav a::after")).toMatch(/background: var\(--primary\);/);
-    expect(rule(HOVER.replace(":hover,", ":hover::after,") + "::after")).toMatch(/transform: scaleX\(1\);/);
   });
 
-  it("keeps the keyboard focus ring: no tab or brand rule removes the outline", () => {
-    expect(rule(":focus-visible")).toMatch(/outline: 3px solid var\(--primary\);/);
-    for (const r of rules.filter((r) => /\.site-nav|\.wordmark|\.brand/.test(r.selector))) {
+  it("keeps the keyboard focus ring: no tab, brand or header rule removes the outline", () => {
+    expect(rule(":focus-visible")).toMatch(/outline: [^;]*var\(--focus\)/);
+    for (const r of rules.filter((r) => HEADER.test(r.selector) || /\.tab\b/.test(r.selector))) {
       expect(r.body, r.selector).not.toMatch(/outline:\s*(none|0)/);
     }
   });
 
-  it("the tabs sit in a rounded capsule with a border token and a translucent background", () => {
-    const capsule = rule(".site-nav ul");
-    expect(capsule).toMatch(/border: 1px solid var\(--border\);/);
-    expect(capsule).toMatch(/background: var\(--card-bg\);/);
-    expect(capsule).toMatch(/border-radius: var\(--radius-pill\);/);
-  });
-
-  it("the brand block: a 40px badge with a border and inner glow; hover and focus give the tabs' tint and lift", () => {
+  it("the brand block: a 40px badge with a border; the caption shows from 640px", () => {
     const badge = rule(".brand-badge");
     expect(badge).toMatch(/width: 40px;/);
     expect(badge).toMatch(/height: 40px;/);
-    expect(badge).toMatch(/border: 1px solid var\(--border\);/);
-    expect(badge).toMatch(/box-shadow: inset /);
-    const hover = rule(".wordmark:hover,\n.wordmark:focus-visible");
-    expect(hover).toMatch(/background: var\(--primary-tint\);/);
-    expect(hover).toMatch(/transform: translateY\(-1px\);/);
-    for (const prop of SIZE) expect(hover).not.toContain(prop);
-    const glow = rule(".wordmark:hover .brand-badge,\n.wordmark:focus-visible .brand-badge");
-    expect(glow).toMatch(/box-shadow: /);
-    for (const prop of SIZE) expect(glow).not.toContain(prop);
+    expect(badge).toMatch(/border: 1px solid var\(--green-line\);/);
+    expect(rule(".brand-caption")).toMatch(/display: none;/);
+    expect(block("@media (min-width: 640px)", css.indexOf(".brand-caption {")).text).toMatch(/\.brand-caption,\s*\.btn-label-wide \{\s*display: inline;/);
   });
 
-  it("the aurora sits only behind the header and the title area, and is contained in them", () => {
-    const ALLOWED = [".site-header::before", ".hero-copy::before"];
-    const auroraRules = rules.filter((r) => r.selector !== ":root" && /aurora/.test(r.body));
-    expect(auroraRules.length).toBeGreaterThan(0);
-    for (const r of auroraRules) expect(ALLOWED, r.selector).toContain(r.selector);
-    // The header and title glows fill their own box, with no blur that could spread onto the form.
-    for (const selector of [".site-header::before", ".hero-copy::before"]) {
-      const body = rule(selector);
-      expect(body, selector).toMatch(/inset: 0;/);
-      expect(body, selector).toMatch(/background: var\(--aurora\);/);
-      expect(body, selector).not.toContain("blur");
-    }
-    // Nothing on the form, the score, the findings or the draft reply uses it.
-    for (const r of rules.filter((r) => /input-card|\.results|\.score|\.finding|\.draft|\.approval/.test(r.selector))) {
-      expect(r.body, r.selector).not.toMatch(/aurora/);
-    }
+  it("five full tabs from 1200px; below that a compact five-column bar under the header", () => {
+    expect(rule(".nav-desktop")).toMatch(/display: none;/);
+    const wide = block("@media (min-width: 1200px)").text;
+    expect(wide).toMatch(/\.nav-desktop \{\s*display: flex;/);
+    expect(wide).toMatch(/\.nav-mobile \{\s*display: none;/);
+    expect(rule(".nav-mobile")).toMatch(/grid-template-columns: repeat\(5, minmax\(0, 1fr\)\);/);
   });
 
-  it("all motion is inside the no-preference block: tab transitions and the aurora drift", () => {
-    const drift = rules.filter((r) => /aurora-drift/.test(r.body));
-    expect(drift.map((r) => r.selector).sort()).toEqual([".hero-copy::before", ".site-header::before"]);
-    for (const r of drift) expect(inMotion(r.at), r.selector).toBe(true);
-    expect(inMotion(css.indexOf("@keyframes aurora-drift"))).toBe(true);
-    const moving = rules.filter((r) => /\.site-nav|\.wordmark|\.brand|\.site-header/.test(r.selector) && /transition|animation/.test(r.body));
+  it("the hotlines panel is inside the screen on a 390px phone, and anchored with a logical property", () => {
+    const panel = rule(".dropdown-panel");
+    expect(panel).toMatch(/inset-inline-end: 0;/);
+    expect(panel).toMatch(/width: min\(300px, calc\(100vw - 2 \* var\(--sp-4\)\)\);/);
+  });
+
+  it("all header motion is inside the no-preference block", () => {
+    const moving = rules.filter((r) => (HEADER.test(r.selector) || /\.tab\b|\.btn\b/.test(r.selector)) && /transition|animation/.test(r.body));
     expect(moving.length).toBeGreaterThan(0);
     for (const r of moving) expect(inMotion(r.at), r.selector).toBe(true);
-    expect(motion.text).toMatch(/\.site-nav a,\s*\.site-nav a::after,\s*\.wordmark,\s*\.brand-badge \{\s*transition: transform 200ms ease-out, background-color 200ms ease-out, color 200ms ease-out, box-shadow 200ms ease-out;/);
+    expect(motion.text).toMatch(/\.btn,\s*\.tab \{\s*transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease;/);
   });
 
-  // No layout engine here, so the 375px check is on the rules: no fixed width in the header that a
-  // 375px screen (327px inside the 24px gutters) cannot hold, a shrinkable first column, wrapping tabs.
-  it("has no horizontal overflow at 375px: shrinkable columns, wrapping capsule, no wide fixed widths", () => {
-    const narrow = block("@media (max-width: 767px)").text;
-    expect(narrow).toMatch(/\.site-header-inner \{[^}]*grid-template-columns: minmax\(0, 1fr\) auto;/);
-    expect(rule(".site-nav ul")).toMatch(/flex-wrap: wrap;/);
+  // No layout engine here, so the 390px check is on the rules: no fixed width in the header that a
+  // 390px screen (358px inside the 16px gutters) cannot hold, and shrinkable brand text.
+  it("has no horizontal overflow at 390px: shrinkable brand, no wide fixed widths", () => {
+    expect(rule(".brand")).toMatch(/min-width: 0;/);
     expect(rule(".brand-text")).toMatch(/min-width: 0;/);
-    expect(rule(".brand-caption")).toMatch(/overflow-wrap: anywhere;/);
-    for (const r of rules.filter((r) => /\.site-header|\.site-nav|\.wordmark|\.brand|\.nav-/.test(r.selector))) {
+    for (const r of rules.filter((r) => HEADER.test(r.selector))) {
       for (const m of r.body.matchAll(/(?:^|[\s;])(?:min-)?width:\s*(\d+)px/g)) {
-        expect(Number(m[1]), `${r.selector} width`).toBeLessThanOrEqual(327);
+        expect(Number(m[1]), `${r.selector} width`).toBeLessThanOrEqual(358);
       }
-      expect(r.body, r.selector).not.toMatch(/white-space: nowrap/);
     }
-    expect(rule(".wordmark")).toMatch(/min-width: 0;/);
   });
 
   // UX-3: the footer, in the same visual language. Checked on the stylesheet like the header.
   describe("footer (UX-3)", () => {
     const footerRules = () => rules.filter((r) => /footer/.test(r.selector));
 
-    it("a thin top border from the border token, a dark palette background, and no aurora", () => {
+    it("a thin top border from the border token, the sunken surface, and no gradient", () => {
       const footer = rule(".site-footer");
       expect(footer).toMatch(/border-top: 1px solid var\(--border\);/);
-      expect(footer).toMatch(/background: var\(--surface\);/);
+      expect(footer).toMatch(/background: var\(--surface-sunken\);/);
       expect(footerRules().length).toBeGreaterThan(5);
       for (const r of footerRules()) {
-        expect(r.body, r.selector).not.toMatch(/aurora|gradient/);
+        expect(r.body, r.selector).not.toMatch(/gradient/);
         expect(r.selector).not.toContain("::before");
       }
     });
 
-    it("four columns on desktop that stack on narrow screens, with no overflow at 375px", () => {
-      expect(rule(".footer-cols")).toMatch(/grid-template-columns: repeat\(4, minmax\(0, 1fr\)\);/);
-      expect(css).toMatch(/@media \(max-width: 1023px\) \{\s*\.footer-cols \{\s*grid-template-columns: repeat\(2, minmax\(0, 1fr\)\);/);
-      expect(css).toMatch(/@media \(max-width: 599px\) \{\s*\.footer-cols \{\s*grid-template-columns: minmax\(0, 1fr\);/);
-      expect(rule(".footer-col")).toMatch(/min-width: 0;/);
-      expect(rule(".footer-col")).toMatch(/overflow-wrap: anywhere;/);
-      expect(rule(".footer-chips ul")).toMatch(/flex-wrap: wrap;/);
+    it("stacks and centres on narrow screens, one row from 768px, with wrapping links and no overflow", () => {
+      expect(rule(".footer-top")).toMatch(/flex-direction: column;/);
+      expect(css).toMatch(/@media \(min-width: 768px\) \{\s*\.footer-top \{\s*flex-direction: row;/);
+      expect(rule(".footer-links")).toMatch(/flex-wrap: wrap;/);
+      expect(rule(".footer-links a")).toMatch(/min-height: var\(--target\);/);
       for (const r of footerRules()) {
         for (const m of r.body.matchAll(/(?:^|[\s;])(?:min-)?width:\s*(\d+)px/g)) {
-          expect(Number(m[1]), `${r.selector} width`).toBeLessThanOrEqual(327);
+          expect(Number(m[1]), `${r.selector} width`).toBeLessThanOrEqual(358);
         }
         expect(r.body, r.selector).not.toMatch(/white-space: nowrap/);
       }
     });
 
-    it("motion: only the link underline slides, and only inside the no-preference block", () => {
-      expect(rule(".footer-link::after")).toMatch(/transform: scaleX\(0\);/);
-      expect(rule(".footer-link::after")).toMatch(/transform-origin: left;/);
-      expect(rule(".footer-link:hover::after,\n.footer-link:focus-visible::after")).toMatch(/transform: scaleX\(1\);/);
-      const moving = footerRules().filter((r) => /transition|animation/.test(r.body));
-      expect(moving.map((r) => r.selector)).toEqual([".footer-link::after"]);
-      for (const r of moving) {
-        expect(inMotion(r.at), r.selector).toBe(true);
-        expect(r.body.trim()).toBe("transition: transform 200ms ease-out;");
-      }
-      // Hover changes nothing but the underline: no tint, lift or colour change on the link itself.
-      for (const r of footerRules().filter((r) => /:hover|:focus-visible/.test(r.selector))) {
-        expect(r.selector).toMatch(/::after/);
-      }
-    });
-
-    it("keeps the focus ring, and has no Soon item rules left", () => {
+    it("hover changes only the link colour; no footer motion; the focus ring stays", () => {
+      expect(rule(".footer-links a:hover")).toMatch(/^\s*color: var\(--green\);\s*$/);
+      expect(footerRules().filter((r) => /transition|animation/.test(r.body))).toEqual([]);
       for (const r of footerRules()) expect(r.body, r.selector).not.toMatch(/outline:\s*(none|0)/);
-      expect(rules.filter((r) => /footer-soon|nav-soon|data-soon/.test(r.selector))).toEqual([]);
-      expect(rule(".footer-chip")).toMatch(/border: 1px solid var\(--border\);/);
-      expect(rule(".footer-chip")).toMatch(/border-radius: var\(--radius-pill\);/);
+      expect(rules.filter((r) => /footer-soon|nav-soon|data-soon|aurora/.test(r.selector + r.body))).toEqual([]);
     });
   });
 });
 
-describe("sample buttons", () => {
-  it("are real buttons for the three synthetic samples", () => {
+describe("sample cards", () => {
+  // The redesign: four synthetic sample cards from src/data/sampleOffers.ts, each with a real
+  // "Load sample" button named by the card's title.
+  it("are four cards with a real button each, named by the sample", () => {
     const html = renderToStaticMarkup(createElement(Home));
-    // Step 5: each button carries a visible "Synthetic" tag after its name.
-    for (const label of ["Fee scam", "Clean offer", "Injection attempt"]) {
-      expect(html).toContain(
-        `<button type="button" class="sample"><span>${label}</span><span class="sample-tag">Synthetic</span></button>`,
-      );
+    for (const sample of SAMPLE_OFFERS) {
+      expect(html).toContain(`<span id="sample-${sample.id}" class="sample-name">${escapeHtml(sample.name)}</span>`);
+      expect(html).toContain(`<button type="button" class="btn btn-secondary sample" aria-describedby="sample-${sample.id}">Load sample</button>`);
     }
+    expect(SAMPLE_OFFERS).toHaveLength(4);
   });
 
-  // S4-4: the buttons sit in a group with an accessible name.
-  it("sit in a labelled group", () => {
+  // S4-4: the samples sit in a section with an accessible name, and are labelled made up.
+  it("sit in a labelled section that says they are made up", () => {
     const html = renderToStaticMarkup(createElement(Home));
-    expect(html).toContain('role="group" aria-labelledby="samples-label"');
-    expect(html).toMatch(/<span id="samples-label"[^>]*>Try a synthetic sample<\/span>/);
+    expect(html).toContain('<section class="stack-sm samples" aria-labelledby="samples-label">');
+    expect(html).toMatch(/<h2 id="samples-label"[^>]*>Try a synthetic sample<\/h2>/);
+    expect(html).toContain("Made-up examples written for this app. No real company or person.");
+  });
+
+  it("are not the evaluation offers: no sample text appears in the dev set", () => {
+    for (const sample of SAMPLE_OFFERS) {
+      for (const offer of EVAL_OFFERS) expect(offer.text).not.toBe(sample.text);
+    }
   });
 
   it("are left out when no samples are given", () => {

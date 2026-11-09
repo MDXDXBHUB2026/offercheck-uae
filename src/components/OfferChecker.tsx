@@ -1,11 +1,17 @@
 "use client";
 
-import { useReducer, useRef, useState, type FormEvent } from "react";
+import { useReducer, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { Eraser, FileText, Linkedin, Mail, MessageCircle, ScanSearch, ShieldCheck } from "lucide-react";
 import { ApprovalPanel } from "@/components/ApprovalPanel";
 import { AuditTrail } from "@/components/AuditTrail";
 import { networkFailure, responseFailure, type CheckFailure } from "@/components/checkRequest";
-import { ResultsPanel } from "@/components/ResultsPanel";
-import { Button, Callout, HelperText } from "@/components/ui";
+import { ReportModal, type ReportDraft } from "@/components/radar/ReportModal";
+import { ResultCard } from "@/components/ResultCard";
+import { SaveVaultModal } from "@/components/SaveVaultModal";
+import { Button, Callout, Card, Chip, HelperText } from "@/components/ui";
+import type { SampleOffer } from "@/data/sampleOffers";
+import { redactSensitive } from "@/lib/redact";
+import { toResultView } from "@/lib/resultView";
 import { gateReducer, INITIAL_GATE_FLOW, type GateAction, type GateFlow } from "@/lib/approvalGate";
 import {
   appendEntries,
@@ -36,8 +42,21 @@ import type { TranslationRecord } from "@/lib/translation";
 import type { LanguageNotice } from "@/lib/textScript";
 import { MAX_OFFER_CHARS } from "@/lib/types";
 
-// A synthetic sample offer the user can load into the box with one button.
-export type Sample = { label: string; text: string };
+// Where the offer came from, as in the reference app. Display and saving only: the rules read the
+// text the same way for every channel. "Offer Letter PDF" means the letter's text, pasted.
+export const CHANNELS = ["Email", "WhatsApp", "LinkedIn", "Offer Letter PDF"] as const;
+export type Channel = (typeof CHANNELS)[number];
+const CHANNEL_ICONS = { Email: Mail, WhatsApp: MessageCircle, LinkedIn: Linkedin, "Offer Letter PDF": FileText } as const;
+
+function channelOf(sample: SampleOffer): Channel {
+  return sample.channel === "Document" ? "Offer Letter PDF" : sample.channel;
+}
+
+// Auto-Redact: what is sent (for a check or a translation) is the box text with Emirates ID,
+// passport and IBAN numbers masked, when the toggle is on. The box itself is not changed.
+export function prepareText(text: string, autoMask: boolean): { text: string; count: number } {
+  return autoMask ? redactSensitive(text) : { text, count: 0 };
+}
 
 const COUNT_FORMAT = new Intl.NumberFormat("en-US");
 
@@ -58,8 +77,14 @@ export function checkBlockedReason(text: string, hasSamples: boolean): string {
 // "translated", and the original and the English are kept with the result to show under it.
 // STALE-1: boxText is the text that was in the box when the check was asked for (the original, also
 // after a translation). The result is shown only while the box holds exactly that text.
+// The redesign: checkedText is the text the rules read (after Auto-Redact; the English after a
+// translation), shown in the source highlights and saved by Save Encrypted. channel and redacted
+// are recorded at check time too.
 export type CheckedResult = {
   boxText: string;
+  checkedText: string;
+  channel: Channel;
+  redacted: number;
   response: AnalyzeResponse;
   coverage: Coverage;
   languageNotice: LanguageNotice | null;
@@ -67,14 +92,20 @@ export type CheckedResult = {
   translation: ShownTranslation | null;
 };
 
+export type CheckMeta = { boxText?: string; channel?: Channel; redacted?: number };
+
 export function recordCheck(
   response: AnalyzeResponse,
   submittedText: string,
   translation: ShownTranslation | null = null,
+  meta: CheckMeta = {},
 ): CheckedResult {
   const coverage = translation ? "translated" : coverageOf(detectLanguage(submittedText));
   return {
-    boxText: translation ? translation.original : submittedText,
+    boxText: meta.boxText ?? (translation ? translation.original : submittedText),
+    checkedText: submittedText,
+    channel: meta.channel ?? "Email",
+    redacted: meta.redacted ?? 0,
     response,
     coverage,
     languageNotice: noticeForCoverage(coverage),
@@ -105,6 +136,8 @@ function notCleared(): boolean {
   return false;
 }
 
+type Modal = { kind: "save" } | { kind: "report"; draft: ReportDraft } | null;
+
 // The screen-reader announcement uses the chip's wording, so the two never disagree (UX-1, LANG-2).
 export function resultAnnouncement(
   result: Pick<AnalyzeResponse, "risk" | "findings">,
@@ -123,9 +156,21 @@ export function resultAnnouncement(
   return `Results ready. Score ${result.risk.score} of 100: ${scoreChip(result.risk, result.findings, notice).label}.`;
 }
 
-// ruleCount and samples come from the server page, so the rules themselves never ship to the browser.
-export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; samples?: Sample[] }) {
+// ruleCount, the hero and the samples come from the server page, so the rules themselves never ship
+// to the browser.
+export function OfferChecker({
+  ruleCount,
+  samples = [],
+  hero = null,
+}: {
+  ruleCount: number;
+  samples?: readonly SampleOffer[];
+  hero?: ReactNode;
+}) {
   const [text, setText] = useState("");
+  const [channel, setChannel] = useState<Channel>("Email");
+  const [autoMask, setAutoMask] = useState(true);
+  const [modal, setModal] = useState<Modal>(null);
   const [checked, setChecked] = useState<CheckedResult | null>(noCheck);
   // STALE-1: never show a result for text other than the text now in the box.
   const result = checked && checked.boxText === text ? checked.response : null;
@@ -144,7 +189,12 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
   const [translateFlow, setTranslateFlow] = useState<TranslateFlow>(idleFlow);
   const translateRef = useRef<TranslateFlow>(translateFlow);
   // The last check request, so "Try again" repeats it exactly (a translated check stays translated).
-  const lastRequest = useRef<{ submitted: string; translation: TranslationRecord | null; shown: ShownTranslation | null } | null>(null);
+  const lastRequest = useRef<{
+    submitted: string;
+    translation: TranslationRecord | null;
+    shown: ShownTranslation | null;
+    meta: CheckMeta;
+  } | null>(null);
   // STALE-1: the request in flight (a translation or a check) and a counter. Each request takes the
   // next id; an edit aborts the request and moves the counter on, so a late reply is ignored.
   const inFlight = useRef<AbortController | null>(null);
@@ -248,10 +298,11 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
     submitted: string = text,
     translation: TranslationRecord | null = null,
     shown: ShownTranslation | null = null,
+    meta: CheckMeta = {},
   ) {
     // The button is aria-disabled, not disabled, so a click or a retry can still arrive here.
     if (loading || reason || submitted.trim().length === 0) return;
-    lastRequest.current = { submitted, translation, shown };
+    lastRequest.current = { submitted, translation, shown, meta };
     if (!shown) moveTranslate({ type: "checked" });
     const { id, signal } = beginRequest();
     setCleared(false);
@@ -284,7 +335,7 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
       }
       if (!isCurrent(id)) return;
       if (response.ok && isAnalyzeResponse(data)) {
-        setChecked(recordCheck(data, submitted, shown));
+        setChecked(recordCheck(data, submitted, shown, { channel, ...meta }));
         startAudit(data.runId, data.audit);
       } else {
         setFailure(responseFailure(response.ok ? 200 : response.status, data));
@@ -301,7 +352,8 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
     event.preventDefault();
     if (translateRef.current.step === "sending") return;
     // "Check original anyway" after a failed translation: the audit trail records the failure code.
-    void runCheck(text, failureForCheck(translateRef.current));
+    const prepared = prepareText(text, autoMask);
+    void runCheck(prepared.text, failureForCheck(translateRef.current), null, { boxText: text, redacted: prepared.count });
   }
 
   // BATCHB-2: the "Send to Google and translate" button, and nothing else, sends the text for
@@ -310,7 +362,10 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
   async function sendTranslation() {
     const step = translateRef.current.step;
     if (loading || (step !== "idle" && step !== "failed")) return;
-    const original = text;
+    const boxText = text;
+    // Auto-Redact applies before the send too: Google receives the masked text.
+    const prepared = prepareText(boxText, autoMask);
+    const original = prepared.text;
     moveTranslate({ type: "send" });
     setCleared(false);
     const { id, signal } = beginRequest();
@@ -327,6 +382,7 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
       outcome.translatedText,
       { result: "ok", sourceLang: outcome.sourceLang },
       { original, english: outcome.translatedText, sourceLang: outcome.sourceLang },
+      { boxText, redacted: prepared.count },
     );
   }
 
@@ -343,102 +399,163 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
         ? RESULT_CLEARED
         : "";
 
+  const channelHint =
+    channel === "Offer Letter PDF"
+      ? "Paste the text of the letter. Offer Check does not read files or images."
+      : `Paste the ${channel} message as text.`;
+
   return (
-    <>
-      <form className="card input-card" onSubmit={handleSubmit} aria-busy={loading || sending || undefined}>
-        <div className="input-head">
-          <label htmlFor="offer">Job offer text</label>
-          <span id="offer-count" className={`counter${overLimit ? " counter-over" : ""}`}>
-            {COUNT_FORMAT.format(text.length)} / {COUNT_FORMAT.format(MAX_OFFER_CHARS)}
-            {overLimit && <span className="counter-note"> (over the limit)</span>}
-          </span>
-        </div>
-        <textarea
-          id="offer"
-          rows={9}
-          value={text}
-          aria-describedby="offer-count"
-          onChange={(event) => editText(event.target.value)}
-          placeholder="Paste the WhatsApp message, email or LinkedIn text here"
-        />
-        {/* The action area, then the samples: the tab order follows the page (text box, actions, samples). */}
-        <div className="input-foot">
-          {languageGate ? (
-            // Not clearly English: one banner under the box. The explanation, the disclosure (always
-            // shown, before any click, while translation is on), any alert, then exactly two buttons.
-            // BATCHB-2: "Send to Google and translate" sends at once, once per press.
-            <Callout tone="neutral" className="language-banner">
-              <p id="language-gate" className="language-gate">
-                {gateNote}
-              </p>
-              {canTranslate && (
-                <p id="translate-disclosure" className="translate-disclosure">
-                  {TRANSLATE_CONSENT_TEXT}
-                </p>
-              )}
-              {translateFlow.step === "failed" && <TranslateFailureAlert code={translateFlow.code} />}
-              {translateFlow.step === "unavailable" && translateFlow.alert && (
-                <TranslateFailureAlert code="translation_unavailable" />
-              )}
-              <div className="gate-actions">
-                {canTranslate && (
-                  <Button
-                    blocked={Boolean(reason) || loading}
-                    reasonId="check-reason"
-                    busy={sending}
-                    onClick={() => void sendTranslation()}
-                    aria-describedby="translate-disclosure"
-                  >
-                    {sending ? "Translating..." : TRANSLATE_BUTTON}
-                  </Button>
-                )}
+    <div className="stack">
+      {hero}
+      {samples.length > 0 && (
+        <section className="stack-sm samples" aria-labelledby="samples-label">
+          <h2 id="samples-label" className="label-caps">
+            Try a synthetic sample
+          </h2>
+          <ul className="grid grid-4">
+            {samples.map((sample) => (
+              <Card as="li" key={sample.id} className="sample-card">
+                <span className="row-between">
+                  <span id={`sample-${sample.id}`} className="sample-name">
+                    {sample.name}
+                  </span>
+                  <Chip tone="neutral">{channelOf(sample)}</Chip>
+                </span>
+                <span className="sample-desc">{sample.description}</span>
                 <Button
-                  type="submit"
-                  variant={canTranslate ? "secondary" : "primary"}
-                  blocked={Boolean(reason) || sending}
-                  reasonId="check-reason"
-                  busy={loading}
-                  aria-describedby="language-gate"
+                  variant="secondary"
+                  className="sample"
+                  aria-describedby={`sample-${sample.id}`}
+                  onClick={() => {
+                    setChannel(channelOf(sample));
+                    editText(sample.text, true);
+                  }}
                 >
-                  {loading ? "Checking..." : LANGUAGE_GATE_BUTTON}
+                  Load sample
                 </Button>
-              </div>
-              <HelperText id="check-reason">{reason}</HelperText>
-            </Callout>
-          ) : (
-            // English or empty: one primary button, nothing about translation.
-            <div className="submit">
-              <Button type="submit" blocked={Boolean(reason) || sending} reasonId="check-reason" busy={loading}>
-                {loading ? "Checking..." : "Check offer"}
-              </Button>
-              <HelperText id="check-reason">{reason}</HelperText>
-            </div>
-          )}
-          {samples.length > 0 && (
-            <div className="samples" role="group" aria-labelledby="samples-label">
-              <span id="samples-label" className="samples-label">
-                Try a synthetic sample
-              </span>
-              <div className="sample-list">
-                {samples.map((sample) => (
-                  <button
-                    key={sample.label}
-                    type="button"
-                    className="sample"
-                    onClick={() => editText(sample.text, true)}
-                  >
-                    <span>{sample.label}</span>
-                    <span className="sample-tag">Synthetic</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
+              </Card>
+            ))}
+          </ul>
+          <p className="small muted">Made-up examples written for this app. No real company or person.</p>
+        </section>
+      )}
+      <form className="card stack input-card" onSubmit={handleSubmit} aria-busy={loading || sending || undefined}>
+        <div className="controls-bar">
+          <div className="tabs" role="group" aria-label="Where the offer came from">
+            {CHANNELS.map((option) => {
+              const Icon = CHANNEL_ICONS[option];
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  className="tab"
+                  aria-pressed={channel === option}
+                  onClick={() => setChannel(option)}
+                >
+                  <Icon className="icon" aria-hidden="true" />
+                  {option}
+                </button>
+              );
+            })}
+          </div>
+          <Button variant="secondary" aria-pressed={autoMask} aria-describedby="mask-note" onClick={() => setAutoMask(!autoMask)}>
+            <ShieldCheck className="icon" aria-hidden="true" />
+            Auto-Redact {autoMask ? "on" : "off"}
+          </Button>
         </div>
+        <p id="mask-note" className="small muted">
+          {autoMask
+            ? "Auto-Redact is on: Emirates ID, passport and IBAN numbers are masked in this browser before the text is checked or translated."
+            : "Auto-Redact is off: the text is sent as it is in the box."}
+        </p>
+        <div className="field">
+          <div className="input-meta">
+            <label htmlFor="offer">Job offer text</label>
+            <span id="offer-count" className={`counter${overLimit ? " counter-over" : ""}`}>
+              {COUNT_FORMAT.format(text.length)} / {COUNT_FORMAT.format(MAX_OFFER_CHARS)}
+              {overLimit && <span className="counter-note"> (over the limit)</span>}
+            </span>
+          </div>
+          <textarea
+            id="offer"
+            rows={9}
+            value={text}
+            aria-describedby="offer-count offer-hint"
+            onChange={(event) => editText(event.target.value)}
+            placeholder="Paste the WhatsApp message, email, LinkedIn message or offer letter text here"
+          />
+          <div className="input-meta">
+            <span id="offer-hint">{channelHint}</span>
+            {text.length > 0 && (
+              <Button variant="secondary" onClick={() => editText("")}>
+                <Eraser className="icon" aria-hidden="true" />
+                Clear
+              </Button>
+            )}
+          </div>
+        </div>
+        {languageGate ? (
+          // Not clearly English: one banner under the box. The explanation, the disclosure (always
+          // shown, before any click, while translation is on), any alert, then exactly two buttons.
+          // BATCHB-2: "Send to Google and translate" sends at once, once per press.
+          <Callout tone="neutral" className="language-banner">
+            <p id="language-gate" className="language-gate">
+              {gateNote}
+            </p>
+            {canTranslate && (
+              <p id="translate-disclosure" className="translate-disclosure">
+                {TRANSLATE_CONSENT_TEXT}
+              </p>
+            )}
+            {translateFlow.step === "failed" && <TranslateFailureAlert code={translateFlow.code} />}
+            {translateFlow.step === "unavailable" && translateFlow.alert && (
+              <TranslateFailureAlert code="translation_unavailable" />
+            )}
+            <div className="gate-actions">
+              {canTranslate && (
+                <Button
+                  blocked={Boolean(reason) || loading}
+                  reasonId="check-reason"
+                  busy={sending}
+                  onClick={() => void sendTranslation()}
+                  aria-describedby="translate-disclosure"
+                >
+                  {sending ? "Translating..." : TRANSLATE_BUTTON}
+                </Button>
+              )}
+              <Button
+                type="submit"
+                variant={canTranslate ? "secondary" : "primary"}
+                blocked={Boolean(reason) || sending}
+                reasonId="check-reason"
+                busy={loading}
+                aria-describedby="language-gate"
+              >
+                {loading ? "Checking..." : LANGUAGE_GATE_BUTTON}
+              </Button>
+            </div>
+            <HelperText id="check-reason">{reason}</HelperText>
+          </Callout>
+        ) : (
+          // English or empty: one big audit button, nothing about translation.
+          <div className="submit">
+            <Button type="submit" large block blocked={Boolean(reason) || sending} reasonId="check-reason" busy={loading}>
+              <ScanSearch className="icon" aria-hidden="true" />
+              {loading ? "Checking..." : "Check offer"}
+            </Button>
+            <HelperText id="check-reason">{reason}</HelperText>
+          </div>
+        )}
       </form>
       <p className="visually-hidden" role="status">
         {announcement}
       </p>
+      {loading && (
+        <p className="progress" aria-hidden="true">
+          <span className="spinner" />
+          Checking the offer
+        </p>
+      )}
       {failure && (
         <Callout tone="high" role="alert" title={failure.title} className="check-failure">
           <p>{failure.message}</p>
@@ -447,7 +564,7 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
               variant="secondary"
               onClick={() => {
                 const last = lastRequest.current;
-                void (last ? runCheck(last.submitted, last.translation, last.shown) : runCheck());
+                void (last ? runCheck(last.submitted, last.translation, last.shown, last.meta) : runCheck());
               }}
             >
               Try again
@@ -456,19 +573,39 @@ export function OfferChecker({ ruleCount, samples = [] }: { ruleCount: number; s
         </Callout>
       )}
       {result && checked?.translation && <TranslationShown translation={checked.translation} />}
-      {result && (
-        <ResultsPanel
+      {result && checked && (
+        <ResultCard
           result={result}
           ruleCount={ruleCount}
-          languageNotice={checked?.languageNotice ?? null}
-          coverage={checked?.coverage ?? null}
-          sourceLang={checked?.translation?.sourceLang ?? null}
-          offerSignals={checked?.offerSignals ?? null}
+          languageNotice={checked.languageNotice}
+          coverage={checked.coverage}
+          sourceLang={checked.translation?.sourceLang ?? null}
+          offerSignals={checked.offerSignals}
+          sourceText={checked.checkedText}
+          channel={checked.channel}
+          redacted={checked.redacted}
+          onNewAudit={() => editText("")}
+          onSave={() => setModal({ kind: "save" })}
+          onReport={(flag) =>
+            setModal({
+              kind: "report",
+              draft: { title: flag.signal, description: flag.explanation, warningQuote: flag.matched_text },
+            })
+          }
         >
           <ApprovalPanel gate={gateFlow.gate} dispatch={dispatchWithAudit} />
           <AuditTrail entries={auditLog} failed={auditFailed} />
-        </ResultsPanel>
+        </ResultCard>
       )}
-    </>
+      {modal?.kind === "save" && result && checked && (
+        <SaveVaultModal
+          view={toResultView(result, checked.coverage)}
+          channel={checked.channel}
+          checkedText={checked.checkedText}
+          onClose={() => setModal(null)}
+        />
+      )}
+      {modal?.kind === "report" && <ReportModal initial={modal.draft} onClose={() => setModal(null)} />}
+    </div>
   );
 }

@@ -1,4 +1,4 @@
-import { SectionHeader, Timeline } from "@/components/ui";
+import { CheckCircle2, CircleDashed } from "lucide-react";
 import type { TraceStatus, TraceStep } from "@/lib/types";
 
 const AGENT_LABELS: Record<string, string> = {
@@ -30,23 +30,36 @@ export function AgentRun({
   intakeNote?: string;
 }) {
   return (
-    <section className="block agent-run" aria-labelledby="agent-run-heading">
-      <SectionHeader id="agent-run-heading" title="Agent run" />
-      <Timeline
-        items={trace.map((step) => ({
-          id: step.agent,
-          title: AGENT_LABELS[step.agent] ?? step.agent,
-          status: step.status,
-          statusLabel: STATUS_LABELS[step.status],
-          detail:
+    <section className="stack-sm agent-run" aria-labelledby="agent-run-heading">
+      <h3 id="agent-run-heading" className="h3">
+        Agent run
+      </h3>
+      <ol className="audit-list">
+        {trace.map((step) => {
+          const detail =
             step.agent === "risk_aggregator" && aggregatorSummary
               ? aggregatorSummary
               : step.agent === "intake" && intakeNote
                 ? `${step.summary} ${intakeNote}`
-                : step.summary,
-          meta: step.durationMs === null ? "Not run" : `${step.durationMs.toFixed(2)} ms`,
-        }))}
-      />
+                : step.summary;
+          return (
+            <li key={step.agent} className={`trace-${step.status}`}>
+              <span className="row">
+                <span className="trace-icon" role="img" aria-label={STATUS_LABELS[step.status]}>
+                  {step.status === "completed" ? (
+                    <CheckCircle2 className="icon text-green" aria-hidden="true" />
+                  ) : (
+                    <CircleDashed className="icon muted" aria-hidden="true" />
+                  )}
+                </span>
+                <span className="trace-agent">{AGENT_LABELS[step.agent] ?? step.agent}</span>
+              </span>
+              <span className="trace-summary">{detail}</span>
+              <code className="trace-time">{step.durationMs === null ? "Not run" : `${step.durationMs.toFixed(2)} ms`}</code>
+            </li>
+          );
+        })}
+      </ol>
     </section>
   );
 }

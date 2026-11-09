@@ -1,7 +1,9 @@
-// Official UAE places to report a suspected job scam, shown on /about#report-fraud. Owner-approved
-// entries only, each with the official page it comes from; nothing here is invented. No phone number
-// or email address on purpose: the official sources disagree on MOHRE's numbers, so the page links
-// to the official pages instead. No jurisdiction rule beyond the source wording.
+// Official UAE places to report a suspected job scam, shown in the Gov Portals Hub (#report-fraud).
+// Owner-approved entries only, each with the official page it comes from; nothing here is invented.
+// No phone number or email address here: the owner-confirmed hotlines and websites live only in
+// src/data/uaeContacts.ts, and the MoHRE and eCrime website links below are read from that file so
+// a link never appears with two values. No jurisdiction rule beyond the source wording.
+import { contact } from "@/data/uaeContacts";
 
 export type Authority = {
   id: string;
@@ -42,6 +44,7 @@ export const AUTHORITIES: readonly Authority[] = [
     name: "Dubai Police eCrime website",
     purpose: LISTED,
     ...CYBERCRIME_SOURCE,
+    alsoSee: { name: "Dubai Police eCrime website", url: contact("ecrime").url },
     lastVerified: VERIFIED,
     reviewer: REVIEWER,
   },
@@ -77,7 +80,7 @@ export const AUTHORITIES: readonly Authority[] = [
     sourceName: "UAE Government Portal, “Tips to stay safe from labour and visa fraud”",
     sourceUrl:
       "https://u.ae/en/information-and-services/visa-and-emirates-id/Visa-information/tips-to-avoid-labour-and-visa-fraud",
-    alsoSee: { name: "MOHRE official website", url: "https://www.mohre.gov.ae" },
+    alsoSee: { name: "MOHRE official website", url: contact("mohre").url },
     lastVerified: VERIFIED,
     reviewer: REVIEWER,
   },

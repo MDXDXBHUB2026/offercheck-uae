@@ -10,19 +10,19 @@ import { Card } from "@/components/ui";
 // LimitsOpener opens the details element on arrival.
 export function LimitationsPanel() {
   return (
-    <section className="block limits" aria-labelledby="limits-heading">
+    <section className="stack-sm limits" aria-labelledby="limits-heading">
       <Card className="limits-intro">
-        <p>{PUBLIC_LIMITS_INTRO}</p>
+        <p className="small">{PUBLIC_LIMITS_INTRO}</p>
       </Card>
       <LimitsOpener />
-      <details id={LIMITS_ID} className="card disclosure limits-details">
+      <details id={LIMITS_ID} className="card accordion limits-details">
         <summary>
           <span id="limits-heading" className="limits-summary">
             {LIMITS_SECTION}
           </span>
         </summary>
         <div className="disclosure-body">
-          <ul>
+          <ul className="bullets">
             {PUBLIC_LIMITS.map((item) => (
               <li key={item.title}>
                 <strong>{item.title}</strong> {item.text}

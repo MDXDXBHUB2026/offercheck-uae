@@ -1,126 +1,91 @@
-import Link from "next/link";
-import { InfoIcon } from "@/components/icons";
+import { ExternalLink, Lock, ShieldAlert, ShieldCheck } from "lucide-react";
 import { LimitsLink } from "@/components/LimitsLink";
 import { LIMITS_SECTION } from "@/components/publicLimitations";
+import { ArabicNote } from "@/components/shell/ArabicNote";
+import { contact } from "@/data/uaeContacts";
 
 // Site-wide text and navigation. Server-safe: no hooks here.
 
-// True only while no server code logs or stores the request body. A test checks that.
-// BATCHB-2: translation sends the text to Google Cloud Translation, only when the user presses "Send to Google and translate".
+// True only while no server code logs or stores the request body (page.test.ts checks that), and
+// the Encrypted Vault keeps its copy in this browser only (src/lib/vault.ts).
 export const PROTOTYPE_NOTICE =
-  "Prototype. Use synthetic or redacted offers only. The app does not store offer text. If you choose translation, Google Cloud Translation receives it.";
+  "Prototype. Use synthetic or redacted offers only. Offer Check's server does not store offer text. If you choose translation, Google Cloud Translation receives it. Save Encrypted keeps an encrypted copy in this browser only.";
 
-// The public site has three pages (owner decision, 2026-11-09): the check, the warning signs and
-// About. The header, the mobile menu and the footer's Product column all use this one list.
-export type NavItem = { href: string; label: string };
+// The five tabs of the reference app. The Arabic labels are the reference app's own, not reviewed by
+// a native speaker. short: the compact bar under the header below 1200px.
+export type NavItem = {
+  id: "analyzer" | "radar" | "portals" | "legal" | "vault";
+  href: string;
+  label: string;
+  labelAr: string;
+  short: string;
+};
 
 export const NAV_ITEMS: readonly NavItem[] = [
-  { href: "/check", label: "Check" },
-  { href: "/guide", label: "Warning signs" },
-  { href: "/about", label: "About" },
+  { id: "analyzer", href: "/check", label: "Offer Analyzer", labelAr: "فاحص العروض", short: "Analyzer" },
+  { id: "radar", href: "/radar", label: "Threat Radar", labelAr: "رادار التهديدات", short: "Radar" },
+  { id: "portals", href: "/portals", label: "Gov Portals Hub", labelAr: "بوابات التحقق", short: "Portals" },
+  { id: "legal", href: "/legal", label: "Legal Guidelines", labelAr: "الدليل القانوني", short: "Legal" },
+  { id: "vault", href: "/vault", label: "Encrypted Vault", labelAr: "الخزنة المشفرة", short: "Vault" },
 ];
 
-// The footer's closing lines, also shown on /about so the wording stays one copy.
 export const FOOTER_DISCLAIMER =
   "A low score does not confirm an offer is genuine. Offer Check does not give legal advice. A translation can lose or change meaning.";
 export const SYNTHETIC_STATEMENT =
   "Risk indicators, not a verdict. It has been tested on synthetic offers only, not validated on real scam data.";
 
-// UX-2: the logo, an original mark from basic shapes. A shield (currentColor, set to --primary in
-// CSS) with a check and a small magnifier cut out in the badge colour (--fill). Inline and
-// decorative: the link text "Offer Check UAE" stays the accessible name.
-export function Mark() {
-  return (
-    <svg className="mark logo" width="24" height="24" viewBox="0 0 28 28" aria-hidden="true" focusable="false">
-      <path d="M14 2.5l9.5 3.5v7c0 6-4 10.5-9.5 12.5C8.5 23.5 4.5 19 4.5 13V6z" fill="currentColor" />
-      <path className="logo-cut" d="M9.5 13.5l3 3 5.5-6" fill="none" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-      <circle className="logo-cut-fill" cx="20.5" cy="20.5" r="5.5" />
-      <circle cx="20.5" cy="20.5" r="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M22.7 22.7l3 3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-// The logo badge, shared by the header and the footer so the SVG exists once.
+// The reference app's logo: a shield in a tinted badge. Decorative: the link text names the site.
 export function BrandBadge() {
   return (
     <span className="brand-badge">
-      <Mark />
+      <ShieldAlert className="icon icon-lg" aria-hidden="true" />
     </span>
   );
 }
 
-// UX-3: the footer chips. Each is true in the code today; the comment on its line names the file
-// that proves it, and a routes test checks the claim. If one stops being true, remove the chip.
-export const FOOTER_CHIPS = [
-  "English rules, translation first", // src/lib/coverage.ts: non-English text is detected; src/components/translateFlow.ts: it can be translated to English, after consent, before the rules read it
-  "No sign-in", // package.json: no auth library; src/app/api/analyze/route.ts: no cookie or token read
-  "Not stored by Offer Check", // src/lib/auditRun.ts: the run and its audit trail go back in the response; src/lib/translateServer.ts: the translation is returned, not kept; src/app/page.test.ts: no logging or storage
-  "Human approval", // src/lib/approvalGate.ts: only the user's approve action approves a draft, which is then only copied
+const FOOTER_LINKS = [
+  { id: "mohre", label: "MoHRE Portal" },
+  { id: "icp", label: "ICP Smart Services" },
+  { id: "ecrime", label: `Dubai Police eCrime (${contact("ecrime").hotlineLabel})` },
 ] as const;
 
-export function NoticeStrip() {
-  return (
-    <div className="notice-strip">
-      <p className="shell notice" role="note">
-        <InfoIcon size={20} />
-        <span>{PROTOTYPE_NOTICE}</span>
-      </p>
-    </div>
-  );
-}
-
-// UX-3: four columns (brand, Product, Trust and limits, chips), then the disclaimer. Product lists the
-// same three pages as the header. Every line is true in the code today (routes test).
+// The reference app's footer: brand line and portal links, then the disclaimer row.
 export function SiteFooter() {
   return (
-    <footer className="site-footer">
-      <div className="shell footer-inner">
-        <div className="footer-cols">
-          <div className="footer-col footer-brand">
-            <h2 className="footer-heading footer-brand-name">
-              <BrandBadge />
+    <footer className="site-footer no-print">
+      <div className="shell">
+        <div className="footer-top">
+          <div className="stack-sm">
+            <h2 className="footer-brand h3">
+              <ShieldCheck className="icon text-green" aria-hidden="true" />
               <span>Offer Check UAE</span>
             </h2>
             <p>A free, rule-based check for warning signs in UAE job offers.</p>
+            <p className="small muted">Rule-based score: the same English text gives the same score.</p>
           </div>
-          <div className="footer-col">
-            <h2 className="footer-heading">Product</h2>
-            <ul>
-              {NAV_ITEMS.map((item) => (
-                <li key={item.href}>
-                  <Link href={item.href} className="footer-link">
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-          <div className="footer-col">
-            <h2 className="footer-heading">Trust and limits</h2>
-            <ul>
-              <li>Rule-based score: the same English text gives the same score</li>
-              <li>A person approves any reply draft</li>
-              <li>
-                <LimitsLink>{LIMITS_SECTION}</LimitsLink>
+          <ul className="footer-links" aria-label="Official portals">
+            {FOOTER_LINKS.map((link) => (
+              <li key={link.id}>
+                <a href={contact(link.id).url} target="_blank" rel="noopener noreferrer">
+                  <span>{link.label}</span>
+                  <ExternalLink className="icon" aria-hidden="true" />
+                </a>
               </li>
-            </ul>
-          </div>
-          <div className="footer-col footer-chips">
-            <h2 className="footer-heading">At a glance</h2>
-            <ul>
-              {FOOTER_CHIPS.map((chip) => (
-                <li key={chip} className="footer-chip">
-                  {chip}
-                </li>
-              ))}
-            </ul>
-          </div>
+            ))}
+            <li>
+              <LimitsLink>{LIMITS_SECTION}</LimitsLink>
+            </li>
+          </ul>
         </div>
         <div className="footer-bottom">
           <p className="footer-disclaimer">{FOOTER_DISCLAIMER}</p>
           <p>{SYNTHETIC_STATEMENT}</p>
-          <p>{PROTOTYPE_NOTICE}</p>
+          <p className="notice">{PROTOTYPE_NOTICE}</p>
+          <p className="row text-green mono">
+            <Lock className="icon" aria-hidden="true" />
+            <span>Encrypted Vault data stays in this browser</span>
+          </p>
+          <ArabicNote />
         </div>
       </div>
     </footer>

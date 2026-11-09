@@ -7,10 +7,15 @@ import { FOOTER_DISCLAIMER, SYNTHETIC_STATEMENT } from "@/components/shell/site"
 import { TRANSLATE_BUTTON } from "@/components/translateFlow";
 import { AUTHORITIES, mainChannels, REPORT_FRAUD_ID, REPORT_FRAUD_NOTE } from "@/lib/authorities";
 import { WARNING_SIGNS, WARNING_SIGNS_SOURCE } from "@/lib/warningSigns";
-import * as about from "./about/page";
-import * as guide from "./guide/page";
+import { REDIRECTS } from "../../next.config";
+import * as legal from "./legal/page";
+import * as portals from "./portals/page";
+import * as radar from "./radar/page";
+import * as vault from "./vault/page";
 
-// The public doc pages: About and Warning signs (/guide). Plain language, static, fixed text only.
+// The public doc pages after the redesign: Legal Guidelines (/legal) holds the Warning signs (was
+// /guide) and the About text (was /about, now /legal#about); the Gov Portals Hub (/portals) holds
+// the report-fraud box. Plain language, static, fixed text only.
 const read = (file: string) => readFileSync(join(process.cwd(), file), "utf8").replaceAll("\r\n", "\n");
 const render = (page: () => React.ReactNode) => renderToStaticMarkup(createElement(page));
 const decode = (html: string) =>
@@ -22,10 +27,24 @@ const decode = (html: string) =>
     .replaceAll("&lt;", "<")
     .replaceAll("&gt;", ">")
     .replace(/\s+/g, " ");
-const ABOUT = render(about.default);
-const GUIDE = render(guide.default);
+const LEGAL = render(legal.default);
+const PORTALS = render(portals.default);
+const ABOUT = LEGAL.slice(LEGAL.indexOf('id="about"'));
+const GUIDE = LEGAL.slice(0, LEGAL.indexOf('id="about"'));
 
-describe("/about", () => {
+describe("/about and /guide keep working", () => {
+  it("redirect to their new places in Legal Guidelines", () => {
+    expect(REDIRECTS).toEqual([
+      { source: "/guide", destination: "/legal", permanent: false },
+      { source: "/about", destination: "/legal#about", permanent: false },
+    ]);
+    expect(existsSync(join(process.cwd(), "src/app/about/page.tsx"))).toBe(false);
+    expect(existsSync(join(process.cwd(), "src/app/guide/page.tsx"))).toBe(false);
+    expect(read("next.config.ts")).toContain("return REDIRECTS;");
+  });
+});
+
+describe("/legal#about (was /about)", () => {
   it("says what Offer Check UAE is, the problem, what it does, who it is for", () => {
     const text = decode(ABOUT);
     expect(text).toContain("Offer Check UAE is a free tool that looks for common warning signs in a job offer");
@@ -34,6 +53,8 @@ describe("/about", () => {
     expect(text).toContain("People in the UAE who receive a job offer by WhatsApp, email or LinkedIn");
   });
 
+  // The redesign: "It does not store your text" became "Its server does not store your text",
+  // because Save Encrypted can keep an encrypted copy in the browser, by the person's choice.
   it("keeps the six 'what it does not do' bullets", () => {
     const list = ABOUT.slice(ABOUT.indexOf('id="not-heading"'), ABOUT.indexOf("</ul>", ABOUT.indexOf('id="not-heading"')));
     expect(list.match(/<li>/g)).toHaveLength(6);
@@ -41,7 +62,7 @@ describe("/about", () => {
     for (const line of [
       "It does not check whether a company, a sender or an offer is real.",
       "It does not contact anyone or send any message for you.",
-      "It does not store your text.",
+      "Its server does not store your text.",
       "It does not use an AI model to score your text.",
       "It reads English only.",
       "It does not give legal advice.",
@@ -50,9 +71,12 @@ describe("/about", () => {
     }
   });
 
-  it("has one privacy paragraph that stays true: Google only when the person presses translate", () => {
+  it("has one privacy paragraph that stays true: Google only on translate, the vault only in this browser", () => {
     const text = decode(ABOUT);
-    expect(text).toContain(`Offer Check does not store the text you paste. Your text is sent to Google, for machine translation, only if you press “${TRANSLATE_BUTTON}”.`);
+    expect(text).toContain(
+      `Offer Check's server does not store the text you paste. Your text is sent to Google, for machine translation, only if you press “${TRANSLATE_BUTTON}”. Save Encrypted keeps an encrypted copy in this browser only, locked with a passphrase that is not stored.`,
+    );
+    expect(text).not.toMatch(/zero storage|nothing is stored|never stored anywhere/i);
   });
 
   it("puts the footer's synthetic-data and legal-advice wording in one paragraph", () => {
@@ -63,28 +87,33 @@ describe("/about", () => {
     expect(decode(ABOUT)).not.toMatch(/\b(?:pipeline|deterministic|hash|audit|agents?|tests?)\b/i);
   });
 
-  it("no longer shows the technical limitation list (it lives in docs/technical-evidence.md)", () => {
-    expect(ABOUT).not.toContain("Technical detail");
-    expect(ABOUT).not.toContain("technical-title");
+  it("does not show the technical limitation list (it lives in docs/technical-evidence.md)", () => {
+    expect(LEGAL).not.toContain("Technical detail");
     const first = read("docs/known-limitations.md").match(/^- \*\*([^*]+)\*\*/m)?.[1] ?? "";
     expect(first.length).toBeGreaterThan(0);
-    expect(decode(ABOUT)).not.toContain(first);
+    expect(decode(LEGAL)).not.toContain(first);
   });
 
   it("has no contact for reporting problems with Offer Check (owner decision): no section, no address, no phone", () => {
     expect(existsSync(join(process.cwd(), "src/lib/siteConfig.ts"))).toBe(false);
-    expect(ABOUT).not.toContain('id="report-heading"');
-    expect(decode(ABOUT)).not.toMatch(/report a problem/i);
-    expect(ABOUT).not.toMatch(/mailto:|tel:/);
+    expect(LEGAL).not.toContain('id="report-heading"');
+    expect(decode(LEGAL)).not.toMatch(/report a problem/i);
+    expect(LEGAL).not.toMatch(/mailto:|tel:/);
   });
 
-  it("keeps the report-fraud anchor, as a small box with the four main channels as links and no dates", () => {
-    const start = ABOUT.indexOf(`id="${REPORT_FRAUD_ID}"`);
+  it("links to the report-fraud box in the Gov Portals Hub", () => {
+    expect(ABOUT).toContain(`href="/portals#${REPORT_FRAUD_ID}"`);
+  });
+});
+
+describe("/portals#report-fraud (was /about#report-fraud)", () => {
+  it("keeps the anchor, as a box with the four main channels as links and no dates", () => {
+    const start = PORTALS.indexOf(`id="${REPORT_FRAUD_ID}"`);
     expect(start).toBeGreaterThan(-1);
-    const box = ABOUT.slice(start, ABOUT.indexOf("</section>", start));
+    const box = PORTALS.slice(start, PORTALS.indexOf("</section>", start));
     expect(box).toContain(">If you think it is a scam</h2>");
     expect(decode(box)).toContain(REPORT_FRAUD_NOTE);
-    const links = [...box.matchAll(/<a class="source-link" href="([^"]+)" rel="noreferrer">([^<]+)<\/a>/g)].map((m) => [m[2], m[1]]);
+    const links = [...box.matchAll(/<a href="([^"]+)" class="btn btn-secondary btn-block"[^>]*>([^<]+)</g)].map((m) => [m[2], m[1]]);
     expect(links).toEqual(mainChannels().map((channel) => [channel.name, channel.url]));
     expect(links.map(([name]) => name)).toEqual([
       "Ministry of Interior eCrimes platform",
@@ -98,32 +127,32 @@ describe("/about", () => {
   });
 });
 
-describe("/guide (Warning signs)", () => {
+describe("/legal Warning signs (was /guide)", () => {
   const IDS = ["offer-letter", "reference-number", "entry-permit-check", "tourist-visa", "recruitment-fees", "company-lookup", "permit-source", "residency-abroad"];
 
-  it("has the eight entries, in order, each an article with its fixed id", () => {
+  it("has the eight entries, in order, each a list item with its fixed id", () => {
     expect(WARNING_SIGNS.map((entry) => entry.id)).toEqual(IDS);
-    const articles = [...GUIDE.matchAll(/<article id="([^"]+)" class="card sign"/g)].map((m) => m[1]);
-    expect(articles).toEqual(IDS);
+    const items = [...GUIDE.matchAll(/<li class="card stack-sm card-fill" id="([^"]+)"/g)].map((m) => m[1]);
+    expect(items).toEqual(IDS);
   });
 
   it("each entry has a short heading, why it matters and one 'what to do' line", () => {
     for (const entry of WARNING_SIGNS) {
-      const start = GUIDE.indexOf(`<article id="${entry.id}"`);
-      const article = GUIDE.slice(start, GUIDE.indexOf("</article>", start));
-      expect(article).toContain(`<h2 id="${entry.id}-title" class="sign-title">${entry.sign.replaceAll("'", "&#x27;")}</h2>`);
-      expect(decode(article)).toContain(entry.why);
-      expect(decode(article)).toContain(`What to do: ${entry.whatToDo}`);
-      expect(article.match(/What to do:/g)).toHaveLength(1);
+      const start = GUIDE.indexOf(`id="${entry.id}"`);
+      const item = GUIDE.slice(start, GUIDE.indexOf("</li>", start));
+      expect(item).toContain(`<h3 id="${entry.id}-title" class="h3">${entry.sign.replaceAll("'", "&#x27;")}</h3>`);
+      expect(decode(item)).toContain(entry.why);
+      expect(decode(item)).toContain(`What to do: ${entry.whatToDo}`);
+      expect(item.match(/What to do:/g)).toHaveLength(1);
       expect(entry.sign.split(" ").length).toBeLessThanOrEqual(10);
       expect(entry.why.split(/(?<=\.)\s/).length).toBeLessThanOrEqual(2);
       expect(entry.whatToDo.split(/(?<=\.)\s/)).toHaveLength(1);
     }
   });
 
-  it("shows one source line at the bottom, with the single source link", () => {
+  it("shows one source line under the list, with the single source link", () => {
     expect([...GUIDE.matchAll(/href="([^"]+)"/g)].map((m) => m[1])).toEqual([WARNING_SIGNS_SOURCE.url]);
-    expect(GUIDE.lastIndexOf("</article>")).toBeLessThan(GUIDE.indexOf('class="doc-source"'));
+    expect(GUIDE.lastIndexOf("</ol>")).toBeLessThan(GUIDE.indexOf("Source:"));
     expect(decode(GUIDE)).toContain(
       `Source: UAE Government Portal, “Tips to avoid labour and visa fraud” , page last updated 24 Sep 2026.`,
     );
@@ -139,46 +168,43 @@ describe("/guide (Warning signs)", () => {
     expect(text).not.toMatch(/https?:|www\./);
   });
 
+  // The reference app's law articles, fines and "golden rules" had no source, so none is shown.
+  it("shows no law article, fine or penalty from the reference app", () => {
+    expect(decode(LEGAL)).not.toMatch(/Article \d|Federal (?:Decree-)?Law|AED \d|fine of|imprisonment/i);
+  });
+
   it("is no longer a placeholder", () => {
-    expect(GUIDE).not.toContain("Not built yet");
+    expect(LEGAL).not.toContain("Not built yet");
     expect(existsSync(join(process.cwd(), "src/components/shell/Placeholder.tsx"))).toBe(false);
   });
 });
 
-describe("doc pages: static, one h1, no landmark of their own, readable type", () => {
+describe("static pages: one h1, no landmark of their own, fixed text", () => {
   it.each([
-    ["src/app/about/page.tsx", ABOUT],
-    ["src/app/guide/page.tsx", GUIDE],
+    ["src/app/legal/page.tsx", LEGAL],
+    ["src/app/portals/page.tsx", PORTALS],
+    ["src/app/radar/page.tsx", render(radar.default)],
+    ["src/app/vault/page.tsx", render(vault.default)],
   ])("%s", (file, html) => {
     const source = read(file);
     expect(source).toContain('export const dynamic = "force-static";');
     expect(source).not.toMatch(/next\/headers|cookies\(|headers\(|searchParams|"use client"|dangerouslySetInnerHTML/);
     expect(html.match(/<h1[\s>]/g)).toHaveLength(1);
-    expect(html).toMatch(/^<div class="doc-page doc-column"><div class="doc-hero"><h1 id="page-title" class="page-title">/);
-    expect(html).not.toMatch(/<(?:main|header|footer|nav|aside|form)[\s>]|role="region"|<section[^>]*aria-label/);
-    expect(html).not.toMatch(/<textarea|<input/);
+    expect(html).toMatch(/^<div class="stack"><section class="card hero" aria-labelledby="page-title">/);
+    expect(html).toContain('<h1 id="page-title" class="h1">');
+    expect(html).not.toMatch(/<(?:main|header|footer|nav|aside)[\s>]|role="region"/);
   });
 
-  it("the doc h1 is 32px (28px under 768px), not the 60px page title, in one centred 720px column", () => {
+  it("the page title uses the one type scale: 24px, 30px from 640px", () => {
     const css = read("src/app/globals.css");
-    const rule = (selector: string, from = 0) => {
-      const at = css.indexOf(`${selector} {`, from);
-      expect(at, selector).toBeGreaterThan(-1);
-      return css.slice(at, css.indexOf("}", at));
-    };
-    expect(rule(".doc-hero .page-title")).toMatch(/font-size: 32px;\s*line-height: 38px;/);
-    const small = css.indexOf("@media (max-width: 767px) {\n  .doc-hero .page-title {");
-    expect(small).toBeGreaterThan(-1);
-    expect(rule("  .doc-hero .page-title", small)).toMatch(/font-size: 28px;\s*line-height: 34px;/);
-    for (const r of css.matchAll(/\.doc-hero \.page-title \{([^}]*)\}/g)) expect(r[1]).not.toContain("60px");
-    expect(rule(".doc-column")).toMatch(/max-width: 720px;\s*margin-inline: auto;/);
-    expect(rule(".doc-hero")).toMatch(/margin-bottom: 24px;/);
-    expect(rule(".doc-section")).toMatch(/margin-top: 32px;/);
-    expect(rule(".doc-hero .intro")).toMatch(/font-size: 17px;\s*line-height: 26px;/);
-    expect(rule(".doc-page p,\n.doc-page li")).toMatch(/font-size: 16px;\s*line-height: 24px;/);
-    expect(rule(".doc-page table")).toMatch(/font-size: 14px;\s*line-height: 20px;/);
-    expect(rule(".doc-page .section-title,\n.doc-page .sign-title,\n.doc-page .report-box-title")).toMatch(/font-size: 20px;\s*line-height: 28px;/);
-    // 44px targets for the source and channel links.
-    expect(rule(".source-link")).toMatch(/min-height: 44px;/);
+    const at = css.indexOf(".h1 {");
+    expect(at).toBeGreaterThan(-1);
+    expect(css.slice(at, css.indexOf("}", at))).toContain("font-size: var(--fs-2xl);");
+    const wide = css.indexOf("@media (min-width: 640px)", at);
+    const later = css.indexOf(".h1 {", wide);
+    expect(css.slice(later, css.indexOf("}", later))).toContain("font-size: var(--fs-3xl);");
+    expect(css).toMatch(/--fs-2xl: 24px;[\s\S]*--fs-3xl: 30px;/);
+    // 44px targets for every link that looks like a button.
+    expect(css).toMatch(/\.btn \{[^}]*min-height: var\(--target\);/);
   });
 });

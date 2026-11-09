@@ -1,6 +1,6 @@
 import { useEffect, useRef, type Dispatch } from "react";
-import { InfoIcon } from "@/components/icons";
-import { Callout } from "@/components/ui";
+import { Info } from "lucide-react";
+import { Button, Callout, Card } from "@/components/ui";
 import { copyText, unfilledPlaceholders, type GateAction, type GateState } from "@/lib/approvalGate";
 
 const NOTHING_SENT = "Nothing is sent until you approve. Offer Check never sends messages for you.";
@@ -84,31 +84,26 @@ export function ApprovalPanel({ gate, dispatch }: ApprovalPanelProps) {
 
   if (!gate || gate.status === "discarded") {
     return (
-      <section className="block approval" aria-labelledby="draft-heading">
-        <h2 id="draft-heading" className="section-title">
+      <Card as="section" className="stack-sm approval no-print" aria-labelledby="draft-heading">
+        <h2 id="draft-heading" className="h3">
           Draft reply
         </h2>
-        <div className="card draft-card">
+        <div className="stack-sm">
           {gate && (
             <Callout tone="neutral" role="status" className="confirm">
               <p>Draft discarded.</p>
             </Callout>
           )}
-          <p className="approval-note">
+          <p className="approval-note small muted">
             Offer Check can prepare a careful reply for you to review. {NOTHING_SENT}
           </p>
-          <div className="approval-actions">
-            <button
-              ref={prepareRef}
-              type="button"
-              className="secondary"
-              onClick={() => dispatch({ type: "prepare", at: now() })}
-            >
+          <div className="row approval-actions">
+            <Button ref={prepareRef} variant="secondary" onClick={() => dispatch({ type: "prepare", at: now() })}>
               Prepare draft reply
-            </button>
+            </Button>
           </div>
         </div>
-      </section>
+      </Card>
     );
   }
 
@@ -122,12 +117,12 @@ export function ApprovalPanel({ gate, dispatch }: ApprovalPanelProps) {
   const reason = gate.status === "pending" ? blockedReason(gate.draft, gate.editing) : "";
 
   return (
-    <section className="block approval" aria-labelledby="approval-heading">
-      <h2 id="approval-heading" className="section-title" ref={headingRef} tabIndex={-1}>
+    <Card as="section" className="stack-sm approval no-print" aria-labelledby="approval-heading">
+      <h2 id="approval-heading" className="h3" ref={headingRef} tabIndex={-1}>
         {gate.status === "pending" ? "Your approval needed" : "Reply approved"}
       </h2>
-      <div className="card draft-card">
-        <p className="approval-note">{gate.status === "approved" ? approvedNote(gate.copied) : NOTHING_SENT}</p>
+      <div className="stack-sm">
+        <p className="approval-note small muted">{gate.status === "approved" ? approvedNote(gate.copied) : NOTHING_SENT}</p>
 
         {gate.status === "pending" && gate.editing && (
           <>
@@ -167,27 +162,20 @@ export function ApprovalPanel({ gate, dispatch }: ApprovalPanelProps) {
           </>
         )}
 
-        <div className="approval-actions">
+        <div className="row approval-actions">
           {gate.status === "pending" && (
             // aria-disabled, not disabled: the button stays in the tab order, so keyboard and
             // screen-reader users reach it and hear why it is blocked.
-            <button
-              type="button"
-              aria-disabled={reason ? true : undefined}
-              aria-describedby={reason ? "approve-reason" : undefined}
-              onClick={() => {
-                if (!reason) void approve(gate.draft);
-              }}
-            >
+            <Button blocked={Boolean(reason)} reasonId="approve-reason" onClick={() => void approve(gate.draft)}>
               Approve and copy reply
-            </button>
+            </Button>
           )}
-          <button type="button" className="secondary" disabled={editing} onClick={startEdit}>
+          <Button variant="secondary" blocked={editing} onClick={startEdit}>
             Edit draft
-          </button>
-          <button type="button" className="text-button" onClick={discard}>
+          </Button>
+          <Button variant="danger" onClick={discard}>
             Discard
-          </button>
+          </Button>
         </div>
 
         {/* A live region that stays in place while pending, so a screen reader announces each
@@ -196,13 +184,13 @@ export function ApprovalPanel({ gate, dispatch }: ApprovalPanelProps) {
           <p id="approve-reason" className="placeholder-note" role="status">
             {reason && (
               <>
-                <InfoIcon />
+                <Info className="icon" aria-hidden="true" />
                 <span>{reason}</span>
               </>
             )}
           </p>
         )}
       </div>
-    </section>
+    </Card>
   );
 }

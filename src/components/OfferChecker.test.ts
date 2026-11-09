@@ -10,8 +10,12 @@ import { ENGLISH_EDGE_CASES, LATIN_NON_ENGLISH } from "@/lib/languageSamples";
 import { ApprovalPanel } from "./ApprovalPanel";
 import type { AnalyzeResponse } from "@/lib/audit";
 import { checkBlockedReason, OfferChecker, recordCheck } from "./OfferChecker";
-import { ResultsPanel } from "./ResultsPanel";
-import { ScoreGauge } from "./ScoreGauge";
+import { ResultCard as ResultsPanel } from "./ResultCard";
+import { Button } from "./ui";
+import type { SampleOffer } from "@/data/sampleOffers";
+
+// The redesign's samples are SampleOffer cards; the tests only need a name and a text.
+const sample = (name: string, text: string): SampleOffer => ({ id: name.toLowerCase().replace(/\W+/g, "-"), name, channel: "Email", kind: "scam", description: "Made up.", text });
 
 // The text the stubbed useState("") hands back, so a test can call the form's submit handler as if
 // the user had typed it. Every other hook keeps its real initial value and ignores updates.
@@ -116,7 +120,7 @@ describe("language notice (LANG-1)", () => {
   const MOST = "Most of this text is not in English.";
   const PART = "Part of this text is not in English.";
   const respond = (text: string): AnalyzeResponse => ({ ...runManager(text), runId: "run-1", audit: [] });
-  const scoreSide = (html: string) => html.slice(html.indexOf("score-card"), html.indexOf("results-main"));
+  const scoreSide = (html: string) => html.slice(html.indexOf("score-card"), html.indexOf('role="tablist"'));
 
   function renderWith(liveText: string, checked: unknown) {
     typed.text = liveText;
@@ -158,7 +162,7 @@ describe("language notice (LANG-1)", () => {
     const neutral = "Not checked: most of the text is not in English";
     // STALE-1: rendered with the checked text in the box (an edit would clear the result).
     const html = renderWith(ARABIC, arabicCheck);
-    expect(html).toContain(`<p class="chip score-label">${neutral}</p>`);
+    expect(html).toContain(`<p class="chip chip-neutral score-label">${neutral}</p>`);
     expect(html).toContain(`Results ready. ${neutral}.`);
     expect(renderWith(ARABIC, recordCheck(respond(ENGLISH), ENGLISH))).not.toContain(neutral);
   });
@@ -299,14 +303,14 @@ describe("offer notice (Batch A case 4)", () => {
       typed.stubbed = false;
     }
     expect(html).not.toContain("No risk indicators found");
-    expect(html).toContain('<p class="chip score-label">Score 0. This text does not look like a job offer.</p>');
+    expect(html).toContain('<p class="chip chip-neutral score-label">Score 0. This text does not look like a job offer.</p>');
     expect(html).toContain("Results ready. Score 0 of 100. This text does not look like a job offer.");
   });
 });
 
 describe("Check offer button (S4-1)", () => {
   it("stays focusable while the box is empty: aria-disabled with a reason, never native disabled", () => {
-    const html = renderToStaticMarkup(createElement(OfferChecker, { ruleCount: 5, samples: [{ label: "S", text: "x" }] }));
+    const html = renderToStaticMarkup(createElement(OfferChecker, { ruleCount: 5, samples: [sample("S", "x")] }));
     const button = html.match(/<button type="submit"[^>]*>/)?.[0] ?? "";
     expect(button).toContain('aria-disabled="true"');
     expect(button).toContain('aria-describedby="check-reason"');
@@ -333,22 +337,27 @@ describe("Check offer button (S4-1)", () => {
   it("shows the live character count against the limit", () => {
     const html = renderToStaticMarkup(createElement(OfferChecker, { ruleCount: 5 }));
     expect(html).toContain('<span id="offer-count" class="counter">0 / 20,000</span>');
-    expect(html).toMatch(/<textarea id="offer"[^>]*aria-describedby="offer-count"/);
+    // The redesign adds the channel hint to the description; the count comes first.
+    expect(html).toMatch(/<textarea id="offer"[^>]*aria-describedby="offer-count offer-hint"/);
   });
 });
 
-describe("Step 5 results layout", () => {
-  it("puts the score on the side and findings, agent run, then the caller's panels in the main column", () => {
+describe("result card layout (redesign)", () => {
+  it("puts the risk banner first, then the two views, the checklist, the portals, the agent run, then the caller's panels", () => {
     const result = runManager(SCAM_OFFER);
     const html = renderToStaticMarkup(
-      createElement(ResultsPanel, { result, ruleCount: 5 }, createElement("p", { id: "child" }, "child")),
+      createElement(ResultsPanel, { result, ruleCount: 5, sourceText: SCAM_OFFER }, createElement("p", { id: "child" }, "child")),
     );
-    const side = html.indexOf('class="results-side"');
-    const main = html.indexOf('class="results-main"');
-    expect(side).toBeGreaterThan(-1);
-    expect(html.indexOf("results-heading")).toBeLessThan(main);
-    const order = ["findings-heading", "agent-run-heading", 'id="child"'].map((s) => html.indexOf(s));
-    expect(order.every((index) => index > main)).toBe(true);
+    const order = [
+      "results-heading",
+      'id="tab-flags"',
+      'id="tab-source"',
+      "checklist-heading",
+      "portals-heading",
+      "agent-run-heading",
+      'id="child"',
+    ].map((s) => html.indexOf(s));
+    expect(order.every((index) => index > -1)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
   });
 
@@ -359,16 +368,16 @@ describe("Step 5 results layout", () => {
     expect(stubs).toHaveLength(2);
     for (const row of stubs) {
       expect(row).toContain('<span class="trace-summary">Not implemented yet</span>');
-      expect(row).not.toContain("<svg");
+      // A dashed circle, never the check icon of a completed step.
+      expect(row).not.toContain("lucide-circle-check");
     }
   });
 
-  it("animates the arc to the server's score, from a CSS variable", () => {
-    const html = renderToStaticMarkup(
-      createElement(ScoreGauge, { risk: { score: 60, band: "high", label: "High risk indicators" } }),
-    );
-    expect(html).toContain('class="gauge-value"');
-    expect(html).toContain("--score:60");
+  // The gauge was replaced by the reference banner: the server's number, out of 100, as text.
+  it("shows the server's score as a number out of 100 in the banner", () => {
+    const result = runManager(SCAM_OFFER);
+    const html = renderToStaticMarkup(createElement(ResultsPanel, { result, ruleCount: 5 }));
+    expect(html).toContain(`<span class="score-value">${result.risk.score}</span> <span class="score-max">/ 100</span>`);
   });
 });
 
@@ -540,11 +549,7 @@ describe("action area layout", () => {
   const ORIGINAL = "Check original anyway (not checked)";
   const DISCLOSURE =
     "To translate, Offer Check sends the text in the box to Google Cloud Translation, a machine translation service run by Google. Offer Check does not store it; Google&#x27;s terms apply to the text it receives. Remove names, phone numbers and other personal details first.";
-  const SAMPLES = [
-    { label: "Fee scam", text: "x" },
-    { label: "Clean offer", text: "y" },
-  ];
-  const SAMPLE_LABELS = ["Fee scamSynthetic", "Clean offerSynthetic"];
+  const SAMPLES = [sample("Fee scam", "x"), sample("Clean offer", "y")];
 
   function page(text: string, flow: unknown) {
     typed.text = text;
@@ -556,34 +561,39 @@ describe("action area layout", () => {
       typed.stubbed = false;
     }
   }
-  // Every button on the page, in document (and so tab) order, by its visible text.
-  const controls = (html: string) => [...html.matchAll(/<button[^>]*>(.*?)<\/button>/g)].map((m) => m[1].replace(/<[^>]+>/g, ""));
+  // Every button in the action area (after the text box), in document (and so tab) order, by its
+  // visible text. The redesign puts the samples, the channel tabs and Auto-Redact above the box, and
+  // Clear beside the count; they are not part of the action area.
+  const controls = (html: string) =>
+    [...html.slice(Math.max(0, html.indexOf("</textarea>"))).matchAll(/<button[^>]*>(.*?)<\/button>/g)]
+      .map((m) => m[1].replace(/<[^>]+>/g, ""))
+      .filter((label) => label !== "Clear");
   const buttonTag = (html: string, name: string) =>
     [...html.matchAll(/<button[^>]*>(.*?)<\/button>/g)].find((m) => m[1].replace(/<[^>]+>/g, "") === name)?.[0] ?? "";
-  // The banner runs from its opening tag to the samples row, which follows it.
-  const banner = (html: string) => html.slice(html.indexOf('class="callout callout-neutral language-banner"'), html.indexOf('class="samples"'));
+  // The banner runs from its opening tag to the end of the form.
+  const banner = (html: string) => html.slice(html.indexOf('class="callout callout-neutral language-banner"'), html.indexOf("</form>"));
   const count = (html: string, needle: string) => html.split(needle).length - 1;
 
-  it("empty: only Check offer (blocked, with its reason), then the samples; no banner, no translate controls", () => {
+  it("empty: only Check offer (blocked, with its reason); no banner, no translate controls", () => {
     const html = page("", { step: "idle" });
-    expect(controls(html)).toEqual(["Check offer", ...SAMPLE_LABELS]);
+    expect(controls(html)).toEqual(["Check offer"]);
     expect(buttonTag(html, "Check offer")).toContain('aria-disabled="true"');
     expect(html).toContain("Paste an offer or choose a sample, then check it.");
     expect(html).not.toContain("language-banner");
     expect(html).not.toContain("language-gate");
   });
 
-  it("English: only Check offer, then the samples; nothing about translation", () => {
+  it("English: only Check offer; nothing about translation", () => {
     const html = page(ENGLISH, { step: "idle" });
-    expect(controls(html)).toEqual(["Check offer", ...SAMPLE_LABELS]);
+    expect(controls(html)).toEqual(["Check offer"]);
     expect(buttonTag(html, "Check offer")).not.toContain("aria-disabled");
-    expect(buttonTag(html, "Check offer")).toContain('class="primary"');
+    expect(buttonTag(html, "Check offer")).toContain('class="btn btn-primary');
     for (const absent of ["language-banner", "language-gate", TRANSLATE, ORIGINAL, "Google"]) expect(html).not.toContain(absent);
   });
 
   it("not clearly English: one banner with the explanation and the disclosure, then exactly two buttons side by side", () => {
     const html = page(ARABIC, { step: "idle" });
-    expect(controls(html)).toEqual([TRANSLATE, ORIGINAL, ...SAMPLE_LABELS]);
+    expect(controls(html)).toEqual([TRANSLATE, ORIGINAL]);
     expect(count(html, "language-banner")).toBe(1);
     const inBanner = banner(html);
     expect(inBanner).toMatch(/^class="callout callout-neutral language-banner"/);
@@ -593,8 +603,8 @@ describe("action area layout", () => {
     expect(controls(inBanner)).toEqual([TRANSLATE, ORIGINAL]);
     const row = inBanner.slice(inBanner.indexOf('class="gate-actions"'));
     expect(controls(row)).toEqual([TRANSLATE, ORIGINAL]);
-    expect(buttonTag(html, TRANSLATE)).toContain('class="primary"');
-    expect(buttonTag(html, ORIGINAL)).toContain('class="secondary"');
+    expect(buttonTag(html, TRANSLATE)).toContain('class="btn btn-primary');
+    expect(buttonTag(html, ORIGINAL)).toContain('class="btn btn-secondary');
     expect(html).not.toContain(">Check offer<");
     expect(html).not.toContain("translate-consent");
     expect(html).not.toContain('class="submit"');
@@ -634,7 +644,7 @@ describe("action area layout", () => {
     const textOf = (e: ReactElement<Props>) => [e.props.children].flat().filter((c) => typeof c === "string").join("");
     // Editing the box and pressing a sample: no request.
     elements.find((e) => e.type === "textarea")?.props.onChange?.({ target: { value: `${ARABIC} ` } });
-    elements.find((e) => e.type === "button" && (e.props as { className?: string }).className === "sample")?.props.onClick?.();
+    elements.find((e) => (e.type === "button" || e.type === Button) && (e.props as { className?: string }).className === "sample")?.props.onClick?.();
     expect(fetchMock).not.toHaveBeenCalled();
     // Two presses of the same button before a re-render: one request.
     const send = elements.find((e) => textOf(e) === TRANSLATE);
@@ -646,7 +656,7 @@ describe("action area layout", () => {
 
   it("translating: the same row, the send button busy and Check original anyway blocked; no Check offer", () => {
     const html = page(ARABIC, { step: "sending" });
-    expect(controls(html)).toEqual(["Translating...", ORIGINAL, ...SAMPLE_LABELS]);
+    expect(controls(html)).toEqual(["Translating...", ORIGINAL]);
     expect(buttonTag(html, "Translating...")).toContain('aria-busy="true"');
     expect(buttonTag(html, "Translating...")).toContain('aria-disabled="true"');
     expect(buttonTag(html, ORIGINAL)).toContain('aria-disabled="true"');
@@ -657,7 +667,7 @@ describe("action area layout", () => {
 
   it("failure: the alert inside the banner above the row; the two choices again, nothing else", () => {
     const html = page(ARABIC, { step: "failed", code: "provider_timeout" });
-    expect(controls(html)).toEqual([TRANSLATE, ORIGINAL, ...SAMPLE_LABELS]);
+    expect(controls(html)).toEqual([TRANSLATE, ORIGINAL]);
     const inBanner = banner(html);
     expect(count(html, 'role="alert"')).toBe(1);
     expect(inBanner).toContain('role="alert"');
@@ -667,45 +677,44 @@ describe("action area layout", () => {
 
   it("translation off: the banner with the Stage 1 note and one primary Check original anyway", () => {
     const html = page(ARABIC, { step: "unavailable", alert: true });
-    expect(controls(html)).toEqual([ORIGINAL, ...SAMPLE_LABELS]);
-    expect(buttonTag(html, ORIGINAL)).toContain('class="primary"');
+    expect(controls(html)).toEqual([ORIGINAL]);
+    expect(buttonTag(html, ORIGINAL)).toContain('class="btn btn-primary');
     expect(banner(html)).toContain("The rules read English only, so the parts in other languages will not be checked.");
     expect(banner(html)).toContain('role="alert"');
   });
 
-  it("keyboard order: the text box, then the action area, then the samples", () => {
+  it("keyboard order: the sample cards, then the text box, then the action area", () => {
     for (const [text, flow] of [["", { step: "idle" }], [ARABIC, { step: "idle" }], [ARABIC, { step: "sending" }]] as const) {
       const html = page(text, flow);
       const box = html.indexOf("<textarea");
       const actions = html.indexOf(text ? "language-banner" : 'class="submit"');
-      const samples = html.indexOf('class="samples"');
+      const samples = html.indexOf("samples");
       expect(box).toBeGreaterThan(-1);
+      expect(samples).toBeLessThan(box);
       expect(box).toBeLessThan(actions);
-      expect(actions).toBeLessThan(samples);
       expect(html).not.toMatch(/tabindex="[1-9]/);
     }
   });
 
-  it("styles: one column, the row side by side from 600px and stacked full width below, samples on one tidy row", () => {
+  it("styles: the two banner buttons side by side from 600px and stacked full width below, samples in a grid", () => {
     const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
     const rule = (selector: string, from = 0) => {
       const at = css.indexOf(`${selector} {`, from);
       return at === -1 ? "" : css.slice(at, css.indexOf("}", at));
     };
-    expect(rule(".input-foot")).not.toContain("grid-template-columns");
-    expect(css).not.toMatch(/\.input-foot\s*\{[^}]*grid-template-columns/);
     expect(rule(".gate-actions")).toContain("flex-direction: column");
-    expect(rule(".gate-actions button")).toContain("width: 100%");
+    expect(rule(".gate-actions .btn")).toContain("width: 100%");
     const wide = css.indexOf("@media (min-width: 600px)");
     expect(rule(".gate-actions", wide)).toContain("flex-direction: row");
-    expect(rule(".gate-actions button", wide)).toContain("width: auto");
-    expect(rule(".samples")).toMatch(/display: flex[\s\S]*flex-wrap: wrap[\s\S]*align-items: center/);
-    expect(rule(".samples-label")).not.toContain("margin-bottom");
+    expect(rule(".gate-actions .btn", wide)).toContain("width: auto");
+    expect(rule(".grid-4")).toContain("grid-template-columns");
+    expect(rule(".sample-card")).toContain("flex-direction: column");
     // The banner uses the existing callout and tokens; no new colours.
     expect(rule(".language-banner")).not.toMatch(/#[0-9a-f]{3,8}\b|rgb/i);
     expect(rule(".language-gate")).toContain("var(--ink)");
     // 44px targets for every button, including the ones in the banner.
-    expect(rule("button")).toContain("min-height: 44px");
+    expect(rule(".btn")).toContain("min-height: var(--target)");
+    expect(css).toContain("--target: 44px;");
   });
 });
 
@@ -723,7 +732,7 @@ describe("STALE-1: clear the old result when the text changes", () => {
     className?: string;
   };
 
-  function mount(text: string, extra: { checked?: unknown; flow?: unknown; samples?: { label: string; text: string }[] } = {}) {
+  function mount(text: string, extra: { checked?: unknown; flow?: unknown; samples?: SampleOffer[] } = {}) {
     typed.text = text;
     typed.checked = extra.checked ?? null;
     typed.flow = extra.flow ?? { step: "idle" };
@@ -760,10 +769,10 @@ describe("STALE-1: clear the old result when the text changes", () => {
   it("shows a result only while the box holds the checked text: score, findings, Agent run, draft and approval go together", () => {
     const check = recordCheck(respond(SCAM_OFFER), SCAM_OFFER);
     const shown = render(SCAM_OFFER, check);
-    for (const part of ["score-card", "results-main", "trace-agent"]) expect(shown).toContain(part);
+    for (const part of ["score-card", "panel-flags", "trace-agent"]) expect(shown).toContain(part);
     for (const edited of [`${SCAM_OFFER}.`, ENGLISH, ""]) {
       const html = render(edited, check);
-      for (const part of ["score-card", "results-main", "trace-agent"]) expect(html).not.toContain(part);
+      for (const part of ["score-card", "panel-flags", "trace-agent"]) expect(html).not.toContain(part);
     }
   });
 
@@ -791,9 +800,9 @@ describe("STALE-1: clear the old result when the text changes", () => {
   });
 
   it("a sample clears the result even when it fills in the same text", () => {
-    const sample = { label: "Fee scam", text: SCAM_OFFER };
-    const tree = mount(SCAM_OFFER, { checked: recordCheck(respond(SCAM_OFFER), SCAM_OFFER), samples: [sample] });
-    all(tree).find((e) => e.type === "button" && e.props.className === "sample")?.props.onClick?.();
+    const scamSample = sample("Fee scam", SCAM_OFFER);
+    const tree = mount(SCAM_OFFER, { checked: recordCheck(respond(SCAM_OFFER), SCAM_OFFER), samples: [scamSample] });
+    all(tree).find((e) => (e.type === "button" || e.type === Button) && e.props.className === "sample")?.props.onClick?.();
     expect(typed.checkedSets).toEqual([null]);
     expect(typed.clearedSets).toEqual([true]);
   });
@@ -893,7 +902,7 @@ describe("LANG-4: the uncertain band", () => {
     "This text does not look like English, or only part of it does. The rules read English only, so the parts in other languages will not be checked.";
   const text = (id: string) => [...ENGLISH_EDGE_CASES, ...LATIN_NON_ENGLISH].find((entry) => entry.id === id)?.text ?? "";
   const respond = (offer: string): AnalyzeResponse => ({ ...runManager(offer), runId: "run-1", audit: [] });
-  const chip = (html: string) => html.match(/<p class="chip score-label">(.*?)<\/p>/)?.[1];
+  const chip = (html: string) => html.match(/<p class="chip chip-\w+ score-label">(.*?)<\/p>/)?.[1];
 
   function renderWith(liveText: string, checked: unknown, flow: unknown = { step: "idle" }) {
     typed.text = liveText;
@@ -925,7 +934,7 @@ describe("LANG-4: the uncertain band", () => {
     expect(html).not.toContain("Not checked");
     expect(html).not.toContain("No risk indicators found");
     expect(html).toContain("Part of this text is not in English.");
-    expect(html).toContain("icon icon-info");
+    expect(html).toContain("icon-info");
     const expected = check.response.findings.length === 0 ? "Score 0 on the English part. Part of the text was not checked." : check.response.risk.label;
     expect(chip(html)).toBe(expected);
   });

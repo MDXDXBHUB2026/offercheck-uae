@@ -9,7 +9,7 @@ import { LIMITS_ID, openLimits, syncLimitsToHash } from "@/components/limitsAnch
 // link still jumps to the section and its summary.
 export function LimitsLink({ children }: { children: ReactNode }) {
   return (
-    <Link href={`/check#${LIMITS_ID}`} className="footer-link" onClick={() => openLimits(document)}>
+    <Link href={`/check#${LIMITS_ID}`} onClick={() => openLimits(document)}>
       {children}
     </Link>
   );

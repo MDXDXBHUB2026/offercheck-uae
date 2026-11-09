@@ -1,9 +1,9 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import * as about from "@/app/about/page";
+import * as portals from "@/app/portals/page";
 import { resultAnnouncement } from "@/components/OfferChecker";
-import { ResultsPanel } from "@/components/ResultsPanel";
+import { ResultCard as ResultsPanel } from "@/components/ResultCard";
 import { noticeFor, reportLinkShown, scoreChip } from "@/components/scoreChip";
 import { EVAL_OFFERS } from "./agents/eval/offers";
 import { LEGIT_OFFER, SCAM_OFFER } from "./agents/fixtures";
@@ -78,8 +78,10 @@ describe("official reporting channels (src/lib/authorities.ts)", () => {
   });
 });
 
-describe("/about#report-fraud", () => {
-  const html = renderToStaticMarkup(createElement(about.default));
+// The redesign: the reporting box moved from /about to the Gov Portals Hub (/about redirects to
+// /legal#about, which links here).
+describe("/portals#report-fraud", () => {
+  const html = renderToStaticMarkup(createElement(portals.default));
   const start = html.indexOf(`id="${REPORT_FRAUD_ID}"`);
   const section = html.slice(start, html.indexOf("</section>", start));
 
@@ -98,7 +100,9 @@ describe("/about#report-fraud", () => {
     const text = decode(section);
     expect(mainChannels().map((channel) => channel.id)).toEqual(["moi_ecrimes", "dubai_police_ecrime", "abu_dhabi_aman", "mohre_verify"]);
     for (const channel of mainChannels()) {
-      expect(section).toContain(`<a class="source-link" href="${channel.url}" rel="noreferrer">${channel.name}</a>`);
+      expect(section).toContain(
+        `<a href="${channel.url}" class="btn btn-secondary btn-block" target="_blank" rel="noopener noreferrer">${channel.name}<svg`,
+      );
     }
     expect(mainChannels().find((channel) => channel.id === "mohre_verify")?.url).toBe("https://www.mohre.gov.ae");
     expect(section.match(/<a /g)).toHaveLength(4);
@@ -121,7 +125,7 @@ describe("Check results: link to the official reporting channels", () => {
   const ruleCount = RULES.length;
   const render = (result: AnalysisResult, coverage: Coverage | null = null) =>
     renderToStaticMarkup(createElement(ResultsPanel, { result, ruleCount, coverage }));
-  const LINK = `<p class="report-link"><a href="/about#${REPORT_FRAUD_ID}">${REPORT_LINK_SENTENCE}</a></p>`;
+  const LINK = `<p class="report-link"><a href="/portals#${REPORT_FRAUD_ID}">${REPORT_LINK_SENTENCE}</a></p>`;
 
   const results = EVAL_OFFERS.map((offer) => runManager(offer.text));
   const medium = results.find((result) => result.risk.band === "medium");

@@ -23,7 +23,7 @@ function chainLabel(check: ChainCheck | null): string {
 
 function chainTone(check: ChainCheck | null): ChipTone {
   if (!check) return "neutral";
-  return check.ok ? "success" : "high";
+  return check.ok ? "green" : "high";
 }
 
 // The time part of the ISO timestamp, in UTC, as recorded.
@@ -50,9 +50,9 @@ export function AuditTrail({ entries, failed }: { entries: AuditEntry[]; failed?
 
   const result = check?.entries === entries ? check.result : null;
   return (
-    <section className="block audit-trail" aria-label="Audit trail">
+    <section className="stack-sm audit-trail no-print" aria-label="Audit trail">
       {/* Outside the collapsed list, so a screen reader announces it. */}
-      <p className="audit-failed" role="status">
+      <p className="audit-failed small text-red" role="status">
         {failed ? "This browser could not add the latest step to the audit trail." : ""}
       </p>
       <Disclosure
@@ -66,10 +66,10 @@ export function AuditTrail({ entries, failed }: { entries: AuditEntry[]; failed?
           </>
         }
       >
-        <ol>
+        <ol className="audit-list">
           {entries.map((entry) => (
             <li key={entry.hash}>
-              <span className="audit-kind">{entry.kind}</span>
+              <span className="audit-kind label-caps">{entry.kind}</span>
               <time dateTime={entry.at} title={entry.at}>
                 {clock(entry.at)}
               </time>
