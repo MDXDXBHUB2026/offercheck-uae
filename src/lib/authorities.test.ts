@@ -51,9 +51,39 @@ describe("official reporting channels (src/lib/authorities.ts)", () => {
       expect(entry.sourceUrl, entry.id).toMatch(/^https:\/\/(u\.ae|www\.mohre\.gov\.ae)\//);
       expect(entry.sourceName.length, entry.id).toBeGreaterThan(0);
       expect(entry.lastVerified, entry.id).toMatch(ISO_DATE);
-      expect(entry.lastVerified).toBe("2026-11-09");
-      expect(entry.reviewer).toBe("owner, approved 2026-11-09");
+      // MOHRE: owner-approved 2026-11-09. The cybercrime channels: source page re-linked by the
+      // owner on 2026-11-10 (LINK-2).
+      if (entry.id === "mohre_verify") {
+        expect(entry.lastVerified).toBe("2026-11-09");
+        expect(entry.reviewer).toBe("owner, approved 2026-11-09");
+      } else {
+        expect(entry.lastVerified).toBe("2026-11-10");
+        expect(entry.reviewer).toBe("owner, link supplied 2026-11-10");
+      }
     }
+  });
+
+  // LINK-2: the old u.ae "report-cybercrimes-online" page returns 404. No authority links to it.
+  it("no authority URL points to the dead report-cybercrimes-online page", () => {
+    for (const entry of AUTHORITIES) {
+      for (const url of [entry.sourceUrl, entry.alsoSee?.url ?? ""]) expect(url, entry.id).not.toContain("report-cybercrimes-online");
+    }
+    for (const channel of mainChannels()) expect(channel.url, channel.id).not.toContain("report-cybercrimes-online");
+  });
+
+  // LINK-2: MoI eCrimes and Aman link to the UAE Government directory page, and their labels say
+  // so; no unconfirmed MoI or Aman address. The Dubai Police eCrime link is unchanged.
+  it("MoI eCrimes and Aman link to the UAE Government directory page, labelled as such", () => {
+    const byId = Object.fromEntries(mainChannels().map((channel) => [channel.id, channel]));
+    for (const id of ["moi_ecrimes", "abu_dhabi_aman"]) {
+      expect(byId[id].url).toBe("https://u.ae/en/information-and-services/justice-safety-and-the-law/Safety/cyber-safety-and-digital-security");
+      expect(byId[id].name).toMatch(/^UAE Government: where to report cybercrime \(lists /);
+    }
+    expect(byId.moi_ecrimes.name).toContain("MoI eCrimes platform");
+    expect(byId.abu_dhabi_aman.name).toContain("Aman, Abu Dhabi Police");
+    expect(byId.dubai_police_ecrime.url).toBe("https://www.dubaipolice.gov.ae/app/services/ecrime");
+    const all = AUTHORITIES.flatMap((entry) => [entry.sourceUrl, entry.alsoSee?.url ?? ""]).join(" ");
+    expect(all).not.toMatch(/ecrime\.ae|adpolice\.gov\.ae|moi\.gov\.ae|twitter\.com/);
   });
 
   it("no entry has a phone number or an email address", () => {

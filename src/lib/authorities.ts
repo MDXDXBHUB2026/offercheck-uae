@@ -22,10 +22,19 @@ export type Authority = {
 const VERIFIED = "2026-11-09";
 const REVIEWER = "owner, approved 2026-11-09";
 
+// LINK-2 (2026-11-10): the earlier source page (.../report-cybercrimes-online) returns 404. This is
+// the UAE Government Portal page that now lists the cybercrime reporting channels: the MoI eCrimes
+// platform (MoI UAE app), the Dubai Police eCrime website, Aman (Abu Dhabi Police), the My Safe
+// Society app and the nearest police station or 999. It is a directory page, not any service's own
+// portal. Link supplied by the owner on 2026-11-10; page "Updated On : 01 Oct 2026".
+const CYBERCRIME_VERIFIED = "2026-11-10";
+const CYBERCRIME_REVIEWER = "owner, link supplied 2026-11-10";
+
 const CYBERCRIME_SOURCE = {
-  sourceName: "UAE Government Portal, “Report cybercrimes online” (page last updated 04 Mar 2024)",
-  sourceUrl:
-    "https://u.ae/en/information-and-services/justice-safety-and-the-law/cyber-safety-and-digital-security/report-cybercrimes-online",
+  sourceName: "UAE Government Portal, “Cyber safety and digital security” (page updated 01 Oct 2026)",
+  sourceUrl: "https://u.ae/en/information-and-services/justice-safety-and-the-law/Safety/cyber-safety-and-digital-security",
+  lastVerified: CYBERCRIME_VERIFIED,
+  reviewer: CYBERCRIME_REVIEWER,
 };
 
 const LISTED = "Listed on the UAE Government Portal as a way to report cybercrime.";
@@ -33,11 +42,11 @@ const LISTED = "Listed on the UAE Government Portal as a way to report cybercrim
 export const AUTHORITIES: readonly Authority[] = [
   {
     id: "moi_ecrimes",
-    name: "Ministry of Interior eCrimes platform",
+    // The link is the UAE Government directory page, not the MoI's own portal, and the label says
+    // so. The MoI eCrimes platform's own address is not owner-confirmed (defects.md LINK-2).
+    name: "UAE Government: where to report cybercrime (lists the MoI eCrimes platform)",
     purpose: "Report cybercrime such as online fraud. Available in the MoI UAE app.",
     ...CYBERCRIME_SOURCE,
-    lastVerified: VERIFIED,
-    reviewer: REVIEWER,
   },
   {
     id: "dubai_police_ecrime",
@@ -45,32 +54,25 @@ export const AUTHORITIES: readonly Authority[] = [
     purpose: LISTED,
     ...CYBERCRIME_SOURCE,
     alsoSee: { name: "Dubai Police eCrime website", url: contact("ecrime").url },
-    lastVerified: VERIFIED,
-    reviewer: REVIEWER,
   },
   {
     id: "abu_dhabi_aman",
-    name: "Abu Dhabi Police Aman service",
+    // As above: a directory page that lists Aman, not Aman's own address (not owner-confirmed).
+    name: "UAE Government: where to report cybercrime (lists Aman, Abu Dhabi Police)",
     purpose: LISTED,
     ...CYBERCRIME_SOURCE,
-    lastVerified: VERIFIED,
-    reviewer: REVIEWER,
   },
   {
     id: "fpp_my_safe_society",
     name: "My Safe Society app of the Federal Public Prosecution",
     purpose: LISTED,
     ...CYBERCRIME_SOURCE,
-    lastVerified: VERIFIED,
-    reviewer: REVIEWER,
   },
   {
     id: "police_station",
     name: "Your nearest police station",
     purpose: LISTED,
     ...CYBERCRIME_SOURCE,
-    lastVerified: VERIFIED,
-    reviewer: REVIEWER,
   },
   {
     id: "mohre_verify",

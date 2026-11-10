@@ -116,9 +116,9 @@ describe("/portals#report-fraud (was /about#report-fraud)", () => {
     const links = [...box.matchAll(/<a href="([^"]+)" class="btn btn-secondary btn-block"[^>]*>([^<]+)</g)].map((m) => [m[2], m[1]]);
     expect(links).toEqual(mainChannels().map((channel) => [channel.name, channel.url]));
     expect(links.map(([name]) => name)).toEqual([
-      "Ministry of Interior eCrimes platform",
+      "UAE Government: where to report cybercrime (lists the MoI eCrimes platform)",
       "Dubai Police eCrime website",
-      "Abu Dhabi Police Aman service",
+      "UAE Government: where to report cybercrime (lists Aman, Abu Dhabi Police)",
       "Ministry of Human Resources and Emiratisation (MOHRE)",
     ]);
     expect(box).toContain('href="https://www.mohre.gov.ae"');
