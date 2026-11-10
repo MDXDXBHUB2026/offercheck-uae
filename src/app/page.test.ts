@@ -46,10 +46,10 @@ describe("no logging or storage of offer text", () => {
     const vault = read(STORAGE_ALLOWED[0]);
     expect(vault.match(/localStorage\.setItem\(([^)]*)\)/g)).toEqual(["localStorage.setItem(VAULT_KEY, value)"]);
     expect(vault).toContain("writeVault(await encryptText(");
-    expect(vault).not.toMatch(/console\.\w+|sessionStorage|indexedDB|document\.cookie/);
+    expect(vault).not.toMatch(/\bconsole\.\w+|sessionStorage|indexedDB|document\.cookie/);
     const lang = read(STORAGE_ALLOWED[1]);
     expect(lang.match(/localStorage\.setItem\(([^)]*)\)/g)).toEqual(["localStorage.setItem(STORAGE_KEY, lang)"]);
-    expect(lang).not.toMatch(/console\.\w+|sessionStorage|indexedDB|document\.cookie/);
+    expect(lang).not.toMatch(/\bconsole\.\w+|sessionStorage|indexedDB|document\.cookie/);
   });
 
   it("finds the source files", () => {
