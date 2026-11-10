@@ -158,8 +158,22 @@ describe("header", () => {
     expect(store).toContain("document.documentElement.lang = lang");
     // Logical properties only: no physical left/right margins, paddings or positions in the CSS.
     const css = read("src/app/globals.css");
-    expect(css).not.toMatch(/(?:margin|padding|border)-(?:left|right)\s*:|(?:^|\s)(?:left|right)\s*:\s*[^;]+;|text-align:\s*(?:left|right)/m);
+    // The one exception is the Arabic (RTL) bidi block: a fixed "right" alignment, only under
+    // [dir="rtl"], so English text in an RTL page stays right-aligned (see the next test).
+    const rtlOnly = /(?:\[dir="rtl"\][^{},]*,\s*)*\[dir="rtl"\][^{},]*\{[^}]*\}/g;
+    expect(css.replace(rtlOnly, "")).not.toMatch(/(?:margin|padding|border)-(?:left|right)\s*:|(?:^|\s)(?:left|right)\s*:\s*[^;]+;|text-align:\s*(?:left|right)/m);
     expect(ARABIC_NOTE).toBe("Arabic labels have not been reviewed by a native speaker. Page content is in English.");
+  });
+
+  // RTL with English page text: sentences keep their full stop at the end and stay right-aligned,
+  // and hotline numbers keep their digit order ("600 590000", not "590000 600").
+  it("in Arabic, English text keeps its punctuation and the hotline numbers keep their order", () => {
+    const css = read("src/app/globals.css");
+    expect(css).toMatch(/\[dir="rtl"\] body,\s*\[dir="rtl"\] \.tabs-boxed \.tab,\s*\[dir="rtl"\] \.vault-item \{\s*text-align: right;\s*\}/);
+    expect(css).toMatch(/\[dir="rtl"\] body \*:not\(\[dir\]\) \{\s*unicode-bidi: plaintext;\s*\}/);
+    expect(css).toMatch(/\[dir="rtl"\] \.score-text \{\s*flex-direction: row-reverse;\s*justify-content: flex-end;\s*\}/);
+    expect(read("src/components/shell/Navbar.tsx")).toContain('<span className="contact-number" dir="ltr">{entry.hotlineLabel}</span>');
+    expect(read("src/app/portals/page.tsx")).toContain('<span className="mono" dir="ltr">{entry.hotlineLabel}</span>');
   });
 
   it("treats / as the Offer Analyzer", () => {

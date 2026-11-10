@@ -132,6 +132,23 @@ body {
   font-family: var(--font-arabic);
 }
 
+/* RTL with English page text: each text block takes its own direction from its first letter, so
+   English sentences keep their full stop and colon at the end, while the right alignment is
+   inherited as a fixed side (not "start", which would follow the English text to the left). */
+[dir="rtl"] body,
+[dir="rtl"] .tabs-boxed .tab,
+[dir="rtl"] .vault-item {
+  text-align: right;
+}
+[dir="rtl"] body *:not([dir]) {
+  unicode-bidi: plaintext;
+}
+/* The score is "72 / 100" in both languages: keep the two parts in reading order, on the right. */
+[dir="rtl"] .score-text {
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+
 h1,
 h2,
 h3,

@@ -120,7 +120,7 @@ export function Navbar() {
                             <br />
                             <span className="small muted">{entry.purpose}</span>
                           </span>
-                          <span className="contact-number">{entry.hotlineLabel}</span>
+                          <span className="contact-number" dir="ltr">{entry.hotlineLabel}</span>
                         </a>
                       );
                     })}

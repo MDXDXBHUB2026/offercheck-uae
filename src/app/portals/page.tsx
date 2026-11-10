@@ -56,7 +56,7 @@ export default function PortalsPage() {
               <div className="row card-foot">
                 <ButtonLink href={`tel:${entry.hotline}`} variant="secondary">
                   <Phone className="icon" aria-hidden="true" />
-                  <span className="mono">{entry.hotlineLabel}</span>
+                  <span className="mono" dir="ltr">{entry.hotlineLabel}</span>
                 </ButtonLink>
                 <ButtonLink href={entry.url} variant="secondary">
                   Website
