@@ -53,7 +53,8 @@ export const UAE_CONTACTS: readonly UaeContact[] = [
     name: "Dubai Police eCrime",
     arabicName: "منصة الجرائم الإلكترونية - شرطة دبي",
     purpose: "Report online fraud",
-    url: "https://www.ecrime.ae",
+    // Corrected by owner 2026-11-10: the Dubai Police eCrime service page.
+    url: "https://www.dubaipolice.gov.ae/app/services/ecrime",
     hotline: "901",
     hotlineLabel: "901",
   },

@@ -327,7 +327,7 @@ describe("UAE contacts: one file, one value each", () => {
       ["mohre", "600590000", "https://www.mohre.gov.ae"],
       ["icp", "600522222", "https://smartservices.icp.gov.ae"],
       ["amer", "8005111", "https://www.gdrfad.gov.ae"],
-      ["ecrime", "901", "https://www.ecrime.ae"],
+      ["ecrime", "901", "https://www.dubaipolice.gov.ae/app/services/ecrime"],
     ]);
   });
 
