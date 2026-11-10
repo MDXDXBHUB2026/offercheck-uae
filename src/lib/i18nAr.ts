@@ -667,6 +667,36 @@ const ENTRIES: Record<string, string> = {
   "Copy text": "نسخ النص",
   "Delete": "حذف",
   "This browser did not allow that.": "لم يسمح هذا المتصفح بذلك.",
+  "No saved results yet": "لا توجد نتائج محفوظة بعد",
+  "No saved results yet. Run a check, then choose Save Encrypted on the result. You will choose your passphrase there. Offer Check cannot recover it.":
+    "لا توجد نتائج محفوظة بعد. أجرِ فحصًا، ثم اختر \"حفظ مشفّر\" في النتيجة. ستختار عبارة المرور هناك. لا يستطيع Offer Check استعادتها.",
+  "Go to the Offer Analyzer": "انتقل إلى محلل العروض",
+  "Saved results: {0}": "النتائج المحفوظة: {0}",
+  "Offer Check cannot recover a forgotten passphrase.": "لا يستطيع Offer Check استعادة عبارة مرور منسية.",
+  "Lock vault": "قفل الخزنة",
+  "Delete all saved results? This cannot be undone.": "حذف جميع النتائج المحفوظة؟ لا يمكن التراجع عن ذلك.",
+  "Keep them": "إبقاؤها",
+  "Delete this saved result? This cannot be undone.": "حذف هذه النتيجة المحفوظة؟ لا يمكن التراجع عن ذلك.",
+  "Keep it": "إبقاؤها",
+  "Notes": "ملاحظات",
+  "View result": "عرض النتيجة",
+  "This result was saved before View result was added, so it cannot be opened in the analyzer.":
+    "حُفظت هذه النتيجة قبل إضافة \"عرض النتيجة\"، لذا لا يمكن فتحها في المحلل.",
+  "Notes (optional)": "ملاحظات (اختياري)",
+  "Confirm passphrase": "تأكيد عبارة المرور",
+  "At least {0} characters.": "الحد الأدنى لعدد الأحرف: {0}.",
+  "A vault is already saved in this browser. Use the passphrase you chose for it.":
+    "توجد خزنة محفوظة مسبقًا في هذا المتصفح. استخدم عبارة المرور التي اخترتها لها.",
+  "Enter a passphrase.": "أدخل عبارة مرور.",
+  "The passphrase needs at least {0} characters.": "عبارة المرور أقصر من اللازم. الحد الأدنى لعدد الأحرف: {0}.",
+  "The two passphrases do not match.": "عبارتا المرور غير متطابقتين.",
+  "That passphrase does not open the vault already saved in this browser. Nothing was changed.":
+    "عبارة المرور هذه لا تفتح الخزنة المحفوظة مسبقًا في هذا المتصفح. لم يتغير شيء.",
+  "You choose this passphrase. Offer Check cannot recover it. If you forget it, saved results cannot be opened.":
+    "أنت من يختار عبارة المرور هذه. لا يستطيع Offer Check استعادتها. وإذا نسيتها، لا يمكن فتح النتائج المحفوظة.",
+  "Saved to your vault in this browser.": "حُفظ في خزنتك في هذا المتصفح.",
+  "Open the Encrypted Vault": "افتح الخزنة المشفّرة",
+  "Opened from your Encrypted Vault. Saved {0}.": "فُتح من خزنتك المشفّرة. تاريخ الحفظ: {0}.",
 };
 
 // Official names: in Arabic, each contact shows its own official Arabic name (src/data/uaeContacts.ts).

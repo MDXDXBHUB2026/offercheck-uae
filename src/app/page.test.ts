@@ -44,7 +44,12 @@ describe("no logging or storage of offer text", () => {
 
   it("the vault writes only the encrypted payload, and the language switch only the language", () => {
     const vault = read(STORAGE_ALLOWED[0]);
-    expect(vault.match(/localStorage\.setItem\(([^)]*)\)/g)).toEqual(["localStorage.setItem(VAULT_KEY, value)"]);
+    // Besides the ciphertext, only the number of saved results (for the Vault tab) is written.
+    expect(vault.match(/localStorage\.setItem\(([^)]*\)?)\)/g)).toEqual([
+      "localStorage.setItem(VAULT_KEY, value)",
+      "localStorage.setItem(VAULT_COUNT_KEY, String(count))",
+      "localStorage.setItem(VAULT_COUNT_KEY, String(count))",
+    ]);
     expect(vault).toContain("writeVault(await encryptText(");
     expect(vault).not.toMatch(/\bconsole\.\w+|sessionStorage|indexedDB|document\.cookie/);
     const lang = read(STORAGE_ALLOWED[1]);

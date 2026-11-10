@@ -7,6 +7,7 @@ import { BookOpen, ChevronDown, FileCheck2, Languages, Lock, PhoneCall, Radio, S
 import { BrandBadge, NAV_ITEMS, type NavItem } from "@/components/shell/site";
 import { restoreLang, setLang, useLang, useT } from "@/components/shell/lang";
 import { Button } from "@/components/ui";
+import { useVaultState } from "@/components/vaultStore";
 import { HEADER_HOTLINE_IDS, contact } from "@/data/uaeContacts";
 import { REPORT_FRAUD_NOTE } from "@/lib/authorities";
 
@@ -73,6 +74,19 @@ export function Navbar() {
 
   const t = useT();
   const label = (item: NavItem) => (lang === "ar" ? item.labelAr : item.label);
+  // The number of saved results on the Vault tab, from the plain count kept beside the encrypted
+  // vault: no passphrase needed, and no title or text is read.
+  const vault = useVaultState();
+  const savedCount = /^\d+$/.test(vault) && Number(vault) > 0 ? Number(vault) : null;
+  const countBadge = (item: NavItem) =>
+    item.id === "vault" && savedCount !== null ? (
+      <>
+        <span className="nav-count" aria-hidden="true">
+          {savedCount}
+        </span>
+        <span className="visually-hidden">{t("Saved results: {0}", savedCount)}</span>
+      </>
+    ) : null;
 
   return (
     <header className="site-header" onKeyDown={closeOnEscape}>
@@ -107,6 +121,7 @@ export function Navbar() {
                   {isCurrent(pathname, item.href) && <span className="tab-dot" aria-hidden="true" />}
                   <Icon className="icon" aria-hidden="true" />
                   <span>{label(item)}</span>
+                  {countBadge(item)}
                 </Link>
               );
             })}
@@ -171,6 +186,7 @@ export function Navbar() {
               aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
             >
               {t(item.short)}
+              {countBadge(item)}
             </Link>
           ))}
         </nav>

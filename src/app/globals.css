@@ -3024,3 +3024,44 @@ details.card > summary {
     display: block !important;
   }
 }
+
+/* Saved results on the Encrypted Vault tab: the plain count kept beside the encrypted vault. */
+.nav-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding-inline: var(--sp-1);
+  border: 1px solid var(--green-line);
+  border-radius: 999px;
+  background: var(--green-bg);
+  color: var(--green-soft);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.nav-mobile .tab .nav-count {
+  margin-inline-start: var(--sp-1);
+}
+
+/* Notes the person wrote when saving: their own text, shown as text. */
+.vault-notes {
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+  color: var(--ink-soft);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* The question asked before a delete. */
+.confirm-delete {
+  padding: var(--sp-3);
+  border: 1px solid var(--amber-line);
+  border-radius: var(--r-md);
+  background: var(--amber-bg);
+  color: var(--ink);
+}

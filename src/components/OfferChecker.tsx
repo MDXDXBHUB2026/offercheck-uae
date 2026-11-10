@@ -1,13 +1,16 @@
 "use client";
 
-import { useReducer, useRef, useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useReducer, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { ArrowRight, Eraser, FileText, Linkedin, Mail, MessageCircle, ScanSearch, ShieldCheck } from "lucide-react";
 import { ApprovalPanel } from "@/components/ApprovalPanel";
 import { AuditTrail } from "@/components/AuditTrail";
 import { networkFailure, responseFailure, type CheckFailure } from "@/components/checkRequest";
 import { ReportModal, type ReportDraft } from "@/components/radar/ReportModal";
 import { ResultCard } from "@/components/ResultCard";
-import { SaveVaultModal } from "@/components/SaveVaultModal";
+import { SAVED_NOTICE, SaveVaultModal, savedDay } from "@/components/SaveVaultModal";
+import { scoreArithmetic } from "@/components/scoreArithmetic";
+import { clearReopen, peekReopen } from "@/components/vaultStore";
+import type { VaultRecord } from "@/lib/vault";
 import { Button, Callout, Card, Chip, HelperText } from "@/components/ui";
 import type { SampleOffer } from "@/data/sampleOffers";
 import { redactSensitive } from "@/lib/redact";
@@ -41,7 +44,7 @@ import { TranslateFailureAlert, TranslationShown } from "@/components/Translatio
 import type { TranslationRecord } from "@/lib/translation";
 import type { LanguageNotice } from "@/lib/textScript";
 import { MAX_OFFER_CHARS } from "@/lib/types";
-import { useT } from "@/components/shell/lang";
+import { useLang, useT } from "@/components/shell/lang";
 
 // Where the offer came from, as in the reference app. Display and saving only: the rules read the
 // text the same way for every channel. "Offer Letter PDF" means the letter's text, pasted.
@@ -133,9 +136,33 @@ export function checkingSteps(ruleCount: number): string[] {
   return ["Cleaning the text", `Running ${ruleCount} fixed rules`, "Building the score"];
 }
 
-// The initial checked result: none.
+// A result re-opened from the Encrypted Vault ("View result"), as a checked result: the saved text
+// is both the box text and the checked text, so the result shows until the text is edited. Records
+// saved before 2026-11-10 have no saved check and cannot be re-opened.
+export function checkedFromVault(record: VaultRecord | null): CheckedResult | null {
+  const saved = record?.check;
+  if (!record || !saved) return null;
+  return {
+    boxText: record.text,
+    checkedText: record.text,
+    channel: (CHANNELS as readonly string[]).includes(record.channel) ? (record.channel as Channel) : "Email",
+    redacted: saved.redacted,
+    response: saved.response,
+    coverage: saved.coverage,
+    languageNotice: noticeForCoverage(saved.coverage),
+    offerSignals: saved.offerSignals,
+    translation: null,
+  };
+}
+
+// The initial checked result: none, or the result handed over by "View result" in the vault.
 export function noCheck(): CheckedResult | null {
-  return null;
+  return checkedFromVault(peekReopen());
+}
+
+// The notice the result card shows, so the saved band wording matches the chip on screen.
+function saveNotice(checked: CheckedResult, result: AnalyzeResponse): Notice | null {
+  return noticeFor(checked.coverage, checked.offerSignals, result.risk.band);
 }
 
 // The initial check failure (none) and STALE-1 notice (off). Named, so a test can recognise them.
@@ -179,8 +206,11 @@ export function OfferChecker({
   hero?: ReactNode;
 }) {
   const t = useT();
-  const [text, setText] = useState("");
-  const [channel, setChannel] = useState<Channel>("Email");
+  const lang = useLang();
+  // "View result" from the vault: the record handed over in memory, read on the first render only.
+  const reopen = checkedFromVault(peekReopen());
+  const [text, setText] = useState(reopen?.boxText ?? "");
+  const [channel, setChannel] = useState<Channel>(reopen?.channel ?? "Email");
   const [autoMask, setAutoMask] = useState(true);
   const [modal, setModal] = useState<Modal>(null);
   const [checked, setChecked] = useState<CheckedResult | null>(noCheck);
@@ -193,16 +223,24 @@ export function OfferChecker({
   const [slowCheck, setSlowCheck] = useState(false);
   const slowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [gateFlow, dispatchGate] = useReducer(gateReducer, INITIAL_GATE_FLOW);
-  const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
+  const [auditLog, setAuditLog] = useState<AuditEntry[]>(reopen?.response.audit ?? []);
   const [auditFailed, setAuditFailed] = useState(false);
   // Appends run one after another, so the chain stays in order. A new run starts a new chain.
-  const auditQueue = useRef<Promise<AuditEntry[]>>(Promise.resolve([]));
-  const runIdRef = useRef<string | null>(null);
+  const auditQueue = useRef<Promise<AuditEntry[]>>(Promise.resolve(reopen?.response.audit ?? []));
+  const runIdRef = useRef<string | null>(reopen?.response.runId ?? null);
+  // When the result came from the vault: the day it was saved, shown above it.
+  const [reopenedAt] = useState(reopen ? (peekReopen()?.savedAt ?? null) : null);
+  // After Save Encrypted: an inline confirmation on the page (no alert).
+  const [savedNotice, setSavedNotice] = useState(false);
   // The gate state as of the last action, so a second click before a re-render sees the first.
   const flowRef = useRef<GateFlow>(INITIAL_GATE_FLOW);
   // BATCHB-2: the translation steps, and the latest of them, so a double click sends once.
   const [translateFlow, setTranslateFlow] = useState<TranslateFlow>(idleFlow);
   const translateRef = useRef<TranslateFlow>(translateFlow);
+  // The handed-over record has been read into state: drop it from memory.
+  useEffect(() => {
+    clearReopen();
+  }, []);
   // The last check request, so "Try again" repeats it exactly (a translated check stays translated).
   const lastRequest = useRef<{
     submitted: string;
@@ -271,6 +309,7 @@ export function OfferChecker({
     flowRef.current = INITIAL_GATE_FLOW;
     lastRequest.current = null;
     startAudit(null, []);
+    setSavedNotice(false);
     if (hadSomething) setCleared(true);
   }
 
@@ -611,6 +650,18 @@ export function OfferChecker({
         </Callout>
       )}
       {result && checked?.translation && <TranslationShown translation={checked.translation} />}
+      {result && reopenedAt && (
+        <Callout tone="neutral" role="note" className="reopened-note">
+          <p>{t("Opened from your Encrypted Vault. Saved {0}.", savedDay(new Date(reopenedAt), lang))}</p>
+        </Callout>
+      )}
+      {result && savedNotice && (
+        <Callout tone="success" role="status" className="saved-notice">
+          <p>
+            {t(SAVED_NOTICE)} <a href="/vault">{t("Open the Encrypted Vault")}</a>
+          </p>
+        </Callout>
+      )}
       {result && checked && (
         <ResultCard
           result={result}
@@ -640,7 +691,20 @@ export function OfferChecker({
           view={toResultView(result, checked.coverage)}
           channel={checked.channel}
           checkedText={checked.checkedText}
+          bandLabel={scoreChip(result.risk, result.findings, saveNotice(checked, result)).label}
+          points={saveNotice(checked, result) === "most" ? null : scoreArithmetic(result.findings, result.risk)}
+          check={{
+            response: checked.response,
+            coverage: checked.coverage,
+            offerSignals: checked.offerSignals,
+            redacted: checked.redacted,
+            sourceLang: checked.translation?.sourceLang ?? null,
+          }}
           onClose={() => setModal(null)}
+          onSaved={() => {
+            setModal(null);
+            setSavedNotice(true);
+          }}
         />
       )}
       {modal?.kind === "report" && <ReportModal initial={modal.draft} onClose={() => setModal(null)} />}

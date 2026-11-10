@@ -2,7 +2,14 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// The vault page shows its unlock form only when a vault is saved; the plain count says one is.
+const vaultState = vi.hoisted(() => ({ value: "pending" }));
+vi.mock("@/components/vaultStore", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/components/vaultStore")>()),
+  useVaultState: () => vaultState.value,
+}));
 import { CHECKING_PANEL_DELAY_MS, checkingSteps } from "@/components/OfferChecker";
 import { COPIED_MS, DIMENSIONS, ResultCard } from "@/components/ResultCard";
 import { LEGIT_OFFER, SCAM_OFFER } from "@/lib/agents/fixtures";
@@ -443,7 +450,9 @@ describe("AI Studio port: Phase 3 pages", () => {
   });
 
   it("Encrypted Vault: the existing wording as a pill, a ringed key, show/hide passphrase and a full-width button", () => {
+    vaultState.value = "1";
     const page = html(createElement(EncryptedVault));
+    vaultState.value = "pending";
     expect(page).toContain('<p class="eyebrow-pill">');
     expect(page).toContain("AES-256-GCM, in this browser only");
     expect(page).toMatch(/<span class="key-ring" aria-hidden="true">/);

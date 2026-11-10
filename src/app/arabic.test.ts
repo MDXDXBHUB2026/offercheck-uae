@@ -35,7 +35,8 @@ import {
 import { PUBLIC_LIMITS, PUBLIC_LIMITS_INTRO } from "@/components/publicLimitations";
 import { ReportModal } from "@/components/radar/ReportModal";
 import { intakeNote, ResultCard } from "@/components/ResultCard";
-import { SaveVaultModal } from "@/components/SaveVaultModal";
+import { EmptyVault, VAULT_EMPTY } from "@/components/EncryptedVault";
+import { PASSPHRASE_NOTE, SAVED_NOTICE, SaveVaultModal } from "@/components/SaveVaultModal";
 import { qualifiedSummary, scoreChip } from "@/components/scoreChip";
 import { Navbar } from "@/components/shell/Navbar";
 import { SiteFooter } from "@/components/shell/site";
@@ -209,7 +210,8 @@ describe("Arabic interface: every state of a result is in Arabic", () => {
       html(createElement(ApprovalPanel, { gate: pending.gate, dispatch: () => {} })),
       html(createElement(AuditTrail, { entries: [] })),
       html(createElement(ReportModal, { initial: {}, onClose: () => {} })),
-      html(createElement(SaveVaultModal, { view: toResultView(scam), channel: "Email", checkedText: SCAM_OFFER, onClose: () => {} })),
+      html(createElement(SaveVaultModal, { view: toResultView(scam), channel: "Email", checkedText: SCAM_OFFER, bandLabel: "High risk indicators", onClose: () => {}, onSaved: () => {} })),
+      html(createElement(EmptyVault)),
     ];
     for (const markup of panels) expect(english(markup)).toEqual([]);
   });
@@ -249,6 +251,9 @@ describe("Arabic interface: every message of the existing flow has Arabic", () =
     ...Object.values(CHECK_NOTES).filter((note): note is string => Boolean(note)),
     ...WARNING_SIGNS.flatMap((sign) => [sign.sign, sign.whatToDo, sign.why]),
     ...(["unchecked", "partial", "translated"] as const).map((state) => intakeNote(state, "hi") ?? ""),
+    VAULT_EMPTY,
+    PASSPHRASE_NOTE,
+    SAVED_NOTICE,
   ];
   for (const notice of [null, "most", "part", "offer", "translated"] as const) {
     for (const result of [scam, legit]) {
