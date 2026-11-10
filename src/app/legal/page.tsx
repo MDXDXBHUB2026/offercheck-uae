@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { BookOpen, Info } from "lucide-react";
 import { LimitsLink } from "@/components/LimitsLink";
 import { PrintButton } from "@/components/PrintButton";
+import { SignAccordion } from "@/components/SignAccordion";
 import { LIMITS_SECTION } from "@/components/publicLimitations";
 import { FOOTER_DISCLAIMER, SYNTHETIC_STATEMENT } from "@/components/shell/site";
 import { TRANSLATE_BUTTON } from "@/components/translateFlow";
@@ -96,10 +97,11 @@ const ABOUT: { id: string; title: string; body: React.ReactNode }[] = [
 export default function LegalPage() {
   return (
     <div className="stack">
-      <section className="card hero" aria-labelledby="page-title">
+      <section className="card hero" aria-labelledby="page-title" data-tint="green">
         <div className="stack-sm">
-          <p className="label-caps text-green">
-            <BookOpen className="icon" aria-hidden="true" /> Offline library
+          <p className="eyebrow-pill">
+            <BookOpen className="icon" aria-hidden="true" />
+            <span>Offline library</span>
           </p>
           <h1 id="page-title" className="h1">
             Legal Guidelines
@@ -129,7 +131,7 @@ export default function LegalPage() {
                   {entry.sign}
                 </h3>
               </div>
-              <p className="small">{entry.why}</p>
+              <SignAccordion why={entry.why} />
               <p className="small card-foot">
                 <strong className="text-green">What to do:</strong> {entry.whatToDo}
               </p>

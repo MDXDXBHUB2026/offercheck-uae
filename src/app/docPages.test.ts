@@ -190,7 +190,8 @@ describe("static pages: one h1, no landmark of their own, fixed text", () => {
     expect(source).toContain('export const dynamic = "force-static";');
     expect(source).not.toMatch(/next\/headers|cookies\(|headers\(|searchParams|"use client"|dangerouslySetInnerHTML/);
     expect(html.match(/<h1[\s>]/g)).toHaveLength(1);
-    expect(html).toMatch(/^<div class="stack"><section class="card hero" aria-labelledby="page-title">/);
+    // AI Studio port, Phase 3: the banner may carry a tint (red on Threat Radar, green elsewhere).
+    expect(html).toMatch(/^<div class="stack"><section class="card hero" aria-labelledby="page-title"(?: data-tint="(?:red|green)")?>/);
     expect(html).toContain('<h1 id="page-title" class="h1">');
     expect(html).not.toMatch(/<(?:main|header|footer|nav|aside)[\s>]|role="region"/);
   });

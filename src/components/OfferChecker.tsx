@@ -122,6 +122,16 @@ export const LANGUAGE_GATE_BUTTON = "Check original anyway (not checked)";
 // STALE-1: announced in the status region when an edit removes a result. No offer text.
 export const RESULT_CLEARED = "Result cleared because the text changed.";
 
+// The checking panel (AI Studio port) appears only when a check takes longer than this, so a fast
+// check never flashes it. Nothing waits for it: the result shows the moment the server answers.
+export const CHECKING_PANEL_DELAY_MS = 300;
+
+// What a check does, in order (src/lib/agents/manager.ts). Listed, not timed: the panel does not
+// claim which step is running, because the server does all three in one request.
+export function checkingSteps(ruleCount: number): string[] {
+  return ["Cleaning the text", `Running ${ruleCount} fixed rules`, "Building the score"];
+}
+
 // The initial checked result: none.
 export function noCheck(): CheckedResult | null {
   return null;
@@ -177,6 +187,9 @@ export function OfferChecker({
   const [cleared, setCleared] = useState(notCleared);
   const [failure, setFailure] = useState<CheckFailure | null>(noFailure);
   const [loading, setLoading] = useState(false);
+  // The checking panel shows only once a check has run for CHECKING_PANEL_DELAY_MS.
+  const [slowCheck, setSlowCheck] = useState(false);
+  const slowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [gateFlow, dispatchGate] = useReducer(gateReducer, INITIAL_GATE_FLOW);
   const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
   const [auditFailed, setAuditFailed] = useState(false);
@@ -233,6 +246,13 @@ export function OfferChecker({
 
   const isCurrent = (id: number) => requestSeq.current === id;
 
+  // The checking panel's timer: started with a check, stopped when it ends or the text changes.
+  function stopSlowTimer() {
+    if (slowTimer.current !== null) clearTimeout(slowTimer.current);
+    slowTimer.current = null;
+    setSlowCheck(false);
+  }
+
   // STALE-1: the text changed, so everything from the previous check goes: the result (score,
   // findings, Agent run, translation panel, draft), the approval gate and its audit chain, and any
   // failure alert. A request in flight is aborted and its reply ignored. Focus is not moved.
@@ -244,6 +264,7 @@ export function OfferChecker({
     setChecked(null);
     setFailure(null);
     setLoading(false);
+    stopSlowTimer();
     dispatchGate({ type: "reset" });
     flowRef.current = INITIAL_GATE_FLOW;
     lastRequest.current = null;
@@ -306,6 +327,8 @@ export function OfferChecker({
     if (!shown) moveTranslate({ type: "checked" });
     const { id, signal } = beginRequest();
     setCleared(false);
+    stopSlowTimer();
+    slowTimer.current = setTimeout(() => setSlowCheck(true), CHECKING_PANEL_DELAY_MS);
     setLoading(true);
     setFailure(null);
     setChecked(null);
@@ -344,6 +367,7 @@ export function OfferChecker({
       if (isCurrent(id)) {
         inFlight.current = null;
         setLoading(false);
+        stopSlowTimer();
       }
     }
   }
@@ -442,7 +466,7 @@ export function OfferChecker({
       )}
       <form className="card stack input-card" onSubmit={handleSubmit} aria-busy={loading || sending || undefined}>
         <div className="controls-bar">
-          <div className="tabs" role="group" aria-label="Where the offer came from">
+          <div className="tabs tabs-boxed channel-tabs" role="group" aria-label="Where the offer came from">
             {CHANNELS.map((option) => {
               const Icon = CHANNEL_ICONS[option];
               return (
@@ -488,10 +512,10 @@ export function OfferChecker({
           <div className="input-meta">
             <span id="offer-hint">{channelHint}</span>
             {text.length > 0 && (
-              <Button variant="secondary" onClick={() => editText("")}>
+              <button type="button" className="link-btn" onClick={() => editText("")}>
                 <Eraser className="icon" aria-hidden="true" />
-                Clear
-              </Button>
+                Clear text
+              </button>
             )}
           </div>
         </div>
@@ -551,11 +575,20 @@ export function OfferChecker({
       <p className="visually-hidden" role="status">
         {announcement}
       </p>
-      {loading && (
-        <p className="progress" aria-hidden="true">
-          <span className="spinner" />
-          Checking the offer
-        </p>
+      {/* The checking panel: hidden from screen readers, which hear "Checking the offer." from the
+          status region above. The steps are a list of what a check does, not a progress report. */}
+      {loading && slowCheck && (
+        <div className="progress checking" aria-hidden="true">
+          <span className="checking-ring" />
+          <div className="stack-sm">
+            <p className="checking-title">Checking the offer</p>
+            <ol className="checking-steps small">
+              {checkingSteps(ruleCount).map((step) => (
+                <li key={step}>{step}</li>
+              ))}
+            </ol>
+          </div>
+        </div>
       )}
       {failure && (
         <Callout tone="high" role="alert" title={failure.title} className="check-failure">

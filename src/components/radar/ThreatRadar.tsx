@@ -20,7 +20,7 @@ function matches(entry: Entry, query: string, type: string): boolean {
 
 function EntryCard({ entry, label }: { entry: Entry; label: string }) {
   return (
-    <Card as="li" tone={entry.severity === "High" ? "high" : "medium"} className="stack-sm card-fill">
+    <Card as="li" tone={entry.severity === "High" ? "high" : "medium"} className="stack-sm card-fill radar-card">
       <div className="row-between">
         <Chip tone={entry.severity === "High" ? "high" : "caution"} upper>
           {entry.type}
@@ -50,10 +50,12 @@ export function ThreatRadar() {
 
   return (
     <div className="stack">
-      <section className="card hero" aria-labelledby="page-title">
+      <section className="card hero" aria-labelledby="page-title" data-tint="red">
         <div className="stack-sm">
-          <p className="label-caps text-amber">
-            <ShieldAlert className="icon" aria-hidden="true" /> {SAMPLE_LABEL}
+          <p className="eyebrow-pill eyebrow-red">
+            <span className="dot dot-high pulse" aria-hidden="true" />
+            <ShieldAlert className="icon" aria-hidden="true" />
+            <span>{SAMPLE_LABEL}</span>
           </p>
           <h1 id="page-title" className="h1">
             Threat Radar
@@ -63,7 +65,7 @@ export function ThreatRadar() {
           </p>
         </div>
         <div className="hero-side">
-          <Button variant="danger" onClick={() => setReporting(true)}>
+          <Button variant="danger" className="glow-red" onClick={() => setReporting(true)}>
             <Plus className="icon" aria-hidden="true" />
             Add a report
           </Button>

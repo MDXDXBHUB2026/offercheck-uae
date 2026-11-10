@@ -1,16 +1,19 @@
 "use client";
 
-import { useState, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useState, useSyncExternalStore, type ReactNode } from "react";
 import {
   AlertTriangle,
+  Check,
   CheckCircle2,
   ClipboardCheck,
   Copy,
+  Quote,
   ExternalLink,
   FileDown,
   FileText,
   Info,
   Lock,
+  Phone,
   RotateCcw,
   ShieldAlert,
   Square,
@@ -21,7 +24,7 @@ import { scoreArithmetic } from "@/components/scoreArithmetic";
 import { allClearShown, noticeFor, qualifiedSummary, reportLinkShown, scoreChip, type Notice } from "@/components/scoreChip";
 import { Button, ButtonLink, Callout, Card, Chip, Disclosure, cx, type ChipTone, type Tone } from "@/components/ui";
 import { contact, MOHRE_INQUIRY_URL } from "@/data/uaeContacts";
-import { REPORT_FRAUD_ID, REPORT_LINK_SENTENCE } from "@/lib/authorities";
+import { mainChannels, REPORT_FRAUD_ID, REPORT_FRAUD_NOTE, REPORT_LINK_SENTENCE } from "@/lib/authorities";
 import { CHECK_LABELS, CHECK_NOTES } from "@/lib/checkLabels";
 import { noticeForCoverage, type Coverage } from "@/lib/coverage";
 import { highlightParts, type MarkLevel } from "@/lib/highlight";
@@ -31,6 +34,7 @@ import { HIGH_BAND_MIN, MEDIUM_BAND_MIN, SEVERITY_WEIGHTS } from "@/lib/scoring"
 import { LANGUAGE_NOTICES, type LanguageNotice } from "@/lib/textScript";
 import { languageName, TRANSLATION_PROVIDER_NAME } from "@/lib/translation";
 import type { AnalysisResult, Finding, Severity } from "@/lib/types";
+import { WARNING_SIGNS } from "@/lib/warningSigns";
 
 // Batch B Stage 1: added to the Intake row of the Agent run for each state but full.
 // BATCHB-2: a translation names the provider and the source language, from fixed lists only.
@@ -95,22 +99,43 @@ async function copyQuote(quote: string): Promise<boolean> {
   }
 }
 
+// "Copied" shows this long, then the button reads "Copy quote" again.
+export const COPIED_MS = 1500;
+
+// The four dimension tiles (AI Studio port): each groups rule ids from src/lib/agents/redFlag.ts.
+// A tile says only whether one of its rules matched; it has no number and no level of its own.
+export const DIMENSIONS = [
+  { title: "Money asked for", rules: ["RF-001"] },
+  { title: "Codes, cards or documents", rules: ["RF-002", "RF-003"] },
+  { title: "Pressure to act fast", rules: ["RF-004"] },
+  { title: "Sender's email address", rules: ["RF-005"] },
+] as const;
+
 function FlagCard({
   finding,
   flag,
+  index,
   onReport,
 }: {
   finding: Finding & { severity: Exclude<Severity, "info"> };
   flag: ViewRedFlag;
+  index: number;
   onReport?: (flag: ViewRedFlag) => void;
 }) {
   const [copied, setCopied] = useState<"idle" | "copied" | "failed">("idle");
   const tone = SEVERITY_TONE[finding.severity];
+
+  useEffect(() => {
+    if (copied !== "copied") return;
+    const timer = window.setTimeout(() => setCopied("idle"), COPIED_MS);
+    return () => window.clearTimeout(timer);
+  }, [copied]);
+
   return (
     <Card as="li" tone={tone} className="stack-sm flag-card">
       <div className="flag-head">
         <span className={cx("num-tile", `tone-${tone}`)} aria-hidden="true">
-          <AlertTriangle className="icon" />
+          {index + 1}
         </span>
         <div className="stack-sm">
           <div className="row">
@@ -135,13 +160,13 @@ function FlagCard({
             variant="secondary"
             onClick={() => void copyQuote(finding.evidence.join("\n")).then((ok) => setCopied(ok ? "copied" : "failed"))}
           >
-            <Copy className="icon" aria-hidden="true" />
-            {copied === "copied" ? "Copied" : "Copy Quote"}
+            {copied === "copied" ? <Check className="icon" aria-hidden="true" /> : <Copy className="icon" aria-hidden="true" />}
+            {copied === "copied" ? "Copied" : "Copy quote"}
           </Button>
           {onReport && (
             <Button variant="secondary" onClick={() => onReport(flag)}>
               <ShieldAlert className="icon" aria-hidden="true" />
-              Add to Threat Radar
+              Report signal
             </Button>
           )}
         </div>
@@ -212,7 +237,11 @@ export function ResultCard({
   const partNotChecked = languageNotice === "part" && findings.length === 0;
   const translatedNone = notice === "translated" && findings.length === 0;
   const offerUnlike = notice === "offer" && findings.length === 0;
-  const checklist = resultView.verification_checklist;
+  // "Check it yourself": the warning-sign actions only, things you can check. The reporting
+  // channels are a separate block below, with no ticks.
+  const checklist = WARNING_SIGNS.map((sign) => sign.whatToDo);
+  const ecrime = contact("ecrime");
+  const otherChannels = mainChannels().filter((channel) => channel.url !== ecrime.url);
 
   const parts = highlightParts(
     sourceText,
@@ -248,9 +277,9 @@ export function ResultCard({
   }
 
   const portals = [
-    { label: "MoHRE enquiry", url: MOHRE_INQUIRY_URL },
+    { label: "MoHRE offer enquiry", url: MOHRE_INQUIRY_URL },
+    { label: "MoHRE website", url: contact("mohre").url },
     { label: contact("icp").name, url: contact("icp").url },
-    { label: contact("ecrime").name, url: contact("ecrime").url },
   ];
 
   return (
@@ -312,6 +341,38 @@ export function ResultCard({
           </p>
         </div>
         <p className="lead">{resultView.summary}</p>
+        {/* Evidence basis: a count of findings, each quoted from the text. Not shown when the text
+            was not checked: there is nothing to count. */}
+        {notice !== "most" && (
+          <p className="evidence-basis small">
+            <Quote className="icon text-green" aria-hidden="true" />
+            <span>
+              <strong>Evidence basis:</strong>{" "}
+              {riskFindings.length === 0
+                ? "no rule matched, so there is nothing to quote."
+                : `${plural(riskFindings.length, "matched rule")}, each with the exact words quoted from the text.`}
+            </span>
+          </p>
+        )}
+        <ul className="dimensions" aria-label="Rule groups">
+          {DIMENSIONS.map((dimension) => {
+            const matched = riskFindings.filter((finding) => (dimension.rules as readonly string[]).includes(finding.source));
+            const found = notice !== "most" && matched.length > 0;
+            const dimTone = matched.some((finding) => finding.severity === "high") ? "high" : "medium";
+            return (
+              <li key={dimension.title} className={cx("dimension", found && `dimension-found tone-${dimTone}`)}>
+                <span className="dimension-title">{dimension.title}</span>
+                <span className="dimension-rules mono">{dimension.rules.join(" / ")}</span>
+                <span className="dimension-bar" aria-hidden="true">
+                  <span className="dimension-fill" />
+                </span>
+                <span className="dimension-status">
+                  {notice === "most" ? "Not checked" : found ? "Indicator found" : "No indicator found"}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
         <div className="result-toolbar no-print">
           {speech && (
             <Button variant="secondary" onClick={listen} aria-pressed={speaking}>
@@ -387,7 +448,7 @@ export function ResultCard({
               onClick={() => setView("flags")}
             >
               <AlertTriangle className="icon" aria-hidden="true" />
-              Documented Red Flags ({riskFindings.length})
+              Documented red flags ({riskFindings.length})
             </button>
             <button
               type="button"
@@ -399,7 +460,7 @@ export function ResultCard({
               onClick={() => setView("source")}
             >
               <FileText className="icon" aria-hidden="true" />
-              Interactive Source Text Highlights
+              Highlights in your text
             </button>
           </div>
           {view === "source" && (
@@ -446,10 +507,11 @@ export function ResultCard({
 
           {riskFindings.length > 0 && (
             <ul className="stack findings">
-              {riskFindings.map((finding) => (
+              {riskFindings.map((finding, index) => (
                 <FlagCard
                   key={finding.source}
                   finding={finding}
+                  index={index}
                   flag={resultView.red_flags.find((flag) => flag.check === finding.check) ?? resultView.red_flags[0]}
                   onReport={onReport}
                 />
@@ -499,16 +561,21 @@ export function ResultCard({
       </Card>
 
       <div className="grid grid-2">
+        <div className="stack">
         <Card as="section" className="stack-sm" aria-labelledby="checklist-heading">
           <div className="row-between">
             <h2 id="checklist-heading" className="h3 row">
               <ClipboardCheck className="icon text-green" aria-hidden="true" />
-              <span>Verification checklist</span>
+              <span>Check it yourself</span>
             </h2>
             <Chip tone={ticked.size === checklist.length ? "green" : "neutral"} pill>
-              {ticked.size} / {checklist.length} Completed
+              {ticked.size} / {checklist.length} done
             </Chip>
           </div>
+          {/* How many of the steps you ticked. Your own progress, not a measure of the offer. */}
+          <span className="meter" aria-hidden="true">
+            <span className="meter-fill" style={{ inlineSize: `${(ticked.size / Math.max(1, checklist.length)) * 100}%` }} />
+          </span>
           <ul className="stack-sm">
             {checklist.map((item, index) => (
               <li key={item}>
@@ -520,6 +587,36 @@ export function ResultCard({
             ))}
           </ul>
         </Card>
+
+        <Card as="section" tone="high" className="stack-sm report-block" aria-labelledby="report-heading">
+          <h2 id="report-heading" className="h3 row">
+            <ShieldAlert className="icon text-red" aria-hidden="true" />
+            <span>If it looks like a scam, report it</span>
+          </h2>
+          <p className="small muted">{REPORT_FRAUD_NOTE}</p>
+          <div className="row">
+            <ButtonLink href={ecrime.url} variant="danger">
+              {ecrime.name}
+              <ExternalLink className="icon" aria-hidden="true" />
+            </ButtonLink>
+            <ButtonLink href={`tel:${ecrime.hotline}`}>
+              <Phone className="icon" aria-hidden="true" />
+              <span>
+                Call <span dir="ltr">{ecrime.hotlineLabel}</span>
+              </span>
+            </ButtonLink>
+          </div>
+          <ul className="stack-sm small report-links">
+            {otherChannels.map((channel) => (
+              <li key={channel.id}>
+                <a href={channel.url} target="_blank" rel="noopener noreferrer">
+                  {channel.name}
+                </a>
+              </li>
+            ))}
+          </ul>
+        </Card>
+        </div>
 
         <Card as="section" className="stack-sm" aria-labelledby="portals-heading">
           <h2 id="portals-heading" className="h3 row">

@@ -34,11 +34,14 @@ export const FOOTER_DISCLAIMER =
 export const SYNTHETIC_STATEMENT =
   "Risk indicators, not a verdict. It has been tested on synthetic offers only, not validated on real scam data.";
 
-// The reference app's logo: a shield in a tinted badge. Decorative: the link text names the site.
+// The reference app's logo: a shield in a tinted badge, with a small red attention mark at its top
+// corner (a ping ring spreads from it when motion is allowed). Decorative: the link text names the
+// site, and the mark claims no live or online state.
 export function BrandBadge() {
   return (
     <span className="brand-badge">
       <ShieldAlert className="icon icon-lg" aria-hidden="true" />
+      <span className="brand-ping" aria-hidden="true" />
     </span>
   );
 }
@@ -46,6 +49,8 @@ export function BrandBadge() {
 const FOOTER_LINKS = [
   { id: "mohre", label: "MoHRE Portal" },
   { id: "icp", label: "ICP Smart Services" },
+  // GDRFA Dubai is in src/data/uaeContacts.ts (Amer), so the footer links it too.
+  { id: "amer", label: "GDRFA Dubai (Amer)" },
   { id: "ecrime", label: `Dubai Police eCrime (${contact("ecrime").hotlineLabel})` },
 ] as const;
 

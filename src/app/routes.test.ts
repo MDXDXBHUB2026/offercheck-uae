@@ -12,6 +12,7 @@ import { ARABIC_NOTE } from "@/components/shell/ArabicNote";
 import { isCurrent, Navbar } from "@/components/shell/Navbar";
 import { BrandBadge, NAV_ITEMS, PROTOTYPE_NOTICE, SiteFooter } from "@/components/shell/site";
 import { Button, ButtonLink, Callout, Card, Chip, Disclosure, HelperText } from "@/components/ui";
+import { SAMPLE_OFFERS } from "@/data/sampleOffers";
 import { HEADER_HOTLINE_IDS, UAE_CONTACTS, contact } from "@/data/uaeContacts";
 import { runManager } from "@/lib/agents/manager";
 import { SCAM_OFFER } from "@/lib/agents/fixtures";
@@ -186,7 +187,7 @@ describe("header", () => {
 describe("Offer Analyzer hero", () => {
   it("has its copy, the four synthetic sample cards, the box and one big audit button; no upload", () => {
     const html = renderToStaticMarkup(createElement(check.default));
-    expect(html).toMatch(/^<div class="stack"><div class="stack"><section class="card hero hero-video" aria-labelledby="page-title">/);
+    expect(html).toMatch(/^<div class="stack"><div class="stack"><section class="card hero hero-video" aria-labelledby="page-title" data-glow="max">/);
     expect(html).toContain("Check a job offer before you pay or share anything.");
     expect(html.match(/<li class="card sample-card">/g)).toHaveLength(4);
     expect(html).toContain('<textarea id="offer"');
@@ -205,6 +206,7 @@ describe("Offer Analyzer hero", () => {
     const html = renderToStaticMarkup(createElement(check.default));
     const hero = html.slice(html.indexOf('<section class="card hero hero-video"'), html.indexOf("</section>") + 10);
     const backdrop = hero.slice(hero.indexOf('<div class="hero-backdrop"'), hero.indexOf("</video>") + 8);
+    const css = read("src/app/globals.css");
 
     it("is decorative, silent, looping, not focusable, with a poster and no autoplay attribute", () => {
       expect(backdrop).toMatch(/^<div class="hero-backdrop" aria-hidden="true"><video /);
@@ -212,10 +214,39 @@ describe("Offer Analyzer hero", () => {
         expect(backdrop.toLowerCase()).toContain(attr.toLowerCase());
       }
       expect(backdrop).not.toMatch(/autoplay|controls/i);
-      // Started from script only when motion is allowed; no pause button (owner, S5-1).
+      // Started from script only when motion is allowed.
       const source = read("src/components/HeroBackdrop.tsx");
       expect(source).toContain('window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;');
-      expect(hero).not.toMatch(/<button/);
+    });
+
+    // S5-1 closed (WCAG 2.2.2, Pause, Stop, Hide): the hero has a Pause radar control that stops the
+    // video and holds every hero animation. It replaces the owner's earlier "no pause button".
+    it("has a Pause radar control that pauses the video and every hero animation", () => {
+      const buttons = [...hero.matchAll(/<button type="button" class="btn btn-secondary">([\s\S]*?)<\/button>/g)].map((m) =>
+        m[1].replace(/<[^>]+>/g, ""),
+      );
+      expect(buttons).toEqual(["Pause radar", "Glow: Max"]);
+      const stage = read("src/components/HeroStage.tsx");
+      expect(stage).toContain('{paused ? "Resume radar" : "Pause radar"}');
+      expect(stage).toContain("if (next) video.pause();");
+      expect(stage).toContain('data-paused={paused ? "true" : undefined}');
+      expect(css).toMatch(
+        /\.hero-video\[data-paused="true"\],\s*\.hero-video\[data-paused="true"\] \*,\s*\.hero-video\[data-paused="true"\] \*::before,\s*\.hero-video\[data-paused="true"\] \*::after \{\s*animation-play-state: paused;/,
+      );
+      // Resume plays the video again only when motion is allowed.
+      expect(stage.indexOf("prefers-reduced-motion: reduce")).toBeLessThan(stage.indexOf("video.play()"));
+    });
+
+    it("labels the radar card as demo data and keeps the radar decorative", () => {
+      const radar = hero.slice(hero.indexOf('<div class="radar"'), hero.indexOf('<div class="hud'));
+      expect(radar).toMatch(/^<div class="radar" aria-hidden="true">/);
+      const hud = hero.slice(hero.indexOf('<div class="hud hero-glass">'), hero.indexOf('<div class="hero-controls">'));
+      expect(hud).toContain("Example findings");
+      expect(hud).toContain(`${SAMPLE_OFFERS.length} EXAMPLES`);
+      expect(hud).toContain("Demo data, not your text");
+      expect(hero).toContain("Demo animation");
+      expect(hero).not.toMatch(/live|threat acquisition|60FPS|online/i);
+      expect(css).toMatch(/\.radar \{[^}]*pointer-events: none;/);
     });
 
     it("ships WebM, MP4 and a poster, each under 2 MB, with no audio track", () => {
@@ -234,9 +265,12 @@ describe("Offer Analyzer hero", () => {
     it("holds every hero text block on a glass panel, never on the video", () => {
       const glass = hero.match(/class="[^"]*hero-glass[^"]*"/g) ?? [];
       expect(glass).toHaveLength(2);
-      // Everything after the backdrop is inside one of the two glass panels.
+      // After the backdrop: the text panel (glass), then the radar side: the decorative radar, the
+      // Example findings card (glass) and the controls (buttons and a chip on their own surfaces).
       const afterBackdrop = hero.slice(hero.indexOf("</div>", hero.indexOf("</video>")) + 6, -"</section>".length);
-      expect(afterBackdrop).toMatch(/^<div class="stack-sm hero-glass">[\s\S]*<\/div><ul class="hero-side hero-glass stack-sm small">[\s\S]*<\/ul>$/);
+      expect(afterBackdrop).toMatch(
+        /^<div class="stack-sm hero-glass hero-main">[\s\S]*<\/div><div class="hero-radar-col"><div class="radar" aria-hidden="true">[\s\S]*<\/svg>(?:<span class="radar-[\w -]+"><\/span>){4}<\/div><div class="hud hero-glass">[\s\S]*<\/div><div class="hero-controls">[\s\S]*<\/div><\/div>$/,
+      );
     });
   });
 
@@ -275,10 +309,11 @@ describe("footer", () => {
     expect(links).toEqual([
       ["MoHRE Portal", contact("mohre").url],
       ["ICP Smart Services", contact("icp").url],
+      ["GDRFA Dubai (Amer)", contact("amer").url],
       [`Dubai Police eCrime (${contact("ecrime").hotlineLabel})`, contact("ecrime").url],
       [LIMITS_SECTION, "/check#limits"],
     ]);
-    expect(html.match(/target="_blank" rel="noopener noreferrer"/g)).toHaveLength(3);
+    expect(html.match(/target="_blank" rel="noopener noreferrer"/g)).toHaveLength(4);
     expect(html).not.toMatch(/<address|mailto:/i);
   });
 
@@ -504,6 +539,9 @@ describe("colour contrast (WCAG AA, from the tokens in globals.css)", () => {
     // Button text: white on the primary green and the danger red, both at rest and on hover.
     ["heading", "green-action"],
     ["heading", "green-action-hover"],
+    // The primary button's gradient ends in cyan (AI Studio port).
+    ["heading", "cyan-action"],
+    ["heading", "cyan-action-hover"],
     ["heading", "red-action"],
     ["heading", "red-action-hover"],
     // Print.

@@ -567,7 +567,7 @@ describe("action area layout", () => {
   const controls = (html: string) =>
     [...html.slice(Math.max(0, html.indexOf("</textarea>"))).matchAll(/<button[^>]*>(.*?)<\/button>/g)]
       .map((m) => m[1].replace(/<[^>]+>/g, ""))
-      .filter((label) => label !== "Clear");
+      .filter((label) => label !== "Clear text");
   const buttonTag = (html: string, name: string) =>
     [...html.matchAll(/<button[^>]*>(.*?)<\/button>/g)].find((m) => m[1].replace(/<[^>]+>/g, "") === name)?.[0] ?? "";
   // The banner runs from its opening tag to the end of the form.

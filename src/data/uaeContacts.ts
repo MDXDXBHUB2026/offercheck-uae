@@ -18,7 +18,9 @@ export type UaeContact = {
   hotlineLabel: string;
 };
 
-export const MOHRE_INQUIRY_URL = "https://www.mohre.gov.ae/en/services/inquiry.aspx";
+// MoHRE "Employment offers and contracts services": the old /en/services/inquiry.aspx page is gone
+// (MoHRE "Page Not Found", checked 2026-11-10). This is the page MoHRE's own home page links.
+export const MOHRE_INQUIRY_URL = "https://receipts.mohre.gov.ae/OfferInquiry/Index?langid=2";
 
 export const UAE_CONTACTS: readonly UaeContact[] = [
   {

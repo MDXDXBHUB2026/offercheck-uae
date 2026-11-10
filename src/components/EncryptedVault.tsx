@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
-import { Copy, Lock, LockOpen, Trash2 } from "lucide-react";
+import { Copy, Eye, EyeOff, KeyRound, Lock, Trash2 } from "lucide-react";
 import { Button, Callout, Card, Chip, cx } from "@/components/ui";
 import { openVault, saveVault, type VaultRecord } from "@/lib/vault";
 import { DecryptError } from "@/lib/vaultCrypto";
@@ -19,6 +19,8 @@ function when(iso: string): string {
 // Saved text is shown as text only.
 export function EncryptedVault() {
   const [passphrase, setPassphrase] = useState("");
+  // Show or hide the passphrase while typing. Display only: the value is the same either way.
+  const [showPass, setShowPass] = useState(false);
   const [records, setRecords] = useState<VaultRecord[] | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
   const [status, setStatus] = useState<"idle" | "opening" | "wrong" | "failed" | "copied">("idle");
@@ -41,6 +43,7 @@ export function EncryptedVault() {
     setRecords(null);
     setSelected(null);
     setPassphrase("");
+    setShowPass(false);
     setStatus("idle");
   }
 
@@ -68,10 +71,11 @@ export function EncryptedVault() {
 
   return (
     <div className="stack">
-      <section className="card hero" aria-labelledby="page-title">
+      <section className="card hero" aria-labelledby="page-title" data-tint="green">
         <div className="stack-sm">
-          <p className="label-caps text-green">
-            <Lock className="icon" aria-hidden="true" /> AES-256-GCM, in this browser only
+          <p className="eyebrow-pill">
+            <Lock className="icon" aria-hidden="true" />
+            <span>AES-256-GCM, in this browser only</span>
           </p>
           <h1 id="page-title" className="h1">
             Encrypted Vault
@@ -93,25 +97,41 @@ export function EncryptedVault() {
 
       {!records ? (
         <Card as="section" className="stack-sm narrow" aria-labelledby="unlock-heading">
-          <h2 id="unlock-heading" className="h3 row">
-            <LockOpen className="icon text-green" aria-hidden="true" />
-            <span>Open the vault</span>
+          <span className="key-ring" aria-hidden="true">
+            <KeyRound className="icon icon-xl text-green" />
+          </span>
+          <h2 id="unlock-heading" className="h3 unlock-title">
+            Open the vault
           </h2>
           <form className="stack-sm" onSubmit={unlock}>
             <div className="field">
               <label htmlFor="vault-open-pass">Passphrase</label>
-              <input
-                id="vault-open-pass"
-                type="password"
-                autoComplete="current-password"
-                value={passphrase}
-                onChange={(e) => {
-                  setPassphrase(e.target.value);
-                  if (status !== "idle") setStatus("idle");
-                }}
-              />
+              <div className="pass-wrap">
+                <input
+                  id="vault-open-pass"
+                  type={showPass ? "text" : "password"}
+                  autoComplete="current-password"
+                  spellCheck={false}
+                  value={passphrase}
+                  onChange={(e) => {
+                    setPassphrase(e.target.value);
+                    if (status !== "idle") setStatus("idle");
+                  }}
+                />
+                <button
+                  type="button"
+                  className="pass-toggle"
+                  aria-pressed={showPass}
+                  aria-controls="vault-open-pass"
+                  onClick={() => setShowPass(!showPass)}
+                >
+                  {showPass ? <EyeOff className="icon" aria-hidden="true" /> : <Eye className="icon" aria-hidden="true" />}
+                  <span className="visually-hidden">Show passphrase</span>
+                </button>
+              </div>
             </div>
-            <Button type="submit" blocked={!passphrase.trim()} busy={status === "opening"}>
+            <Button type="submit" block large blocked={!passphrase.trim()} busy={status === "opening"}>
+              <Lock className="icon" aria-hidden="true" />
               Open
             </Button>
             <p className="small text-red" role="alert">

@@ -23,7 +23,7 @@ export function isCurrent(pathname: string, href: string): boolean {
   return pathname === href || (href === "/check" && pathname === "/");
 }
 
-// The reference app's header: UAE flag ribbon, logo and title, five tabs (a bar under the header
+// The reference app's header: UAE flag ribbon (its colours drift slowly when motion is allowed), logo and title, five tabs (a bar under the header
 // below 1200px), the hotlines dropdown and the English / Arabic switch. Tabs are real links, so
 // navigation works without JavaScript.
 export function Navbar() {
@@ -86,6 +86,7 @@ export function Navbar() {
                   className="tab"
                   aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
                 >
+                  {isCurrent(pathname, item.href) && <span className="tab-dot" aria-hidden="true" />}
                   <Icon className="icon" aria-hidden="true" />
                   <span>{label(item)}</span>
                 </Link>
@@ -94,6 +95,11 @@ export function Navbar() {
           </nav>
 
           <div className="header-actions">
+            {/* True of the engine: the score comes from fixed rules (scoring.ts), with no AI model. */}
+            <span className="status-pill">
+              <span className="status-dot" aria-hidden="true" />
+              <span>Fixed rules</span>
+            </span>
             <div className="dropdown">
               <Button
                 ref={toggleRef}

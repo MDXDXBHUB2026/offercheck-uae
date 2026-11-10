@@ -32,6 +32,9 @@
   --green-line: #065f46;
   --green-action: #047857;
   --green-action-hover: #065f46;
+  /* Cyan: the far end of the primary button's gradient (white text on it is at least 4.5:1) */
+  --cyan-action: #0e7490;
+  --cyan-action-hover: #155e75;
 
   /* Red: high risk, danger action */
   --red: #f87171;
@@ -73,6 +76,9 @@
   --aurora-cyan: rgba(6, 182, 212, 0.12);
   --aurora-indigo: rgba(99, 102, 241, 0.15);
   --sheen: rgba(255, 255, 255, 0.1);
+  --radar-line: rgba(52, 211, 153, 0.35);
+  --radar-sweep: rgba(52, 211, 153, 0.45);
+  --radar-face: rgba(2, 6, 23, 0.7);
   --scroll-track: #0f172a;
   --scroll-thumb: #64748b;
 
@@ -114,6 +120,7 @@
   --r-sm: 8px;
   --r-md: 12px;
   --r-lg: 16px;
+  --r-xl: 24px;
   --r-full: 999px;
 
   --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.35), 0 8px 10px -6px rgba(0, 0, 0, 0.35);
@@ -586,11 +593,46 @@ html {
 .btn-primary {
   background: var(--green-action);
   color: var(--heading);
+  /* AI Studio port: an emerald-to-cyan gradient over the solid colour, so text contrast is checked
+     on both ends (--green-action and --cyan-action). */
+  background-image: linear-gradient(90deg, var(--green-action), var(--cyan-action));
+  box-shadow: 0 0 20px var(--glow-green);
 }
 
 .btn-primary:hover {
   background: var(--green-action-hover);
   color: var(--heading);
+  background-image: linear-gradient(90deg, var(--green-action-hover), var(--cyan-action-hover));
+  box-shadow: 0 0 28px var(--glow-green), 0 0 12px var(--glow-cyan);
+}
+
+.btn-primary[aria-disabled="true"],
+.btn-primary:disabled {
+  background-image: none;
+  box-shadow: none;
+  filter: saturate(0.3);
+}
+
+/* A text-only action (Clear text): looks like a link, keeps a 44px target. */
+.link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-1);
+  min-height: var(--target);
+  padding-inline: var(--sp-2);
+  border: 0;
+  background: none;
+  color: var(--green);
+  font: inherit;
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.link-btn:hover {
+  color: var(--green-soft);
 }
 
 .btn-secondary {
@@ -689,6 +731,7 @@ html {
 }
 
 .tab:hover {
+  border-color: var(--border-strong);
   background: var(--surface-raised);
   color: var(--heading);
 }
@@ -700,6 +743,22 @@ html {
   background: var(--green-bg);
   color: var(--green-soft);
   box-shadow: 0 0 18px var(--glow-green);
+}
+
+/* The current page's tab brightens on hover too: a brighter emerald edge and white text. */
+.tab[aria-current="page"]:hover {
+  border-color: var(--green);
+  color: var(--heading);
+}
+
+/* The small glowing dot before the current tab's label (desktop bar). Decorative. */
+.tab-dot {
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: var(--r-full);
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
 }
 
 /* ---------- Header ---------- */
@@ -717,28 +776,26 @@ html {
 .flag-ribbon {
   display: flex;
   height: 4px;
+  /* The UAE flag colours, twice over a 200% wide image, so the drift (motion block) loops without a
+     seam. Still, it shows the four colours in order. */
+  background: linear-gradient(
+      90deg,
+      var(--flag-green) 0 10%,
+      var(--flag-white) 13% 22%,
+      var(--flag-black) 25% 35%,
+      var(--flag-red) 38% 47%,
+      var(--flag-green) 50% 60%,
+      var(--flag-white) 63% 72%,
+      var(--flag-black) 75% 85%,
+      var(--flag-red) 88% 97%,
+      var(--flag-green) 100%
+    )
+    0 0 / 200% 100%;
+  box-shadow: 0 0 8px var(--glow-green);
 }
 
 .flag-ribbon span {
   flex: 1;
-}
-
-.flag-ribbon span:nth-child(1) {
-  background: var(--flag-green);
-  box-shadow: 0 0 8px var(--glow-green);
-}
-
-.flag-ribbon span:nth-child(2) {
-  background: var(--flag-white);
-}
-
-.flag-ribbon span:nth-child(3) {
-  background: var(--flag-black);
-}
-
-.flag-ribbon span:nth-child(4) {
-  background: var(--flag-red);
-  box-shadow: 0 0 8px var(--glow-red);
 }
 
 .header-row {
@@ -774,6 +831,32 @@ html {
   background: linear-gradient(135deg, var(--green-bg), var(--surface), var(--red-bg));
   box-shadow: 0 0 15px var(--glow-green);
   color: var(--green);
+  position: relative;
+}
+
+/* The red attention mark at the badge's top corner. Decorative; the ping ring (motion block) is
+   hidden when still, so with a reduced-motion preference only the dot shows. */
+.brand-ping {
+  position: absolute;
+  inset-block-start: -3px;
+  inset-inline-end: -3px;
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-full);
+  background: var(--red);
+  box-shadow: 0 0 6px var(--glow-red);
+  pointer-events: none;
+}
+
+.brand-ping::after,
+.ping-icon::after {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-full);
+  background: var(--red);
+  opacity: 0;
+  content: "";
+  pointer-events: none;
 }
 
 .brand-text {
@@ -791,9 +874,35 @@ html {
 
 .brand-caption {
   display: none;
+  overflow: hidden;
   color: var(--muted);
   font-family: var(--font-mono);
   font-size: var(--fs-xs);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+/* "Fixed rules": true of the engine (scoring.ts, no AI model). A label, not a control. */
+.status-pill {
+  display: none;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--green-line);
+  border-radius: var(--r-full);
+  background: var(--green-bg);
+  color: var(--green-soft);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--r-full);
+  background: var(--green);
+  box-shadow: 0 0 8px var(--green);
 }
 
 .nav-desktop {
@@ -837,6 +946,12 @@ html {
 
   .brand-name {
     font-size: var(--fs-lg);
+  }
+}
+
+@media (min-width: 900px) {
+  .status-pill {
+    display: inline-flex;
   }
 }
 
@@ -1017,6 +1132,7 @@ html {
   isolation: isolate;
   overflow: hidden;
   min-height: 320px;
+  border-radius: var(--r-xl);
   border-color: var(--green-line);
   background: var(--surface-sunken);
   box-shadow: var(--shadow), 0 0 50px var(--glow-green);
@@ -1098,10 +1214,262 @@ html {
   backdrop-filter: blur(12px);
 }
 
-/* On the video hero the side list is its own glass panel, with the same edge on every side. */
-.hero-video .hero-side {
-  padding: var(--sp-5);
-  border: 1px solid var(--border);
+/* The text panel: two badges, the headline, the intro and three feature chips. */
+.hero-main {
+  flex: 1 1 auto;
+  max-width: 680px;
+}
+
+.hero-badges,
+.hero-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+}
+
+.hero-chips {
+  margin: 0;
+  padding: var(--sp-2) 0 0;
+  list-style: none;
+}
+
+.hero-badge,
+.hero-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  border: 1px solid var(--border-strong);
+  background: var(--surface-sunken);
+  color: var(--ink-soft);
+}
+
+.hero-badge {
+  padding: var(--sp-1) var(--sp-3);
+  border-radius: var(--r-full);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+}
+
+.hero-badge-green {
+  border-color: var(--green-line);
+  background: var(--green-bg);
+  color: var(--green-soft);
+  box-shadow: 0 0 14px var(--glow-green);
+}
+
+.hero-chip {
+  padding: var(--sp-2) var(--sp-3);
+  border-radius: var(--r-md);
+  color: var(--ink);
+}
+
+/* An icon with a ping ring (motion block); still, only the icon shows. */
+.ping-icon {
+  position: relative;
+  display: inline-flex;
+  border-radius: var(--r-full);
+}
+
+.ping-icon::after {
+  background: var(--green);
+}
+
+/* The radar side: the radar, the Example findings card and the hero controls. */
+.hero-radar-col {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--sp-4);
+  width: 100%;
+  max-width: 320px;
+  margin-inline: auto;
+}
+
+/* Decorative radar, drawn in CSS and SVG. Still with a reduced-motion preference. */
+.radar {
+  position: relative;
+  width: 220px;
+  height: 220px;
+  border: 1px solid var(--green-line);
+  border-radius: var(--r-full);
+  background: radial-gradient(circle, var(--radar-face), var(--surface-sunken));
+  box-shadow: 0 0 30px var(--glow-green);
+  pointer-events: none;
+}
+
+.radar-aura {
+  position: absolute;
+  inset: -40px;
+  z-index: -1;
+}
+
+.radar-orb {
+  position: absolute;
+  inset-block: 10%;
+  inset-inline: 10%;
+  border-radius: var(--r-full);
+  background: radial-gradient(circle, var(--glow-green), transparent 70%);
+  filter: blur(24px);
+}
+
+.radar-orb + .radar-orb {
+  inset-block: -5% 40%;
+  inset-inline: 35% -10%;
+  background: radial-gradient(circle, var(--glow-cyan), transparent 70%);
+}
+
+/* "Glow: Normal" dims the aurora light; "Glow: Max" (the default) shows it in full. */
+.hero-video[data-glow="normal"] .radar-aura,
+.hero-video[data-glow="normal"] .hero-orb {
+  opacity: 0.4;
+}
+
+.radar-grid {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: var(--radar-line);
+  stroke-width: 1;
+}
+
+.radar-grid text {
+  fill: var(--green);
+  stroke: none;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  text-anchor: middle;
+  opacity: 0.6;
+}
+
+/* The sweep: a conic wedge whose bright edge leads; it turns clockwise (motion block). */
+.radar-sweep {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--r-full);
+  background: conic-gradient(from 0deg, transparent 0deg 290deg, var(--radar-sweep) 360deg);
+}
+
+/* In Arabic the sweep turns the other way; the blips mirror through their logical insets. */
+[dir="rtl"] .radar-sweep {
+  scale: -1 1;
+}
+
+.radar-blip {
+  position: absolute;
+  width: 8px;
+  height: 8px;
+  margin-block-start: -4px;
+  margin-inline-start: -4px;
+  border-radius: var(--r-full);
+  background: var(--red);
+  box-shadow: 0 0 10px var(--glow-red);
+  opacity: 0.9;
+}
+
+.radar-blip-1 {
+  inset-block-start: 28%;
+  inset-inline-start: 64%;
+}
+
+.radar-blip-2 {
+  inset-block-start: 60%;
+  inset-inline-start: 74%;
+  background: var(--amber);
+  box-shadow: 0 0 10px var(--amber);
+}
+
+.radar-blip-3 {
+  inset-block-start: 70%;
+  inset-inline-start: 34%;
+  background: var(--green);
+  box-shadow: 0 0 10px var(--glow-green);
+}
+
+/* The Example findings card: demo data, labelled on the card. */
+.hud {
+  width: 100%;
+  padding: var(--sp-4);
+  border-color: var(--green-line);
+  box-shadow: 0 0 25px var(--glow-green);
+}
+
+.hud-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+}
+
+.hud-title {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  color: var(--heading);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+}
+
+.hud-rows {
+  display: grid;
+  gap: var(--sp-2);
+  margin: var(--sp-3) 0 0;
+  padding: 0;
+  color: var(--ink-soft);
+  font-size: var(--fs-xs);
+  list-style: none;
+}
+
+.hud-rows li {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.hud-tag {
+  margin-inline-start: auto;
+  color: var(--muted);
+}
+
+.hud-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  margin-block-start: var(--sp-3);
+  padding-block-start: var(--sp-2);
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: var(--fs-xs);
+}
+
+.hero-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+}
+
+.demo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+.dot-high {
+  background: var(--red);
+}
+
+.dot-medium {
+  background: var(--amber);
+}
+
+.dot-green {
+  background: var(--green);
 }
 
 .dot {
@@ -1130,6 +1498,19 @@ html {
   }
 }
 
+@media (min-width: 768px) and (max-width: 1023px) {
+  .hero-video {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+@media (min-width: 1024px) {
+  .hero-radar-col {
+    margin-inline: 0;
+  }
+}
+
 /* ---------- Sample cards ---------- */
 /* Layout only: a sample is a .card with its name, a line about it and a Load button. */
 .sample-card {
@@ -1153,6 +1534,7 @@ html {
 
 .sample-card:hover {
   border-color: var(--green-line);
+  box-shadow: 0 0 24px var(--glow-green);
 }
 
 [dir="rtl"] .sample-arrow {
@@ -1202,8 +1584,9 @@ textarea:focus-visible,
 input:focus-visible,
 select:focus-visible {
   border-color: var(--green);
-  outline: 1px solid var(--green);
-  outline-offset: 0;
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+  box-shadow: 0 0 24px var(--glow-green);
 }
 
 .field {
@@ -1370,7 +1753,141 @@ select:focus-visible {
   font-weight: 600;
 }
 
+/* The checking panel: a ring and the three steps a check does. Listed, not timed. */
+.checking {
+  align-items: flex-start;
+  gap: var(--sp-4);
+}
+
+.checking-ring {
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--green-line);
+  border-top-color: var(--green);
+  border-radius: var(--r-full);
+}
+
+.checking-title {
+  color: var(--heading);
+}
+
+.checking-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding-inline-start: var(--sp-5);
+  color: var(--ink-soft);
+  font-weight: 400;
+  list-style: decimal;
+}
+
 /* ---------- Result card ---------- */
+.evidence-basis {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+  color: var(--ink-soft);
+}
+
+.evidence-basis strong {
+  color: var(--heading);
+}
+
+/* Four rule groups. A tile says found or not found; the bar is full or empty, never a level. */
+.dimensions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: var(--sp-2);
+}
+
+.dimension {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding: var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+}
+
+.dimension-title {
+  color: var(--heading);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+}
+
+.dimension-rules,
+.dimension-status {
+  color: var(--muted);
+  font-size: var(--fs-xs);
+}
+
+.dimension-bar {
+  display: block;
+  height: 4px;
+  overflow: hidden;
+  border-radius: var(--r-full);
+  background: var(--border-strong);
+  pointer-events: none;
+}
+
+.dimension-fill {
+  display: block;
+  inline-size: 0;
+  height: 100%;
+  background: var(--green);
+}
+
+.dimension-found .dimension-fill {
+  inline-size: 100%;
+}
+
+.dimension-found.tone-high {
+  border-color: var(--red-line);
+}
+
+.dimension-found.tone-high .dimension-fill {
+  background: var(--red);
+}
+
+.dimension-found.tone-high .dimension-status {
+  color: var(--red-soft);
+}
+
+.dimension-found.tone-medium {
+  border-color: var(--amber-line);
+}
+
+.dimension-found.tone-medium .dimension-fill {
+  background: var(--amber);
+}
+
+.dimension-found.tone-medium .dimension-status {
+  color: var(--amber-soft);
+}
+
+/* The checklist meter: how many steps you ticked. */
+.meter {
+  display: block;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--r-full);
+  background: var(--border-strong);
+  pointer-events: none;
+}
+
+.meter-fill {
+  display: block;
+  height: 100%;
+  border-radius: var(--r-full);
+  background: linear-gradient(90deg, var(--green), var(--glow-cyan));
+}
+
 /* The score ring around the result icon (AI Studio port). Filled to the score from scoring.ts and
    coloured by the banner tone; the number and chip text beside it carry the meaning. */
 .gauge-wrap {
@@ -1827,6 +2344,188 @@ details.card > summary {
 }
 
 /* ---------- Motion ---------- */
+/* ---------- Page banners, Phase 3 (AI Studio port) ---------- */
+/* A banner tint behind the page title. Both tints are dark, so the page's text pairs hold. */
+.hero[data-tint="red"] {
+  border-color: var(--red-line);
+  background-image: linear-gradient(135deg, var(--red-bg), var(--surface) 70%);
+}
+
+.hero[data-tint="green"] {
+  border-color: var(--green-line);
+  background-image: linear-gradient(135deg, var(--green-bg), var(--surface) 70%);
+}
+
+/* The eyebrow as a pill (Threat Radar, Gov Portals Hub, Legal Guidelines, Encrypted Vault). */
+.eyebrow-pill {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--green-line);
+  border-radius: var(--r-full);
+  background: var(--green-bg);
+  color: var(--green-soft);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.eyebrow-red {
+  border-color: var(--red-line);
+  background: var(--red-bg);
+  color: var(--red-soft);
+}
+
+.glow-red {
+  box-shadow: 0 0 22px var(--glow-red);
+}
+
+/* Threat Radar cards and portal directory cards: a glow on hover (the lift is in the motion block). */
+.radar-card:hover,
+.directory-card:hover {
+  box-shadow: 0 0 24px var(--glow-green);
+}
+
+.radar-card.tone-high:hover {
+  box-shadow: 0 0 24px var(--glow-red);
+}
+
+/* Portal directory: numbered "How to verify" steps and the phone chip. */
+.verify-steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+
+.verify-steps li {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-2);
+}
+
+.verify-steps .num-tile {
+  width: 24px;
+  height: 24px;
+}
+
+.phone-chip {
+  border-radius: var(--r-full);
+}
+
+/* The result's report block: plain links under the eCrime buttons, no ticks. */
+.report-links {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  padding-inline-start: var(--sp-5);
+  list-style: disc;
+}
+
+.report-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target);
+}
+
+/* Legal Guidelines: "Why it matters" folds open. The panel stays in the page; folded, it takes no
+   room and is hidden from view and assistive tech. */
+.accordion-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-2);
+  inline-size: 100%;
+  min-height: var(--target);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+  color: var(--ink-soft);
+  font: inherit;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+
+.accordion-toggle:hover {
+  border-color: var(--border-strong);
+  color: var(--heading);
+}
+
+.accordion-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  visibility: hidden;
+}
+
+.accordion[data-open="true"] .accordion-panel {
+  grid-template-rows: 1fr;
+  visibility: visible;
+}
+
+.accordion-inner {
+  min-block-size: 0;
+  overflow: hidden;
+}
+
+.accordion-inner > p {
+  padding-block-start: var(--sp-2);
+}
+
+.accordion[data-open="true"] .accordion-chevron {
+  rotate: 180deg;
+}
+
+/* Encrypted Vault: the key in a ringed circle, and the passphrase show/hide button. */
+.key-ring {
+  display: inline-flex;
+  align-self: center;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+  border: 1px solid var(--green-line);
+  border-radius: var(--r-full);
+  background: var(--green-bg);
+  box-shadow: 0 0 0 6px var(--surface-sunken), 0 0 0 7px var(--green-line), 0 0 30px var(--glow-green);
+}
+
+.unlock-title {
+  text-align: center;
+}
+
+.pass-wrap {
+  position: relative;
+}
+
+.pass-wrap input {
+  padding-inline-end: calc(var(--target) + var(--sp-2));
+}
+
+.pass-toggle {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-end: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--target);
+  height: var(--target);
+  border: 0;
+  background: none;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.pass-toggle:hover,
+.pass-toggle[aria-pressed="true"] {
+  color: var(--green);
+}
+
 @media (prefers-reduced-motion: no-preference) {
   .btn,
   .tab {
@@ -1900,20 +2599,98 @@ details.card > summary {
   }
 
   /* Page and tab change: the page's blocks fade in and rise, staggered by 80ms. */
-  .page > .stack > * {
-    animation: rise-in var(--dur-slow) var(--ease-out) both;
+  /* Route change: each page's content fades in over 200ms with an 8px rise. */
+  .page > .stack {
+    animation: page-in 200ms var(--ease-out) both;
   }
 
-  .page > .stack > :nth-child(2) {
-    animation-delay: 80ms;
+  /* Phase 3: radar and portal cards lift 2px on hover; the Legal accordion folds with
+     grid-template-rows and its chevron turns. */
+  .radar-card,
+  .directory-card {
+    transition: translate var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
   }
 
-  .page > .stack > :nth-child(3) {
-    animation-delay: 160ms;
+  .radar-card:hover,
+  .directory-card:hover {
+    translate: 0 -2px;
   }
 
-  .page > .stack > :nth-child(n + 4) {
-    animation-delay: 240ms;
+  .accordion-panel {
+    transition: grid-template-rows var(--dur) var(--ease-out), visibility var(--dur);
+  }
+
+  .accordion-chevron {
+    transition: rotate var(--dur) var(--ease-out);
+  }
+
+  .eyebrow-pill .pulse {
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  /* Header (AI Studio port, part 2): the red attention mark sends out a ping ring; the "Fixed
+     rules" dot pulses; the flag line's colours drift slowly. */
+  .brand-ping::after {
+    animation: ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  .status-dot {
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  .flag-ribbon {
+    animation: ribbon-drift 24s linear infinite;
+  }
+
+  /* Hero radar (decorative): the corner brackets pulse, the sweep turns every 8s, each blip lights
+     up as the sweep passes it (negative delays set the phase from the blip's angle), the aurora
+     orbs pulse, the crosshair turns slowly and the radio icon pings. */
+  .hero-backdrop::after {
+    animation: pulse 3s ease-in-out infinite;
+  }
+
+  .ping-icon::after {
+    animation: ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+  }
+
+  .radar-sweep {
+    animation: spin 8s linear infinite;
+  }
+
+  .radar-blip {
+    animation: blip 8s linear infinite;
+  }
+
+  .radar-blip-1 {
+    animation-delay: -7.28s;
+  }
+
+  .radar-blip-2 {
+    animation-delay: -5.5s;
+  }
+
+  .radar-blip-3 {
+    animation-delay: -3.14s;
+  }
+
+  .radar-orb {
+    animation: orb-pulse 6s ease-in-out infinite;
+  }
+
+  .radar-orb + .radar-orb {
+    animation-duration: 4s;
+  }
+
+  .hud-crosshair {
+    animation: spin 10s linear infinite;
+  }
+
+  /* "Pause radar" (WCAG 2.2.2): every animation in the hero holds where it is. */
+  .hero-video[data-paused="true"],
+  .hero-video[data-paused="true"] *,
+  .hero-video[data-paused="true"] *::before,
+  .hero-video[data-paused="true"] *::after {
+    animation-play-state: paused;
   }
 
   /* Hero: the aurora orbs drift slowly. */
@@ -1940,11 +2717,20 @@ details.card > summary {
   }
 
   .sample-card:hover .sample-arrow {
-    translate: 3px 0;
+    translate: 4px 0;
   }
 
   [dir="rtl"] .sample-card:hover .sample-arrow {
-    translate: -3px 0;
+    translate: -4px 0;
+  }
+
+  /* The checking panel's ring turns; the panel itself fades up. */
+  .checking-ring {
+    animation: spin 900ms linear infinite;
+  }
+
+  .checking {
+    animation: rise-in var(--dur) var(--ease-out);
   }
 
   /* Loading: an indeterminate sheen runs along the progress line. It shows that work is going on,
@@ -1962,6 +2748,31 @@ details.card > summary {
   /* Result: the score ring fills to the score; finding cards and checklist rows ease their colours. */
   .gauge-value {
     animation: gauge-fill 600ms var(--ease-out) both;
+  }
+
+  /* Findings fade up one after another, 60ms apart (at most five rules can match). */
+  .findings > .flag-card {
+    animation: rise-in var(--dur) var(--ease-out) both;
+  }
+
+  .findings > .flag-card:nth-child(2) {
+    animation-delay: 60ms;
+  }
+
+  .findings > .flag-card:nth-child(3) {
+    animation-delay: 120ms;
+  }
+
+  .findings > .flag-card:nth-child(4) {
+    animation-delay: 180ms;
+  }
+
+  .findings > .flag-card:nth-child(5) {
+    animation-delay: 240ms;
+  }
+
+  .meter-fill {
+    transition: inline-size var(--dur) var(--ease-out);
   }
 
   .flag-card,
@@ -2026,6 +2837,13 @@ details.card > summary {
   }
 }
 
+@keyframes page-in {
+  from {
+    opacity: 0;
+    translate: 0 8px;
+  }
+}
+
 @keyframes rise-in {
   from {
     opacity: 0;
@@ -2044,6 +2862,49 @@ details.card > summary {
   to {
     translate: -40px 24px;
     scale: 1.15;
+  }
+}
+
+@keyframes ping {
+  from {
+    opacity: 0.8;
+    scale: 1;
+  }
+
+  to {
+    opacity: 0;
+    scale: 2.4;
+  }
+}
+
+@keyframes ribbon-drift {
+  to {
+    background-position: 100% 0;
+  }
+}
+
+@keyframes blip {
+  0% {
+    opacity: 1;
+    scale: 1.5;
+  }
+
+  6% {
+    opacity: 1;
+    scale: 1;
+  }
+
+  60%,
+  100% {
+    opacity: 0.25;
+    scale: 1;
+  }
+}
+
+@keyframes orb-pulse {
+  50% {
+    opacity: 0.55;
+    scale: 1.12;
   }
 }
 
@@ -2069,6 +2930,15 @@ details.card > summary {
 }
 
 @media print {
+  .accordion-panel {
+    grid-template-rows: 1fr !important;
+    visibility: visible !important;
+  }
+
+  .accordion-toggle {
+    display: none !important;
+  }
+
   body {
     background: var(--print-paper);
     color: var(--print-ink);

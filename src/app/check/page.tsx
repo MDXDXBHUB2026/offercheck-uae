@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { HeroBackdrop } from "@/components/HeroBackdrop";
+import { Gauge, Landmark, Quote, Radio, ShieldCheck } from "lucide-react";
+import { HeroStage } from "@/components/HeroStage";
 import { LimitationsPanel } from "@/components/LimitationsPanel";
 import { OfferChecker } from "@/components/OfferChecker";
 import { SAMPLE_OFFERS } from "@/data/sampleOffers";
@@ -15,12 +16,20 @@ export const metadata: Metadata = {
 // The layout supplies <main>.
 export default function CheckPage() {
   const hero = (
-    <section className="card hero hero-video" aria-labelledby="page-title">
-      <HeroBackdrop />
-      <div className="stack-sm hero-glass">
-        <p className="label-caps text-green">
-          <span className="dot" aria-hidden="true" /> Fixed rules, no AI scoring
-        </p>
+    <HeroStage exampleCount={SAMPLE_OFFERS.length}>
+      <div className="stack-sm hero-glass hero-main">
+        <div className="hero-badges">
+          <span className="hero-badge hero-badge-green">
+            <ShieldCheck className="icon pulse" aria-hidden="true" />
+            <span>Fixed rules, no AI scoring</span>
+          </span>
+          <span className="hero-badge mono">
+            <span className="ping-icon" aria-hidden="true">
+              <Radio className="icon text-green" />
+            </span>
+            <span>{RULES.length} rules, every finding quoted</span>
+          </span>
+        </div>
         <h1 id="page-title" className="h1">
           Check a job offer before you pay or share anything.
         </h1>
@@ -28,13 +37,22 @@ export default function CheckPage() {
           Paste a job offer to check it against {RULES.length} fixed rules. The rules read English. Other languages can
           be translated by Google Cloud Translation if you agree. Offer Check&apos;s server does not store your text.
         </p>
+        <ul className="hero-chips small">
+          <li className="hero-chip">
+            <Quote className="icon text-green" aria-hidden="true" />
+            <span>Warning signs with the words that matched</span>
+          </li>
+          <li className="hero-chip">
+            <Gauge className="icon text-sky" aria-hidden="true" />
+            <span>Low, medium or high risk indicators</span>
+          </li>
+          <li className="hero-chip">
+            <Landmark className="icon text-amber" aria-hidden="true" />
+            <span>Official places to confirm and to report</span>
+          </li>
+        </ul>
       </div>
-      <ul className="hero-side hero-glass stack-sm small">
-        <li>Warning signs with the words that matched</li>
-        <li>Low, medium or high risk indicators</li>
-        <li>Official places to confirm and to report</li>
-      </ul>
-    </section>
+    </HeroStage>
   );
   return (
     <div className="stack">

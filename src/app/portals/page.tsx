@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import { ExternalLink, FileCheck2, Phone } from "lucide-react";
 import { ReferenceHelper } from "@/components/ReferenceHelper";
-import { ButtonLink, Card } from "@/components/ui";
-import { UAE_CONTACTS } from "@/data/uaeContacts";
+import { ButtonLink, Card, Chip } from "@/components/ui";
+import { UAE_CONTACTS, type UaeContact } from "@/data/uaeContacts";
 import { mainChannels, REPORT_FRAUD_ID, REPORT_FRAUD_NOTE } from "@/lib/authorities";
 
 export const metadata: Metadata = {
@@ -14,12 +14,33 @@ export const metadata: Metadata = {
 // the owner) or src/lib/authorities.ts, which imports from it.
 export const dynamic = "force-static";
 
+// The directory cards' category and level, for each contact in src/data/uaeContacts.ts.
+const DIRECTORY: Record<UaeContact["id"], { category: string; authority: string }> = {
+  mohre: { category: "Job offers", authority: "Federal" },
+  icp: { category: "Visas", authority: "Federal" },
+  amer: { category: "Visas", authority: "Dubai" },
+  ecrime: { category: "Report fraud", authority: "Dubai" },
+};
+
+// "How to verify": general steps that hold for every official channel. No claim about how a
+// portal works inside; its own pages say that.
+function verifySteps(entry: UaeContact): string[] {
+  return [
+    "Open the official site with the button below, not from a link in the message you received.",
+    `What it is for: ${entry.purpose}.`,
+    "If what you were told does not match, call the hotline before you pay or share anything.",
+  ];
+}
+
 export default function PortalsPage() {
   return (
     <div className="stack">
-      <section className="card hero" aria-labelledby="page-title">
+      <section className="card hero" aria-labelledby="page-title" data-tint="green">
         <div className="stack-sm">
-          <p className="label-caps text-green">Official sources only</p>
+          <p className="eyebrow-pill">
+            <span className="dot dot-green pulse" aria-hidden="true" />
+            <span>Official sources only</span>
+          </p>
           <h1 id="page-title" className="h1">
             Gov Portals Hub
           </h1>
@@ -47,19 +68,35 @@ export default function PortalsPage() {
         </h2>
         <ul className="grid grid-2">
           {UAE_CONTACTS.map((entry) => (
-            <Card as="li" key={entry.id} className="stack-sm card-fill">
+            <Card as="li" key={entry.id} className="stack-sm card-fill directory-card">
+              <div className="row">
+                <Chip tone="green" upper>
+                  {DIRECTORY[entry.id].category}
+                </Chip>
+                <Chip tone="neutral">{DIRECTORY[entry.id].authority}</Chip>
+              </div>
               <h3 className="h3">{entry.name}</h3>
               <p className="small muted" lang="ar" dir="rtl">
                 {entry.arabicName}
               </p>
-              <p className="small">{entry.purpose}</p>
+              <p className="label-caps">How to verify</p>
+              <ol className="verify-steps small">
+                {verifySteps(entry).map((step, index) => (
+                  <li key={step}>
+                    <span className="num-tile" aria-hidden="true">
+                      {index + 1}
+                    </span>
+                    <span>{step}</span>
+                  </li>
+                ))}
+              </ol>
               <div className="row card-foot">
-                <ButtonLink href={`tel:${entry.hotline}`} variant="secondary">
+                <ButtonLink href={`tel:${entry.hotline}`} variant="secondary" className="phone-chip">
                   <Phone className="icon" aria-hidden="true" />
                   <span className="mono" dir="ltr">{entry.hotlineLabel}</span>
                 </ButtonLink>
-                <ButtonLink href={entry.url} variant="secondary">
-                  Website
+                <ButtonLink href={entry.url} variant="primary">
+                  Open portal
                   <ExternalLink className="icon" aria-hidden="true" />
                 </ButtonLink>
               </div>
