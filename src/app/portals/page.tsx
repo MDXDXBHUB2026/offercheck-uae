@@ -4,6 +4,7 @@ import { ReferenceHelper } from "@/components/ReferenceHelper";
 import { ButtonLink, Card, Chip } from "@/components/ui";
 import { UAE_CONTACTS, type UaeContact } from "@/data/uaeContacts";
 import { mainChannels, REPORT_FRAUD_ID, REPORT_FRAUD_NOTE } from "@/lib/authorities";
+import { T } from "@/components/shell/T";
 
 export const metadata: Metadata = {
   title: "Gov Portals Hub",
@@ -37,14 +38,17 @@ export default function PortalsPage() {
         <div className="stack-sm">
           <p className="eyebrow-pill">
             <span className="dot dot-green pulse" aria-hidden="true" />
-            <span>Official sources only</span>
+            <span>
+              <T>Official sources only</T>
+            </span>
           </p>
           <h1 id="page-title" className="h1">
-            Gov Portals Hub
+            <T>Gov Portals Hub</T>
           </h1>
           <p className="lead">
-            Confirm an offer, a visa or an employer yourself, on the official UAE sites and hotlines. Offer Check is not
-            part of any of them.
+            <T>
+              Confirm an offer, a visa or an employer yourself, on the official UAE sites and hotlines. Offer Check is not part of any of them.
+            </T>
           </p>
         </div>
       </section>
@@ -52,40 +56,52 @@ export default function PortalsPage() {
       <Card as="section" className="stack-sm" aria-labelledby="mohre-heading">
         <h2 id="mohre-heading" className="h2 row">
           <FileCheck2 className="icon text-green" aria-hidden="true" />
-          <span>Check an offer reference with MoHRE</span>
+          <span>
+            <T>Check an offer reference with MoHRE</T>
+          </span>
         </h2>
         <p className="muted">
-          A genuine offer comes through MoHRE. Ask the employer for the reference, then look it up on the MoHRE site.
+          <T>A genuine offer comes through MoHRE. Ask the employer for the reference, then look it up on the MoHRE site.</T>
         </p>
         <ReferenceHelper />
       </Card>
 
       <section className="stack-sm" aria-labelledby="hotlines-heading">
         <h2 id="hotlines-heading" className="h2">
-          Hotlines and portals
+          <T>Hotlines and portals</T>
         </h2>
         <ul className="grid grid-2">
           {UAE_CONTACTS.map((entry) => (
             <Card as="li" key={entry.id} className="stack-sm card-fill directory-card">
               <div className="row">
                 <Chip tone="green" upper>
-                  {DIRECTORY[entry.id].category}
+                  <T>{DIRECTORY[entry.id].category}</T>
                 </Chip>
-                <Chip tone="neutral">{DIRECTORY[entry.id].authority}</Chip>
+                <Chip tone="neutral">
+                  <T>{DIRECTORY[entry.id].authority}</T>
+                </Chip>
               </div>
-              <h3 className="h3">{entry.name}</h3>
-              <p className="small muted" lang="ar" dir="rtl">
+              <h3 className="h3">
+                <T>{entry.name}</T>
+              </h3>
+              <p className="small muted contact-arabic-name" lang="ar" dir="rtl">
                 {entry.arabicName}
               </p>
-              <p className="small">{entry.purpose}.</p>
-              <p className="label-caps">How to verify</p>
+              <p className="small">
+                <T>{`${entry.purpose}.`}</T>
+              </p>
+              <p className="label-caps">
+                <T>How to verify</T>
+              </p>
               <ol className="verify-steps small">
                 {VERIFY_STEPS.map((step, index) => (
                   <li key={step}>
                     <span className="num-tile" aria-hidden="true">
                       {index + 1}
                     </span>
-                    <span>{step}</span>
+                    <span>
+                      <T>{step}</T>
+                    </span>
                   </li>
                 ))}
               </ol>
@@ -95,7 +111,7 @@ export default function PortalsPage() {
                   <span className="mono" dir="ltr">{entry.hotlineLabel}</span>
                 </ButtonLink>
                 <ButtonLink href={entry.url} variant="primary">
-                  Open portal
+                  <T>Open portal</T>
                   <ExternalLink className="icon" aria-hidden="true" />
                 </ButtonLink>
               </div>
@@ -106,14 +122,16 @@ export default function PortalsPage() {
 
       <Card as="section" tone="high" className="stack-sm" id={REPORT_FRAUD_ID} aria-labelledby="report-fraud-heading">
         <h2 id="report-fraud-heading" className="h2">
-          If you think it is a scam
+          <T>If you think it is a scam</T>
         </h2>
-        <p>{REPORT_FRAUD_NOTE}</p>
+        <p>
+          <T>{REPORT_FRAUD_NOTE}</T>
+        </p>
         <ul className="stack-sm">
           {mainChannels().map((channel) => (
             <li key={channel.id}>
               <ButtonLink href={channel.url} variant="secondary" block>
-                {channel.name}
+                <T>{channel.name}</T>
                 <ExternalLink className="icon" aria-hidden="true" />
               </ButtonLink>
             </li>

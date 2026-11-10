@@ -94,7 +94,8 @@
 
   /* Type */
   --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-arabic: "Tajawal", system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
+  /* System Arabic fonts only: nothing is downloaded. */
+  --font-arabic: "Segoe UI", Tahoma, "Geeza Pro", "Noto Naskh Arabic", "Noto Sans Arabic", Arial, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --fs-xs: 12px;
   --fs-sm: 14px;
@@ -161,8 +162,28 @@ body {
   font-family: var(--font-arabic);
 }
 
-/* RTL with English page text: each text block takes its own direction from its first letter, so
-   English sentences keep their full stop and colon at the end, while the right alignment is
+/* Arabic typography. Arabic letters join, so no letter-spacing and no upper-case styling on any text
+   (labels, chips, tabs, the hero example card and the result tiles included), and no monospace font:
+   numbers, codes and labels take the Arabic stack too. Taller lines leave room for diacritics. Text
+   kept in English (marked lang="en", such as the reply draft and the audit entries) is left as it is. */
+:root[lang="ar"] body {
+  line-height: 1.8;
+}
+:root[lang="ar"] body *:not([lang="en"], [lang="en"] *) {
+  font-family: var(--font-arabic);
+  letter-spacing: normal;
+  text-transform: none;
+}
+/* Portals: in Arabic the card title is already the official Arabic name, so its second line is hidden. */
+:root[lang="ar"] .contact-arabic-name {
+  display: none;
+}
+:root[lang="ar"] body :is(h1, h2, h3, .h1, .h2, .h3, .lead, .chip, .tab, .label-caps) {
+  line-height: 1.6;
+}
+
+/* RTL: each text block takes its own direction from its first letter, so English kept in the
+   page (offer text, quotes, official names) keeps its full stop and colon at the end, while the right alignment is
    inherited as a fixed side (not "start", which would follow the English text to the left). */
 [dir="rtl"] body,
 [dir="rtl"] .tabs-boxed .tab,

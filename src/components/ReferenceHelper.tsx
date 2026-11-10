@@ -4,6 +4,7 @@ import { useState, type FormEvent } from "react";
 import { Copy, ExternalLink, FileSearch } from "lucide-react";
 import { Button, ButtonLink, Callout } from "@/components/ui";
 import { MOHRE_INQUIRY_URL } from "@/data/uaeContacts";
+import { useT } from "@/components/shell/lang";
 
 // The reference app's "MoHRE reference check" claimed to validate reference formats that are not
 // published. Here it only tidies what was typed (spaces removed, upper case) so it is easy to copy,
@@ -17,6 +18,7 @@ export function ReferenceHelper() {
   const [value, setValue] = useState("");
   const [shown, setShown] = useState("");
   const [copied, setCopied] = useState(false);
+  const t = useT();
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -36,29 +38,29 @@ export function ReferenceHelper() {
   return (
     <form className="stack-sm" onSubmit={submit}>
       <div className="field">
-        <label htmlFor="mohre-ref">Offer letter or work permit reference</label>
+        <label htmlFor="mohre-ref">{t("Offer letter or work permit reference")}</label>
         <input id="mohre-ref" type="text" autoComplete="off" value={value} onChange={(e) => setValue(e.target.value)} />
       </div>
       <div className="row">
         <Button type="submit" variant="secondary" blocked={!value.trim()} reasonId="mohre-ref-help">
           <FileSearch className="icon" aria-hidden="true" />
-          Prepare to check
+          {t("Prepare to check")}
         </Button>
         <ButtonLink href={MOHRE_INQUIRY_URL} variant="primary">
-          Open the MoHRE enquiry page
+          {t("Open the MoHRE enquiry page")}
           <ExternalLink className="icon" aria-hidden="true" />
         </ButtonLink>
       </div>
       <p id="mohre-ref-help" className="small muted">
-        Offer Check cannot tell whether a reference is real. Only MoHRE can confirm it.
+        {t("Offer Check cannot tell whether a reference is real. Only MoHRE can confirm it.")}
       </p>
       {shown && (
-        <Callout tone="info" role="status" title="Ready to check on the MoHRE site">
+        <Callout tone="info" role="status" title={t("Ready to check on the MoHRE site")}>
           <p className="mono">{shown}</p>
           <div className="row">
             <Button variant="secondary" onClick={() => void copy()}>
               <Copy className="icon" aria-hidden="true" />
-              {copied ? "Copied" : "Copy reference"}
+              {copied ? t("Copied") : t("Copy reference")}
             </Button>
           </div>
         </Callout>

@@ -27,6 +27,7 @@ import * as root from "./page";
 import * as portals from "./portals/page";
 import * as radar from "./radar/page";
 import * as vault from "./vault/page";
+import { tr } from "@/lib/i18n";
 
 // The header reads the current path and the language store. Both are set here.
 const nav = vi.hoisted(() => ({ pathname: "/check", lang: "en" as "en" | "ar" }));
@@ -149,7 +150,8 @@ describe("header", () => {
     expect(header()).toContain(">العربية</span>");
     const arabic = header("/check", "ar");
     expect(arabic).toContain(">English</span>");
-    for (const item of NAV_ITEMS) expect(navOf(arabic, "Main")).toContain(`<span>${item.labelAr}</span>`);
+    // The nav's own label is in Arabic too.
+    for (const item of NAV_ITEMS) expect(navOf(arabic, tr("ar", "Main"))).toContain(`<span>${item.labelAr}</span>`);
   });
 
   it("the language store sets lang and dir on <html>, so the whole layout mirrors", () => {
@@ -162,7 +164,9 @@ describe("header", () => {
     // [dir="rtl"], so English text in an RTL page stays right-aligned (see the next test).
     const rtlOnly = /(?:\[dir="rtl"\][^{},]*,\s*)*\[dir="rtl"\][^{},]*\{[^}]*\}/g;
     expect(css.replace(rtlOnly, "")).not.toMatch(/(?:margin|padding|border)-(?:left|right)\s*:|(?:^|\s)(?:left|right)\s*:\s*[^;]+;|text-align:\s*(?:left|right)/m);
-    expect(ARABIC_NOTE).toBe("Arabic labels have not been reviewed by a native speaker. Page content is in English.");
+    expect(ARABIC_NOTE).toBe(
+      "The Arabic text has not been reviewed by a native speaker. Offer text, quoted words and official names are shown as written.",
+    );
   });
 
   // RTL with English page text: sentences keep their full stop at the end and stay right-aligned,
@@ -226,7 +230,7 @@ describe("Offer Analyzer hero", () => {
       );
       expect(buttons).toEqual(["Pause radar", "Glow: Max"]);
       const stage = read("src/components/HeroStage.tsx");
-      expect(stage).toContain('{paused ? "Resume radar" : "Pause radar"}');
+      expect(stage).toContain('{paused ? t("Resume radar") : t("Pause radar")}');
       expect(stage).toContain("if (next) video.pause();");
       expect(stage).toContain('data-paused={paused ? "true" : undefined}');
       expect(css).toMatch(
@@ -406,7 +410,7 @@ describe("footer", () => {
     expect(html).not.toContain(ARABIC_NOTE);
     nav.lang = "ar";
     try {
-      expect(renderToStaticMarkup(createElement(SiteFooter))).toContain(ARABIC_NOTE);
+      expect(renderToStaticMarkup(createElement(SiteFooter))).toContain(tr("ar", ARABIC_NOTE));
     } finally {
       nav.lang = "en";
     }
@@ -456,7 +460,7 @@ describe("error, not-found and loading states", () => {
 
   it("the global error page brings its own document and never shows the message", () => {
     const html = renderToStaticMarkup(createElement(GlobalError, { error: new Error(CANARY), retry: () => {} }));
-    expect(html).toMatch(/^<html lang="en">/);
+    expect(html).toMatch(/^<html lang="en" dir="ltr">/);
     expect(html).toContain("<title>Something went wrong · Offer Check UAE</title>");
     expect(html).toContain("Offer Check did not save your text.");
     expect(html).not.toContain("not saved anywhere");

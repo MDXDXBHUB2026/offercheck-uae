@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { useT } from "@/components/shell/lang";
 
 // One warning sign's "Why it matters" text, folded under a button (AI Studio port). The text is
 // passed in from src/lib/warningSigns.ts and rendered as text; nothing is added. The panel stays in
@@ -11,6 +12,7 @@ import { ChevronDown } from "lucide-react";
 export function SignAccordion({ why }: { why: string }) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
+  const t = useT();
   return (
     <div className="accordion" data-open={open ? "true" : undefined}>
       <button
@@ -20,12 +22,12 @@ export function SignAccordion({ why }: { why: string }) {
         aria-controls={panelId}
         onClick={() => setOpen(!open)}
       >
-        <span>Why it matters</span>
+        <span>{t("Why it matters")}</span>
         <ChevronDown className="icon accordion-chevron" aria-hidden="true" />
       </button>
       <div id={panelId} className="accordion-panel">
         <div className="accordion-inner">
-          <p className="small">{why}</p>
+          <p className="small">{t(why)}</p>
         </div>
       </div>
     </div>

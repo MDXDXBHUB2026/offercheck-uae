@@ -12,6 +12,9 @@ vi.mock("react", async (importOriginal) => ({
   ...(await importOriginal<typeof import("react")>()),
   useEffect: () => {},
   useRef: () => ({ current: null }),
+  // The language store: the server snapshot, English, since there is no DOM.
+  useSyncExternalStore: (_subscribe: unknown, getSnapshot: () => unknown, getServerSnapshot?: () => unknown) =>
+    (getServerSnapshot ?? getSnapshot)(),
 }));
 
 type Props = { children?: ReactNode; onClick?: (event: { preventDefault: () => void }) => void };

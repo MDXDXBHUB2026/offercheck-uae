@@ -34,3 +34,7 @@ The page shows a plain-language version of each bullet below, from `src/componen
 These cases are marked `knownMiss` in `src/lib/agents/eval/offers.ts`. They stay unfixed because the rules cannot handle them without becoming unreliable. A test fails if one starts passing, so this list stays current.
 
 - **S12: Arabic visa fee request.** Expected high, scores low. The rules are English patterns. Arabic needs its own reviewed pattern set or an intake model.
+
+## Interface language
+
+**The Arabic interface has not been reviewed by a native speaker.** (2026-11-10) With Arabic chosen, every page and every message of the flow is shown in Arabic (`src/lib/i18n.ts`, dictionary `src/lib/i18nAr.ts`). The Arabic was written during development and the footer says it has not been reviewed. Interface only: the rules, scoring, coverage detection and both APIs are unchanged, so the rules still read English and pasted Arabic is handled exactly as before (S12 below). Offer text, quoted evidence, the reply draft and the audit entries stay as typed or in English (marked `lang="en"`). The language choice is kept in this browser only; the default is English and the browser's language is never read.

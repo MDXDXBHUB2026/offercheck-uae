@@ -41,6 +41,7 @@ import { TranslateFailureAlert, TranslationShown } from "@/components/Translatio
 import type { TranslationRecord } from "@/lib/translation";
 import type { LanguageNotice } from "@/lib/textScript";
 import { MAX_OFFER_CHARS } from "@/lib/types";
+import { useT } from "@/components/shell/lang";
 
 // Where the offer came from, as in the reference app. Display and saving only: the rules read the
 // text the same way for every channel. "Offer Letter PDF" means the letter's text, pasted.
@@ -177,6 +178,7 @@ export function OfferChecker({
   samples?: readonly SampleOffer[];
   hero?: ReactNode;
 }) {
+  const t = useT();
   const [text, setText] = useState("");
   const [channel, setChannel] = useState<Channel>("Email");
   const [autoMask, setAutoMask] = useState(true);
@@ -425,8 +427,8 @@ export function OfferChecker({
 
   const channelHint =
     channel === "Offer Letter PDF"
-      ? "Paste the text of the letter. Offer Check does not read files or images."
-      : `Paste the ${channel} message as text.`;
+      ? t("Paste the text of the letter. Offer Check does not read files or images.")
+      : t("Paste the {0} message as text.", channel);
 
   return (
     <div className="stack">
@@ -434,18 +436,18 @@ export function OfferChecker({
       {samples.length > 0 && (
         <section className="stack-sm samples" aria-labelledby="samples-label">
           <h2 id="samples-label" className="label-caps">
-            Try a synthetic sample
+            {t("Try a synthetic sample")}
           </h2>
           <ul className="grid grid-4">
             {samples.map((sample) => (
               <Card as="li" key={sample.id} className="sample-card">
                 <span className="row-between">
                   <span id={`sample-${sample.id}`} className="sample-name">
-                    {sample.name}
+                    {t(sample.name)}
                   </span>
-                  <Chip tone="neutral">{channelOf(sample)}</Chip>
+                  <Chip tone="neutral">{t(channelOf(sample))}</Chip>
                 </span>
-                <span className="sample-desc">{sample.description}</span>
+                <span className="sample-desc">{t(sample.description)}</span>
                 <Button
                   variant="secondary"
                   className="sample"
@@ -455,18 +457,18 @@ export function OfferChecker({
                     editText(sample.text, true);
                   }}
                 >
-                  Load sample
+                  {t("Load sample")}
                   <ArrowRight className="icon sample-arrow" aria-hidden="true" />
                 </Button>
               </Card>
             ))}
           </ul>
-          <p className="small muted">Made-up examples written for this app. No real company or person.</p>
+          <p className="small muted">{t("Made-up examples written for this app. No real company or person.")}</p>
         </section>
       )}
       <form className="card stack input-card" onSubmit={handleSubmit} aria-busy={loading || sending || undefined}>
         <div className="controls-bar">
-          <div className="tabs tabs-boxed channel-tabs" role="group" aria-label="Where the offer came from">
+          <div className="tabs tabs-boxed channel-tabs" role="group" aria-label={t("Where the offer came from")}>
             {CHANNELS.map((option) => {
               const Icon = CHANNEL_ICONS[option];
               return (
@@ -478,27 +480,29 @@ export function OfferChecker({
                   onClick={() => setChannel(option)}
                 >
                   <Icon className="icon" aria-hidden="true" />
-                  {option}
+                  {t(option)}
                 </button>
               );
             })}
           </div>
           <Button variant="secondary" aria-pressed={autoMask} aria-describedby="mask-note" onClick={() => setAutoMask(!autoMask)}>
             <ShieldCheck className="icon" aria-hidden="true" />
-            Auto-Redact {autoMask ? "on" : "off"}
+            {t(autoMask ? "Auto-Redact on" : "Auto-Redact off")}
           </Button>
         </div>
         <p id="mask-note" className="small muted">
           {autoMask
-            ? "Auto-Redact is on: Emirates ID, passport and IBAN numbers are masked in this browser before the text is checked or translated."
-            : "Auto-Redact is off: the text is sent as it is in the box."}
+            ? t(
+                "Auto-Redact is on: Emirates ID, passport and IBAN numbers are masked in this browser before the text is checked or translated.",
+              )
+            : t("Auto-Redact is off: the text is sent as it is in the box.")}
         </p>
         <div className="field">
           <div className="input-meta">
-            <label htmlFor="offer">Job offer text</label>
+            <label htmlFor="offer">{t("Job offer text")}</label>
             <span id="offer-count" className={`counter${overLimit ? " counter-over" : ""}`}>
               {COUNT_FORMAT.format(text.length)} / {COUNT_FORMAT.format(MAX_OFFER_CHARS)}
-              {overLimit && <span className="counter-note"> (over the limit)</span>}
+              {overLimit && <span className="counter-note"> ({t("over the limit")})</span>}
             </span>
           </div>
           <textarea
@@ -507,14 +511,14 @@ export function OfferChecker({
             value={text}
             aria-describedby="offer-count offer-hint"
             onChange={(event) => editText(event.target.value)}
-            placeholder="Paste the WhatsApp message, email, LinkedIn message or offer letter text here"
+            placeholder={t("Paste the WhatsApp message, email, LinkedIn message or offer letter text here")}
           />
           <div className="input-meta">
             <span id="offer-hint">{channelHint}</span>
             {text.length > 0 && (
               <button type="button" className="link-btn" onClick={() => editText("")}>
                 <Eraser className="icon" aria-hidden="true" />
-                Clear text
+                {t("Clear text")}
               </button>
             )}
           </div>
@@ -525,11 +529,11 @@ export function OfferChecker({
           // BATCHB-2: "Send to Google and translate" sends at once, once per press.
           <Callout tone="neutral" className="language-banner">
             <p id="language-gate" className="language-gate">
-              {gateNote}
+              {t(gateNote)}
             </p>
             {canTranslate && (
               <p id="translate-disclosure" className="translate-disclosure">
-                {TRANSLATE_CONSENT_TEXT}
+                {t(TRANSLATE_CONSENT_TEXT)}
               </p>
             )}
             {translateFlow.step === "failed" && <TranslateFailureAlert code={translateFlow.code} />}
@@ -545,7 +549,7 @@ export function OfferChecker({
                   onClick={() => void sendTranslation()}
                   aria-describedby="translate-disclosure"
                 >
-                  {sending ? "Translating..." : TRANSLATE_BUTTON}
+                  {sending ? t("Translating...") : t(TRANSLATE_BUTTON)}
                 </Button>
               )}
               <Button
@@ -556,24 +560,24 @@ export function OfferChecker({
                 busy={loading}
                 aria-describedby="language-gate"
               >
-                {loading ? "Checking..." : LANGUAGE_GATE_BUTTON}
+                {loading ? t("Checking...") : t(LANGUAGE_GATE_BUTTON)}
               </Button>
             </div>
-            <HelperText id="check-reason">{reason}</HelperText>
+            <HelperText id="check-reason">{t(reason)}</HelperText>
           </Callout>
         ) : (
           // English or empty: one big audit button, nothing about translation.
           <div className="submit">
             <Button type="submit" large block blocked={Boolean(reason) || sending} reasonId="check-reason" busy={loading}>
               <ScanSearch className="icon" aria-hidden="true" />
-              {loading ? "Checking..." : "Check offer"}
+              {loading ? t("Checking...") : t("Check offer")}
             </Button>
-            <HelperText id="check-reason">{reason}</HelperText>
+            <HelperText id="check-reason">{t(reason)}</HelperText>
           </div>
         )}
       </form>
       <p className="visually-hidden" role="status">
-        {announcement}
+        {t(announcement)}
       </p>
       {/* The checking panel: hidden from screen readers, which hear "Checking the offer." from the
           status region above. The steps are a list of what a check does, not a progress report. */}
@@ -581,18 +585,18 @@ export function OfferChecker({
         <div className="progress checking" aria-hidden="true">
           <span className="checking-ring" />
           <div className="stack-sm">
-            <p className="checking-title">Checking the offer</p>
+            <p className="checking-title">{t("Checking the offer")}</p>
             <ol className="checking-steps small">
               {checkingSteps(ruleCount).map((step) => (
-                <li key={step}>{step}</li>
+                <li key={step}>{t(step)}</li>
               ))}
             </ol>
           </div>
         </div>
       )}
       {failure && (
-        <Callout tone="high" role="alert" title={failure.title} className="check-failure">
-          <p>{failure.message}</p>
+        <Callout tone="high" role="alert" title={t(failure.title)} className="check-failure">
+          <p>{t(failure.message)}</p>
           {failure.retry && (
             <Button
               variant="secondary"
@@ -601,7 +605,7 @@ export function OfferChecker({
                 void (last ? runCheck(last.submitted, last.translation, last.shown, last.meta) : runCheck());
               }}
             >
-              Try again
+              {t("Try again")}
             </Button>
           )}
         </Callout>

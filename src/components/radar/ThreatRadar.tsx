@@ -6,6 +6,7 @@ import { ReportModal } from "@/components/radar/ReportModal";
 import { useLocalReports } from "@/components/radar/localReports";
 import { Button, Card, Chip } from "@/components/ui";
 import { SAMPLE_LABEL, THREAT_SAMPLES, THREAT_TYPES } from "@/data/threatSamples";
+import { useT } from "@/components/shell/lang";
 
 const ALL = "All";
 
@@ -18,21 +19,28 @@ function matches(entry: Entry, query: string, type: string): boolean {
   return [entry.title, entry.description, entry.warningQuote, entry.region].some((field) => field.toLowerCase().includes(q));
 }
 
-function EntryCard({ entry, label }: { entry: Entry; label: string }) {
+// Demo entries are interface text and are translated; a report typed in this tab is shown as typed.
+function EntryCard({ entry, label, own = false }: { entry: Entry; label: string; own?: boolean }) {
+  const t = useT();
+  const text = (value: string) => (own ? value : t(value));
   return (
     <Card as="li" tone={entry.severity === "High" ? "high" : "medium"} className="stack-sm card-fill radar-card">
       <div className="row-between">
         <Chip tone={entry.severity === "High" ? "high" : "caution"} upper>
-          {entry.type}
+          {t(entry.type)}
         </Chip>
-        <Chip tone="neutral">{label}</Chip>
+        <Chip tone="neutral">{t(label)}</Chip>
       </div>
-      <h3 className="h3">{entry.title}</h3>
-      <p className="small muted">{entry.description}</p>
-      {entry.warningQuote && <p className="quote">{entry.warningQuote}</p>}
+      <h3 className="h3">{text(entry.title)}</h3>
+      <p className="small muted">{text(entry.description)}</p>
+      {entry.warningQuote && (
+        <p className="quote" lang={own ? undefined : "en"} dir="auto">
+          {entry.warningQuote}
+        </p>
+      )}
       <p className="card-foot small muted row">
         <MapPin className="icon" aria-hidden="true" />
-        <span>{entry.region}</span>
+        <span>{t(entry.region)}</span>
       </p>
     </Card>
   );
@@ -47,6 +55,7 @@ export function ThreatRadar() {
   const local = useLocalReports();
   const samples = THREAT_SAMPLES.filter((entry) => matches(entry, query, type));
   const mine = local.filter((entry) => matches(entry, query, type));
+  const t = useT();
 
   return (
     <div className="stack">
@@ -55,19 +64,19 @@ export function ThreatRadar() {
           <p className="eyebrow-pill eyebrow-red">
             <span className="dot dot-high pulse" aria-hidden="true" />
             <ShieldAlert className="icon" aria-hidden="true" />
-            <span>{SAMPLE_LABEL}</span>
+            <span>{t(SAMPLE_LABEL)}</span>
           </p>
           <h1 id="page-title" className="h1">
-            Threat Radar
+            {t("Threat Radar")}
           </h1>
           <p className="lead">
-            Common job-scam patterns, shown with made-up examples. These are not real reports and are not live data.
+            {t("Common job-scam patterns, shown with made-up examples. These are not real reports and are not live data.")}
           </p>
         </div>
         <div className="hero-side">
           <Button variant="danger" className="glow-red" onClick={() => setReporting(true)}>
             <Plus className="icon" aria-hidden="true" />
-            Add to Threat Radar
+            {t("Add to Threat Radar")}
           </Button>
         </div>
       </section>
@@ -77,21 +86,21 @@ export function ThreatRadar() {
           <div className="search-wrap">
             <Search className="icon" aria-hidden="true" />
             <label htmlFor="radar-search" className="visually-hidden">
-              Search the reports
+              {t("Search the reports")}
             </label>
             <input
               id="radar-search"
               type="search"
-              placeholder="Search by words or emirate"
+              placeholder={t("Search by words or emirate")}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
             />
           </div>
         </div>
-        <div className="tabs" role="group" aria-label="Filter by type">
+        <div className="tabs" role="group" aria-label={t("Filter by type")}>
           {[ALL, ...THREAT_TYPES].map((option) => (
             <button key={option} type="button" className="tab" aria-pressed={type === option} onClick={() => setType(option)}>
-              {option}
+              {t(option)}
             </button>
           ))}
         </div>
@@ -100,14 +109,14 @@ export function ThreatRadar() {
       {local.length > 0 && (
         <section className="stack-sm" aria-labelledby="mine-heading">
           <h2 id="mine-heading" className="h2">
-            Your reports (this tab only, not sent anywhere)
+            {t("Your reports (this tab only, not sent anywhere)")}
           </h2>
           {mine.length === 0 ? (
-            <p className="muted">None of your reports match.</p>
+            <p className="muted">{t("None of your reports match.")}</p>
           ) : (
             <ul className="grid grid-2">
               {mine.map((entry) => (
-                <EntryCard key={entry.id} entry={entry} label="Your report" />
+                <EntryCard key={entry.id} entry={entry} label="Your report" own />
               ))}
             </ul>
           )}
@@ -116,10 +125,10 @@ export function ThreatRadar() {
 
       <section className="stack-sm" aria-labelledby="samples-heading">
         <h2 id="samples-heading" className="h2">
-          {SAMPLE_LABEL}
+          {t(SAMPLE_LABEL)}
         </h2>
         {samples.length === 0 ? (
-          <p className="muted">No sample report matches.</p>
+          <p className="muted">{t("No sample report matches.")}</p>
         ) : (
           <ul className="grid grid-2">
             {samples.map((entry) => (

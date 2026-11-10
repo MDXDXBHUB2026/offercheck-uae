@@ -3,6 +3,7 @@
 import { useRef, useState, type ReactNode } from "react";
 import { Crosshair, Pause, Play, Zap } from "lucide-react";
 import { HeroBackdrop } from "@/components/HeroBackdrop";
+import { useT } from "@/components/shell/lang";
 
 // The Offer Analyzer hero frame (AI Studio port): the 24px emerald panel with corner brackets, the
 // dim video backdrop, the text panel (children, rendered on the server) and, on the other side, a
@@ -25,6 +26,7 @@ export function HeroStage({ children }: { children: ReactNode }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(false);
   const [glow, setGlow] = useState<"max" | "normal">("max");
+  const t = useT();
 
   function togglePause() {
     const next = !paused;
@@ -75,23 +77,23 @@ export function HeroStage({ children }: { children: ReactNode }) {
           <div className="hud-head">
             <p className="hud-title">
               <Crosshair className="icon text-green hud-crosshair" aria-hidden="true" />
-              <span>Example findings</span>
+              <span>{t("Example findings")}</span>
             </p>
-            <span className="chip chip-neutral mono">{EXAMPLES.length} EXAMPLES</span>
+            <span className="chip chip-neutral mono">{t("{0} EXAMPLES", EXAMPLES.length)}</span>
           </div>
           <ul className="hud-rows mono">
             {EXAMPLES.map((row) => (
               <li key={row.text}>
                 <span className={`dot dot-${row.tone}`} aria-hidden="true" />
-                <span>{row.text}</span>
-                <span className="hud-tag">{row.tag}</span>
+                <span>{t(row.text)}</span>
+                <span className="hud-tag">{t(row.tag)}</span>
               </li>
             ))}
           </ul>
           <p className="hud-foot">
-            <span>Demo data, not your text</span>
+            <span>{t("Demo data, not your text")}</span>
             <span className="mono" dir="ltr">
-              Dubai 25.20° N, 55.27° E
+              {t("Dubai")} 25.20° N, 55.27° E
             </span>
           </p>
         </div>
@@ -99,15 +101,15 @@ export function HeroStage({ children }: { children: ReactNode }) {
         <div className="hero-controls">
           <button type="button" className="btn btn-secondary" onClick={togglePause}>
             {paused ? <Play className="icon text-green" aria-hidden="true" /> : <Pause className="icon text-green" aria-hidden="true" />}
-            <span>{paused ? "Resume radar" : "Pause radar"}</span>
+            <span>{paused ? t("Resume radar") : t("Pause radar")}</span>
           </button>
           <button type="button" className="btn btn-secondary" onClick={() => setGlow(glow === "max" ? "normal" : "max")}>
             <Zap className="icon text-green" aria-hidden="true" />
-            <span>{glow === "max" ? "Glow: Max" : "Glow: Normal"}</span>
+            <span>{glow === "max" ? t("Glow: Max") : t("Glow: Normal")}</span>
           </button>
           <span className="chip chip-neutral demo-chip">
             <span className="dot pulse" aria-hidden="true" />
-            <span>Demo animation</span>
+            <span>{t("Demo animation")}</span>
           </span>
         </div>
       </div>

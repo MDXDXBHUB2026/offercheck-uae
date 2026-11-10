@@ -2,6 +2,7 @@ import { useEffect, useRef, type Dispatch } from "react";
 import { Info } from "lucide-react";
 import { Button, Callout, Card } from "@/components/ui";
 import { copyText, unfilledPlaceholders, type GateAction, type GateState } from "@/lib/approvalGate";
+import { useLang, useT } from "@/components/shell/lang";
 
 const NOTHING_SENT = "Nothing is sent until you approve. Offer Check never sends messages for you.";
 
@@ -14,8 +15,8 @@ function approvedNote(copied: boolean): string {
     : "Reply approved. Offer Check has not sent this reply draft anywhere.";
 }
 
-function listOf(items: string[]): string {
-  return items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
+function listOf(items: string[], and: string): string {
+  return items.length < 2 ? items.join("") : `${items.slice(0, -1).join(", ")} ${and} ${items.at(-1)}`;
 }
 
 function now(): string {
@@ -23,14 +24,23 @@ function now(): string {
 }
 
 // Why approval is blocked, or "" when it is not. The gate refuses the same cases on its own.
-function blockedReason(draft: string, editing: boolean): string {
-  if (draft.trim().length === 0) return "Write the reply before you approve.";
+// The placeholders are quoted from the draft, which stays in English.
+function blockedReason(draft: string, editing: boolean, t: Translate): string {
+  if (draft.trim().length === 0) return t("Write the reply before you approve.");
   const missing = unfilledPlaceholders(draft);
   if (missing.length === 0) return "";
-  return `${editing ? "Replace " : "Choose Edit draft and replace "}${listOf(missing)} with the real ${
-    missing.length === 1 ? "text" : "details"
-  } before you approve.`;
+  const one = missing.length === 1;
+  const template = editing
+    ? one
+      ? "Replace {0} with the real text before you approve."
+      : "Replace {0} with the real details before you approve."
+    : one
+      ? "Choose Edit draft and replace {0} with the real text before you approve."
+      : "Choose Edit draft and replace {0} with the real details before you approve.";
+  return t(template, listOf(missing, t("and")));
 }
+
+type Translate = ReturnType<typeof useT>;
 
 // The draft as text, with each unfilled placeholder shown as a highlighted chip. Text only: the
 // draft is never parsed as markup.
@@ -38,7 +48,7 @@ function DraftText({ draft }: { draft: string }) {
   const missing = new Set(unfilledPlaceholders(draft));
   const parts = draft.split(/(\[[^\]\n]+\])/);
   return (
-    <p className="draft-text">
+    <p className="draft-text" lang="en" dir="ltr">
       {parts.map((part, index) =>
         missing.has(part) ? (
           <mark key={index} className="placeholder">
@@ -62,6 +72,8 @@ export function ApprovalPanel({ gate, dispatch }: ApprovalPanelProps) {
   const prepareRef = useRef<HTMLButtonElement>(null);
   const editRef = useRef<HTMLTextAreaElement>(null);
   const manualCopyRef = useRef<HTMLTextAreaElement>(null);
+  const t = useT();
+  const lang = useLang();
 
   const status = gate?.status;
   const editing = gate?.status === "pending" && gate.editing;
@@ -86,20 +98,20 @@ export function ApprovalPanel({ gate, dispatch }: ApprovalPanelProps) {
     return (
       <Card as="section" className="stack-sm approval no-print" aria-labelledby="draft-heading">
         <h2 id="draft-heading" className="h3">
-          Draft reply
+          {t("Draft reply")}
         </h2>
         <div className="stack-sm">
           {gate && (
             <Callout tone="neutral" role="status" className="confirm">
-              <p>Draft discarded.</p>
+              <p>{t("Draft discarded.")}</p>
             </Callout>
           )}
           <p className="approval-note small muted">
-            Offer Check can prepare a careful reply for you to review. {NOTHING_SENT}
+            {t("Offer Check can prepare a careful reply for you to review.")} {t(NOTHING_SENT)}
           </p>
           <div className="row approval-actions">
             <Button ref={prepareRef} variant="secondary" onClick={() => dispatch({ type: "prepare", at: now() })}>
-              Prepare draft reply
+              {t("Prepare draft reply")}
             </Button>
           </div>
         </div>
@@ -114,23 +126,25 @@ export function ApprovalPanel({ gate, dispatch }: ApprovalPanelProps) {
 
   const startEdit = () => dispatch({ type: "startEdit", at: now() });
   const discard = () => dispatch({ type: "discard", at: now() });
-  const reason = gate.status === "pending" ? blockedReason(gate.draft, gate.editing) : "";
+  const reason = gate.status === "pending" ? blockedReason(gate.draft, gate.editing, t) : "";
 
   return (
     <Card as="section" className="stack-sm approval no-print" aria-labelledby="approval-heading">
       <h2 id="approval-heading" className="h3" ref={headingRef} tabIndex={-1}>
-        {gate.status === "pending" ? "Your approval needed" : "Reply approved"}
+        {t(gate.status === "pending" ? "Your approval needed" : "Reply approved")}
       </h2>
       <div className="stack-sm">
-        <p className="approval-note small muted">{gate.status === "approved" ? approvedNote(gate.copied) : NOTHING_SENT}</p>
+        <p className="approval-note small muted">{t(gate.status === "approved" ? approvedNote(gate.copied) : NOTHING_SENT)}</p>
 
         {gate.status === "pending" && gate.editing && (
           <>
-            <label htmlFor="draft-edit">Draft reply</label>
+            <label htmlFor="draft-edit">{t("Draft reply")}</label>
             <textarea
               id="draft-edit"
               ref={editRef}
               rows={10}
+              lang="en"
+              dir="ltr"
               value={gate.draft}
               onChange={(event) => dispatch({ type: "changeDraft", draft: event.target.value })}
             />
@@ -141,7 +155,7 @@ export function ApprovalPanel({ gate, dispatch }: ApprovalPanelProps) {
         {gate.status === "approved" && gate.copied && (
           <>
             <Callout tone="success" role="status" className="confirm">
-              <p>Reply copied. Paste it yourself if you want to use it.</p>
+              <p>{t("Reply copied. Paste it yourself if you want to use it.")}</p>
             </Callout>
             <DraftText draft={gate.draft} />
           </>
@@ -149,14 +163,16 @@ export function ApprovalPanel({ gate, dispatch }: ApprovalPanelProps) {
         {gate.status === "approved" && !gate.copied && (
           <>
             <Callout tone="neutral" role="status" className="confirm">
-              <p>Your browser did not allow copying. Select the text below and copy it yourself.</p>
+              <p>{t("Your browser did not allow copying. Select the text below and copy it yourself.")}</p>
             </Callout>
-            <label htmlFor="draft-manual-copy">Reply to copy</label>
+            <label htmlFor="draft-manual-copy">{t("Reply to copy")}</label>
             <textarea
               id="draft-manual-copy"
               ref={manualCopyRef}
               rows={10}
               readOnly
+              lang="en"
+              dir="ltr"
               value={gate.draft}
             />
           </>
@@ -167,14 +183,14 @@ export function ApprovalPanel({ gate, dispatch }: ApprovalPanelProps) {
             // aria-disabled, not disabled: the button stays in the tab order, so keyboard and
             // screen-reader users reach it and hear why it is blocked.
             <Button blocked={Boolean(reason)} reasonId="approve-reason" onClick={() => void approve(gate.draft)}>
-              Approve and copy reply
+              {t("Approve and copy reply")}
             </Button>
           )}
           <Button variant="secondary" blocked={editing} onClick={startEdit}>
-            Edit draft
+            {t("Edit draft")}
           </Button>
           <Button variant="danger" onClick={discard}>
-            Discard
+            {t("Discard")}
           </Button>
         </div>
 
@@ -185,7 +201,18 @@ export function ApprovalPanel({ gate, dispatch }: ApprovalPanelProps) {
             {reason && (
               <>
                 <Info className="icon" aria-hidden="true" />
-                <span>{reason}</span>
+                <span>
+                  {/* The placeholders are quoted from the English draft, so they keep its language. */}
+                  {(lang === "ar" ? reason.split(/(\[[^\]\n]+\])/) : [reason]).map((part, index) =>
+                    index % 2 === 1 ? (
+                      <bdi key={index} lang="en">
+                        {part}
+                      </bdi>
+                    ) : (
+                      part
+                    ),
+                  )}
+                </span>
               </>
             )}
           </p>

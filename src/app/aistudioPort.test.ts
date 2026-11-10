@@ -539,8 +539,8 @@ describe("Copy: Offer Check does not report anything for the user", () => {
     expect(report).toContain(note);
     expect(read("src/components/shell/site.tsx")).toContain(note);
     const navbar = read("src/components/shell/Navbar.tsx");
-    expect(navbar).toContain("<p className=\"small muted\">{REPORT_FRAUD_NOTE}</p>");
-    expect(navbar.indexOf("REPORT_FRAUD_NOTE}")).toBeGreaterThan(navbar.indexOf('id="hotlines-panel"'));
+    expect(navbar).toContain("<p className=\"small muted\">{t(REPORT_FRAUD_NOTE)}</p>");
+    expect(navbar.indexOf("REPORT_FRAUD_NOTE)}")).toBeGreaterThan(navbar.indexOf('id="hotlines-panel"'));
   });
 
   it("the Threat Radar add buttons say what they do: keep a note in this tab", () => {

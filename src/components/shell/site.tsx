@@ -3,6 +3,7 @@ import { LimitsLink } from "@/components/LimitsLink";
 import { LIMITS_SECTION } from "@/components/publicLimitations";
 import { ArabicNote } from "@/components/shell/ArabicNote";
 import { contact } from "@/data/uaeContacts";
+import { T } from "@/components/shell/T";
 
 // Site-wide text and navigation. Server-safe: no hooks here.
 
@@ -65,30 +66,49 @@ export function SiteFooter() {
               <ShieldCheck className="icon text-green" aria-hidden="true" />
               <span>Offer Check UAE</span>
             </h2>
-            <p>A free, rule-based check for warning signs in UAE job offers.</p>
-            <p className="small muted">Rule-based score: the same English text gives the same score.</p>
+            <p>
+              <T>A free, rule-based check for warning signs in UAE job offers.</T>
+            </p>
+            <p className="small muted">
+              <T>Rule-based score: the same English text gives the same score.</T>
+            </p>
           </div>
-          <ul className="footer-links" aria-label="Official portals">
+          <h3 id="footer-links-heading" className="visually-hidden">
+            <T>Official portals</T>
+          </h3>
+          <ul className="footer-links" aria-labelledby="footer-links-heading">
             {FOOTER_LINKS.map((link) => (
               <li key={link.id}>
                 <a href={contact(link.id).url} target="_blank" rel="noopener noreferrer">
-                  <span>{link.label}</span>
+                  <span>
+                    <T>{link.label}</T>
+                  </span>
                   <ExternalLink className="icon" aria-hidden="true" />
                 </a>
               </li>
             ))}
             <li>
-              <LimitsLink>{LIMITS_SECTION}</LimitsLink>
+              <LimitsLink>
+                <T>{LIMITS_SECTION}</T>
+              </LimitsLink>
             </li>
           </ul>
         </div>
         <div className="footer-bottom">
-          <p className="footer-disclaimer">{FOOTER_DISCLAIMER}</p>
-          <p>{SYNTHETIC_STATEMENT}</p>
-          <p className="notice">{PROTOTYPE_NOTICE}</p>
+          <p className="footer-disclaimer">
+            <T>{FOOTER_DISCLAIMER}</T>
+          </p>
+          <p>
+            <T>{SYNTHETIC_STATEMENT}</T>
+          </p>
+          <p className="notice">
+            <T>{PROTOTYPE_NOTICE}</T>
+          </p>
           <p className="row text-green mono">
             <Lock className="icon" aria-hidden="true" />
-            <span>Encrypted Vault data stays in this browser</span>
+            <span>
+              <T>Encrypted Vault data stays in this browser</T>
+            </span>
           </p>
           <ArabicNote />
         </div>

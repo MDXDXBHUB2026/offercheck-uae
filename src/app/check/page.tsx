@@ -5,6 +5,7 @@ import { LimitationsPanel } from "@/components/LimitationsPanel";
 import { OfferChecker } from "@/components/OfferChecker";
 import { SAMPLE_OFFERS } from "@/data/sampleOffers";
 import { RULES } from "@/lib/agents/redFlag";
+import { T } from "@/components/shell/T";
 
 export const metadata: Metadata = {
   title: "Offer Analyzer",
@@ -21,34 +22,47 @@ export default function CheckPage() {
         <div className="hero-badges">
           <span className="hero-badge hero-badge-green">
             <ShieldCheck className="icon pulse" aria-hidden="true" />
-            <span>Fixed rules, no AI scoring</span>
+            <span>
+              <T>Fixed rules, no AI scoring</T>
+            </span>
           </span>
           <span className="hero-badge mono">
             <span className="ping-icon" aria-hidden="true">
               <Radio className="icon text-green" />
             </span>
-            <span>{RULES.length} rules, every finding quoted</span>
+            <span>
+              <T args={[RULES.length]}>{"{0} rules, every finding quoted"}</T>
+            </span>
           </span>
         </div>
         <h1 id="page-title" className="h1">
-          Check a job offer before you pay or share anything.
+          <T>Check a job offer before you pay or share anything.</T>
         </h1>
         <p className="lead">
-          Paste a job offer to check it against {RULES.length} fixed rules. The rules read English. Other languages can
-          be translated by Google Cloud Translation if you agree. Offer Check&apos;s server does not store your text.
+          <T args={[RULES.length]}>
+            {
+              "Paste a job offer to check it against {0} fixed rules. The rules read English. Other languages can be translated by Google Cloud Translation if you agree. Offer Check's server does not store your text."
+            }
+          </T>
         </p>
         <ul className="hero-chips small">
           <li className="hero-chip">
             <Quote className="icon text-green" aria-hidden="true" />
-            <span>Warning signs with the words that matched</span>
+            <span>
+              <T>Warning signs with the words that matched</T>
+            </span>
           </li>
           <li className="hero-chip">
             <Gauge className="icon text-sky" aria-hidden="true" />
-            <span>Low, medium or high risk indicators</span>
+            <span>
+              <T>Low, medium or high risk indicators</T>
+            </span>
           </li>
           <li className="hero-chip">
             <Landmark className="icon text-amber" aria-hidden="true" />
-            <span>Official places to confirm and to report</span>
+            <span>
+              <T>Official places to confirm and to report</T>
+            </span>
           </li>
         </ul>
       </div>

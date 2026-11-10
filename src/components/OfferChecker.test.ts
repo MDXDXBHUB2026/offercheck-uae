@@ -62,6 +62,9 @@ vi.mock("react", async (importOriginal) => {
         ? [initial, (action: unknown) => typed.gateActions.push(action)]
         : (real.useReducer as (r: unknown, i: unknown) => unknown)(reducer, initial),
     useRef: <T,>(initial: T) => (typed.stubbed ? { current: initial } : real.useRef(initial)),
+    // The language store: English (the server snapshot) while the component is called as a function.
+    useSyncExternalStore: <T,>(subscribe: (cb: () => void) => () => void, getSnapshot: () => T, getServerSnapshot?: () => T) =>
+      typed.stubbed ? (getServerSnapshot ?? getSnapshot)() : real.useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot),
   };
 });
 

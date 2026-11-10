@@ -1,12 +1,14 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
+import { tr, type Arg } from "@/lib/i18n";
 
 // The English / Arabic switch. Arabic sets dir="rtl" and lang="ar" on <html>, so the whole layout
-// mirrors (the CSS uses logical properties). As in the reference app, the navigation labels change
-// language; the content stays in English. The Arabic labels are the reference app's own and have not
-// been reviewed by a native speaker; the footer says so while Arabic is on. The choice is kept in
-// this browser only (localStorage), wrapped so blocked storage never breaks the page.
+// mirrors (the CSS uses logical properties), and the interface text changes language (useT and <T>,
+// dictionary in src/lib/i18nAr.ts). Offer text is never translated by the switch. The Arabic text
+// has not been reviewed by a native speaker; the footer says so while Arabic is on. The choice is
+// kept in this browser only (localStorage), wrapped so blocked storage never breaks the page. The
+// default is English, and the browser's own language settings are never read.
 
 export type Lang = "en" | "ar";
 
@@ -53,4 +55,10 @@ function subscribe(listener: () => void) {
 
 export function useLang(): Lang {
   return useSyncExternalStore(subscribe, getLang, () => "en");
+}
+
+// The interface text in the current language: t("English text", ...slot values).
+export function useT(): (en: string, ...args: Arg[]) => string {
+  const lang = useLang();
+  return (en, ...args) => tr(lang, en, ...args);
 }

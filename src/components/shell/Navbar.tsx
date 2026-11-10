@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { BookOpen, ChevronDown, FileCheck2, Languages, Lock, PhoneCall, Radio, ShieldCheck } from "lucide-react";
 import { BrandBadge, NAV_ITEMS, type NavItem } from "@/components/shell/site";
-import { restoreLang, setLang, useLang } from "@/components/shell/lang";
+import { restoreLang, setLang, useLang, useT } from "@/components/shell/lang";
 import { Button } from "@/components/ui";
 import { HEADER_HOTLINE_IDS, contact } from "@/data/uaeContacts";
 import { REPORT_FRAUD_NOTE } from "@/lib/authorities";
@@ -38,6 +38,22 @@ export function Navbar() {
     restoreLang();
   }, []);
 
+  // The tab title follows the interface language on the five main pages. Next sets the page's own
+  // (English) title after a navigation, so while Arabic is on the title is set again when it changes.
+  useEffect(() => {
+    const item = NAV_ITEMS.find((entry) => isCurrent(pathname, entry.href));
+    if (!item) return;
+    const wanted = `${lang === "ar" ? item.labelAr : item.label} · Offer Check UAE`;
+    const apply = () => {
+      if (document.title !== wanted) document.title = wanted;
+    };
+    apply();
+    if (lang !== "ar" || typeof MutationObserver === "undefined") return;
+    const observer = new MutationObserver(apply);
+    observer.observe(document.head, { subtree: true, childList: true, characterData: true });
+    return () => observer.disconnect();
+  }, [lang, pathname]);
+
   useEffect(() => {
     if (!hotlinesOpen) return;
     const close = (event: MouseEvent) => {
@@ -55,6 +71,7 @@ export function Navbar() {
     }
   }
 
+  const t = useT();
   const label = (item: NavItem) => (lang === "ar" ? item.labelAr : item.label);
 
   return (
@@ -72,12 +89,12 @@ export function Navbar() {
             <span className="brand-text">
               <span className="brand-name">Offer Check UAE</span>
               <span className="brand-caption" aria-hidden="true">
-                UAE job offer scam check
+                {t("UAE job offer scam check")}
               </span>
             </span>
           </Link>
 
-          <nav aria-label="Main" className="nav-desktop">
+          <nav aria-label={t("Main")} className="nav-desktop">
             {NAV_ITEMS.map((item) => {
               const Icon = ICONS[item.id];
               return (
@@ -99,7 +116,7 @@ export function Navbar() {
             {/* True of the engine: the score comes from fixed rules (scoring.ts), with no AI model. */}
             <span className="status-pill">
               <span className="status-dot" aria-hidden="true" />
-              <span>Fixed rules</span>
+              <span>{t("Fixed rules")}</span>
             </span>
             <div className="dropdown">
               <Button
@@ -110,22 +127,22 @@ export function Navbar() {
                 onClick={() => setHotlinesOpen((open) => !open)}
               >
                 <PhoneCall className="icon text-red" aria-hidden="true" />
-                <span className="btn-label-wide">UAE Hotlines</span>
-                <span className="visually-hidden">UAE hotlines</span>
+                <span className="btn-label-wide">{t("UAE Hotlines")}</span>
+                <span className="visually-hidden">{t("UAE hotlines")}</span>
                 <ChevronDown className="icon text-red" aria-hidden="true" />
               </Button>
               {hotlinesOpen && (
                 <div id="hotlines-panel" ref={panelRef} className="dropdown-panel">
-                  <p className="label-caps">Official UAE hotlines</p>
+                  <p className="label-caps">{t("Official UAE hotlines")}</p>
                   <div className="stack-sm">
                     {HEADER_HOTLINE_IDS.map((id) => {
                       const entry = contact(id);
                       return (
                         <a key={id} href={`tel:${entry.hotline}`} className="contact-row">
                           <span>
-                            <span className="contact-name">{entry.name}</span>
+                            <span className="contact-name">{lang === "ar" ? entry.arabicName : entry.name}</span>
                             <br />
-                            <span className="small muted">{entry.purpose}</span>
+                            <span className="small muted">{t(entry.purpose)}</span>
                           </span>
                           <span className="contact-number" dir="ltr">{entry.hotlineLabel}</span>
                         </a>
@@ -134,7 +151,7 @@ export function Navbar() {
                   </div>
                   {/* The dropdown lists a reporting hotline (eCrime), so it carries the same note as
                       every other place that lists reporting channels. */}
-                  <p className="small muted">{REPORT_FRAUD_NOTE}</p>
+                  <p className="small muted">{t(REPORT_FRAUD_NOTE)}</p>
                 </div>
               )}
             </div>
@@ -145,7 +162,7 @@ export function Navbar() {
           </div>
         </div>
 
-        <nav aria-label="Main (compact)" className="nav-mobile">
+        <nav aria-label={t("Main (compact)")} className="nav-mobile">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
@@ -153,7 +170,7 @@ export function Navbar() {
               className="tab"
               aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
             >
-              {item.short}
+              {t(item.short)}
             </Link>
           ))}
         </nav>

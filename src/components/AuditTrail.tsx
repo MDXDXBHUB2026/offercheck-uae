@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Chip, Disclosure, type ChipTone } from "@/components/ui";
 import { verifyAuditLog, type AuditEntry, type AuditValue, type ChainCheck } from "@/lib/audit";
+import { useT } from "@/components/shell/lang";
 
 const HASH_SHOWN = 12;
 
@@ -49,24 +50,25 @@ export function AuditTrail({ entries, failed }: { entries: AuditEntry[]; failed?
   }, [entries]);
 
   const result = check?.entries === entries ? check.result : null;
+  const t = useT();
   return (
-    <section className="stack-sm audit-trail no-print" aria-label="Audit trail">
+    <section className="stack-sm audit-trail no-print" aria-label={t("Audit trail")}>
       {/* Outside the collapsed list, so a screen reader announces it. */}
       <p className="audit-failed small text-red" role="status">
-        {failed ? "This browser could not add the latest step to the audit trail." : ""}
+        {failed ? t("This browser could not add the latest step to the audit trail.") : ""}
       </p>
       <Disclosure
         summary={
           <>
-            <span className="audit-title">Audit trail</span>
+            <span className="audit-title">{t("Audit trail")}</span>
             <span className="audit-count">
-              {entries.length} {entries.length === 1 ? "entry" : "entries"}
+              {t(entries.length === 1 ? "{0} entry" : "{0} entries", entries.length)}
             </span>
-            <Chip tone={chainTone(result)}>{chainLabel(result)}</Chip>
+            <Chip tone={chainTone(result)}>{t(chainLabel(result))}</Chip>
           </>
         }
       >
-        <ol className="audit-list">
+        <ol className="audit-list" lang="en" dir="ltr">
           {entries.map((entry) => (
             <li key={entry.hash}>
               <span className="audit-kind label-caps">{entry.kind}</span>
