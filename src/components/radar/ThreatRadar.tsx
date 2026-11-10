@@ -67,7 +67,7 @@ export function ThreatRadar() {
         <div className="hero-side">
           <Button variant="danger" className="glow-red" onClick={() => setReporting(true)}>
             <Plus className="icon" aria-hidden="true" />
-            Add a report
+            Add to Threat Radar
           </Button>
         </div>
       </section>

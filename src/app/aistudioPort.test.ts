@@ -330,12 +330,13 @@ describe("AI Studio port: result card", () => {
     expect(basis).not.toContain("%");
   });
 
-  it("findings are numbered, with Copy quote (Copied for 1.5s) and Report signal", () => {
+  it("findings are numbered, with Copy quote (Copied for 1.5s) and Add to Threat Radar", () => {
     const html = render(SCAM_OFFER);
     const count = runManager(SCAM_OFFER).findings.filter((f) => f.severity !== "info").length;
     for (let n = 1; n <= count; n += 1) expect(html).toContain(`aria-hidden="true">${n}</span>`);
     expect(html).toContain("Copy quote");
-    expect(html).toContain("Report signal");
+    expect(html).toContain("Add to Threat Radar");
+    expect(html).not.toContain("Report signal");
     expect(COPIED_MS).toBe(1500);
     expect(html).toContain(`Documented red flags (${count})`);
     expect(html).toContain("Highlights in your text");
@@ -387,11 +388,11 @@ describe("AI Studio port: Phase 3 pages", () => {
     expect(rendered).toContain(`href="${MOHRE_INQUIRY_URL.replace("&", "&amp;")}"`);
   });
 
-  it("Threat Radar: red banner, pulsing demo pill, red-glow Add a report, every card tagged Demo data, no votes or dates", () => {
+  it("Threat Radar: red banner, pulsing demo pill, red-glow Add to Threat Radar, every card tagged Demo data, no votes or dates", () => {
     const page = html(createElement(RadarPage));
     expect(page).toContain('aria-labelledby="page-title" data-tint="red"');
     expect(page).toMatch(/<p class="eyebrow-pill eyebrow-red"><span class="dot dot-high pulse" aria-hidden="true"><\/span>/);
-    expect(page).toMatch(/<button type="button" class="btn btn-danger glow-red">[\s\S]*?Add a report<\/button>/);
+    expect(page).toMatch(/<button type="button" class="btn btn-danger glow-red">[\s\S]*?Add to Threat Radar<\/button>/);
     expect(page.match(/radar-card/g)).toHaveLength(THREAT_SAMPLES.length);
     expect(page.match(/>Demo data</g)).toHaveLength(THREAT_SAMPLES.length);
     expect(page).not.toMatch(/upvote|\bvotes?\b|\d{4}-\d{2}-\d{2}|\bago\b/i);
@@ -487,5 +488,70 @@ describe("Header: the brand stays fully visible", () => {
     // Without the decorative tab icons all five labels fit in the capped header (measured 1280 to
     // 1920 px, English and Arabic); the scroll is only a fallback.
     expect(desktop).toMatch(/\.nav-desktop \.tab \.icon \{\s*display: none;/);
+  });
+});
+
+// Copy check (2026-11-10): Offer Check never reports, files, submits or forwards anything for the
+// user. Controls only copy text, keep a note in this tab, or open an official page or the phone
+// dialler, and their labels say so. Every place that lists reporting channels carries the note
+// "Offer Check does not report anything for you and does not give legal advice."
+describe("Copy: Offer Check does not report anything for the user", () => {
+  const FORBIDDEN =
+    /\breported to\b|\bwe (?:will )?(?:report|file|submit|forward)\b|\breport(?:s|ed)? (?:it |this |them )?for you\b|\bsubmit(?:s|ted)? to\b|\bsent to (?:the )?(?:authorities|police)\b|\bforwarded to\b|\bfiled (?:with|a report|a complaint)\b|\bReport signal\b/i;
+  const html = (element: Parameters<typeof renderToStaticMarkup>[0]) => renderToStaticMarkup(element);
+  const COPY_SOURCES = [
+    ...UI_SOURCES,
+    "src/lib/authorities.ts",
+    "src/lib/warningSigns.ts",
+    "src/lib/resultView.ts",
+    "src/lib/agents/drafter.ts",
+    "src/lib/approvalGate.ts",
+  ];
+
+  it("no user-facing source says it reports, files, submits or forwards for the user", () => {
+    for (const file of COPY_SOURCES) expect(read(file), file).not.toMatch(FORBIDDEN);
+  });
+
+  it("no rendered page or result says so either", () => {
+    const rendered = [
+      html(createElement(PortalsPage)),
+      html(createElement(RadarPage)),
+      html(createElement(LegalPage)),
+      html(createElement(ResultCard, { result: runManager(SCAM_OFFER), ruleCount: RULES.length, onReport: () => {} })),
+      html(createElement(ResultCard, { result: runManager(LEGIT_OFFER), ruleCount: RULES.length })),
+    ].join(" ");
+    expect(rendered).not.toMatch(FORBIDDEN);
+    expect(rendered).toContain("Add to Threat Radar");
+  });
+
+  it("the test catches the phrases it is meant to catch", () => {
+    for (const phrase of ["Reported to MoHRE", "We report it", "We will report this for you", "Submitted to Dubai Police", "Report signal", "forwarded to the police"]) {
+      expect(phrase, phrase).toMatch(FORBIDDEN);
+    }
+    expect("Offer Check does not report anything for you and does not give legal advice.").not.toMatch(FORBIDDEN);
+  });
+
+  it("every place that lists reporting channels carries the no-reporting note", () => {
+    const note = "Offer Check does not report anything for you and does not give legal advice.";
+    expect(html(createElement(PortalsPage))).toContain(note);
+    const card = html(createElement(ResultCard, { result: runManager(SCAM_OFFER), ruleCount: RULES.length }));
+    const report = card.slice(card.indexOf('aria-labelledby="report-heading"'));
+    expect(report).toContain(note);
+    expect(read("src/components/shell/site.tsx")).toContain(note);
+    const navbar = read("src/components/shell/Navbar.tsx");
+    expect(navbar).toContain("<p className=\"small muted\">{REPORT_FRAUD_NOTE}</p>");
+    expect(navbar.indexOf("REPORT_FRAUD_NOTE}")).toBeGreaterThan(navbar.indexOf('id="hotlines-panel"'));
+  });
+
+  it("the Threat Radar add buttons say what they do: keep a note in this tab", () => {
+    expect(read("src/components/radar/ReportModal.tsx")).toContain("Add to this tab");
+    expect(read("src/components/radar/ReportModal.tsx")).toContain("Offer Check does not send reports to anyone.");
+    for (const file of UI_SOURCES) expect(read(file), file).not.toMatch(/>\s*Add (?:a )?report\s*</);
+  });
+
+  it("the LINK-2 entries read as a directory, not as the MoI or Aman portals", () => {
+    const names = mainChannels().filter((c) => c.id === "moi_ecrimes" || c.id === "abu_dhabi_aman").map((c) => c.name);
+    expect(names).toHaveLength(2);
+    for (const name of names) expect(name).toMatch(/^UAE Government: where to report cybercrime \(lists /);
   });
 });

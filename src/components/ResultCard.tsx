@@ -166,7 +166,7 @@ function FlagCard({
           {onReport && (
             <Button variant="secondary" onClick={() => onReport(flag)}>
               <ShieldAlert className="icon" aria-hidden="true" />
-              Report signal
+              Add to Threat Radar
             </Button>
           )}
         </div>

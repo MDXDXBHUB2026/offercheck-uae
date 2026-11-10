@@ -30,7 +30,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
 ];
 
 export const FOOTER_DISCLAIMER =
-  "A low score does not confirm an offer is genuine. Offer Check does not give legal advice. A translation can lose or change meaning.";
+  "A low score does not confirm an offer is genuine. Offer Check does not report anything for you and does not give legal advice. A translation can lose or change meaning.";
 export const SYNTHETIC_STATEMENT =
   "Risk indicators, not a verdict. It has been tested on synthetic offers only, not validated on real scam data.";
 

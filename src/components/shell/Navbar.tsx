@@ -8,6 +8,7 @@ import { BrandBadge, NAV_ITEMS, type NavItem } from "@/components/shell/site";
 import { restoreLang, setLang, useLang } from "@/components/shell/lang";
 import { Button } from "@/components/ui";
 import { HEADER_HOTLINE_IDS, contact } from "@/data/uaeContacts";
+import { REPORT_FRAUD_NOTE } from "@/lib/authorities";
 
 const ICONS: Record<NavItem["id"], typeof ShieldCheck> = {
   analyzer: ShieldCheck,
@@ -131,6 +132,9 @@ export function Navbar() {
                       );
                     })}
                   </div>
+                  {/* The dropdown lists a reporting hotline (eCrime), so it carries the same note as
+                      every other place that lists reporting channels. */}
+                  <p className="small muted">{REPORT_FRAUD_NOTE}</p>
                 </div>
               )}
             </div>

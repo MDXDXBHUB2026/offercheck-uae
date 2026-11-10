@@ -109,7 +109,7 @@ export function ReportModal({ initial, onClose }: { initial: ReportDraft; onClos
                 Cancel
               </Button>
               <Button type="submit" variant="danger">
-                Add report
+                Add to this tab
               </Button>
             </div>
           </form>
