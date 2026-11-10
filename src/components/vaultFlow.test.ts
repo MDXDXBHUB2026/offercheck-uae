@@ -13,7 +13,7 @@ vi.mock("react", async (importOriginal) => {
 });
 vi.mock("next/navigation", () => ({ usePathname: () => "/vault" }));
 
-import { EmptyVault, EncryptedVault, VAULT_EMPTY } from "@/components/EncryptedVault";
+import { EmptyVault, EncryptedVault, VAULT_EMPTY, VAULT_LOCAL_NOTE } from "@/components/EncryptedVault";
 import { checkedFromVault } from "@/components/OfferChecker";
 import { defaultTitle, PASSPHRASE_NOTE, SAVED_NOTICE, savedDay, SaveVaultModal } from "@/components/SaveVaultModal";
 import { Navbar } from "@/components/shell/Navbar";
@@ -106,6 +106,7 @@ describe("vault page", () => {
     expect(markup).toContain('href="/check"');
     expect(markup).toContain("Go to the Offer Analyzer");
     expect(markup).not.toContain("vault-open-pass");
+    expect(markup).toContain(VAULT_LOCAL_NOTE.replace("'", "&#x27;"));
     expect(html(createElement(EmptyVault))).toContain(VAULT_EMPTY);
   });
 

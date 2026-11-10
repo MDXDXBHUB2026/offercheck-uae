@@ -12,6 +12,10 @@ import { DecryptError } from "@/lib/vaultCrypto";
 
 const LEVEL_TONE = { High: "high", Medium: "caution", Low: "green" } as const;
 
+// Saved results live in this browser's storage only, so the page says what loses them.
+export const VAULT_LOCAL_NOTE =
+  "Saved results are kept only in this browser. They are lost if this browser's data is cleared, and they are not available on another device or browser.";
+
 export const VAULT_EMPTY =
   "No saved results yet. Run a check, then choose Save Encrypted on the result. You will choose your passphrase there. Offer Check cannot recover it.";
 
@@ -134,6 +138,7 @@ export function EncryptedVault() {
               "Results you save with Save Encrypted stay in this browser, encrypted with your passphrase. They are never sent anywhere. The passphrase is not stored: without it the records cannot be opened.",
             )}
           </p>
+          <p className="small muted">{t(VAULT_LOCAL_NOTE)}</p>
         </div>
         {records && (
           <div className="hero-side">

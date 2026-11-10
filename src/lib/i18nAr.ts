@@ -668,6 +668,8 @@ const ENTRIES: Record<string, string> = {
   "Delete": "حذف",
   "This browser did not allow that.": "لم يسمح هذا المتصفح بذلك.",
   "No saved results yet": "لا توجد نتائج محفوظة بعد",
+  "Saved results are kept only in this browser. They are lost if this browser's data is cleared, and they are not available on another device or browser.":
+    "تُحفظ النتائج في هذا المتصفح فقط. وتضيع إذا مُسحت بيانات هذا المتصفح، ولا تتوفر على جهاز أو متصفح آخر.",
   "No saved results yet. Run a check, then choose Save Encrypted on the result. You will choose your passphrase there. Offer Check cannot recover it.":
     "لا توجد نتائج محفوظة بعد. أجرِ فحصًا، ثم اختر \"حفظ مشفّر\" في النتيجة. ستختار عبارة المرور هناك. لا يستطيع Offer Check استعادتها.",
   "Go to the Offer Analyzer": "انتقل إلى محلل العروض",

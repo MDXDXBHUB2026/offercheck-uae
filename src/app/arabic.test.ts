@@ -35,7 +35,7 @@ import {
 import { PUBLIC_LIMITS, PUBLIC_LIMITS_INTRO } from "@/components/publicLimitations";
 import { ReportModal } from "@/components/radar/ReportModal";
 import { intakeNote, ResultCard } from "@/components/ResultCard";
-import { EmptyVault, VAULT_EMPTY } from "@/components/EncryptedVault";
+import { EmptyVault, VAULT_EMPTY, VAULT_LOCAL_NOTE } from "@/components/EncryptedVault";
 import { PASSPHRASE_NOTE, SAVED_NOTICE, SaveVaultModal } from "@/components/SaveVaultModal";
 import { qualifiedSummary, scoreChip } from "@/components/scoreChip";
 import { Navbar } from "@/components/shell/Navbar";
@@ -252,6 +252,7 @@ describe("Arabic interface: every message of the existing flow has Arabic", () =
     ...WARNING_SIGNS.flatMap((sign) => [sign.sign, sign.whatToDo, sign.why]),
     ...(["unchecked", "partial", "translated"] as const).map((state) => intakeNote(state, "hi") ?? ""),
     VAULT_EMPTY,
+    VAULT_LOCAL_NOTE,
     PASSPHRASE_NOTE,
     SAVED_NOTICE,
   ];
