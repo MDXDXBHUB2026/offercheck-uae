@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { HeroBackdrop } from "@/components/HeroBackdrop";
 import { LimitationsPanel } from "@/components/LimitationsPanel";
 import { OfferChecker } from "@/components/OfferChecker";
 import { SAMPLE_OFFERS } from "@/data/sampleOffers";
@@ -14,8 +15,9 @@ export const metadata: Metadata = {
 // The layout supplies <main>.
 export default function CheckPage() {
   const hero = (
-    <section className="card hero" aria-labelledby="page-title">
-      <div className="stack-sm">
+    <section className="card hero hero-video" aria-labelledby="page-title">
+      <HeroBackdrop />
+      <div className="stack-sm hero-glass">
         <p className="label-caps text-green">
           <span className="dot" aria-hidden="true" /> Fixed rules, no AI scoring
         </p>
@@ -27,7 +29,7 @@ export default function CheckPage() {
           be translated by Google Cloud Translation if you agree. Offer Check&apos;s server does not store your text.
         </p>
       </div>
-      <ul className="hero-side stack-sm small">
+      <ul className="hero-side hero-glass stack-sm small">
         <li>Warning signs with the words that matched</li>
         <li>Low, medium or high risk indicators</li>
         <li>Official places to confirm and to report</li>

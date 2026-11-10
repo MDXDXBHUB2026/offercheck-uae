@@ -64,6 +64,28 @@
   --focus: #6ee7b7;
   --overlay: rgba(0, 0, 0, 0.8);
 
+  /* Glow and aurora (the reference's emerald / cyan / indigo light; decorative only, never behind
+     text without a solid surface in between) */
+  --glow-green: rgba(16, 185, 129, 0.35);
+  --glow-cyan: rgba(6, 182, 212, 0.25);
+  --glow-red: rgba(239, 68, 68, 0.35);
+  --aurora-green: rgba(16, 185, 129, 0.15);
+  --aurora-cyan: rgba(6, 182, 212, 0.12);
+  --aurora-indigo: rgba(99, 102, 241, 0.15);
+  --sheen: rgba(255, 255, 255, 0.1);
+  --scroll-track: #0f172a;
+  --scroll-thumb: #64748b;
+
+  /* Hero glass: the panels that hold the hero text over the video. 85% of --surface-sunken, so the
+     text keeps 4.5:1 even over a pure white video pixel (checked in routes.test.ts). */
+  --hero-glass: rgba(2, 6, 23, 0.85);
+
+  /* Motion (used only inside the no-preference block) */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 150ms;
+  --dur: 300ms;
+  --dur-slow: 700ms;
+
   /* Type */
   --font-sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --font-arabic: "Tajawal", system-ui, -apple-system, "Segoe UI", Tahoma, sans-serif;
@@ -176,13 +198,33 @@ a:hover {
 }
 
 :focus-visible {
-  outline: 2px solid var(--focus);
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
 
 ::selection {
   background: var(--green-line);
   color: var(--heading);
+}
+
+/* Thin scrollbars (the reference's 6px slate bar); the thumb is at least 3:1 on the track. */
+html {
+  scrollbar-color: var(--scroll-thumb) var(--scroll-track);
+  scrollbar-width: thin;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--scroll-track);
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: var(--r-full);
+  background: var(--scroll-thumb);
 }
 
 .visually-hidden {
@@ -657,6 +699,7 @@ a:hover {
   border-color: var(--green-line);
   background: var(--green-bg);
   color: var(--green-soft);
+  box-shadow: 0 0 18px var(--glow-green);
 }
 
 /* ---------- Header ---------- */
@@ -665,7 +708,10 @@ a:hover {
   top: 0;
   z-index: 40;
   border-bottom: 1px solid var(--border);
-  background: var(--surface-sunken);
+  /* The reference's aurora horizon: a faint emerald / cyan / indigo band over the sunken surface. */
+  background:
+    linear-gradient(90deg, var(--aurora-green), var(--aurora-cyan), var(--aurora-indigo), var(--aurora-green)) 0 0 / 300% 100%,
+    var(--surface-sunken);
 }
 
 .flag-ribbon {
@@ -679,6 +725,7 @@ a:hover {
 
 .flag-ribbon span:nth-child(1) {
   background: var(--flag-green);
+  box-shadow: 0 0 8px var(--glow-green);
 }
 
 .flag-ribbon span:nth-child(2) {
@@ -691,6 +738,7 @@ a:hover {
 
 .flag-ribbon span:nth-child(4) {
   background: var(--flag-red);
+  box-shadow: 0 0 8px var(--glow-red);
 }
 
 .header-row {
@@ -724,6 +772,7 @@ a:hover {
   border: 1px solid var(--green-line);
   border-radius: var(--r-md);
   background: linear-gradient(135deg, var(--green-bg), var(--surface), var(--red-bg));
+  box-shadow: 0 0 15px var(--glow-green);
   color: var(--green);
 }
 
@@ -960,6 +1009,101 @@ a:hover {
   color: var(--ink);
 }
 
+/* The Offer Analyzer hero (AI Studio port): the decorative video behind, HUD corner brackets, and
+   the text on .hero-glass panels. Text never sits on the video directly: the glass is 85% of the
+   sunken surface, so every text pair keeps 4.5:1 even over a white pixel (routes.test.ts). */
+.hero-video {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  min-height: 320px;
+  border-color: var(--green-line);
+  background: var(--surface-sunken);
+  box-shadow: var(--shadow), 0 0 50px var(--glow-green);
+}
+
+.hero-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+.hero-backdrop video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Scrims: darker at the start side and the bottom, open towards the end side. */
+.hero-backdrop::before {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, var(--hero-glass), transparent 75%),
+    linear-gradient(0deg, var(--surface-sunken), transparent 40%);
+  content: "";
+}
+
+[dir="rtl"] .hero-backdrop::before {
+  background:
+    linear-gradient(270deg, var(--hero-glass), transparent 75%),
+    linear-gradient(0deg, var(--surface-sunken), transparent 40%);
+}
+
+/* HUD corner brackets, drawn as eight short gradient bars. */
+.hero-backdrop::after {
+  position: absolute;
+  inset: var(--sp-2);
+  background:
+    linear-gradient(var(--green), var(--green)) top left / 16px 2px,
+    linear-gradient(var(--green), var(--green)) top left / 2px 16px,
+    linear-gradient(var(--green), var(--green)) top right / 16px 2px,
+    linear-gradient(var(--green), var(--green)) top right / 2px 16px,
+    linear-gradient(var(--green), var(--green)) bottom left / 16px 2px,
+    linear-gradient(var(--green), var(--green)) bottom left / 2px 16px,
+    linear-gradient(var(--green), var(--green)) bottom right / 16px 2px,
+    linear-gradient(var(--green), var(--green)) bottom right / 2px 16px;
+  background-repeat: no-repeat;
+  content: "";
+}
+
+.hero-orb {
+  position: absolute;
+  inset-block-start: 10%;
+  inset-inline-end: 5%;
+  width: 320px;
+  height: 320px;
+  border-radius: var(--r-full);
+  background: radial-gradient(circle, var(--aurora-green), transparent 70%);
+}
+
+.hero-orb + .hero-orb {
+  inset-block-start: auto;
+  inset-block-end: -10%;
+  inset-inline-end: 30%;
+  width: 260px;
+  height: 260px;
+  background: radial-gradient(circle, var(--aurora-cyan), transparent 70%);
+}
+
+.hero-glass {
+  position: relative;
+  padding: var(--sp-5);
+  border: 1px solid var(--border);
+  border-radius: var(--r-lg);
+  background: var(--hero-glass);
+  backdrop-filter: blur(12px);
+}
+
+/* On the video hero the side list is its own glass panel, with the same edge on every side. */
+.hero-video .hero-side {
+  padding: var(--sp-5);
+  border: 1px solid var(--border);
+}
+
 .dot {
   display: inline-block;
   flex-shrink: 0;
@@ -1005,6 +1149,14 @@ a:hover {
   color: var(--muted);
   font-size: var(--fs-xs);
   line-height: 1.4;
+}
+
+.sample-card:hover {
+  border-color: var(--green-line);
+}
+
+[dir="rtl"] .sample-arrow {
+  scale: -1 1;
 }
 
 .sample-load {
@@ -1205,6 +1357,8 @@ select:focus-visible {
 
 /* ---------- Progress line ---------- */
 .progress {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   gap: var(--sp-2);
@@ -1217,6 +1371,60 @@ select:focus-visible {
 }
 
 /* ---------- Result card ---------- */
+/* The score ring around the result icon (AI Studio port). Filled to the score from scoring.ts and
+   coloured by the banner tone; the number and chip text beside it carry the meaning. */
+.gauge-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 72px;
+  height: 72px;
+}
+
+.gauge-wrap .icon-tile {
+  width: 54px;
+  height: 54px;
+  border-radius: var(--r-full);
+}
+
+.gauge {
+  position: absolute;
+  inset: 0;
+  rotate: -90deg;
+}
+
+[dir="rtl"] .gauge {
+  scale: 1 -1;
+}
+
+.gauge circle {
+  fill: none;
+  stroke-width: 5;
+}
+
+.gauge-track {
+  stroke: var(--border-strong);
+}
+
+.gauge-value {
+  stroke: var(--muted);
+  stroke-linecap: round;
+}
+
+.gauge-high .gauge-value {
+  stroke: var(--red);
+}
+
+.gauge-medium .gauge-value {
+  stroke: var(--amber);
+}
+
+.gauge-green .gauge-value {
+  stroke: var(--green);
+}
+
 .score-text {
   display: flex;
   flex-wrap: wrap;
@@ -1632,6 +1840,160 @@ details.card > summary {
   .pulse {
     animation: pulse 2s ease-in-out infinite;
   }
+
+  /* AI Studio port (Phase 2). Everything below moves only without a reduced-motion preference. */
+
+  /* Press and hover on buttons that work: scale 1.02 on hover, 0.98 when pressed. Blocked buttons
+     (aria-disabled or disabled) do not move. Tabs keep colour-only hover. */
+  .btn:not([aria-disabled="true"]):not(:disabled) {
+    transition: background-color 150ms ease, border-color 150ms ease, color 150ms ease, scale var(--dur) var(--ease-out),
+      box-shadow var(--dur) var(--ease-out);
+  }
+
+  .btn:not([aria-disabled="true"]):not(:disabled):hover {
+    scale: 1.02;
+  }
+
+  .btn:not([aria-disabled="true"]):not(:disabled):active {
+    scale: 0.98;
+  }
+
+  /* The reference's shimmer sweep: a faint sheen crosses a button or tab on hover. */
+  .btn:not([aria-disabled="true"]):not(:disabled),
+  .tab {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn:not([aria-disabled="true"]):not(:disabled)::after,
+  .tab::after {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, var(--sheen), transparent);
+    translate: -100% 0;
+    content: "";
+    pointer-events: none;
+    transition: translate var(--dur-slow) ease;
+  }
+
+  .btn:not([aria-disabled="true"]):not(:disabled):hover::after,
+  .tab:hover::after {
+    translate: 100% 0;
+  }
+
+  /* Header: the aurora band drifts; the logo badge grows a little on hover; the hotlines panel
+     slides in. */
+  .site-header {
+    animation: aurora-flow 8s ease infinite;
+  }
+
+  .brand-badge {
+    transition: scale var(--dur) var(--ease-out);
+  }
+
+  .brand:hover .brand-badge {
+    scale: 1.05;
+  }
+
+  .dropdown-panel {
+    animation: drop-in var(--dur) var(--ease-out);
+  }
+
+  /* Page and tab change: the page's blocks fade in and rise, staggered by 80ms. */
+  .page > .stack > * {
+    animation: rise-in var(--dur-slow) var(--ease-out) both;
+  }
+
+  .page > .stack > :nth-child(2) {
+    animation-delay: 80ms;
+  }
+
+  .page > .stack > :nth-child(3) {
+    animation-delay: 160ms;
+  }
+
+  .page > .stack > :nth-child(n + 4) {
+    animation-delay: 240ms;
+  }
+
+  /* Hero: the aurora orbs drift slowly. */
+  .hero-orb {
+    animation: orb-drift 18s ease-in-out infinite alternate;
+  }
+
+  .hero-orb + .hero-orb {
+    animation-duration: 24s;
+    animation-direction: alternate-reverse;
+  }
+
+  /* Sample cards lift and their arrow nudges on hover. */
+  .sample-card {
+    transition: border-color var(--dur) var(--ease-out), translate var(--dur) var(--ease-out);
+  }
+
+  .sample-card:hover {
+    translate: 0 -2px;
+  }
+
+  .sample-arrow {
+    transition: translate var(--dur) var(--ease-out);
+  }
+
+  .sample-card:hover .sample-arrow {
+    translate: 3px 0;
+  }
+
+  [dir="rtl"] .sample-card:hover .sample-arrow {
+    translate: -3px 0;
+  }
+
+  /* Loading: an indeterminate sheen runs along the progress line. It shows that work is going on,
+     not how much is done. */
+  .progress::after {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--green), transparent);
+    content: "";
+    animation: progress-sweep 1.4s ease-in-out infinite;
+  }
+
+  /* Result: the score ring fills to the score; finding cards and checklist rows ease their colours. */
+  .gauge-value {
+    animation: gauge-fill 600ms var(--ease-out) both;
+  }
+
+  .flag-card,
+  .check-item {
+    transition: border-color var(--dur) var(--ease-out), background-color var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
+  }
+
+  /* Modals and the report success tick scale in; an opened disclosure fades in. */
+  .modal {
+    animation: pop-in var(--dur) var(--ease-out);
+  }
+
+  .success-tick {
+    animation: pop-in var(--dur-slow) var(--ease-out);
+  }
+
+  details[open] > :not(summary) {
+    animation: rise-in var(--dur) var(--ease-out);
+  }
+}
+
+/* With a reduced-motion preference nothing above applies; this also stops any motion a browser or
+   component adds, so every duration is 0s. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0s !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
 }
 
 @keyframes spin {
@@ -1643,6 +2005,61 @@ details.card > summary {
 @keyframes pulse {
   50% {
     opacity: 0.5;
+  }
+}
+
+@keyframes aurora-flow {
+  0%,
+  100% {
+    background-position: 0% 0;
+  }
+
+  50% {
+    background-position: 100% 0;
+  }
+}
+
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    translate: 0 -8px;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    translate: 0 16px;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    scale: 0.96;
+  }
+}
+
+@keyframes orb-drift {
+  to {
+    translate: -40px 24px;
+    scale: 1.15;
+  }
+}
+
+@keyframes progress-sweep {
+  from {
+    translate: -100% 0;
+  }
+
+  to {
+    translate: 100% 0;
+  }
+}
+
+@keyframes gauge-fill {
+  from {
+    stroke-dashoffset: 100;
   }
 }
 

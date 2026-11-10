@@ -11,10 +11,14 @@ Seamless: each row moves exactly one card-sequence period per loop and the sweep
 ends off the wall, so the last frame leads straight into the first. Rows move with sub-pixel
 interpolation, so the slide is smooth rather than stepped. Frames stream to ffmpeg one by one.
 
-Readable: each pixel's relative luminance is capped at MAX_LUMINANCE (hue kept). Compression
-overshoots a little, so check the encoded files: their brightest pixel must stay at or below
-VIDEO_MAX_LUMINANCE in src/app/routes.test.ts (0.12), where hero text (#e2e8f0 or white) keeps
-4.5:1. Measured 2026-11-08: webm 0.111, mp4 0.088, poster below.
+Brighter version (owner request, 2026-11-10): an emerald and cyan wall, lit more strongly, in the
+app's palette. Each pixel's relative luminance is capped at MAX_LUMINANCE (hue kept); compression
+overshoots a little, so the decoded files are measured after encoding and the result is pinned as
+VIDEO_MAX_LUMINANCE in src/app/routes.test.ts. Hero text no longer sits on the video itself: it
+sits on the glass panels (.hero-glass), whose fill keeps every text pair at 4.5:1 even over a pure
+white pixel, and routes.test.ts checks that worst case.
+Measured 2026-11-10 (decoded at 2 fps): brightest pixel webm 0.410, mp4 0.458, poster 0.372
+(was 0.111 / 0.088 under the old 0.12 cap). Sizes: webm 1.36 MB, mp4 1.10 MB, poster 122 KB.
 """
 
 import subprocess
@@ -27,7 +31,7 @@ W, H = 1600, 900
 FPS = 24
 SECONDS = 20
 N = FPS * SECONDS
-MAX_LUMINANCE = 0.07  # source cap; after compression the measured max must stay <= 0.12
+MAX_LUMINANCE = 0.30  # source cap; the decoded maximum is pinned in routes.test.ts
 SS = 2  # supersampling for card drawing
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -57,7 +61,7 @@ def card(w: int, h: int, tone, gauge: bool, pad: int):
     ImageDraw.Draw(mask).rounded_rectangle((x0, y0, x1, y1), r, fill=255)
     grad = np.zeros((ch, cw, 4), np.uint8)
     t = np.linspace(0, 1, ch)[:, None]
-    top, bottom = np.array([34, 46, 72]), np.array([13, 20, 40])
+    top, bottom = np.array([38, 66, 82]), np.array([12, 28, 40])
     grad[..., :3] = (top + (bottom - top) * t[..., None]).astype(np.uint8)
     body = Image.fromarray(grad, "RGBA")
     body.putalpha(Image.fromarray((np.asarray(mask).astype(np.uint16) * 240 // 255).astype(np.uint8)))
@@ -80,7 +84,7 @@ def card(w: int, h: int, tone, gauge: bool, pad: int):
     ax, ay = x0 + 18 * s, y0 + 18 * s
     avatar = np.zeros((av, av, 4), np.uint8)
     g = np.linspace(0, 1, av)[None, :, None]
-    avatar[..., :3] = (np.array([37, 99, 235]) * (1 - g) + np.array([79, 70, 229]) * g).astype(np.uint8)
+    avatar[..., :3] = (np.array([16, 185, 129]) * (1 - g) + np.array([6, 182, 212]) * g).astype(np.uint8)
     am = Image.new("L", (av, av), 0)
     ImageDraw.Draw(am).ellipse((0, 0, av - 1, av - 1), fill=200)
     avatar_img = Image.fromarray(avatar, "RGBA")
@@ -214,8 +218,8 @@ def plane_frame(rows, t):
         region *= 1 - s[..., 3:4]
         region += s
         # The sweep brightens the glass slightly and lights the status chips and gauges.
-        region[..., :3] += s[..., 3:4] * lit * np.array([0.10, 0.13, 0.22], np.float32)
-        region[..., :3] += g[..., :3] * (0.22 + 0.9 * lit)
+        region[..., :3] += s[..., 3:4] * lit * np.array([0.14, 0.30, 0.26], np.float32)
+        region[..., :3] += g[..., :3] * (0.35 + 1.3 * lit)
     return plane
 
 
@@ -232,21 +236,21 @@ Xn, Yn = xx / W, yy / H
 
 
 def base_background():
-    top, bottom = np.array([2, 6, 22], np.float32), np.array([5, 10, 32], np.float32)
+    top, bottom = np.array([3, 10, 20], np.float32), np.array([6, 18, 30], np.float32)
     bg = top + (bottom - top) * Yn[..., None]
     glow = np.exp(-(((Xn - 0.72) / 0.45) ** 2 + ((Yn - 0.45) / 0.55) ** 2))
-    bg += glow[..., None] * np.array([12, 22, 66], np.float32)
+    bg += glow[..., None] * np.array([8, 52, 56], np.float32)
     return bg
 
 
 BASE = base_background()
 # Far side (left) fades into the dark; the near side (right) stays clear.
-DEPTH = np.clip(0.12 + 0.95 * Xn ** 1.3, 0, 1)[..., None]
-VIGNETTE = (1 - 0.5 * np.clip(((Xn - 0.6) ** 2) / 0.4 + ((Yn - 0.5) ** 2) / 0.5, 0, 1))[..., None]
+DEPTH = np.clip(0.40 + 0.65 * Xn ** 1.2, 0, 1)[..., None]
+VIGNETTE = (1 - 0.3 * np.clip(((Xn - 0.6) ** 2) / 0.4 + ((Yn - 0.5) ** 2) / 0.5, 0, 1))[..., None]
 SW_, SH_ = 320, 180
 sy, sx = np.mgrid[0:SH_, 0:SW_].astype(np.float32)
-BLOBS = [((37, 99, 235), 0.72, 0.40, 0.08, 0.08, 1, 1, 0.0, 0.26),
-         ((79, 70, 229), 0.88, 0.70, 0.06, 0.08, 1, 1, 2.4, 0.22)]
+BLOBS = [((16, 185, 129), 0.70, 0.40, 0.08, 0.08, 1, 1, 0.0, 0.26),
+         ((6, 182, 212), 0.88, 0.70, 0.06, 0.08, 1, 1, 2.4, 0.22)]
 
 
 def aurora(t):
@@ -254,7 +258,7 @@ def aurora(t):
     for colour, cx, cy, rx, ry, kx, ky, ph, size in BLOBS:
         x = (cx + rx * np.sin(2 * np.pi * kx * t + ph)) * SW_
         y = (cy + ry * np.cos(2 * np.pi * ky * t + ph)) * SH_
-        small += np.exp(-((sx - x) ** 2 + (sy - y) ** 2) / (2 * (size * SW_) ** 2))[..., None] * np.array(colour, np.float32) * 0.14
+        small += np.exp(-((sx - x) ** 2 + (sy - y) ** 2) / (2 * (size * SW_) ** 2))[..., None] * np.array(colour, np.float32) * 0.30
     return np.stack([np.asarray(Image.fromarray(np.ascontiguousarray(small[..., i]), "F").resize((W, H), Image.BILINEAR))
                      for i in range(3)], -1)
 
@@ -297,10 +301,9 @@ def main() -> None:
         enc.stdin.close()
         if enc.wait() != 0:
             raise SystemExit("ffmpeg failed")
-    # The MP4 fallback is made from the WebM, 12% darker: x264 overshoots bright edges more than VP9,
-    # and this keeps its brightest decoded pixel well under the 0.12 limit at under 1 MB.
+    # The MP4 fallback is made from the WebM (x264, for browsers without VP9).
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(OUT / "loop.webm"), "-an",
-                    "-vf", "lutrgb=r=val*0.88:g=val*0.88:b=val*0.88", "-c:v", "libx264", "-preset", "slower",
+                    "-c:v", "libx264", "-preset", "slower",
                     "-crf", "34", "-tune", "animation", "-pix_fmt", "yuv420p", "-g", str(FPS * 4),
                     "-movflags", "+faststart", str(OUT / "loop.mp4")], check=True)
     for name in ("loop.webm", "loop.mp4", "poster.jpg"):

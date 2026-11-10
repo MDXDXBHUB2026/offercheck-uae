@@ -708,7 +708,9 @@ describe("header and nav (UX-2)", () => {
       expect(rule(".footer-links a:hover")).toMatch(/^\s*color: var\(--green\);\s*$/);
       expect(footerRules().filter((r) => /transition|animation/.test(r.body))).toEqual([]);
       for (const r of footerRules()) expect(r.body, r.selector).not.toMatch(/outline:\s*(none|0)/);
-      expect(rules.filter((r) => /footer-soon|nav-soon|data-soon|aurora/.test(r.selector + r.body))).toEqual([]);
+      expect(rules.filter((r) => /footer-soon|nav-soon|data-soon/.test(r.selector + r.body))).toEqual([]);
+      // The aurora tokens (Phase 2 port) light the header and hero only; the footer stays plain.
+      expect(footerRules().filter((r) => /aurora|glow/.test(r.selector + r.body))).toEqual([]);
     });
   });
 });
@@ -720,7 +722,10 @@ describe("sample cards", () => {
     const html = renderToStaticMarkup(createElement(Home));
     for (const sample of SAMPLE_OFFERS) {
       expect(html).toContain(`<span id="sample-${sample.id}" class="sample-name">${escapeHtml(sample.name)}</span>`);
-      expect(html).toContain(`<button type="button" class="btn btn-secondary sample" aria-describedby="sample-${sample.id}">Load sample</button>`);
+      // The arrow (AI Studio port) is decorative: aria-hidden, so the button's name stays "Load sample".
+      expect(html).toMatch(
+        new RegExp(`<button type="button" class="btn btn-secondary sample" aria-describedby="sample-${sample.id}">Load sample<svg [^>]*class="lucide lucide-arrow-right icon sample-arrow" aria-hidden="true">`),
+      );
     }
     expect(SAMPLE_OFFERS).toHaveLength(4);
   });

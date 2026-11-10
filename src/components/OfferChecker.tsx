@@ -1,7 +1,7 @@
 "use client";
 
 import { useReducer, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { Eraser, FileText, Linkedin, Mail, MessageCircle, ScanSearch, ShieldCheck } from "lucide-react";
+import { ArrowRight, Eraser, FileText, Linkedin, Mail, MessageCircle, ScanSearch, ShieldCheck } from "lucide-react";
 import { ApprovalPanel } from "@/components/ApprovalPanel";
 import { AuditTrail } from "@/components/AuditTrail";
 import { networkFailure, responseFailure, type CheckFailure } from "@/components/checkRequest";
@@ -432,6 +432,7 @@ export function OfferChecker({
                   }}
                 >
                   Load sample
+                  <ArrowRight className="icon sample-arrow" aria-hidden="true" />
                 </Button>
               </Card>
             ))}

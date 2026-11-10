@@ -54,7 +54,7 @@ export function ReportModal({ initial, onClose }: { initial: ReportDraft; onClos
         </div>
         {done ? (
           <div className="empty stack-sm" role="status">
-            <Check className="icon icon-xl text-green" aria-hidden="true" />
+            <Check className="icon icon-xl text-green success-tick" aria-hidden="true" />
             <p className="h3">Added to this tab&apos;s Threat Radar</p>
             <p className="muted">
               It was not sent anywhere and is gone after a reload. To report a scam, use the official channels in the

@@ -184,17 +184,60 @@ describe("header", () => {
 });
 
 describe("Offer Analyzer hero", () => {
-  it("has its copy, the four synthetic sample cards, the box and one big audit button; no video, no upload", () => {
+  it("has its copy, the four synthetic sample cards, the box and one big audit button; no upload", () => {
     const html = renderToStaticMarkup(createElement(check.default));
-    expect(html).toMatch(/^<div class="stack"><div class="stack"><section class="card hero" aria-labelledby="page-title">/);
+    expect(html).toMatch(/^<div class="stack"><div class="stack"><section class="card hero hero-video" aria-labelledby="page-title">/);
     expect(html).toContain("Check a job offer before you pay or share anything.");
     expect(html.match(/<li class="card sample-card">/g)).toHaveLength(4);
     expect(html).toContain('<textarea id="offer"');
     expect(html.match(/<button type="submit"/g)).toHaveLength(1);
     expect(html).toMatch(/<button type="submit" class="btn btn-primary btn-block btn-lg"/);
-    // The reference's upload / screenshot box is not copied: no file input, no image, no video.
-    expect(html).not.toMatch(/<video|<img|type="file"|Upload|screenshot/i);
-    expect(existsSync(join(process.cwd(), "public/hero"))).toBe(false);
+    // The reference's upload / screenshot box is not copied: no file input, no image.
+    expect(html).not.toMatch(/<img|type="file"|Upload|screenshot/i);
+    // The only video is the hero's decorative backdrop (owner decision 2026-11-10).
+    expect(html.match(/<video/g)).toHaveLength(1);
+  });
+
+  // Owner decision 2026-11-10: a brighter loop than the old 0.12-capped one, rendered locally by
+  // scripts/make-hero-loop.py (the export's video was rejected: its frames carry model names,
+  // invented figures and law articles). The hero text sits on .hero-glass panels instead.
+  describe("hero backdrop video", () => {
+    const html = renderToStaticMarkup(createElement(check.default));
+    const hero = html.slice(html.indexOf('<section class="card hero hero-video"'), html.indexOf("</section>") + 10);
+    const backdrop = hero.slice(hero.indexOf('<div class="hero-backdrop"'), hero.indexOf("</video>") + 8);
+
+    it("is decorative, silent, looping, not focusable, with a poster and no autoplay attribute", () => {
+      expect(backdrop).toMatch(/^<div class="hero-backdrop" aria-hidden="true"><video /);
+      for (const attr of ["muted", "loop", "playsInline", 'preload="metadata"', 'poster="/hero/poster.jpg"', 'tabindex="-1"']) {
+        expect(backdrop.toLowerCase()).toContain(attr.toLowerCase());
+      }
+      expect(backdrop).not.toMatch(/autoplay|controls/i);
+      // Started from script only when motion is allowed; no pause button (owner, S5-1).
+      const source = read("src/components/HeroBackdrop.tsx");
+      expect(source).toContain('window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;');
+      expect(hero).not.toMatch(/<button/);
+    });
+
+    it("ships WebM, MP4 and a poster, each under 2 MB, with no audio track", () => {
+      for (const file of ["loop.webm", "loop.mp4", "poster.jpg"]) {
+        if (file !== "poster.jpg") expect(backdrop).toContain(`src="/hero/${file}"`);
+        const bytes = readFileSync(join(process.cwd(), "public/hero", file));
+        expect(bytes.length, file).toBeGreaterThan(10_000);
+        expect(bytes.length, file).toBeLessThan(2_000_000);
+      }
+      expect(readFileSync(join(process.cwd(), "public/hero/loop.mp4")).includes("soun")).toBe(false);
+      // WebM: no Opus or Vorbis audio codec id.
+      expect(readFileSync(join(process.cwd(), "public/hero/loop.webm")).includes("A_OPUS")).toBe(false);
+      expect(readFileSync(join(process.cwd(), "public/hero/loop.webm")).includes("A_VORBIS")).toBe(false);
+    });
+
+    it("holds every hero text block on a glass panel, never on the video", () => {
+      const glass = hero.match(/class="[^"]*hero-glass[^"]*"/g) ?? [];
+      expect(glass).toHaveLength(2);
+      // Everything after the backdrop is inside one of the two glass panels.
+      const afterBackdrop = hero.slice(hero.indexOf("</div>", hero.indexOf("</video>")) + 6, -"</section>".length);
+      expect(afterBackdrop).toMatch(/^<div class="stack-sm hero-glass">[\s\S]*<\/div><ul class="hero-side hero-glass stack-sm small">[\s\S]*<\/ul>$/);
+    });
   });
 
   it("has the four channel tabs and the Auto-Redact toggle, on by default", () => {
@@ -486,6 +529,21 @@ describe("colour contrast (WCAG AA, from the tokens in globals.css)", () => {
     expect(ratio("focus", "bg")).toBeGreaterThanOrEqual(3);
     expect(ratio("focus", "surface")).toBeGreaterThanOrEqual(3);
     expect(ratio("control-border", "surface")).toBeGreaterThanOrEqual(3);
+  });
+
+  // The hero video can be bright, so the hero text sits on glass: --surface-sunken at 85%. Worst
+  // case: a pure white video pixel under the glass (blur only averages it down). Alpha blending is
+  // done in sRGB values, as browsers do.
+  it.each(["heading", "ink", "ink-soft", "muted", "green"])("hero text %s on the glass keeps 4.5:1 over a white video pixel", (fg) => {
+    const glass = root.match(/--hero-glass:\s*rgba\((\d+),\s*(\d+),\s*(\d+),\s*([\d.]+)\)/);
+    expect(glass, "--hero-glass").not.toBeNull();
+    const [r, g, b, a] = glass!.slice(1).map(Number);
+    expect(`#${[r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("")}`).toBe(token("surface-sunken").toLowerCase());
+    expect(a).toBeGreaterThanOrEqual(0.85);
+    const over = `#${[r, g, b].map((v) => Math.round(a * v + (1 - a) * 255).toString(16).padStart(2, "0")).join("")}`;
+    const [x, y] = [luminance(token(fg)), luminance(over)].sort((p, q) => q - p);
+    expect((x + 0.05) / (y + 0.05)).toBeGreaterThanOrEqual(4.5);
+    expect(css).toMatch(/\.hero-glass \{[^}]*background: var\(--hero-glass\);/);
   });
 
   it("is one dark theme, with no light variant to fall out of date", () => {

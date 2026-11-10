@@ -107,7 +107,7 @@ function FlagCard({
   const [copied, setCopied] = useState<"idle" | "copied" | "failed">("idle");
   const tone = SEVERITY_TONE[finding.severity];
   return (
-    <Card as="li" tone={tone} className="stack-sm">
+    <Card as="li" tone={tone} className="stack-sm flag-card">
       <div className="flag-head">
         <span className={cx("num-tile", `tone-${tone}`)} aria-hidden="true">
           <AlertTriangle className="icon" />
@@ -263,12 +263,31 @@ export function ResultCard({
       >
         <div className="row-between">
           <div className="result-title-block">
-            <span className={cx("icon-tile", tone === "high" ? "text-red" : tone === "medium" ? "text-amber" : tone === "green" ? "text-green" : "muted")}>
-              {allClearShown(notice) && tone === "green" ? (
-                <CheckCircle2 className="icon icon-xl" aria-hidden="true" />
-              ) : (
-                <ShieldAlert className="icon icon-xl" aria-hidden="true" />
+            <span className="gauge-wrap">
+              {/* The score ring (AI Studio port): decoration around the icon, filled to risk.score from
+                  scoring.ts. The number and the chip text carry the meaning; no ring when the text
+                  was not checked, because there is no score to show. */}
+              {notice !== "most" && (
+                <svg className={cx("gauge", `gauge-${tone}`)} viewBox="0 0 72 72" aria-hidden="true" focusable="false">
+                  <circle className="gauge-track" cx="36" cy="36" r="33" pathLength={100} />
+                  <circle
+                    className="gauge-value"
+                    cx="36"
+                    cy="36"
+                    r="33"
+                    pathLength={100}
+                    strokeDasharray="100"
+                    strokeDashoffset={100 - Math.min(100, Math.max(0, risk.score))}
+                  />
+                </svg>
               )}
+              <span className={cx("icon-tile", tone === "high" ? "text-red" : tone === "medium" ? "text-amber" : tone === "green" ? "text-green" : "muted")}>
+                {allClearShown(notice) && tone === "green" ? (
+                  <CheckCircle2 className="icon icon-xl" aria-hidden="true" />
+                ) : (
+                  <ShieldAlert className="icon icon-xl" aria-hidden="true" />
+                )}
+              </span>
             </span>
             <div className="stack-sm">
               <h2 id="results-heading" className="label-caps">

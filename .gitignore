@@ -8,3 +8,6 @@ next-env.d.ts
 .env.*
 !.env.example
 .vercel
+
+# AI Studio export: local reference only, never committed
+docs/reference/aistudio/
