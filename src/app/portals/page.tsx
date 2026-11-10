@@ -22,15 +22,13 @@ const DIRECTORY: Record<UaeContact["id"], { category: string; authority: string 
   ecrime: { category: "Report fraud", authority: "Dubai" },
 };
 
-// "How to verify": general steps that hold for every official channel. No claim about how a
-// portal works inside; its own pages say that.
-function verifySteps(entry: UaeContact): string[] {
-  return [
-    "Open the official site with the button below, not from a link in the message you received.",
-    `What it is for: ${entry.purpose}.`,
-    "If what you were told does not match, call the hotline before you pay or share anything.",
-  ];
-}
+// "How to verify": general steps that hold for every official channel, each an action. No claim
+// about how a portal works inside; its own pages say that. What the channel is for (uaeContacts.ts
+// purpose) is shown above the steps, not as a step.
+const VERIFY_STEPS = [
+  "Open the official site with the button below, not from a link in the message you received.",
+  "If what you were told does not match, call the hotline before you pay or share anything.",
+] as const;
 
 export default function PortalsPage() {
   return (
@@ -79,9 +77,10 @@ export default function PortalsPage() {
               <p className="small muted" lang="ar" dir="rtl">
                 {entry.arabicName}
               </p>
+              <p className="small">{entry.purpose}.</p>
               <p className="label-caps">How to verify</p>
               <ol className="verify-steps small">
-                {verifySteps(entry).map((step, index) => (
+                {VERIFY_STEPS.map((step, index) => (
                   <li key={step}>
                     <span className="num-tile" aria-hidden="true">
                       {index + 1}

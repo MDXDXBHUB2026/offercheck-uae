@@ -397,7 +397,7 @@ describe("AI Studio port: Phase 3 pages", () => {
     expect(page).not.toMatch(/upvote|\bvotes?\b|\d{4}-\d{2}-\d{2}|\bago\b/i);
   });
 
-  it("Gov Portals Hub: each directory card has a category, a level, the Arabic name, three steps, the hotline and Open portal", () => {
+  it("Gov Portals Hub: each directory card has a category, a level, the Arabic name, its purpose, two verify actions, the hotline and Open portal", () => {
     const page = html(createElement(PortalsPage));
     expect(page).toContain('aria-labelledby="page-title" data-tint="green"');
     expect(page).toContain("Offer Check cannot tell whether a reference is real.");
@@ -408,8 +408,13 @@ describe("AI Studio port: Phase 3 pages", () => {
       expect(card).toMatch(/class="chip chip-green chip-upper"/);
       expect(card).toMatch(/>(Federal|Dubai)<\/span>/);
       expect(card).toContain(entry.arabicName);
-      expect(card).toContain("How to verify");
-      expect(card.match(/<span class="num-tile" aria-hidden="true">\d<\/span>/g)).toHaveLength(3);
+      // What the channel is for sits above the steps, in the data's own words; the numbered steps
+      // are actions only.
+      expect(card).toContain(`<p class="small">${entry.purpose}.</p><p class="label-caps">How to verify</p>`);
+      expect(card.match(/<span class="num-tile" aria-hidden="true">\d<\/span>/g)).toHaveLength(2);
+      const steps = card.slice(card.indexOf('<ol class="verify-steps'), card.indexOf("</ol>"));
+      expect(steps).not.toContain("What it is for");
+      expect(steps).not.toContain(entry.purpose);
       expect(card).toContain(`href="tel:${entry.hotline}"`);
       expect(card).toMatch(new RegExp(`<a href="${entry.url.replace(/[.?]/g, "\$&")}" class="btn btn-primary"[^>]*>Open portal`));
     });
@@ -450,5 +455,37 @@ describe("AI Studio port: Phase 3 pages", () => {
   it("route change: the page fades in over 200ms with an 8px rise", () => {
     expect(block("@media (prefers-reduced-motion: no-preference)").text).toMatch(/\.page > \.stack \{\s*animation: page-in 200ms/);
     expect(css).toMatch(/@keyframes page-in \{\s*from \{\s*opacity: 0;\s*translate: 0 8px;/);
+  });
+});
+
+// Header layout: at 1280 to 1920 px (content capped at 1280) the tab row was drawn over
+// "Offer Check UAE", in English and Arabic. From 1200px the brand and the actions never shrink; the tab row
+// takes what is left, may shrink to nothing and then scrolls sideways. Flex order follows the
+// writing direction, so the same rules hold under dir="rtl". Browser check: docs/test-report.md.
+describe("Header: the brand stays fully visible", () => {
+  const rule = (selector: string) => {
+    const at = css.indexOf(`\n${selector} {`);
+    expect(at, selector).toBeGreaterThan(-1);
+    return css.slice(at, css.indexOf("}", at));
+  };
+
+  it("from 1200px (tabs on the header row) the brand and the header actions do not shrink", () => {
+    const desktop = css.slice(css.indexOf("@media (min-width: 1200px)"));
+    expect(desktop.slice(0, desktop.indexOf(".nav-desktop {"))).toMatch(/\.brand \{\s*flex-shrink: 0;\s*\}/);
+    expect(rule(".header-actions")).toMatch(/flex-shrink: 0;/);
+    expect(rule(".brand-name")).toMatch(/white-space: nowrap;/);
+  });
+
+  it("the desktop tab row shrinks and scrolls instead of overlapping, with room for the focus ring", () => {
+    const desktop = css.slice(css.indexOf("@media (min-width: 1200px)"));
+    const nav = desktop.slice(desktop.indexOf(".nav-desktop {"), desktop.indexOf("}", desktop.indexOf(".nav-desktop {")));
+    expect(nav).toMatch(/flex: 1 1 0;/);
+    expect(nav).toMatch(/min-width: 0;/);
+    expect(nav).toMatch(/overflow-x: auto;/);
+    expect(nav).toMatch(/padding: 6px;/);
+    expect(desktop).toMatch(/\.nav-desktop \.tab \{\s*flex-shrink: 0;/);
+    // Without the decorative tab icons all five labels fit in the capped header (measured 1280 to
+    // 1920 px, English and Arabic); the scroll is only a fallback.
+    expect(desktop).toMatch(/\.nav-desktop \.tab \.icon \{\s*display: none;/);
   });
 });

@@ -14,14 +14,14 @@ import { HeroBackdrop } from "@/components/HeroBackdrop";
 // globals.css, so with a reduced-motion preference the radar is a still picture.
 
 // Three example rows, each a rule the engine really has (src/lib/agents/redFlag.ts) or the official
-// check it points to. Demo data: they do not come from the user's text.
+// check it points to. Demo data: they do not come from the user's text. The badge counts these rows.
 const EXAMPLES = [
   { tone: "high", text: "fee asked", tag: "RF-001" },
   { tone: "medium", text: "free e-mail sender", tag: "RF-005" },
   { tone: "green", text: "MoHRE reference", tag: "check on MoHRE" },
 ] as const;
 
-export function HeroStage({ children, exampleCount }: { children: ReactNode; exampleCount: number }) {
+export function HeroStage({ children }: { children: ReactNode }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(false);
   const [glow, setGlow] = useState<"max" | "normal">("max");
@@ -77,7 +77,7 @@ export function HeroStage({ children, exampleCount }: { children: ReactNode; exa
               <Crosshair className="icon text-green hud-crosshair" aria-hidden="true" />
               <span>Example findings</span>
             </p>
-            <span className="chip chip-neutral mono">{exampleCount} EXAMPLES</span>
+            <span className="chip chip-neutral mono">{EXAMPLES.length} EXAMPLES</span>
           </div>
           <ul className="hud-rows mono">
             {EXAMPLES.map((row) => (

@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 // The layout supplies <main>.
 export default function CheckPage() {
   const hero = (
-    <HeroStage exampleCount={SAMPLE_OFFERS.length}>
+    <HeroStage>
       <div className="stack-sm hero-glass hero-main">
         <div className="hero-badges">
           <span className="hero-badge hero-badge-green">

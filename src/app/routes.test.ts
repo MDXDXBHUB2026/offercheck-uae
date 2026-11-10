@@ -12,7 +12,6 @@ import { ARABIC_NOTE } from "@/components/shell/ArabicNote";
 import { isCurrent, Navbar } from "@/components/shell/Navbar";
 import { BrandBadge, NAV_ITEMS, PROTOTYPE_NOTICE, SiteFooter } from "@/components/shell/site";
 import { Button, ButtonLink, Callout, Card, Chip, Disclosure, HelperText } from "@/components/ui";
-import { SAMPLE_OFFERS } from "@/data/sampleOffers";
 import { HEADER_HOTLINE_IDS, UAE_CONTACTS, contact } from "@/data/uaeContacts";
 import { runManager } from "@/lib/agents/manager";
 import { SCAM_OFFER } from "@/lib/agents/fixtures";
@@ -242,7 +241,10 @@ describe("Offer Analyzer hero", () => {
       expect(radar).toMatch(/^<div class="radar" aria-hidden="true">/);
       const hud = hero.slice(hero.indexOf('<div class="hud hero-glass">'), hero.indexOf('<div class="hero-controls">'));
       expect(hud).toContain("Example findings");
-      expect(hud).toContain(`${SAMPLE_OFFERS.length} EXAMPLES`);
+      // The badge counts the rows it shows (each a real rule or official check), not the samples.
+      const rows = hud.match(/<li>/g)?.length ?? 0;
+      expect(rows).toBe(3);
+      expect(hud).toContain(`${rows} EXAMPLES`);
       expect(hud).toContain("Demo data, not your text");
       expect(hero).toContain("Demo animation");
       expect(hero).not.toMatch(/live|threat acquisition|60FPS|online/i);

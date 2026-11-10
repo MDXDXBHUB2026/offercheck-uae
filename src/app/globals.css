@@ -956,9 +956,35 @@ html {
 }
 
 @media (min-width: 1200px) {
+  /* With the tabs on the header row the brand keeps its own space: it never shrinks under the
+     tab row, in either direction. Below 1200px the tabs sit in their own bar and the brand may
+     shrink on a small phone. */
+  .brand {
+    flex-shrink: 0;
+  }
+
+  /* The tab row takes only the space left between the brand and the actions: it may shrink to
+     nothing and then scrolls sideways, so it is never drawn over the brand. */
   .nav-desktop {
     display: flex;
-    gap: var(--sp-1);
+    flex: 1 1 0;
+    gap: 0;
+    min-width: 0;
+    /* 3px ring + 2px offset fits in the 6px padding, so overflow does not clip it. */
+    padding: 6px;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .nav-desktop .tab {
+    flex-shrink: 0;
+    padding-inline: var(--sp-2);
+  }
+
+  /* The header is capped at the content width, so all five labels fit beside the brand and the
+     actions only without the tab icons (decorative, aria-hidden). Measured: docs/test-report.md. */
+  .nav-desktop .tab .icon {
+    display: none;
   }
 
   .nav-mobile {
