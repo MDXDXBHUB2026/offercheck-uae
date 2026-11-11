@@ -10,7 +10,7 @@ import {
   OFFICIAL_STEPS_NOTE,
   validCrossChecks,
 } from "@/lib/crossCheckLabels";
-import { resolveSteps } from "@/lib/officialSteps";
+import { MENTION_LABELS, resolveSteps } from "@/lib/officialSteps";
 import { ruleName } from "@/lib/ruleNames";
 import type { AnalysisResult, CrossCheck } from "@/lib/types";
 
@@ -22,8 +22,10 @@ import type { AnalysisResult, CrossCheck } from "@/lib/types";
 export const CROSS_CHECKS_TITLE = "Cross-checks on the offer";
 export const OFFICIAL_STEPS_TITLE = "Official steps for these findings";
 
-// The plain name of a rule id (RF-…) or a cross-check id (V-…) as it matched in this result.
+// The plain name of a rule id (RF-…), a cross-check id (V-…) as it matched in this result, or an
+// authority-mention id (mention:…).
 export function idName(id: string, checks: readonly CrossCheck[]): string {
+  if (id.startsWith("mention:")) return MENTION_LABELS[id] ?? id;
   if (id.startsWith("V-")) {
     const matched = checks.find((check) => check.id === id);
     return matched ? (CROSS_CHECK_LABELS[matched.check] ?? id) : id;

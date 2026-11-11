@@ -6,7 +6,7 @@ import { CROSS_CHECK_COUNT } from "@/lib/crossCheckIds";
 
 export const CROSS_CHECK_LABELS: Readonly<Record<string, string>> = {
   free_email_with_company_claim: "Free email address for a named company or government body",
-  authority_without_official_domain: "UAE authority named, with no official address",
+  authority_without_official_domain: "Presents itself as a UAE authority, with no official address",
   link_shortener: "Shortened link",
   raw_ip_link: "Link to a numeric address",
   lookalike_domain: "Address that looks like an official one",
@@ -18,7 +18,7 @@ export const CROSS_CHECK_LABELS: Readonly<Record<string, string>> = {
 export const CROSS_CHECK_REASONS: Readonly<Record<string, string>> = {
   free_email_with_company_claim: "The text names a company or a government body, but gives a free email address.",
   authority_without_official_domain:
-    "The text names a UAE authority, but no email address or link in it is on an official UAE government website from Offer Check's list.",
+    "The text presents itself as coming from, or acting for, a UAE authority, but gives no address on an official UAE government website from Offer Check's list, or ties an address that is not on that list to the authority.",
   link_shortener: "A shortened link hides the website it opens.",
   raw_ip_link: "The link goes to a numeric address instead of a website name.",
   lookalike_domain: "An email address or link uses the name of an official UAE government website, but is not on that website.",

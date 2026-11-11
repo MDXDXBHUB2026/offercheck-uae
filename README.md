@@ -34,7 +34,7 @@ The steps of a check, with the status the code reports. The run's trace comes fr
 | Intake | Partly built | Text cleaning only: removes hidden characters. It does not extract claims yet. |
 | Red-flag | Built | Five fixed rules look for warning signs in English text and quote the words that matched. |
 | Verification | Built (text only) | Five cross-checks on the cleaned text (V-01 to V-05), shown as "Cross-checks on the offer" with the matched words quoted. No outside lookups. They do not change the score. |
-| Official channel | Built (text only) | Links findings and cross-checks to existing official entries, each with its official source link, shown as "Official steps for these findings". No new guidance text. It does not change the score. |
+| Official channel | Built (text only) | Links findings, cross-checks and a UAE authority named in the text to existing official entries, each with its official source link, shown as "Official steps for these findings". No new guidance text. It does not change the score. |
 | Risk aggregator | Built | Turns the findings into a score with fixed weights. No AI model is involved. |
 | Explainer | Not implemented yet | Would explain the findings in plain words. |
 | Drafter | Built | Fills a fixed English reply template. It runs only after the user asks for a draft. |

@@ -766,7 +766,7 @@ const ENTRIES: Record<string, string> = {
   "Cross-checks that matched": "الفحوص المتقاطعة المتطابقة",
   "Not counted in the score": "لا تُحتسب في الدرجة",
   "Free email address for a named company or government body": "بريد إلكتروني مجاني لشركة أو جهة حكومية مذكورة",
-  "UAE authority named, with no official address": "ذِكر جهة إماراتية رسمية دون عنوان رسمي",
+  "Presents itself as a UAE authority, with no official address": "يقدّم نفسه على أنه جهة إماراتية رسمية، دون عنوان رسمي",
   "Shortened link": "رابط مختصر",
   "Link to a numeric address": "رابط إلى عنوان رقمي",
   "Address that looks like an official one": "عنوان يشبه عنوانًا رسميًا",
@@ -775,8 +775,16 @@ const ENTRIES: Record<string, string> = {
   "Salary in more than one currency": "الراتب بأكثر من عملة",
   "The text names a company or a government body, but gives a free email address.":
     "يذكر النص شركة أو جهة حكومية، لكنه يعطي عنوان بريد إلكتروني مجانيًا.",
-  "The text names a UAE authority, but no email address or link in it is on an official UAE government website from Offer Check's list.":
-    "يذكر النص جهة إماراتية رسمية، لكن لا يوجد فيه عنوان بريد إلكتروني أو رابط على موقع حكومي إماراتي رسمي من قائمة Offer Check.",
+  "The text presents itself as coming from, or acting for, a UAE authority, but gives no address on an official UAE government website from Offer Check's list, or ties an address that is not on that list to the authority.":
+    "يقدّم النص نفسه على أنه صادر عن جهة إماراتية رسمية أو يعمل باسمها، لكنه لا يعطي أي عنوان على موقع حكومي إماراتي رسمي من قائمة Offer Check، أو ينسب إلى هذه الجهة عنوانًا ليس في تلك القائمة.",
+  // [review] V-02 narrowed and authority mentions (2026-11-11): written with an AI tool, not reviewed.
+  "MoHRE is named in the text": "النص يذكر وزارة الموارد البشرية والتوطين",
+  "ICP is named in the text": "النص يذكر الهيئة الاتحادية للهوية والجنسية",
+  "GDRFA or Amer is named in the text": "النص يذكر الإدارة العامة للإقامة وشؤون الأجانب أو مراكز آمر",
+  "{0} official step for a UAE authority named in the text": "الخطوات الرسمية: {0}، لجهة إماراتية رسمية مذكورة في النص",
+  "{0} official steps for a UAE authority named in the text": "الخطوات الرسمية: {0}، لجهة إماراتية رسمية مذكورة في النص",
+  "{0}, and {1} official step for a UAE authority named in the text": "{0}، والخطوات الرسمية: {1}، لجهة إماراتية رسمية مذكورة في النص",
+  "{0}, and {1} official steps for a UAE authority named in the text": "{0}، والخطوات الرسمية: {1}، لجهة إماراتية رسمية مذكورة في النص",
   "A shortened link hides the website it opens.": "الرابط المختصر يُخفي الموقع الذي يفتحه.",
   "The link goes to a numeric address instead of a website name.": "يؤدي الرابط إلى عنوان رقمي بدلًا من اسم موقع.",
   "An email address or link uses the name of an official UAE government website, but is not on that website.":

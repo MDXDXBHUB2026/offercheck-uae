@@ -3,7 +3,7 @@ import type { AnalysisResult, TraceStep } from "../types";
 import { selectOfficialSteps } from "../officialSteps";
 import { cleanOfferText } from "./intake";
 import { RULES, runRedFlagWorker } from "./redFlag";
-import { CROSS_CHECKS, matchedIds, runVerification } from "./verification";
+import { authorityMentionIds, CROSS_CHECKS, matchedIds, runVerification } from "./verification";
 
 function timed<T>(run: () => T): { result: T; durationMs: number } {
   const start = performance.now();
@@ -13,6 +13,15 @@ function timed<T>(run: () => T): { result: T; durationMs: number } {
 
 function plural(count: number, one: string, many: string): string {
   return count === 1 ? one : many;
+}
+
+// "2 official steps for 3 findings", "1 official step for a UAE authority named in the text", or both.
+function officialSummary(forFindings: number, findings: number, forMentionOnly: number): string {
+  const steps = (count: number) => `${count} ${plural(count, "official step", "official steps")}`;
+  const mention = `${steps(forMentionOnly)} for a UAE authority named in the text`;
+  if (forFindings === 0) return forMentionOnly === 0 ? "No official step applies to these findings" : mention;
+  const base = `${steps(forFindings)} for ${findings} ${plural(findings, "finding", "findings")}`;
+  return forMentionOnly === 0 ? base : `${base}, and ${mention}`;
 }
 
 // Plans, routes and merges only. It never sends, stores or contacts anyone.
@@ -31,9 +40,13 @@ export function runManager(offerText: string): AnalysisResult {
   const crossChecks = verification.result;
   const crossIds = matchedIds(crossChecks);
   const ruleIds = findings.filter((f) => f.severity !== "info").map((f) => f.source);
-  const official = timed(() => selectOfficialSteps([...ruleIds, ...crossIds]));
+  // A plain mention of an authority adds that authority's entry, with no cross-check.
+  const official = timed(() => selectOfficialSteps([...ruleIds, ...crossIds, ...authorityMentionIds(intake.result.text)]));
   const officialSteps = official.result;
+  // The audit keeps to rule and cross-check ids; a mention is counted in the step count only.
   const coveredIds = [...ruleIds, ...crossIds].filter((id) => officialSteps.some((step) => step.forIds.includes(id)));
+  const forFindings = officialSteps.filter((step) => step.forIds.some((id) => coveredIds.includes(id))).length;
+  const forMentionOnly = officialSteps.length - forFindings;
   const durationMs = performance.now() - start;
 
   const plan = ["intake", "red_flag", "verification", "official_channel", "risk_aggregator"];
@@ -50,10 +63,7 @@ export function runManager(offerText: string): AnalysisResult {
       agent: "official_channel",
       status: "completed",
       durationMs: official.durationMs,
-      summary:
-        officialSteps.length === 0
-          ? "No official step applies to these findings"
-          : `${officialSteps.length} ${plural(officialSteps.length, "official step", "official steps")} for ${coveredIds.length} ${plural(coveredIds.length, "finding", "findings")}`,
+      summary: officialSummary(forFindings, coveredIds.length, forMentionOnly),
       checkIds: coveredIds,
       count: officialSteps.length,
     },

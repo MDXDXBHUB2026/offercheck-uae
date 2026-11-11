@@ -46,8 +46,8 @@ describe("the official domain list comes from the existing data files", () => {
 describe("extractors", () => {
   it("emails: address and lower-case domain", () => {
     expect(emails("Write to HR.Jobs@Gmail.com or hr@acme.ae")).toEqual([
-      { address: "HR.Jobs@Gmail.com", domain: "gmail.com" },
-      { address: "hr@acme.ae", domain: "acme.ae" },
+      { address: "HR.Jobs@Gmail.com", domain: "gmail.com", index: 9 },
+      { address: "hr@acme.ae", domain: "acme.ae", index: 30 },
     ]);
   });
 
@@ -66,6 +66,9 @@ describe("extractors", () => {
     expect(authorityMentions("Registered with MOHRE and the Ministry of Human Resources & Emiratisation").map((m) => m.id)).toEqual(["mohre", "mohre"]);
     expect(authorityMentions("ICP, GDRFA-D, an Amer centre and Dubai Police").map((m) => m.id).sort()).toEqual(["dubai_police", "gdrfa", "gdrfa", "icp"]);
     expect(authorityMentions("Call Amer on Sunday. The icp team is nice.")).toEqual([]);
+    // A name inside an address is part of the address, not a mention.
+    expect(authorityMentions("Apply at mohre-careers.com or write to jobs@mohre.example.com")).toEqual([]);
+    expect(authorityMentions("A MoHRE-approved agency (MoHRE).").map((m) => m.quote)).toEqual(["MoHRE", "MoHRE"]);
   });
 
   it("company claims: a capitalised name with a legal or trade suffix, or a government body", () => {
@@ -126,21 +129,67 @@ describe("V-01: free email address while the text names a company or government 
   });
 });
 
-describe("V-02: a UAE authority named, with no address on an official domain", () => {
-  it.each([
-    "Your visa is approved by MoHRE. Reply to visa@uae-jobs-desk.com",
-    "This is the GDRFA. Pay at www.gdrfa-pay.com",
-    "Dubai Police clearance is included",
-    "ICP has issued your permit",
-  ])("fires: %s", (text) => expect(ids(text)).toContain("V-02"));
+describe("V-02: presents itself as a UAE authority, with no official address (narrowed 2026-11-11)", () => {
+  const genuineLetter = SAMPLE_OFFERS.find((offer) => offer.id === "genuine-letter")?.text ?? "";
 
+  // A plain mention of an authority is not a cross-check.
   it.each([
-    "Check the offer on MoHRE: https://www.mohre.gov.ae",
-    "Apply through ICP at smartservices.icp.gov.ae",
-    "Write to recruitment@dubaipolice.gov.ae about Dubai Police roles",
-    "Contact Amer at amer@acme.ae",
-    "A plain offer with no authority named",
-  ])("does not fire: %s", (text) => expect(ids(text)).not.toContain("V-02"));
+    ["the Standard offer letter sample", genuineLetter],
+    ["issued through MoHRE", "Your official offer letter will be issued through MoHRE for your signature."],
+    ["through the Ministry", "You will receive the official job offer through the Ministry of Human Resources and Emiratisation to sign."],
+    ["work permit approved, no payment", "Your work permit is approved by MoHRE. The company pays all visa costs."],
+    ["clearance mentioned", "Dubai Police clearance is included"],
+    ["permit mentioned", "ICP has issued your permit"],
+    ["thanks, then a mention", "Thank you for applying. Your offer letter will be issued through MoHRE."],
+    ["mention, address in the next sentence", "Your MoHRE offer letter will be issued. Please reply to careers@example.ae"],
+    ["an official address", "Check the offer on MoHRE: https://www.mohre.gov.ae"],
+    ["an official address for ICP", "Apply through ICP at smartservices.icp.gov.ae"],
+    ["official address, speaking for", "This is MoHRE. Write to us at enquiries@mohre.gov.ae"],
+    ["official sender address", "Write to recruitment@dubaipolice.gov.ae about Dubai Police roles"],
+    ["Amer as a name", "Contact Amer at amer@acme.ae"],
+    ["no authority", "A plain offer with no authority named"],
+    ["the authority only in an address", "Apply at mohre-careers.com"],
+  ])("does not fire: %s", (_name, text) => expect(ids(text)).not.toContain("V-02"));
+
+  // Impersonation: speaks as the authority, or gives an address it presents as the authority's.
+  it.each([
+    ["speaks as, free email", "Dear candidate, this is MoHRE. Send your documents to mohre.jobs.desk@gmail.com"],
+    ["from the Ministry, no address", "Greetings from the Ministry of Human Resources and Emiratisation. Your visa is ready."],
+    ["officer of the authority", "I am an officer from MoHRE. Call me on +971 50 000 0000."],
+    ["role after the name", "Our MoHRE recruitment officer will call you today."],
+    ["approved, pay", "Your visa is approved by MoHRE, pay the visa fee of AED 900 today."],
+    ["sender line", "From: MoHRE Recruitment <offers@uae-jobs-desk.com>\nYou are selected."],
+    ["signature", "You are selected for the role.\nRegards,\nMinistry of Human Resources and Emiratisation\nRecruitment Desk"],
+    ["address tied to the name", "This is the GDRFA. Pay at www.gdrfa-pay.com"],
+    ["portal of the authority", "Complete the form on the MoHRE portal www.uae-offer-portal.com"],
+    ["address, then the name", "Visit www.uae-offer-portal.com, the official MoHRE portal."],
+    ["tied address beside an official one", "MoHRE: hr.mohre.desk@gmail.com (see also www.mohre.gov.ae)"],
+  ])("fires: %s", (_name, text) => expect(ids(text)).toContain("V-02"));
+
+  it("quotes the words that speak for the authority and the address, never the whole text", () => {
+    const evidence = check("Dear candidate, this is MoHRE. Send your documents to mohre.jobs.desk@gmail.com")
+      .find((c) => c.id === "V-02")?.evidence;
+    expect(evidence).toEqual(["this is MoHRE"]);
+    expect(check("Complete the form on the MoHRE portal www.uae-offer-portal.com").find((c) => c.id === "V-02")?.evidence).toEqual([
+      "www.uae-offer-portal.com",
+    ]);
+  });
+
+  it("a plain mention still shows the authority's official step, with no cross-check", () => {
+    const result = runManager("Your official offer letter will be issued through MoHRE for your signature.");
+    expect(result.crossChecks).toEqual([]);
+    expect(result.officialSteps).toEqual([{ key: "authority:mohre_verify", forIds: ["mention:mohre"] }]);
+    const step = result.trace.find((s) => s.agent === "official_channel");
+    expect(step?.summary).toBe("1 official step for a UAE authority named in the text");
+    expect(step?.checkIds).toEqual([]);
+    expect(step?.count).toBe(1);
+  });
+
+  it("the Standard offer letter sample: no cross-check, the MoHRE offer enquiry step only", () => {
+    const result = runManager(genuineLetter);
+    expect(result.crossChecks).toEqual([]);
+    expect(result.officialSteps).toEqual([{ key: "authority:mohre_verify", forIds: ["mention:mohre"] }]);
+  });
 });
 
 describe("V-03: shortened links, numeric links and look-alike addresses", () => {
@@ -298,6 +347,15 @@ describe("fuzz: never throws, stays bounded", () => {
       "salary AED 1 ".repeat(MAX_OFFER_CHARS / 13),
       "no a b fees ".repeat(MAX_OFFER_CHARS / 12),
       "x@y.com ".repeat(MAX_OFFER_CHARS / 8),
+      "MoHRE ".repeat(MAX_OFFER_CHARS / 6),
+      "MoHRE portal ".repeat(MAX_OFFER_CHARS / 13),
+      "mohre-".repeat(MAX_OFFER_CHARS / 6),
+      "this is the ".repeat(MAX_OFFER_CHARS / 12),
+      "officer of the ".repeat(MAX_OFFER_CHARS / 15),
+      "Regards,\n".repeat(MAX_OFFER_CHARS / 9),
+      "From: MoHRE ".repeat(MAX_OFFER_CHARS / 12),
+      "approved by MoHRE ".repeat(MAX_OFFER_CHARS / 18),
+      "MoHRE x@y.com ".repeat(MAX_OFFER_CHARS / 14),
     ];
     for (const input of inputs) {
       const start = performance.now();

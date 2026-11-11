@@ -30,7 +30,9 @@ import {
   CROSS_CHECKS_NOTE,
   OFFICIAL_STEPS_NOTE,
 } from "@/lib/crossCheckLabels";
+import { tr } from "@/lib/i18n";
 import { AR } from "@/lib/i18nAr";
+import { MENTION_LABELS } from "@/lib/officialSteps";
 import type { AnalysisResult } from "@/lib/types";
 
 const sample = (id: string) => SAMPLE_OFFERS.find((offer) => offer.id === id)?.text ?? "";
@@ -82,6 +84,15 @@ describe("the groups on the result card", () => {
     expect(html).not.toContain(CROSS_CHECKS_TITLE);
     expect(html).not.toContain(OFFICIAL_STEPS_TITLE);
     expect(html).not.toContain("cross-check-refs");
+  });
+
+  it("names a plain authority mention under its official step, with no cross-check", () => {
+    const result = runManager(sample("genuine-letter"));
+    expect(result.crossChecks).toEqual([]);
+    const html = card(result);
+    expect(html).toContain("none matched");
+    expect(html).toContain(OFFICIAL_STEPS_TITLE);
+    expect(html).toContain("For: MoHRE is named in the text");
   });
 
   it("drops malformed saved entries instead of failing", () => {
@@ -138,15 +149,29 @@ describe("Arabic", () => {
     "Verification (text only, no outside lookups)",
     ...Object.values(CROSS_CHECK_LABELS),
     ...Object.values(CROSS_CHECK_REASONS),
+    ...Object.values(MENTION_LABELS),
   ];
 
+  it("translates every Official channel summary, with no English left", () => {
+    for (const summary of [
+      "1 official step for a UAE authority named in the text",
+      "2 official steps for a UAE authority named in the text",
+      "1 official step for 1 finding, and 1 official step for a UAE authority named in the text",
+      "3 official steps for 2 findings, and 2 official steps for a UAE authority named in the text",
+    ]) {
+      const ar = tr("ar", summary);
+      expect(ar, summary).toMatch(/\p{Script=Arabic}/u);
+      expect(ar, summary).not.toMatch(/[A-Za-z]/);
+    }
+  });
+
   it("has an Arabic entry for every new string", () => {
-    for (const text of strings) expect(AR[text], text).toMatch(/[؀-ۿ]/);
+    for (const text of strings) expect(AR[text], text).toMatch(/\p{Script=Arabic}/u);
   });
 
   it("marks the new entries for review", () => {
     const source = readFileSync("src/lib/i18nAr.ts", "utf8");
-    const block = source.slice(source.lastIndexOf("[review]"));
+    const block = source.slice(source.indexOf("[review] Verification and Official channel"));
     for (const text of strings) expect(block, text).toContain(JSON.stringify(text).slice(1, -1).slice(0, 30));
   });
 

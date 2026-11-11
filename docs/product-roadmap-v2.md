@@ -81,6 +81,8 @@ Done when: each check has tests, the aggregator tests prove determinism, the Tes
 
 Status (2026-11-11, owner decisions, on `ui-port-2`, not merged): built as Verification v1, text only. Five checks on the cleaned text, V-01 to V-05 (`src/lib/agents/verification.ts`, extractors in `src/lib/agents/extract.ts`), each with a plain reason and the matched words quoted. The official address list is derived from the official links already in the app (`src/lib/officialDomains.ts`), not typed by hand. Deviations from the text above, by owner decision: score-neutral (no weights added; weights deferred; `redFlag.ts` and `scoring.ts` unchanged; all 77 eval cases unchanged); no model and no network (no RDAP, web search or page fetch); the group is named "Cross-checks on the offer"; Intake is not rebuilt (Phase 4 stays open), only the small extractors these checks need were added. The Test Lab was removed earlier, so there is no Test Lab section. Tests in `src/lib/agents/verification.test.ts`.
 
+Status update (2026-11-11, owner decision, on `ui-port-2`, not merged): V-02 narrowed. It matches only text that presents itself as coming from, or acting for, a UAE authority with no official address, or that ties an address that is not official to the authority. A plain mention of an authority matches nothing; the Official channel step then shows that authority's existing entry (MoHRE: the MOHRE offer enquiry; ICP: ICP Smart Services; GDRFA or Amer: Amer), with no cross-check.
+
 ## Phase 6: Official channels guidance (sourced library, strict provenance)
 
 Build the mechanism, not the content:

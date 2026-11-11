@@ -25,10 +25,10 @@ function take(text: string, pattern: RegExp): RegExpMatchArray[] {
 // ---------- Emails ----------
 const EMAIL = /\b[a-z0-9._%+-]{1,64}@([a-z0-9-]{1,63}(?:\.[a-z0-9-]{1,63}){1,4})\b/gi;
 
-export type EmailMention = { address: string; domain: string };
+export type EmailMention = { address: string; domain: string; index: number };
 
 export function emails(text: string): EmailMention[] {
-  return take(text, EMAIL).map((m) => ({ address: m[0], domain: m[1].toLowerCase() }));
+  return take(text, EMAIL).map((m) => ({ address: m[0], domain: m[1].toLowerCase(), index: m.index ?? 0 }));
 }
 
 // ---------- Links ----------
@@ -49,12 +49,12 @@ const LINK = new RegExp(
 );
 const RAW_IP = /^\d{1,3}(?:\.\d{1,3}){3}$/;
 
-export type LinkMention = { raw: string; host: string; rawIp: boolean };
+export type LinkMention = { raw: string; host: string; rawIp: boolean; index: number };
 
 export function links(text: string): LinkMention[] {
   return take(text, LINK).map((m) => {
     const host = (m[1] ?? m[2] ?? m[3]).toLowerCase().replace(/^www\./, "");
-    return { raw: m[0].replace(/[.,;:!?]+$/, ""), host, rawIp: RAW_IP.test(host) };
+    return { raw: m[0].replace(/[.,;:!?]+$/, ""), host, rawIp: RAW_IP.test(host), index: m.index ?? 0 };
   });
 }
 
@@ -132,20 +132,108 @@ export function lookalikeOf(host: string): string | null {
 // ---------- UAE authorities named in the text ----------
 export type AuthorityId = "mohre" | "icp" | "gdrfa" | "dubai_police";
 
+// A name inside an address ("mohre-jobs.com", "visa@mohre.example") is part of that address, not a
+// mention of the authority: the look-alike check reads addresses.
+const NOT_IN_ADDRESS_BEFORE = "(?<![@./\\w-])";
+const NOT_IN_ADDRESS_AFTER = "(?![\\w-]{0,63}\\.[a-z]{2,})(?!\\w)";
+const named = (source: string, flags: string) => new RegExp(`${NOT_IN_ADDRESS_BEFORE}(?:${source})${NOT_IN_ADDRESS_AFTER}`, flags);
+
 const AUTHORITY_PATTERNS: readonly { id: AuthorityId; pattern: RegExp }[] = [
-  { id: "mohre", pattern: /\bmohre\b|\bministry of human resources(?: (?:and|&) emiratisation)?\b/gi },
+  { id: "mohre", pattern: named("mohre|ministry of human resources(?: (?:and|&) emiratisation)?", "gi") },
   // "ICP" only in capitals; the long name in any case.
-  { id: "icp", pattern: /\bICP\b/g },
-  { id: "icp", pattern: /\bfederal authority for identity\b/gi },
+  { id: "icp", pattern: named("ICP", "g") },
+  { id: "icp", pattern: named("federal authority for identity", "gi") },
   // "Amer" alone is also a first name, so only "Amer centre" or "Amer service" counts.
-  { id: "gdrfa", pattern: /\bgdrfa(?:-?d)?\b|\bgeneral directorate of residency and foreigners affairs\b|\bamer (?:cent(?:er|re)s?|services?)\b/gi },
-  { id: "dubai_police", pattern: /\bdubai police\b/gi },
+  { id: "gdrfa", pattern: named("gdrfa(?:-?d)?|general directorate of residency and foreigners affairs|amer (?:cent(?:er|re)s?|services?)", "gi") },
+  { id: "dubai_police", pattern: named("dubai police", "gi") },
 ];
 
-export type AuthorityMention = { id: AuthorityId; quote: string };
+export type AuthorityMention = { id: AuthorityId; quote: string; index: number };
 
 export function authorityMentions(text: string): AuthorityMention[] {
-  return AUTHORITY_PATTERNS.flatMap(({ id, pattern }) => take(text, pattern).map((m) => ({ id, quote: m[0] })));
+  return AUTHORITY_PATTERNS.flatMap(({ id, pattern }) =>
+    take(text, pattern).map((m) => ({ id, quote: m[0], index: m.index ?? 0 })),
+  );
+}
+
+// ---------- Text that speaks as, or for, a UAE authority ----------
+// A plain mention ("your offer letter will be issued through MoHRE") is not enough. These cues are
+// read only when the text also names an authority above; "the Ministry" then refers back to it.
+const AUTH =
+  "(?:mohre|ministry of human resources(?: (?:and|&) emiratisation)?|icp|federal authority for identity|gdrfa(?:-?d)?|general directorate of residency and foreigners affairs|amer (?:cent(?:er|re)s?|services?)|dubai police|ministry)";
+const SP = "[ \\t]+";
+const ARTICLE = `(?:(?:an?|the|our)${SP})?`;
+const ROLE = "(?:officer|agent|official|representative|inspector|staff|employee)s?";
+const SPEAKS_AS: readonly RegExp[] = [
+  // "This is MoHRE", "We are from the Ministry", "I am an officer of MoHRE", "on behalf of GDRFA".
+  new RegExp(
+    `\\b(?:this is|we are|we're|i am|i'm|i work (?:for|at|with)|we work (?:for|at|with)|on behalf of|representing|acting for)${SP}(?:(?:from|with|at)${SP})?${ARTICLE}(?:${ROLE}${SP}(?:of|from|at|with)${SP}${ARTICLE})?${AUTH}\\b`,
+    "gi",
+  ),
+  // "Greetings from the Ministry", "This message is from MoHRE".
+  new RegExp(`\\b(?:greetings|hello|hi|(?:this|our)${SP}(?:message|e-?mail|letter|notice|call|sms)(?:${SP}is)?)${SP}(?:from|sent by|on behalf of)${SP}${ARTICLE}${AUTH}\\b`, "gi"),
+  // "MoHRE officer", "Ministry agent", "MoHRE recruitment team".
+  new RegExp(`\\b${AUTH}${SP}(?:officer|agent|representative|inspector|staff|employee|recruit(?:er|ment${SP}(?:team|officer|desk|department|agent)))s?\\b`, "gi"),
+  // "an officer from MoHRE", "representative of the Ministry".
+  new RegExp(`\\b${ROLE}${SP}(?:from|of|at|with)${SP}${ARTICLE}${AUTH}\\b`, "gi"),
+];
+// "Approved by MoHRE" counts only together with a payment asked for (the red-flag rule RF-001).
+const APPROVED_BY = new RegExp(
+  `\\b(?:(?:approved|authori[sz]ed|certified|registered|licensed|endorsed|accredited|sanctioned|verified|appointed)${SP}by${SP}${ARTICLE}${AUTH}|${AUTH}[ \\t-]+(?:approved|authori[sz]ed|certified|registered|licensed|accredited))\\b`,
+  "gi",
+);
+const SENDER_LINE = /^[ \t]*(?:from|sender|sent by)[ \t]*:[^\n]{0,160}$/gim;
+// A sign-off line ("Regards," or "Regards, MoHRE Team"), then up to three lines of signature.
+const SIGN_OFF =
+  /^[ \t]*(?:(?:best |kind |warm |with )?regards|sincerely|yours (?:sincerely|faithfully|truly)|thanks(?: and regards)?|thank you)[ \t]*(?:[.!]|,(?:[ \t]*[^\n.!?]{1,60})?)?[ \t]*$(?:\n[^\n]{0,120}){0,3}/gim;
+
+// The cue counts only where its words name an authority ("ICP" in capitals) or say "Ministry".
+const namesAuthority = (words: string) => authorityMentions(words).length > 0 || /\bministry\b/i.test(words);
+
+// The words that present the text as coming from, or acting for, a UAE authority.
+export function speaksForAuthority(text: string): string[] {
+  const cues = SPEAKS_AS.flatMap((pattern) => take(text, pattern).map((m) => m[0])).filter(namesAuthority);
+  const sender = take(text, SENDER_LINE).map((m) => m[0]).filter((line) => authorityMentions(line).length > 0);
+  const signature = take(text, SIGN_OFF).flatMap((m) =>
+    m[0].split("\n").filter((line) => authorityMentions(line).length > 0),
+  );
+  return [...cues, ...sender, ...signature].map(quote);
+}
+
+export function approvalClaims(text: string): string[] {
+  return take(text, APPROVED_BY).map((m) => m[0]).filter(namesAuthority).map(quote);
+}
+
+// An email address or link the text ties to a named authority: "MoHRE portal www.x.com",
+// "MoHRE: x@mail.com", "contact GDRFA at x@mail.com", "www.x.com, the official MoHRE portal".
+const ADDRESS_NOUN =
+  "(?:(?:online|payment)[ \\t]+)?(?:portal|website|web site|site|page|link|e-?mail(?:[ \\t]+address)?|address|account|desk|office|help ?desk|service)";
+const NAME_THEN_ADDRESS = new RegExp(
+  `^(?:['’]s)?[ \\t]*(?:official[ \\t]+)?(?:${ADDRESS_NOUN}[ \\t]*)?(?:[:\\-–(][ \\t]*|(?:at|on|via|through|is)[ \\t]+)?$`,
+  "i",
+);
+const ADDRESS_THEN_NAME = /^[ \t]*(?:[,(\-–][ \t]*)?(?:is[ \t]+)?(?:(?:the|our)[ \t]+)?(?:official[ \t]+)?$/i;
+const MAX_GAP = 60;
+
+export function addressesTiedToAuthority(text: string): { address: string; host: string }[] {
+  const mentions = authorityMentions(text);
+  const addresses = [
+    ...emails(text).map((e) => ({ address: e.address, host: e.domain, index: e.index })),
+    ...links(text).map((l) => ({ address: l.raw, host: l.host, index: l.index })),
+  ];
+  return addresses
+    .filter((a) =>
+      mentions.some((m) => {
+        const mEnd = m.index + m.quote.length;
+        if (a.index >= mEnd) {
+          const gap = text.slice(mEnd, a.index);
+          return gap.length <= MAX_GAP && NAME_THEN_ADDRESS.test(gap);
+        }
+        const gap = text.slice(a.index + a.address.length, m.index);
+        return a.index + a.address.length <= m.index && gap.length <= MAX_GAP && ADDRESS_THEN_NAME.test(gap);
+      }),
+    )
+    .map(({ address, host }) => ({ address: quote(address), host }));
 }
 
 // ---------- Company or government body named as the sender ----------

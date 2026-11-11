@@ -1,3 +1,4 @@
+import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -24,6 +25,14 @@ describe("locked files", () => {
   it.each(rows)("%s is unchanged", (file, hash) => {
     const text = readFileSync(join(process.cwd(), file), "utf8").replaceAll("\r\n", "\n");
     expect(createHash("sha256").update(text).digest("hex")).toBe(hash);
+  });
+
+  // The recorded value is the committed blob's sha256 (docs/locked-files.md, "Hash method"). Git must
+  // store each locked file with LF only, so that blob and the LF-normalised working copy hash the same.
+  it("git stores every locked file with LF line endings", () => {
+    const eol = execFileSync("git", ["ls-files", "--eol", "--", ...rows.map(([file]) => file)], { encoding: "utf8" });
+    const index = new Map(eol.trim().split("\n").map((line) => [line.split("\t")[1]?.trim(), line.split(/\s+/)[0]]));
+    for (const [file] of rows) expect(index.get(file), file).toBe("i/lf");
   });
 
   it("agrees with the redFlag.ts prefix recorded for holdout 2", () => {

@@ -5,7 +5,8 @@ import { AUTHORITIES } from "@/lib/authorities";
 import { WARNING_SIGNS, WARNING_SIGNS_SOURCE } from "@/lib/warningSigns";
 import { RULES } from "./agents/redFlag";
 import { CROSS_CHECKS } from "./crossCheckIds";
-import { loadStep, resolveSteps, selectOfficialSteps, STEP_MAP } from "./officialSteps";
+import { runManager } from "./agents/manager";
+import { loadStep, MENTION_LABELS, resolveSteps, selectOfficialSteps, STEP_MAP } from "./officialSteps";
 
 // Official-channel v1 (2026-11-11): a typed mapping to existing entries only, each shown with an
 // official source URL; "last checked" only where the data holds a date; nothing for an unmapped id.
@@ -13,9 +14,17 @@ import { loadStep, resolveSteps, selectOfficialSteps, STEP_MAP } from "./officia
 const KEYS = [...new Set(Object.values(STEP_MAP).flat())];
 
 describe("the mapping", () => {
-  it("maps only known finding and cross-check ids", () => {
-    const known = new Set([...RULES.map((rule) => rule.id), ...CROSS_CHECKS.map((check) => check.id)]);
+  it("maps only known finding, cross-check and authority-mention ids", () => {
+    const known = new Set([...RULES.map((rule) => rule.id), ...CROSS_CHECKS.map((check) => check.id), ...Object.keys(MENTION_LABELS)]);
     for (const id of Object.keys(STEP_MAP)) expect(known.has(id), id).toBe(true);
+    for (const id of Object.keys(MENTION_LABELS)) expect(STEP_MAP[id], id).toBeDefined();
+  });
+
+  it("maps a plain mention of an authority to that authority's own existing entry", () => {
+    expect(STEP_MAP["mention:mohre"]).toEqual(["authority:mohre_verify"]);
+    expect(STEP_MAP["mention:icp"]).toEqual(["contact:icp"]);
+    expect(STEP_MAP["mention:gdrfa"]).toEqual(["contact:amer"]);
+    expect(STEP_MAP["mention:dubai_police"]).toBeUndefined();
   });
 
   it("points only at existing entries, and every one loads with an https source", () => {
@@ -74,6 +83,15 @@ describe("the loader refuses an entry without an official source URL", () => {
 });
 
 describe("the step", () => {
+  it("summarises steps for findings and for an authority named in the text, and audits only rule and cross-check ids", () => {
+    const result = runManager("Send your passport copy. Your offer letter will be issued through MoHRE.");
+    const step = result.trace.find((s) => s.agent === "official_channel");
+    expect(result.officialSteps?.map((s) => s.key)).toEqual(["sign:offer-letter", "authority:mohre_verify"]);
+    expect(step?.summary).toBe("1 official step for 1 finding, and 1 official step for a UAE authority named in the text");
+    expect(step?.checkIds).toEqual(["RF-003"]);
+    expect(step?.count).toBe(2);
+  });
+
   it("lists each entry once, in order of first use, with the ids it is for", () => {
     expect(selectOfficialSteps(["RF-005", "V-01", "RF-001"])).toEqual([
       { key: "sign:company-lookup", forIds: ["RF-005", "V-01"] },

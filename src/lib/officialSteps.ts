@@ -24,6 +24,18 @@ export const STEP_MAP: Readonly<Record<string, readonly StepKey[]>> = {
   "V-03": ["contact:ecrime"],
   "V-04": ["sign:offer-letter"],
   "V-05": ["sign:offer-letter"],
+  // A UAE authority named in the text, even in a plain mention (owner decision, 2026-11-11): its own
+  // existing entry, with no cross-check. Dubai Police has no entry for this, so it gets nothing.
+  "mention:mohre": ["authority:mohre_verify"],
+  "mention:icp": ["contact:icp"],
+  "mention:gdrfa": ["contact:amer"],
+};
+
+// The plain name of an authority-mention id, for "For: …" under an official step.
+export const MENTION_LABELS: Readonly<Record<string, string>> = {
+  "mention:mohre": "MoHRE is named in the text",
+  "mention:icp": "ICP is named in the text",
+  "mention:gdrfa": "GDRFA or Amer is named in the text",
 };
 
 // What the interface shows for one step: the entry's own words and its official source.
@@ -83,7 +95,8 @@ export function loadStep(key: string, read: (key: string) => Partial<OfficialSte
   };
 }
 
-// The Official-channel step: for the given ids (red-flag rule ids, then cross-check ids), the
+// The Official-channel step: for the given ids (red-flag rule ids, cross-check ids, then the
+// authority-mention ids), the
 // entries that apply, each once, in order of first use, with the ids it is shown for.
 export function selectOfficialSteps(ids: readonly string[]): OfficialStepRef[] {
   const out: OfficialStepRef[] = [];

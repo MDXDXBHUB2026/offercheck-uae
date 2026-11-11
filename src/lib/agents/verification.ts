@@ -6,6 +6,8 @@
 // interface) and the matched words, quoted. Offer text is untrusted data, never interpreted.
 import type { CrossCheck, Finding } from "../types";
 import {
+  addressesTiedToAuthority,
+  approvalClaims,
   authorityMentions,
   companyClaims,
   emails,
@@ -17,6 +19,7 @@ import {
   noFeeClaims,
   quote,
   salaryCurrencies,
+  speaksForAuthority,
 } from "./extract";
 import { isOfficialHost } from "@/lib/officialDomains";
 import { CROSS_CHECKS, type CrossCheckName } from "@/lib/crossCheckIds";
@@ -38,13 +41,25 @@ function v01(text: string, findings: readonly Finding[]): CrossCheck[] {
   return claims.length > 0 ? [crossCheck("V-01", "free_email_with_company_claim", [freeEmail, claims[0]])] : [];
 }
 
-// V-02: a UAE authority is named, but no email address or link in the text is on an official domain.
-function v02(text: string): CrossCheck[] {
-  const named = authorityMentions(text);
-  if (named.length === 0) return [];
+// V-02 (narrowed, owner decision 2026-11-11): the text presents itself as coming from, or acting for,
+// a named UAE authority, and either gives no address on an official domain at all, or ties an
+// address that is not official to the authority. A plain mention ("your offer letter will be issued
+// through MoHRE") does not match; the Official channel step still shows the authority's entry.
+function v02(text: string, findings: readonly Finding[]): CrossCheck[] {
+  if (authorityMentions(text).length === 0) return [];
+  const tied = addressesTiedToAuthority(text).filter((a) => !isOfficialHost(a.host));
+  const feeAsked = findings.some((f) => f.source === "RF-001" && f.severity !== "info");
+  const cues = [...speaksForAuthority(text), ...(feeAsked ? approvalClaims(text) : [])];
   const hosts = [...emails(text).map((e) => e.domain), ...links(text).map((l) => l.host)];
-  if (hosts.some(isOfficialHost)) return [];
-  return [crossCheck("V-02", "authority_without_official_domain", named.map((m) => m.quote))];
+  const noOfficialAddress = !hosts.some(isOfficialHost);
+  if (tied.length === 0 && !(cues.length > 0 && noOfficialAddress)) return [];
+  return [crossCheck("V-02", "authority_without_official_domain", [...cues, ...tied.map((a) => a.address)])];
+}
+
+// The UAE authorities the text names (outside addresses), for the Official channel step:
+// "mention:mohre", "mention:icp", "mention:gdrfa" or "mention:dubai_police", each once.
+export function authorityMentionIds(text: string): string[] {
+  return [...new Set(authorityMentions(text).map((m) => `mention:${m.id}`))];
 }
 
 // V-03: a shortened link, a link to a bare IP address, or an address that looks like an official one.
@@ -86,7 +101,7 @@ function v05(text: string, findings: readonly Finding[]): CrossCheck[] {
 
 // findings: the red-flag findings of the same text, read only (V-01 and V-05 reuse them).
 export function runVerification(text: string, findings: readonly Finding[]): CrossCheck[] {
-  return [...v01(text, findings), ...v02(text), ...v03(text), ...v04(text), ...v05(text, findings)];
+  return [...v01(text, findings), ...v02(text, findings), ...v03(text), ...v04(text), ...v05(text, findings)];
 }
 
 // The distinct cross-check ids that matched, in V-01 to V-05 order.
