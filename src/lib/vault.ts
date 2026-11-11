@@ -1,6 +1,6 @@
 // The Encrypted Vault's records, kept only in this browser's localStorage, encrypted with the user's
 // passphrase (vaultCrypto.ts). Nothing here is sent to any server. Saving is always the user's
-// choice ("Save Encrypted"), and every record can be deleted. Storage access is wrapped: a private
+// choice ("Save to Encrypted Vault"), and every record can be deleted. Storage access is wrapped: a private
 // window or blocked storage gives "unavailable", never a crash.
 import type { AnalyzeResponse } from "./audit";
 import type { Coverage } from "./coverage";

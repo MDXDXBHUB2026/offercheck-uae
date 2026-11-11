@@ -156,7 +156,7 @@ describe("Vault tab count", () => {
   });
 });
 
-describe("Save Encrypted dialog", () => {
+describe("Save to Encrypted Vault dialog", () => {
   const props = {
     view,
     channel: "Email",

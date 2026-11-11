@@ -1986,6 +1986,44 @@ select:focus-visible {
   display: flex;
   flex-direction: column;
   gap: var(--sp-5);
+  /* Room for the sticky site header when a completed check scrolls this into view: the header is
+     130 px high below 1200 px (two rows) and 69 px from 1200 px (one row), measured 2026-11-11. */
+  scroll-margin-top: 150px;
+}
+
+@media (min-width: 1200px) {
+  .result-head {
+    scroll-margin-top: 96px;
+  }
+}
+
+.result-head-row {
+  align-items: flex-start;
+}
+
+/* The result actions on the score's row: at the end of the row (right in English, left in Arabic),
+   or wrapped under the score on a narrow card, before the summary and the rule tiles. */
+.result-head-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: var(--sp-2);
+  min-width: 0;
+}
+
+.result-head-end .result-toolbar {
+  justify-content: flex-end;
+}
+
+@media (max-width: 639px) {
+  .result-head-end {
+    align-items: flex-start;
+    width: 100%;
+  }
+
+  .result-head-end .result-toolbar {
+    justify-content: flex-start;
+  }
 }
 
 .result-title-block {

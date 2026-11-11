@@ -11,7 +11,7 @@ import { T } from "@/components/shell/T";
 // True only while no server code logs or stores the request body (page.test.ts checks that), and
 // the Encrypted Vault keeps its copy in this browser only (src/lib/vault.ts).
 export const PROTOTYPE_NOTICE =
-  "Prototype. Use synthetic or redacted offers only. Offer Check's server does not store offer text. If you choose translation, Google Cloud Translation receives it. Save Encrypted keeps an encrypted copy in this browser only.";
+  "Prototype. Use synthetic or redacted offers only. Offer Check's server does not store offer text. If you choose translation, Google Cloud Translation receives it. Save to Encrypted Vault keeps an encrypted copy in this browser only.";
 
 // The five tabs of the reference app. The Arabic labels are the reference app's own, not reviewed by
 // a native speaker. short: the compact bar under the header below 1200px.

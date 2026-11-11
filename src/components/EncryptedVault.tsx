@@ -18,7 +18,7 @@ export const VAULT_LOCAL_NOTE =
 
 // The heading says "No saved results yet"; this line explains, without repeating it.
 export const VAULT_EMPTY =
-  "Run a check, then choose Save Encrypted on the result. You will choose your passphrase there. Offer Check cannot recover it.";
+  "Run a check, then choose Save to Encrypted Vault on the result. You will choose your passphrase there. Offer Check cannot recover it.";
 
 export { TEXT_NOT_KEPT };
 
@@ -70,7 +70,7 @@ export function SavedText({ record }: { record: VaultRecord }) {
 
 type Confirming = { kind: "one"; id: string } | { kind: "all" } | null;
 
-// The reference app's Encrypted Vault: records saved with "Save Encrypted" on a result, encrypted
+// The reference app's Encrypted Vault: records saved with "Save to Encrypted Vault" on a result, encrypted
 // with AES-256-GCM (a key derived from the passphrase with PBKDF2) and kept in this browser only.
 // With nothing saved, an empty state replaces the unlock form. The passphrase and the opened records
 // are held in memory while the vault is open and dropped on Lock; the passphrase is never stored.
@@ -155,7 +155,7 @@ export function EncryptedVault() {
           </h1>
           <p className="lead">
             {t(
-              "Results you save with Save Encrypted stay in this browser, encrypted with your passphrase. They are never sent anywhere. The passphrase is not stored: without it the records cannot be opened.",
+              "Results you save with Save to Encrypted Vault stay in this browser, encrypted with your passphrase. They are never sent anywhere. The passphrase is not stored: without it the records cannot be opened.",
             )}
           </p>
           <p className="small muted">{t(VAULT_LOCAL_NOTE)}</p>

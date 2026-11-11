@@ -48,8 +48,9 @@ const ENTRIES: Record<string, string> = {
     "لا يبلّغ Offer Check عن أي شيء نيابةً عنك ولا يقدّم استشارة قانونية. هذه قنوات رسمية في الإمارات؛ ارجع إلى الصفحة الرسمية لمعرفة التفاصيل الحالية.",
   "A free, rule-based check for warning signs in UAE job offers.":
     "فحص مجاني قائم على قواعد ثابتة لعلامات التحذير في عروض العمل في الإمارات.",
-  "Prototype. Use synthetic or redacted offers only. Offer Check's server does not store offer text. If you choose translation, Google Cloud Translation receives it. Save Encrypted keeps an encrypted copy in this browser only.":
-    "نموذج أولي. استخدم عروضًا مصطنعة أو منقّحة فقط. لا يخزّن خادم Offer Check نص العرض. إذا اخترت الترجمة، يستلمه Google Cloud Translation. ميزة \"حفظ مشفّر\" تحفظ نسخة مشفّرة في هذا المتصفح فقط.",
+  // [review] button renamed "Save to Encrypted Vault" (2026-11-11); Arabic name follows "Encrypted Vault".
+  "Prototype. Use synthetic or redacted offers only. Offer Check's server does not store offer text. If you choose translation, Google Cloud Translation receives it. Save to Encrypted Vault keeps an encrypted copy in this browser only.":
+    "نموذج أولي. استخدم عروضًا مصطنعة أو منقّحة فقط. لا يخزّن خادم Offer Check نص العرض. إذا اخترت الترجمة، يستلمه Google Cloud Translation. ميزة \"حفظ في الخزنة المشفّرة\" تحفظ نسخة مشفّرة في هذا المتصفح فقط.",
   "Made-up examples written for this app. No real company or person.":
     "أمثلة مختلقة كُتبت لهذا التطبيق. لا تخص أي شركة أو شخص حقيقي.",
   "Offer Check is an early prototype that checks English text. Text in other languages can be machine translated first, and a translation can lose or change meaning. A low score, or \"No risk indicators found\", does not mean an offer is genuine.":
@@ -263,7 +264,10 @@ const ENTRIES: Record<string, string> = {
   "Stop": "إيقاف",
   "Listen": "استمع",
   "Export PDF": "تصدير PDF",
-  "Save Encrypted": "حفظ مشفّر",
+  // [review] new group label for the result card's action buttons (2026-11-11).
+  "Result actions": "إجراءات النتيجة",
+  // [review] button renamed "Save to Encrypted Vault" (2026-11-11); Arabic name follows "Encrypted Vault".
+  "Save to Encrypted Vault": "حفظ في الخزنة المشفّرة",
   "New Audit": "فحص جديد",
   "Points": "النقاط",
   "Bands": "الفئات",
@@ -554,8 +558,9 @@ const ENTRIES: Record<string, string> = {
   "It does not give legal advice.": "لا يقدّم استشارة قانونية.",
   "People in the UAE who receive a job offer by WhatsApp, email or LinkedIn and want to check it for warning signs, such as a request for a fee, a code or identity documents.":
     "الأشخاص في الإمارات الذين يتلقون عرض عمل عبر واتساب أو البريد الإلكتروني أو LinkedIn ويريدون فحصه بحثًا عن علامات تحذير، مثل طلب رسوم أو رمز أو مستندات هوية.",
-  "Offer Check's server does not store the text you paste. Your text is sent to Google, for machine translation, only if you press “{0}”. Save Encrypted keeps an encrypted copy in this browser only, locked with a passphrase that is not stored.":
-    "لا يخزّن خادم Offer Check النص الذي تلصقه. يُرسل نصك إلى Google للترجمة الآلية فقط إذا ضغطت \"{0}\". ميزة \"حفظ مشفّر\" تحفظ نسخة مشفّرة في هذا المتصفح فقط، مقفلة بعبارة مرور لا تُخزَّن.",
+  // [review] button renamed "Save to Encrypted Vault" (2026-11-11); Arabic name follows "Encrypted Vault".
+  "Offer Check's server does not store the text you paste. Your text is sent to Google, for machine translation, only if you press “{0}”. Save to Encrypted Vault keeps an encrypted copy in this browser only, locked with a passphrase that is not stored.":
+    "لا يخزّن خادم Offer Check النص الذي تلصقه. يُرسل نصك إلى Google للترجمة الآلية فقط إذا ضغطت \"{0}\". ميزة \"حفظ في الخزنة المشفّرة\" تحفظ نسخة مشفّرة في هذا المتصفح فقط، مقفلة بعبارة مرور لا تُخزَّن.",
   // Warning signs (src/lib/warningSigns.ts). Phase 4d, 2026-11-11: checked against the official
   // Arabic page the English was paraphrased from, UAE Government Portal, "التحقق من صحة عقود العمل،
   // وأذونات الدخول والتأشيرات", https://u.ae/ar/information-and-services/visa-and-emirates-id/Visa-information/tips-to-avoid-labour-and-visa-fraud
@@ -699,8 +704,9 @@ const ENTRIES: Record<string, string> = {
   "Encrypt and save": "شفّر واحفظ",
   "AES-256-GCM, in this browser only": "AES-256-GCM، في هذا المتصفح فقط",
   "Encrypted Vault": "الخزنة المشفّرة",
-  "Results you save with Save Encrypted stay in this browser, encrypted with your passphrase. They are never sent anywhere. The passphrase is not stored: without it the records cannot be opened.":
-    "النتائج التي تحفظها بميزة \"حفظ مشفّر\" تبقى في هذا المتصفح، مشفّرة بعبارة مرورك. لا تُرسل إلى أي جهة. لا تُخزَّن عبارة المرور: ومن دونها لا يمكن فتح السجلات.",
+  // [review] button renamed "Save to Encrypted Vault" (2026-11-11); Arabic name follows "Encrypted Vault".
+  "Results you save with Save to Encrypted Vault stay in this browser, encrypted with your passphrase. They are never sent anywhere. The passphrase is not stored: without it the records cannot be opened.":
+    "النتائج التي تحفظها بميزة \"حفظ في الخزنة المشفّرة\" تبقى في هذا المتصفح، مشفّرة بعبارة مرورك. لا تُرسل إلى أي جهة. لا تُخزَّن عبارة المرور: ومن دونها لا يمكن فتح السجلات.",
   "Lock": "قفل",
   "Open the vault": "افتح الخزنة",
   "Show passphrase": "إظهار عبارة المرور",
@@ -708,8 +714,9 @@ const ENTRIES: Record<string, string> = {
   "That passphrase does not open the vault saved in this browser.": "عبارة المرور هذه لا تفتح الخزنة المحفوظة في هذا المتصفح.",
   "This browser did not allow reading the vault.": "لم يسمح هذا المتصفح بقراءة الخزنة.",
   "With nothing saved yet, any passphrase opens an empty vault.": "ما دام لم يُحفظ شيء بعد، تفتح أي عبارة مرور خزنة فارغة.",
-  "The vault is empty. Check an offer, then choose Save Encrypted on the result.":
-    "الخزنة فارغة. افحص عرضًا، ثم اختر \"حفظ مشفّر\" في النتيجة.",
+  // [review] button renamed "Save to Encrypted Vault" (2026-11-11); Arabic name follows "Encrypted Vault".
+  "The vault is empty. Check an offer, then choose Save to Encrypted Vault on the result.":
+    "الخزنة فارغة. افحص عرضًا، ثم اختر \"حفظ في الخزنة المشفّرة\" في النتيجة.",
   "Saved results": "النتائج المحفوظة",
   "Delete all": "حذف الكل",
   "saved {0}": "حُفظ في {0}",
@@ -721,8 +728,9 @@ const ENTRIES: Record<string, string> = {
   "No saved results yet": "لا توجد نتائج محفوظة بعد",
   "Saved results are kept only in this browser. They are lost if this browser's data is cleared, and they are not available on another device or browser.":
     "تُحفظ النتائج في هذا المتصفح فقط. وتضيع إذا مُسحت بيانات هذا المتصفح، ولا تتوفر على جهاز أو متصفح آخر.",
-  "Run a check, then choose Save Encrypted on the result. You will choose your passphrase there. Offer Check cannot recover it.":
-    "أجرِ فحصًا، ثم اختر \"حفظ مشفّر\" في النتيجة. ستختار عبارة المرور هناك. لا يستطيع Offer Check استعادتها.",
+  // [review] button renamed "Save to Encrypted Vault" (2026-11-11); Arabic name follows "Encrypted Vault".
+  "Run a check, then choose Save to Encrypted Vault on the result. You will choose your passphrase there. Offer Check cannot recover it.":
+    "أجرِ فحصًا، ثم اختر \"حفظ في الخزنة المشفّرة\" في النتيجة. ستختار عبارة المرور هناك. لا يستطيع Offer Check استعادتها.",
   "The checked text was not kept with this result. Only the result was saved.":
     "لم يُحفظ النص المفحوص مع هذه النتيجة. حُفظت النتيجة فقط.",
   "Also keep the checked text (it may contain personal details)":

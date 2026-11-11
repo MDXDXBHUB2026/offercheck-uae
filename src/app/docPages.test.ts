@@ -54,7 +54,7 @@ describe("/legal#about (was /about)", () => {
   });
 
   // The redesign: "It does not store your text" became "Its server does not store your text",
-  // because Save Encrypted can keep an encrypted copy in the browser, by the person's choice.
+  // because Save to Encrypted Vault can keep an encrypted copy in the browser, by the person's choice.
   it("keeps the six 'what it does not do' bullets", () => {
     const list = ABOUT.slice(ABOUT.indexOf('id="not-heading"'), ABOUT.indexOf("</ul>", ABOUT.indexOf('id="not-heading"')));
     expect(list.match(/<li>/g)).toHaveLength(6);
@@ -74,7 +74,7 @@ describe("/legal#about (was /about)", () => {
   it("has one privacy paragraph that stays true: Google only on translate, the vault only in this browser", () => {
     const text = decode(ABOUT);
     expect(text).toContain(
-      `Offer Check's server does not store the text you paste. Your text is sent to Google, for machine translation, only if you press “${TRANSLATE_BUTTON}”. Save Encrypted keeps an encrypted copy in this browser only, locked with a passphrase that is not stored.`,
+      `Offer Check's server does not store the text you paste. Your text is sent to Google, for machine translation, only if you press “${TRANSLATE_BUTTON}”. Save to Encrypted Vault keeps an encrypted copy in this browser only, locked with a passphrase that is not stored.`,
     );
     expect(text).not.toMatch(/zero storage|nothing is stored|never stored anywhere/i);
   });

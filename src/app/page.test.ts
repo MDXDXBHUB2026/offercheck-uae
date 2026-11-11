@@ -7,9 +7,9 @@ import { PROTOTYPE_NOTICE, SiteFooter } from "@/components/shell/site";
 import Home from "./page";
 
 // The redesign: the notice names the server (it stores nothing), Google (only on translation) and
-// the Encrypted Vault (an encrypted copy in this browser, only on Save Encrypted).
+// the Encrypted Vault (an encrypted copy in this browser, only on Save to Encrypted Vault).
 const NOTICE =
-  "Prototype. Use synthetic or redacted offers only. Offer Check&#x27;s server does not store offer text. If you choose translation, Google Cloud Translation receives it. Save Encrypted keeps an encrypted copy in this browser only.";
+  "Prototype. Use synthetic or redacted offers only. Offer Check&#x27;s server does not store offer text. If you choose translation, Google Cloud Translation receives it. Save to Encrypted Vault keeps an encrypted copy in this browser only.";
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -34,7 +34,7 @@ describe("home page", () => {
 
 // The notice says the server does not store offer text. These checks keep that true.
 // Two files may use browser storage, both named in the notice or the footer and checked below: the
-// Encrypted Vault (only ciphertext, on the user's Save Encrypted) and the language switch (only
+// Encrypted Vault (only ciphertext, on the user's Save to Encrypted Vault) and the language switch (only
 // "en" or "ar"). Every other file stays free of storage.
 const STORAGE_ALLOWED = [
   join("src", "lib", "vault.ts"),

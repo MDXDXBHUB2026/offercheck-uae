@@ -31,7 +31,7 @@ export function defaultTitle(bandLabel: string, channel: string, day: string): s
   return `${bandLabel}, ${channel}, ${day}`;
 }
 
-// The record Save Encrypted writes. Decision 2h: the checked text is in it only when keepText is
+// The record Save to Encrypted Vault writes. Decision 2h: the checked text is in it only when keepText is
 // true (redacted text, cut to SAVED_TEXT_MAX characters); otherwise the record has no text field.
 export function buildRecord(input: {
   title: string;
@@ -60,7 +60,7 @@ export function buildRecord(input: {
 
 type Status = "idle" | "saving" | "wrong" | "failed";
 
-// "Save Encrypted": title, optional notes, and the passphrase twice. The passphrase is used once to
+// "Save to Encrypted Vault": title, optional notes, and the passphrase twice. The passphrase is used once to
 // encrypt and is never stored. With a vault already saved, the passphrase must open it, or nothing is
 // written. The checked text (after Auto-Redact, cut to SAVED_TEXT_MAX characters) is saved only when
 // "Also keep the checked text" is ticked; otherwise the record has no text field at all. Fixed messages only: no offer text in any message.

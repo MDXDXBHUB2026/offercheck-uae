@@ -97,7 +97,7 @@ const ABOUT: { id: string; title: string; body: React.ReactNode }[] = [
       <p>
         <T args={[TRANSLATE_BUTTON]}>
           {
-            "Offer Check's server does not store the text you paste. Your text is sent to Google, for machine translation, only if you press “{0}”. Save Encrypted keeps an encrypted copy in this browser only, locked with a passphrase that is not stored."
+            "Offer Check's server does not store the text you paste. Your text is sent to Google, for machine translation, only if you press “{0}”. Save to Encrypted Vault keeps an encrypted copy in this browser only, locked with a passphrase that is not stored."
           }
         </T>
       </p>

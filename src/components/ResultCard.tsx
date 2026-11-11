@@ -38,6 +38,7 @@ import { TEXT_NOT_KEPT } from "@/lib/vault";
 import { WARNING_SIGNS } from "@/lib/warningSigns";
 import { useLang, useT } from "@/components/shell/lang";
 import { tr } from "@/lib/i18n";
+import { RESULT_HEADING_ID } from "./revealResult";
 
 // Batch B Stage 1: added to the Intake row of the Agent run for each state but full.
 // BATCHB-2: a translation names the provider and the source language, from fixed lists only.
@@ -310,7 +311,7 @@ export function ResultCard({
         className={cx("banner result-head score-card", `score-${chip.tone === "band" ? risk.band : chip.tone}`)}
         aria-labelledby="results-heading"
       >
-        <div className="row-between">
+        <div className="row-between result-head-row">
           <div className="result-title-block">
             <span className="gauge-wrap">
               {/* The score ring (AI Studio port): decoration around the icon, filled to risk.score from
@@ -339,7 +340,8 @@ export function ResultCard({
               </span>
             </span>
             <div className="stack-sm">
-              <h2 id="results-heading" className="label-caps">
+              {/* tabIndex -1: focus moves here when a check completes (revealResult.ts). */}
+              <h2 id={RESULT_HEADING_ID} className="label-caps" tabIndex={-1}>
                 {t("Risk indicators")}
               </h2>
               <p className="h1 score-text">
@@ -354,11 +356,40 @@ export function ResultCard({
               <p className={cx("chip", `chip-${CHIP_TONE[tone]}`, "score-label")}>{t(chip.label)}</p>
             </div>
           </div>
-          <p className="result-meta">
-            <strong>{t(plural(riskFindings.length, "red flag"))}</strong>
-            {channel ? ` · ${t(channel)}` : ""}
-            {redacted > 0 ? ` · ${t(`${plural(redacted, "number")} removed before checking`)}` : ""}
-          </p>
+          {/* The actions sit on the score's row, at the end (top right in English, top left in
+              Arabic), so Save is in view when the result is. On a narrow screen the group wraps under
+              the score, above the rule tiles. Not printed. */}
+          <div className="result-head-end">
+            <div className="result-toolbar no-print" role="group" aria-label={t("Result actions")}>
+              {speech && (
+                <Button variant="secondary" onClick={listen} aria-pressed={speaking}>
+                  {speaking ? <Square className="icon" aria-hidden="true" /> : <Volume2 className="icon" aria-hidden="true" />}
+                  {speaking ? t("Stop") : t("Listen")}
+                </Button>
+              )}
+              <Button variant="secondary" onClick={() => window.print()}>
+                <FileDown className="icon" aria-hidden="true" />
+                {t("Export PDF")}
+              </Button>
+              {onSave && (
+                <Button variant="secondary" onClick={onSave}>
+                  <Lock className="icon" aria-hidden="true" />
+                  {t("Save to Encrypted Vault")}
+                </Button>
+              )}
+              {onNewAudit && (
+                <Button variant="secondary" onClick={onNewAudit}>
+                  <RotateCcw className="icon" aria-hidden="true" />
+                  {t("New Audit")}
+                </Button>
+              )}
+            </div>
+            <p className="result-meta">
+              <strong>{t(plural(riskFindings.length, "red flag"))}</strong>
+              {channel ? ` · ${t(channel)}` : ""}
+              {redacted > 0 ? ` · ${t(`${plural(redacted, "number")} removed before checking`)}` : ""}
+            </p>
+          </div>
         </div>
         <p className="lead">{t(resultView.summary)}</p>
         {/* Evidence basis: a count of findings, each quoted from the text. Not shown when the text
@@ -395,30 +426,6 @@ export function ResultCard({
             );
           })}
         </ul>
-        <div className="result-toolbar no-print">
-          {speech && (
-            <Button variant="secondary" onClick={listen} aria-pressed={speaking}>
-              {speaking ? <Square className="icon" aria-hidden="true" /> : <Volume2 className="icon" aria-hidden="true" />}
-              {speaking ? t("Stop") : t("Listen")}
-            </Button>
-          )}
-          <Button variant="secondary" onClick={() => window.print()}>
-            <FileDown className="icon" aria-hidden="true" />
-            {t("Export PDF")}
-          </Button>
-          {onSave && (
-            <Button variant="secondary" onClick={onSave}>
-              <Lock className="icon" aria-hidden="true" />
-              {t("Save Encrypted")}
-            </Button>
-          )}
-          {onNewAudit && (
-            <Button variant="secondary" onClick={onNewAudit}>
-              <RotateCcw className="icon" aria-hidden="true" />
-              {t("New Audit")}
-            </Button>
-          )}
-        </div>
         {languageNotice && (
           <Callout tone="neutral" role="note" className="language-notice">
             <p>{t(LANGUAGE_NOTICES[languageNotice])}</p>

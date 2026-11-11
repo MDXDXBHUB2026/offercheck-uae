@@ -7,6 +7,7 @@ import { AuditTrail } from "@/components/AuditTrail";
 import { networkFailure, responseFailure, type CheckFailure } from "@/components/checkRequest";
 import { ReportModal, type ReportDraft } from "@/components/radar/ReportModal";
 import { ResultCard } from "@/components/ResultCard";
+import { revealResult, scrollBehaviorFor } from "@/components/revealResult";
 import { SAVED_NOTICE, SaveVaultModal, savedDay } from "@/components/SaveVaultModal";
 import { scoreArithmetic } from "@/components/scoreArithmetic";
 import { clearReopen, peekReopen } from "@/components/vaultStore";
@@ -82,7 +83,7 @@ export function checkBlockedReason(text: string, hasSamples: boolean): string {
 // STALE-1: boxText is the text that was in the box when the check was asked for (the original, also
 // after a translation). The result is shown only while the box holds exactly that text.
 // The redesign: checkedText is the text the rules read (after Auto-Redact; the English after a
-// translation), shown in the source highlights and saved by Save Encrypted. channel and redacted
+// translation), shown in the source highlights and saved by Save to Encrypted Vault. channel and redacted
 // are recorded at check time too.
 export type CheckedResult = {
   boxText: string;
@@ -235,7 +236,7 @@ export function OfferChecker({
   const runIdRef = useRef<string | null>(reopen?.response.runId ?? null);
   // When the result came from the vault: the day it was saved, shown above it.
   const [reopenedAt] = useState(reopen ? (peekReopen()?.savedAt ?? null) : null);
-  // After Save Encrypted: an inline confirmation on the page (no alert).
+  // After Save to Encrypted Vault: an inline confirmation on the page (no alert).
   const [savedNotice, setSavedNotice] = useState(false);
   // The gate state as of the last action, so a second click before a re-render sees the first.
   const flowRef = useRef<GateFlow>(INITIAL_GATE_FLOW);
@@ -246,6 +247,13 @@ export function OfferChecker({
   useEffect(() => {
     clearReopen();
   }, []);
+  // Counts completed checks. Each one brings the result header into view and focuses its heading
+  // (revealResult.ts), after the card has rendered. Not on first load or a vault reopen.
+  const [revealCount, setRevealCount] = useState(0);
+  useEffect(() => {
+    if (revealCount === 0) return;
+    revealResult(document, scrollBehaviorFor(window, document.documentElement));
+  }, [revealCount]);
   // The last check request, so "Try again" repeats it exactly (a translated check stays translated).
   const lastRequest = useRef<{
     submitted: string;
@@ -406,6 +414,7 @@ export function OfferChecker({
       if (response.ok && isAnalyzeResponse(data)) {
         setChecked(recordCheck(data, submitted, shown, { channel, ...meta }));
         startAudit(data.runId, data.audit);
+        setRevealCount((count) => count + 1);
       } else {
         setFailure(responseFailure(response.ok ? 200 : response.status, data));
       }
