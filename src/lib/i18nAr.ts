@@ -742,6 +742,53 @@ const ENTRIES: Record<string, string> = {
   "Saved to your vault in this browser.": "حُفظ في خزنتك في هذا المتصفح.",
   "Open the Encrypted Vault": "افتح الخزنة المشفّرة",
   "Opened from your Encrypted Vault. Saved {0}.": "فُتح من خزنتك المشفّرة. تاريخ الحفظ: {0}.",
+
+  // [review] Verification and Official channel (2026-11-11): every entry below, written with an AI
+  // tool, not reviewed by a native speaker.
+  "Verification (text only, no outside lookups)": "التحقق (من النص فقط، دون أي بحث خارجي)",
+  "{0} of {1} cross-checks matched": "تطابق من الفحوص المتقاطعة: {0} من {1}",
+  "No official step applies to these findings": "لا تنطبق أي خطوة رسمية على هذه النتائج",
+  "{0} official steps for {1} findings": "الخطوات الرسمية: {0}، للنتائج: {1}",
+  "{0} official step for {1} finding": "الخطوات الرسمية: {0}، للنتائج: {1}",
+  "{0} official steps for {1} finding": "الخطوات الرسمية: {0}، للنتائج: {1}",
+  "{0} official step for {1} findings": "الخطوات الرسمية: {0}، للنتائج: {1}",
+  "Cross-checks on the offer": "فحوص متقاطعة على العرض",
+  "Official steps for these findings": "خطوات رسمية لهذه النتائج",
+  "These cross-checks read only the text you checked. Nothing is looked up outside Offer Check, and they do not change the score.":
+    "تقرأ هذه الفحوص المتقاطعة النص الذي فحصته فقط. لا يُبحث عن أي شيء خارج Offer Check، ولا تغيّر هذه الفحوص الدرجة.",
+  "{0} cross-checks ran and none matched. This does not confirm that the offer is genuine.":
+    "نُفّذت الفحوص المتقاطعة ({0}) ولم يتطابق أي منها. هذا لا يؤكد أن العرض حقيقي.",
+  "Official pages and services that apply to these findings. Use the official page for current details.":
+    "صفحات وخدمات رسمية تنطبق على هذه النتائج. استخدم الصفحة الرسمية للاطلاع على أحدث التفاصيل.",
+  "For: {0}": "تخص: {0}",
+  "Last checked": "آخر مراجعة",
+  "Official source": "المصدر الرسمي",
+  "Cross-checks that matched": "الفحوص المتقاطعة المتطابقة",
+  "Not counted in the score": "لا تُحتسب في الدرجة",
+  "Free email address for a named company or government body": "بريد إلكتروني مجاني لشركة أو جهة حكومية مذكورة",
+  "UAE authority named, with no official address": "ذِكر جهة إماراتية رسمية دون عنوان رسمي",
+  "Shortened link": "رابط مختصر",
+  "Link to a numeric address": "رابط إلى عنوان رقمي",
+  "Address that looks like an official one": "عنوان يشبه عنوانًا رسميًا",
+  "Asks to continue only on a messaging app": "يطلب المتابعة عبر تطبيق مراسلة فقط",
+  "Asks for a payment and also says there are no fees": "يطلب دفع مبلغ ويقول أيضًا إنه لا توجد رسوم",
+  "Salary in more than one currency": "الراتب بأكثر من عملة",
+  "The text names a company or a government body, but gives a free email address.":
+    "يذكر النص شركة أو جهة حكومية، لكنه يعطي عنوان بريد إلكتروني مجانيًا.",
+  "The text names a UAE authority, but no email address or link in it is on an official UAE government website from Offer Check's list.":
+    "يذكر النص جهة إماراتية رسمية، لكن لا يوجد فيه عنوان بريد إلكتروني أو رابط على موقع حكومي إماراتي رسمي من قائمة Offer Check.",
+  "A shortened link hides the website it opens.": "الرابط المختصر يُخفي الموقع الذي يفتحه.",
+  "The link goes to a numeric address instead of a website name.": "يؤدي الرابط إلى عنوان رقمي بدلًا من اسم موقع.",
+  "An email address or link uses the name of an official UAE government website, but is not on that website.":
+    "يستخدم عنوان بريد إلكتروني أو رابط اسم موقع حكومي إماراتي رسمي، لكنه ليس على ذلك الموقع.",
+  "The text asks you to continue on WhatsApp or Telegram, with no other way to reply.":
+    "يطلب النص منك المتابعة عبر واتساب أو تيليجرام، دون أي طريقة أخرى للرد.",
+  "The text asks you to pay and also says there are no fees.": "يطلب النص منك الدفع ويقول أيضًا إنه لا توجد رسوم.",
+  "The salary is given in more than one currency.": "الراتب مذكور بأكثر من عملة.",
+  "Report cybercrime such as online fraud. Available in the MoI UAE app.":
+    "الإبلاغ عن الجرائم الإلكترونية مثل الاحتيال عبر الإنترنت. متاح في تطبيق MoI UAE.",
+  "Verify a job offer by its reference number through the MOHRE enquiry service, and contact MOHRE through its official channels.":
+    "تحقّق من عرض العمل برقمه المرجعي عبر خدمة الاستعلام في وزارة الموارد البشرية والتوطين، وتواصل مع الوزارة عبر قنواتها الرسمية.",
 };
 
 // Official names: in Arabic, each contact shows its own official Arabic name (src/data/uaeContacts.ts).

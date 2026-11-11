@@ -36,6 +36,9 @@ const ALLOWED_KEYS = new Set([
   "agent",
   "ruleIds",
   "warningIds",
+  // Verification and Official channel (2026-11-11): fixed ids and a number only.
+  "checkIds",
+  "count",
   "score",
   "band",
   "decision",
@@ -44,8 +47,8 @@ const ALLOWED_KEYS = new Set([
   "blocks",
 ]);
 // Every string value in the log comes from a fixed vocabulary: kinds, agents, statuses, rule ids,
-// bands, decisions and block ids.
-const SAFE_STRING = /^(?:[a-z]+(?:[_-][a-z]+)*|RF-\d{3}(?:-W)?)$/;
+// cross-check ids (V-01 to V-05), bands, decisions and block ids.
+const SAFE_STRING = /^(?:[a-z]+(?:[_-][a-z]+)*|RF-\d{3}(?:-W)?|V-0[1-5])$/;
 
 function digests(text: string): string[] {
   return ["sha256", "sha1", "md5", "sha512"].map((algorithm) =>
@@ -92,18 +95,20 @@ describe("run records", () => {
     expect(audit[0].data).toEqual({ offerLength: SCAM_OFFER.length });
     expect(audit[2].data.ruleIds).toEqual(findings.filter((f) => f.severity !== "info").map((f) => f.source));
     expect(audit[5].data).toMatchObject({ score: risk.score, band: risk.band });
-    expect(audit[3].data).toEqual({ agent: "verification", status: "not_implemented", durationMs: null });
+    // Verification (2026-11-11): its check ids and a count, never the matched words.
+    expect(Object.keys(audit[3].data).sort()).toEqual(["agent", "checkIds", "count", "durationMs", "status"]);
+    expect(audit[3].data).toMatchObject({ agent: "verification", status: "completed" });
   });
 
-  it("labels each step as it really is: stubs as not implemented, intake as text cleaning only", async () => {
+  it("labels each step as it really is: all completed, intake as text cleaning only", async () => {
     const { audit } = await runWithAudit(SCAM_OFFER);
     const status = Object.fromEntries(
       audit.filter((e) => e.kind === "agent_step").map((e) => [e.data.agent, e.data.status]),
     );
     expect(status).toEqual({
       red_flag: "completed",
-      verification: "not_implemented",
-      official_channel: "not_implemented",
+      verification: "completed",
+      official_channel: "completed",
       risk_aggregator: "completed",
     });
     expect(audit[1].data).toMatchObject({ status: "completed", scope: "text_cleaning_only", translation: "none" });

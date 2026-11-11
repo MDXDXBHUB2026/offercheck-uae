@@ -35,7 +35,7 @@ describe("runManager", () => {
   });
 
   it("reports the steps it ran", () => {
-    expect(runManager(LEGIT_OFFER).plan).toEqual(["intake", "red_flag", "risk_aggregator"]);
+    expect(runManager(LEGIT_OFFER).plan).toEqual(["intake", "red_flag", "verification", "official_channel", "risk_aggregator"]);
   });
 
   it("gives the same findings and score on every run", () => {
@@ -77,16 +77,16 @@ describe("runManager trace", () => {
     ]);
   });
 
-  it("marks agents that do not exist yet as not implemented, with no time", () => {
-    const steps = runManager(LEGIT_OFFER).trace.filter((step) =>
-      ["verification", "official_channel"].includes(step.agent),
-    );
-    expect(steps).toHaveLength(2);
-    for (const step of steps) {
-      expect(step.status).toBe("not_implemented");
-      expect(step.durationMs).toBeNull();
-      expect(step.summary).toBe("Not implemented yet");
-    }
+  // Built 2026-11-11 (text only, score-neutral): each reports its ids and a count, never text.
+  it("runs Verification and Official channel, with ids and a count on each step", () => {
+    const trace = runManager(SCAM_OFFER).trace;
+    const step = (agent: string) => trace.find((s) => s.agent === agent);
+    expect(trace.map((s) => s.status)).not.toContain("not_implemented");
+    expect(step("verification")).toMatchObject({ status: "completed", summary: expect.stringMatching(/^\d of 5 cross-checks matched$/) });
+    expect(step("verification")?.checkIds?.every((id) => /^V-0[1-5]$/.test(id))).toBe(true);
+    expect(step("official_channel")).toMatchObject({ status: "completed" });
+    expect(step("official_channel")?.checkIds?.every((id) => /^(?:RF-00[1-5]|V-0[1-5])$/.test(id))).toBe(true);
+    expect(step("official_channel")?.count).toBe(runManager(SCAM_OFFER).officialSteps?.length);
   });
 
   it("takes each duration from performance.now", () => {
@@ -96,9 +96,11 @@ describe("runManager trace", () => {
       .trace.filter((step) => step.status === "completed")
       .map((step) => [step.agent, step.durationMs]);
     expect(durations).toEqual([
-      ["manager", 35],
+      ["manager", 55],
       ["intake", 5],
       ["red_flag", 5],
+      ["verification", 5],
+      ["official_channel", 5],
       ["risk_aggregator", 5],
     ]);
   });

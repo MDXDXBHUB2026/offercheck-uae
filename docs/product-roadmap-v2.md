@@ -79,6 +79,8 @@ Build the Verification agent on top of the Intake structure. Checks must be expl
 These findings appear in the results as a separate group "Verification checks" and feed the Risk aggregator only through the existing fixed weights (add check ids to the weight table with explicit tests; do not change existing rule weights).
 Done when: each check has tests, the aggregator tests prove determinism, the Test Lab gets a "verification checks" section computed from cases, and the Agent run shows Verification as real.
 
+Status (2026-11-11, owner decisions, on `ui-port-2`, not merged): built as Verification v1, text only. Five checks on the cleaned text, V-01 to V-05 (`src/lib/agents/verification.ts`, extractors in `src/lib/agents/extract.ts`), each with a plain reason and the matched words quoted. The official address list is derived from the official links already in the app (`src/lib/officialDomains.ts`), not typed by hand. Deviations from the text above, by owner decision: score-neutral (no weights added; weights deferred; `redFlag.ts` and `scoring.ts` unchanged; all 77 eval cases unchanged); no model and no network (no RDAP, web search or page fetch); the group is named "Cross-checks on the offer"; Intake is not rebuilt (Phase 4 stays open), only the small extractors these checks need were added. The Test Lab was removed earlier, so there is no Test Lab section. Tests in `src/lib/agents/verification.test.ts`.
+
 ## Phase 6: Official channels guidance (sourced library, strict provenance)
 
 Build the mechanism, not the content:
@@ -89,6 +91,8 @@ Build the mechanism, not the content:
 Done when: with an empty library the UI shows "Guidance not available yet" honestly, tests cover the refusal rules and the mapping.
 
 Status (2026-11-09, owner decision, committed locally, not pushed): partly built: warning signs only. `/guide` ("Warning signs") shows eight owner-approved signs from `src/lib/warningSigns.ts`, paraphrased from one official page (UAE Government Portal, "Tips to avoid labour and visa fraud"). The typed library, loader refusal rules and finding-to-guidance mapping above are not built.
+
+Status update (2026-11-11, owner decisions, on `ui-port-2`, not merged): Official-channel v1 built as a mapping, not a library. `src/lib/officialSteps.ts` maps finding ids (RF-001 to RF-005) and cross-check ids (V-01 to V-05) to existing entries only (warning signs, `src/lib/authorities.ts`, `src/data/uaeContacts.ts`); no new guidance text. The loader refuses an entry without a title, text, source name or https source URL, and a test enforces it. "Last checked" is shown only where the data holds a date (the warning signs and the authorities; the contacts have none). When no entry applies, nothing is shown for that finding. The result card group is "Official steps for these findings". `data/guidance.json` and the reviewer field are not built. Tests in `src/lib/officialSteps.test.ts`.
 
 ## Phase 7: Orchestrator v2 (manager with a visible plan)
 

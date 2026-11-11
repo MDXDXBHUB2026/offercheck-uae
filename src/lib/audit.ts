@@ -164,7 +164,10 @@ export function runRecords(
             }
           : step.agent === "risk_aggregator"
             ? { score: result.risk.score, band: result.risk.band }
-            : {};
+            : // Verification and Official channel (owner-approved, 2026-11-11): fixed ids and a count only.
+              step.checkIds
+              ? { checkIds: [...step.checkIds], count: step.count ?? step.checkIds.length }
+              : {};
       records.push({ runId, at: finishedAt, kind: "agent_step", data: { agent: step.agent, ...timing, ...extra } });
     }
   }

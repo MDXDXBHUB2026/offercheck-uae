@@ -366,16 +366,16 @@ describe("result card layout (redesign)", () => {
     expect([...order].sort((a, b) => a - b)).toEqual(order);
   });
 
-  it("draws stub agents with a 'Not implemented yet' label and no check icon", () => {
+  // Since 2026-11-11 every step in the run is built; a stub would still be drawn as one (AgentRun test).
+  it("draws every agent of the run as completed, with the check icon", () => {
     const html = renderToStaticMarkup(createElement(ResultsPanel, { result: runManager("Hello"), ruleCount: 5 }));
     const rows = html.match(/<li class="trace-[^"]+">.*?<\/li>/g) ?? [];
-    const stubs = rows.filter((row) => row.includes("trace-not_implemented"));
-    expect(stubs).toHaveLength(2);
-    for (const row of stubs) {
-      expect(row).toContain('<span class="trace-summary">Not implemented yet</span>');
-      // A dashed circle, never the check icon of a completed step.
-      expect(row).not.toContain("lucide-circle-check");
+    expect(rows).toHaveLength(6);
+    for (const row of rows) {
+      expect(row).toContain('class="trace-completed"');
+      expect(row).toContain("lucide-circle-check");
     }
+    expect(html).not.toContain("trace-not_implemented");
   });
 
   // The gauge was replaced by the reference banner: the server's number, out of 100, as text.

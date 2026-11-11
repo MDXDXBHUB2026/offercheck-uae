@@ -33,8 +33,8 @@ The steps of a check, with the status the code reports. The run's trace comes fr
 | Manager | Built | Runs the steps in order and merges their results. It never sends, stores or contacts anyone. |
 | Intake | Partly built | Text cleaning only: removes hidden characters. It does not extract claims yet. |
 | Red-flag | Built | Five fixed rules look for warning signs in English text and quote the words that matched. |
-| Verification | Not implemented yet | Would check the sender's email domain and the company. |
-| Official channel | Not implemented yet | Would explain how to confirm an offer through an official channel. (The Gov Portals Hub and Legal Guidelines pages are fixed text; they are not this step.) |
+| Verification | Built (text only) | Five cross-checks on the cleaned text (V-01 to V-05), shown as "Cross-checks on the offer" with the matched words quoted. No outside lookups. They do not change the score. |
+| Official channel | Built (text only) | Links findings and cross-checks to existing official entries, each with its official source link, shown as "Official steps for these findings". No new guidance text. It does not change the score. |
 | Risk aggregator | Built | Turns the findings into a score with fixed weights. No AI model is involved. |
 | Explainer | Not implemented yet | Would explain the findings in plain words. |
 | Drafter | Built | Fills a fixed English reply template. It runs only after the user asks for a draft. |
@@ -81,8 +81,8 @@ The result card names each finding in plain words. Rule IDs appear only in "How 
 ## Not built yet
 
 - Claim extraction in the intake step (roadmap Phase 4).
-- Verification: no company, domain or offer number is checked (roadmap Phase 5).
-- The official-channel step and the typed guidance library (roadmap Phase 6; only the eight warning signs are built).
+- Outside lookups for verification: no company, domain or offer number is checked against any registry or website (no RDAP, web search or page fetch). Weights for the cross-checks are deferred by owner decision, so they do not count in the score (roadmap Phase 5).
+- The typed guidance library with a reviewer field (roadmap Phase 6; the official-channel step maps findings to the existing warning signs, reporting channels and contacts only).
 - The explainer step (roadmap Phase 9). No language model is called; a code search finds no model client or model API call.
 - A run plan with skipped and failed steps (roadmap Phase 7).
 - Hardening (roadmap Phase 11): no Content-Security-Policy yet (only `X-Content-Type-Options`, `Referrer-Policy` and `X-Frame-Options` are set), no rate limit on `/api/analyze`, no end-to-end browser tests. `/api/translate` has a best-effort throttle of 10 requests a minute per client address, in server memory, per instance; the real spend limit is the quota set on the Google Cloud project.

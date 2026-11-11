@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 import { ArrowRight, Copy, Eye, EyeOff, KeyRound, Lock, ScanSearch, Trash2 } from "lucide-react";
+import { CrossChecksGroup, OfficialStepsGroup } from "@/components/CrossCheckGroups";
 import { useLang, useT } from "@/components/shell/lang";
 import { Button, ButtonLink, Callout, Card, Chip, cx } from "@/components/ui";
 import { clearReopen, setReopen, useVaultState } from "@/components/vaultStore";
@@ -315,6 +316,13 @@ export function EncryptedVault() {
                     </li>
                   ))}
                 </ul>
+              )}
+              {/* Saved with the result since 2026-11-11; a record saved earlier has neither group. */}
+              {current.check && (
+                <>
+                  <CrossChecksGroup result={current.check.response} />
+                  <OfficialStepsGroup result={current.check.response} />
+                </>
               )}
               <SavedText record={current} />
               <div className="row">

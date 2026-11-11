@@ -7,7 +7,8 @@ const AGENT_LABELS: Record<string, string> = {
   // Intake only cleans the text so far: it does not extract claims yet.
   intake: "Intake (text cleaning only)",
   red_flag: "Red-flag",
-  verification: "Verification",
+  // Text only: no domain lookup, web search or page fetch (owner decision, 2026-11-11).
+  verification: "Verification (text only, no outside lookups)",
   official_channel: "Official channel",
   risk_aggregator: "Risk aggregator",
 };

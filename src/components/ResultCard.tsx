@@ -20,12 +20,14 @@ import {
   Volume2,
 } from "lucide-react";
 import { AgentRun } from "@/components/AgentRun";
+import { CrossChecksGroup, OfficialStepsGroup } from "@/components/CrossCheckGroups";
 import { scoreArithmetic } from "@/components/scoreArithmetic";
 import { allClearShown, noticeFor, qualifiedSummary, reportLinkShown, scoreChip, type Notice } from "@/components/scoreChip";
 import { Button, ButtonLink, Callout, Card, Chip, Disclosure, cx, type ChipTone, type Tone } from "@/components/ui";
 import { contact, MOHRE_INQUIRY_URL } from "@/data/uaeContacts";
 import { mainChannels, REPORT_FRAUD_ID, REPORT_FRAUD_NOTE, REPORT_LINK_SENTENCE } from "@/lib/authorities";
 import { CHECK_LABELS, CHECK_NOTES } from "@/lib/checkLabels";
+import { CROSS_CHECK_LABELS, validCrossChecks } from "@/lib/crossCheckLabels";
 import { noticeForCoverage, type Coverage } from "@/lib/coverage";
 import { highlightParts, type MarkLevel } from "@/lib/highlight";
 import { OFFER_NOTICE, showOfferNotice, type OfferSignal } from "@/lib/offerLikeness";
@@ -238,6 +240,7 @@ export function ResultCard({
   const { risk, findings } = result;
   const riskFindings = findings.filter((f): f is Finding & { severity: Exclude<Severity, "info"> } => f.severity !== "info");
   const warningMentions = findings.filter((finding) => finding.severity === "info");
+  const crossChecks = validCrossChecks(result.crossChecks);
   const state: Coverage =
     coverage ?? (languageTier === "most" ? "unchecked" : languageTier === "part" ? "partial" : "full");
   const languageNotice = noticeForCoverage(state);
@@ -607,6 +610,9 @@ export function ResultCard({
         </div>
       </Card>
 
+      <CrossChecksGroup result={result} />
+      <OfficialStepsGroup result={result} />
+
       <div className="grid grid-2">
         <div className="stack">
         <Card as="section" className="stack-sm" aria-labelledby="checklist-heading">
@@ -710,6 +716,22 @@ export function ResultCard({
                   {t(CHECK_LABELS[finding.check] ?? finding.check)}: {t("Mentioned in a warning, not counted in the score")}{" "}
                   <bdi className="rule-ref muted" dir="ltr">
                     {finding.source}
+                  </bdi>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+        {/* The cross-checks that matched, by plain name with their ID; no points, they are not scored. */}
+        {crossChecks.length > 0 && (
+          <div className="stack-sm rule-refs cross-check-refs">
+            <h3 className="h3">{t("Cross-checks that matched")}</h3>
+            <ul className="stack-sm small">
+              {crossChecks.map((check, index) => (
+                <li key={`${check.check}-${index}`}>
+                  {t(CROSS_CHECK_LABELS[check.check])}: {t("Not counted in the score")}{" "}
+                  <bdi className="rule-ref muted" dir="ltr">
+                    {check.id}
                   </bdi>
                 </li>
               ))}
