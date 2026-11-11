@@ -1444,15 +1444,26 @@ html {
   list-style: none;
 }
 
+/* Each row on one grid: the dot, then the label with its value on the line below, both starting at
+   the same edge. A value beside the label (pushed to the far end) left the rows ragged and made the
+   longer ones wrap in the 320px card. */
 .hud-rows li {
-  display: flex;
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr);
   align-items: center;
-  gap: var(--sp-2);
+  column-gap: var(--sp-2);
+  row-gap: 2px;
+}
+
+.hud-rows li > .dot {
+  grid-row: 1;
 }
 
 .hud-tag {
-  margin-inline-start: auto;
+  grid-column: 2;
+  margin-inline-start: 0;
   color: var(--muted);
+  overflow-wrap: anywhere;
 }
 
 .hud-foot {

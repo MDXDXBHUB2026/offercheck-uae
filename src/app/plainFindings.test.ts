@@ -202,6 +202,21 @@ describe("the hero Example findings card", () => {
   });
 });
 
+describe("the Example findings rows line up", () => {
+  it("each row is a grid: the dot, then the label with its value below it at the same start edge", () => {
+    const css = readFileSync("src/app/globals.css", "utf8").replace(/\r\n/g, "\n");
+    const rule = (selector: string) => {
+      const at = css.indexOf(`${selector} {`);
+      expect(at, selector).toBeGreaterThan(-1);
+      return css.slice(at, css.indexOf("}", at));
+    };
+    expect(rule(".hud-rows li")).toMatch(/display: grid;[\s\S]*grid-template-columns: 8px minmax\(0, 1fr\);/);
+    expect(rule(".hud-tag")).toMatch(/grid-column: 2;/);
+    // No longer pushed to the far end of the row.
+    expect(rule(".hud-tag")).not.toMatch(/margin-inline-start: auto/);
+  });
+});
+
 describe("the Visa fee sample still scores the same", () => {
   it("scores 100 as 40 + 20 + 20 + 20 with four findings", () => {
     const result = sample();
