@@ -48,9 +48,10 @@ const ENTRIES: Record<string, string> = {
     "لا يبلّغ Offer Check عن أي شيء نيابةً عنك ولا يقدّم استشارة قانونية. هذه قنوات رسمية في الإمارات؛ ارجع إلى الصفحة الرسمية لمعرفة التفاصيل الحالية.",
   "A free, rule-based check for warning signs in UAE job offers.":
     "فحص مجاني قائم على قواعد ثابتة لعلامات التحذير في عروض العمل في الإمارات.",
+  // [review] Auto-Redact always on (2026-11-11): the sentence about hidden numbers is new.
   // [review] button renamed "Save to Encrypted Vault" (2026-11-11); Arabic name follows "Encrypted Vault".
-  "Prototype. Use synthetic or redacted offers only. Offer Check's server does not store offer text. If you choose translation, Google Cloud Translation receives it. Save to Encrypted Vault keeps an encrypted copy in this browser only.":
-    "نموذج أولي. استخدم عروضًا مصطنعة أو منقّحة فقط. لا يخزّن خادم Offer Check نص العرض. إذا اخترت الترجمة، يستلمه Google Cloud Translation. ميزة \"حفظ في الخزنة المشفّرة\" تحفظ نسخة مشفّرة في هذا المتصفح فقط.",
+  "Prototype. Use synthetic or redacted offers only. Emirates ID, passport and UAE IBAN numbers in common formats are hidden in your browser before the text is sent. Offer Check's server does not store offer text. If you choose translation, Google Cloud Translation receives it. Save to Encrypted Vault keeps an encrypted copy in this browser only.":
+    "نموذج أولي. استخدم عروضًا مصطنعة أو منقّحة فقط. تُخفى أرقام الهوية الإماراتية وجواز السفر والآيبان الإماراتي بالصيغ الشائعة في متصفحك قبل إرسال النص. لا يخزّن خادم Offer Check نص العرض. إذا اخترت الترجمة، يستلمه Google Cloud Translation. ميزة \"حفظ في الخزنة المشفّرة\" تحفظ نسخة مشفّرة في هذا المتصفح فقط.",
   "Made-up examples written for this app. No real company or person.":
     "أمثلة مختلقة كُتبت لهذا التطبيق. لا تخص أي شركة أو شخص حقيقي.",
   "Offer Check is an early prototype that checks English text. Text in other languages can be machine translated first, and a translation can lose or change meaning. A low score, or \"No risk indicators found\", does not mean an offer is genuine.":
@@ -106,17 +107,11 @@ const ENTRIES: Record<string, string> = {
   "Paste the WhatsApp message, email, LinkedIn message or offer letter text here":
     "الصق هنا رسالة واتساب أو البريد الإلكتروني أو رسالة LinkedIn أو نص خطاب العرض",
   "Job offer text": "نص عرض العمل",
-  "Auto-Redact on": "الإخفاء التلقائي مفعّل",
-  "Auto-Redact off": "الإخفاء التلقائي متوقف",
-  "Auto-Redact is on: Emirates ID, passport and IBAN numbers are masked in this browser before the text is checked or translated.":
-    "الإخفاء التلقائي مفعّل: تُخفى أرقام الهوية الإماراتية وجواز السفر والآيبان في هذا المتصفح قبل فحص النص أو ترجمته.",
-  "Auto-Redact is off: the text is checked as typed.": "الإخفاء التلقائي متوقف: يُفحص النص كما كُتب.",
   "Clear text": "مسح النص",
   "Check offer": "افحص العرض",
   "Checking...": "جارٍ الفحص...",
-  // Phase 4b (2026-11-11): four strings found with no Arabic (Auto-Redact off, over the limit, the
-  // checking panel title, a dropped file).
-  "Auto-Redact is off: the text is sent as it is in the box.": "الإخفاء التلقائي متوقف: يُرسل النص كما هو في المربع.",
+  // Phase 4b (2026-11-11): strings found with no Arabic (over the limit, the checking panel title, a
+  // dropped file). The string for the old off state was removed with the redaction toggle.
   "over the limit": "تجاوز الحد",
   "Checking the offer": "جارٍ فحص العرض",
   "Paste the text of the letter. Offer Check does not read files or images.":
@@ -312,8 +307,11 @@ const ENTRIES: Record<string, string> = {
   "{0} topic": "{0}",
   "{0} topics": "{0}",
   "Mentioned in a warning, not counted in the score": "مذكور في تحذير، ولا يُحتسب في الدرجة",
-  "The text the rules read, with ID, passport and IBAN numbers removed. Each quoted warning sign is marked.":
-    "النص الذي قرأته القواعد، بعد حذف أرقام الهوية وجواز السفر والآيبان. كل علامة تحذير مقتبسة مميّزة.",
+  // [review] Auto-Redact always on (2026-11-11): shown only when a number was hidden.
+  "ID, passport and bank numbers are hidden before the text is sent. A reference number in a similar format may also be hidden. Your original text is still in the box.":
+    "تُخفى أرقام الهوية وجواز السفر والحسابات المصرفية قبل إرسال النص. وقد يُخفى أيضًا رقم مرجعي بصيغة مشابهة. نصك الأصلي ما زال في المربع.",
+  "ID, passport and bank numbers are hidden before the text is sent. A reference number in a similar format may also be hidden.":
+    "تُخفى أرقام الهوية وجواز السفر والحسابات المصرفية قبل إرسال النص. وقد يُخفى أيضًا رقم مرجعي بصيغة مشابهة.",
   "The text the rules read. Each quoted warning sign is marked.":
     "النص الذي قرأته القواعد. كل علامة تحذير مقتبسة مميّزة.",
   "Check it yourself": "تحقق بنفسك",

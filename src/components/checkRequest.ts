@@ -1,4 +1,18 @@
+import { redactSensitive } from "@/lib/redact";
+import type { TranslationRecord } from "@/lib/translation";
 import { MAX_OFFER_CHARS } from "@/lib/types";
+
+// The /api/analyze request body. Auto-Redact is always on (owner decision, 2026-11-11): the text is
+// masked here, at the request itself, whatever the caller passed, so no Emirates ID, passport or UAE
+// IBAN number in the formats src/lib/redact.ts knows is ever sent. Masking is idempotent: text that
+// was already masked comes back unchanged with a count of 0.
+export function analyzeRequest(
+  unmasked: string,
+  translation: TranslationRecord | null = null,
+): { body: string; text: string; count: number } {
+  const { text, count } = redactSensitive(unmasked);
+  return { body: JSON.stringify(translation ? { text, translation } : { text }), text, count };
+}
 
 // What the page says when a check does not complete. Every message is fixed text chosen here: the
 // page never shows a string it did not write, so offer text can never be echoed back in an error,

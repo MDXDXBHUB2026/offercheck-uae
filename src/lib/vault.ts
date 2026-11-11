@@ -17,7 +17,7 @@ export const VAULT_EVENT = "offercheck-vault";
 // A new vault's passphrase must have at least this many characters.
 export const PASSPHRASE_MIN = 8;
 // When the person ticks "Also keep the checked text", the saved text is the text that was checked
-// (after Auto-Redact, if on), cut to this length. Otherwise no text is saved.
+// (always after Auto-Redact), cut to this length. Otherwise no text is saved.
 export const SAVED_TEXT_MAX = 2_000;
 // Decision 2h: shown on a saved result whose checked text was not kept (vault detail, View result).
 export const TEXT_NOT_KEPT = "The checked text was not kept with this result. Only the result was saved.";

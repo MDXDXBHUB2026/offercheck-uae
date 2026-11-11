@@ -50,6 +50,14 @@ const INTAKE_NOTES: Record<Exclude<Coverage, "translated">, string | undefined> 
   unchecked: "Most of the text is not in English and was not checked.",
 };
 
+// Auto-Redact (always on, 2026-11-11): shown beside "Highlights in your text" only when at least one
+// number was hidden. A result re-opened from the vault drops the last sentence (the box does not hold
+// the original text then).
+export const REDACTION_NOTE =
+  "ID, passport and bank numbers are hidden before the text is sent. A reference number in a similar format may also be hidden. Your original text is still in the box.";
+export const REDACTION_NOTE_SAVED =
+  "ID, passport and bank numbers are hidden before the text is sent. A reference number in a similar format may also be hidden.";
+
 export function intakeNote(state: Coverage, sourceLang: string | null = null): string | undefined {
   if (state !== "translated") return INTAKE_NOTES[state];
   const name = sourceLang && sourceLang !== "en" ? languageName(sourceLang) : null;
@@ -203,6 +211,7 @@ export function ResultCard({
   sourceText = "",
   channel = null,
   redacted = 0,
+  reopened = false,
   textNotKept = false,
   onNewAudit,
   onSave,
@@ -219,10 +228,13 @@ export function ResultCard({
   sourceLang?: string | null;
   // Batch A case 4: also set at check time. null means not recorded, so no notice.
   offerSignals?: readonly OfferSignal[] | null;
-  // The text the rules read (after Auto-Redact; the English after a translation).
+  // The text the rules read (always after Auto-Redact; the English after a translation).
   sourceText?: string;
   channel?: string | null;
   redacted?: number;
+  // Re-opened from the Encrypted Vault: the box does not hold the original text, so the redaction
+  // note does not say it does.
+  reopened?: boolean;
   // Decision 2h: opened from a vault record saved without its checked text.
   textNotKept?: boolean;
   onNewAudit?: () => void;
@@ -510,6 +522,8 @@ export function ResultCard({
             </div>
           )}
         </div>
+        {/* Auto-Redact is silent: only when a number was hidden does the result say so. */}
+        {redacted > 0 && <p className="small muted redaction-note">{t(reopened ? REDACTION_NOTE_SAVED : REDACTION_NOTE)}</p>}
 
         <div id="panel-flags" role="tabpanel" aria-labelledby="tab-flags" hidden={view !== "flags"} className="stack">
           {/* LANG-2, LANG-3, OFFER-1: with any notice, no green tick and no "all clear". */}
@@ -585,13 +599,7 @@ export function ResultCard({
 
         <div id="panel-source" role="tabpanel" aria-labelledby="tab-source" hidden={view !== "source"} className="stack-sm">
           {textNotKept && <p className="small">{t(TEXT_NOT_KEPT)}</p>}
-          <p className="small muted">
-            {t(
-              redacted > 0
-                ? "The text the rules read, with ID, passport and IBAN numbers removed. Each quoted warning sign is marked."
-                : "The text the rules read. Each quoted warning sign is marked.",
-            )}
-          </p>
+          <p className="small muted">{t("The text the rules read. Each quoted warning sign is marked.")}</p>
           <div className="source-text" dir="auto">
             {parts.map((part, index) =>
               part.mark ? (

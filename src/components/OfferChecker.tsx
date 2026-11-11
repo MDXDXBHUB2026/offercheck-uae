@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useReducer, useRef, useState, type FormEvent, type ReactNode } from "react";
-import { ArrowRight, Eraser, FileText, Linkedin, Mail, MessageCircle, ScanSearch, ShieldCheck } from "lucide-react";
+import { ArrowRight, Eraser, FileText, Linkedin, Mail, MessageCircle, ScanSearch } from "lucide-react";
 import { ApprovalPanel } from "@/components/ApprovalPanel";
 import { AuditTrail } from "@/components/AuditTrail";
-import { networkFailure, responseFailure, type CheckFailure } from "@/components/checkRequest";
+import { analyzeRequest, networkFailure, responseFailure, type CheckFailure } from "@/components/checkRequest";
 import { ReportModal, type ReportDraft } from "@/components/radar/ReportModal";
 import { ResultCard } from "@/components/ResultCard";
 import { revealResult, scrollBehaviorFor } from "@/components/revealResult";
@@ -57,10 +57,12 @@ function channelOf(sample: SampleOffer): Channel {
   return sample.channel === "Document" ? "Offer Letter PDF" : sample.channel;
 }
 
-// Auto-Redact: what is sent (for a check or a translation) is the box text with Emirates ID,
-// passport and IBAN numbers masked, when the toggle is on. The box itself is not changed.
-export function prepareText(text: string, autoMask: boolean): { text: string; count: number } {
-  return autoMask ? redactSensitive(text) : { text, count: 0 };
+// Auto-Redact, always on and silent (owner decision, 2026-11-11): what is sent for a check or a
+// translation is the box text with Emirates ID, passport and UAE IBAN numbers masked in this browser.
+// There is no switch and no unmasked path: runCheck and requestTranslation mask again at the request
+// itself (masking is idempotent). The box itself is not changed.
+export function prepareText(text: string): { text: string; count: number } {
+  return redactSensitive(text);
 }
 
 const COUNT_FORMAT = new Intl.NumberFormat("en-US");
@@ -97,6 +99,8 @@ export type CheckedResult = {
   translation: ShownTranslation | null;
   // Decision 2h: opened from a vault record saved without its checked text.
   textNotKept?: boolean;
+  // Re-opened from the Encrypted Vault: the box does not hold the original text.
+  reopened?: boolean;
 };
 
 export type CheckMeta = { boxText?: string; channel?: Channel; redacted?: number };
@@ -157,6 +161,7 @@ export function checkedFromVault(record: VaultRecord | null): CheckedResult | nu
     languageNotice: noticeForCoverage(saved.coverage),
     offerSignals: saved.offerSignals,
     translation: null,
+    reopened: true,
     ...(record.text === undefined ? { textNotKept: true } : {}),
   };
 }
@@ -217,7 +222,6 @@ export function OfferChecker({
   const reopen = checkedFromVault(peekReopen());
   const [text, setText] = useState(reopen?.boxText ?? "");
   const [channel, setChannel] = useState<Channel>(reopen?.channel ?? "Email");
-  const [autoMask, setAutoMask] = useState(true);
   const [modal, setModal] = useState<Modal>(null);
   const [checked, setChecked] = useState<CheckedResult | null>(noCheck);
   // STALE-1: never show a result for text other than the text now in the box.
@@ -370,13 +374,17 @@ export function OfferChecker({
   // fixed-value record for the audit trail. shown: the original and the English, after a translation.
   // The language notice is decided from the text as sent, not from later edits.
   async function runCheck(
-    submitted: string = text,
+    unmasked: string,
     translation: TranslationRecord | null = null,
     shown: ShownTranslation | null = null,
-    meta: CheckMeta = {},
+    checkMeta: CheckMeta = {},
   ) {
     // The button is aria-disabled, not disabled, so a click or a retry can still arrive here.
-    if (loading || reason || submitted.trim().length === 0) return;
+    if (loading || reason || unmasked.trim().length === 0) return;
+    // Masked at the request itself, whatever the caller passed: no unmasked text reaches /api/analyze.
+    const request = analyzeRequest(unmasked, translation);
+    const submitted = request.text;
+    const meta: CheckMeta = { ...checkMeta, redacted: (checkMeta.redacted ?? 0) + request.count };
     lastRequest.current = { submitted, translation, shown, meta };
     if (!shown) moveTranslate({ type: "checked" });
     const { id, signal } = beginRequest();
@@ -395,7 +403,7 @@ export function OfferChecker({
         response = await fetch("/api/analyze", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(translation ? { text: submitted, translation } : { text: submitted }),
+          body: request.body,
           signal,
         });
       } catch {
@@ -427,12 +435,17 @@ export function OfferChecker({
     }
   }
 
+  // Check the text in the box, masked. "Check original anyway" after a failed translation: the audit
+  // trail records the failure code.
+  function checkBox() {
+    const prepared = prepareText(text);
+    void runCheck(prepared.text, failureForCheck(translateRef.current), null, { boxText: text, redacted: prepared.count });
+  }
+
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (translateRef.current.step === "sending") return;
-    // "Check original anyway" after a failed translation: the audit trail records the failure code.
-    const prepared = prepareText(text, autoMask);
-    void runCheck(prepared.text, failureForCheck(translateRef.current), null, { boxText: text, redacted: prepared.count });
+    checkBox();
   }
 
   // BATCHB-2: the "Send to Google and translate" button, and nothing else, sends the text for
@@ -443,7 +456,7 @@ export function OfferChecker({
     if (loading || (step !== "idle" && step !== "failed")) return;
     const boxText = text;
     // Auto-Redact applies before the send too: Google receives the masked text.
-    const prepared = prepareText(boxText, autoMask);
+    const prepared = prepareText(boxText);
     const original = prepared.text;
     moveTranslate({ type: "send" });
     setCleared(false);
@@ -538,18 +551,7 @@ export function OfferChecker({
               );
             })}
           </div>
-          <Button variant="secondary" aria-pressed={autoMask} aria-describedby="mask-note" onClick={() => setAutoMask(!autoMask)}>
-            <ShieldCheck className="icon" aria-hidden="true" />
-            {t(autoMask ? "Auto-Redact on" : "Auto-Redact off")}
-          </Button>
         </div>
-        <p id="mask-note" className="small muted">
-          {autoMask
-            ? t(
-                "Auto-Redact is on: Emirates ID, passport and IBAN numbers are masked in this browser before the text is checked or translated.",
-              )
-            : t("Auto-Redact is off: the text is sent as it is in the box.")}
-        </p>
         <div className="field">
           <div className="input-meta">
             <label htmlFor="offer">{t("Job offer text")}</label>
@@ -655,7 +657,8 @@ export function OfferChecker({
               variant="secondary"
               onClick={() => {
                 const last = lastRequest.current;
-                void (last ? runCheck(last.submitted, last.translation, last.shown, last.meta) : runCheck());
+                if (last) void runCheck(last.submitted, last.translation, last.shown, last.meta);
+                else checkBox();
               }}
             >
               {t("Try again")}
@@ -687,6 +690,7 @@ export function OfferChecker({
           sourceText={checked.checkedText}
           channel={checked.channel}
           redacted={checked.redacted}
+          reopened={checked.reopened ?? false}
           textNotKept={checked.textNotKept ?? false}
           onNewAudit={() => editText("")}
           onSave={() => setModal({ kind: "save" })}

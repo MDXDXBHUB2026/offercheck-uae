@@ -6,6 +6,7 @@ import { useLang, useT } from "@/components/shell/lang";
 import { Button, Card } from "@/components/ui";
 import { useVaultState } from "@/components/vaultStore";
 import type { UiLang } from "@/lib/i18n";
+import { redactSensitive } from "@/lib/redact";
 import type { ResultView } from "@/lib/resultView";
 import { addToVault, PASSPHRASE_MIN, SAVED_TEXT_MAX, type SavedCheck, type VaultRecord } from "@/lib/vault";
 import { DecryptError } from "@/lib/vaultCrypto";
@@ -33,6 +34,9 @@ export function defaultTitle(bandLabel: string, channel: string, day: string): s
 
 // The record Save to Encrypted Vault writes. Decision 2h: the checked text is in it only when keepText is
 // true (redacted text, cut to SAVED_TEXT_MAX characters); otherwise the record has no text field.
+// Auto-Redact is always on (2026-11-11): the checked text is already masked, and it is masked again
+// here (idempotent), so a kept text never holds a number src/lib/redact.ts would hide. The quotes in
+// the saved result come from the same masked run.
 export function buildRecord(input: {
   title: string;
   channel: string;
@@ -49,7 +53,9 @@ export function buildRecord(input: {
     savedAt: new Date().toISOString(),
     title: input.title,
     channel: input.channel,
-    ...(input.keepText && input.checkedText ? { text: Array.from(input.checkedText).slice(0, SAVED_TEXT_MAX).join("") } : {}),
+    ...(input.keepText && input.checkedText
+      ? { text: Array.from(redactSensitive(input.checkedText).text).slice(0, SAVED_TEXT_MAX).join("") }
+      : {}),
     view: input.view,
     notes: input.notes.trim() || undefined,
     bandLabel: input.bandLabel,
@@ -62,7 +68,7 @@ type Status = "idle" | "saving" | "wrong" | "failed";
 
 // "Save to Encrypted Vault": title, optional notes, and the passphrase twice. The passphrase is used once to
 // encrypt and is never stored. With a vault already saved, the passphrase must open it, or nothing is
-// written. The checked text (after Auto-Redact, cut to SAVED_TEXT_MAX characters) is saved only when
+// written. The checked text (always after Auto-Redact, cut to SAVED_TEXT_MAX characters) is saved only when
 // "Also keep the checked text" is ticked; otherwise the record has no text field at all. Fixed messages only: no offer text in any message.
 export function SaveVaultModal({
   view,

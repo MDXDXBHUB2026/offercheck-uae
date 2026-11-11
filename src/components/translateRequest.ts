@@ -1,26 +1,30 @@
 import { isTranslateFailure, sourceLanguage, TRANSLATE_MAX_CHARS, type TranslateFailure } from "@/lib/translation";
+import { redactSensitive } from "@/lib/redact";
 import { MAX_OFFER_CHARS } from "@/lib/types";
 
 // BATCHB-2: the page's only translation request, to this app's own /api/translate route (which calls
 // Google Cloud Translation). OfferChecker calls it only from the "Send to Google and translate"
 // button, once per press. It sends the text and the consent flag (the user pressed that labelled
 // button), nothing else, and keeps neither. STALE-1: signal lets the page abort it when the text changes.
+// Auto-Redact (always on, 2026-11-11): the text is masked here, at the request itself, so Google never
+// receives an Emirates ID, passport or UAE IBAN number in the formats src/lib/redact.ts knows.
 export type TranslateOutcome =
   | { ok: true; translatedText: string; sourceLang: string }
   | { ok: false; code: TranslateFailure };
 
 export async function requestTranslation(
-  text: string,
+  unmasked: string,
   fetchImpl: typeof fetch = globalThis.fetch,
   signal?: AbortSignal,
 ): Promise<TranslateOutcome> {
-  if (text.length > TRANSLATE_MAX_CHARS) return { ok: false, code: "text_too_long" };
+  const masked = redactSensitive(unmasked).text;
+  if (masked.length > TRANSLATE_MAX_CHARS) return { ok: false, code: "text_too_long" };
   let response: Response;
   try {
     response = await fetchImpl("/api/translate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, consent: true }),
+      body: JSON.stringify({ text: masked, consent: true }),
       signal,
     });
   } catch {

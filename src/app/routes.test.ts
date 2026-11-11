@@ -278,7 +278,8 @@ describe("Offer Analyzer hero", () => {
     });
   });
 
-  it("has the four channel tabs and the Auto-Redact toggle, on by default", () => {
+  // Auto-Redact is always on and silent (owner decision, 2026-11-11): no toggle and no notice.
+  it("has the four channel tabs, and nothing about redaction before a check", () => {
     const html = renderToStaticMarkup(createElement(check.default));
     const tabs = [...html.matchAll(/<button type="button" class="tab" aria-pressed="(true|false)">.*?<\/svg>([^<]+)<\/button>/g)].map((m) => [m[2], m[1]]);
     expect(tabs).toEqual([
@@ -287,7 +288,7 @@ describe("Offer Analyzer hero", () => {
       ["LinkedIn", "false"],
       ["Offer Letter PDF", "false"],
     ]);
-    expect(html).toMatch(/aria-describedby="mask-note" aria-pressed="true">.*Auto-Redact on<\/button>/);
+    expect(html).not.toMatch(/Auto-Redact|mask-note|hidden before the text is sent|removed before checking/);
   });
 });
 
