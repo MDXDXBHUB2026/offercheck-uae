@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -13,15 +14,35 @@ vi.mock("react", async (importOriginal) => {
 });
 vi.mock("next/navigation", () => ({ usePathname: () => "/vault" }));
 
-import { EmptyVault, EncryptedVault, VAULT_EMPTY, VAULT_LOCAL_NOTE } from "@/components/EncryptedVault";
+import { EmptyVault, EncryptedVault, SavedText, VAULT_EMPTY, VAULT_LOCAL_NOTE } from "@/components/EncryptedVault";
 import { checkedFromVault } from "@/components/OfferChecker";
-import { defaultTitle, PASSPHRASE_NOTE, SAVED_NOTICE, savedDay, SaveVaultModal } from "@/components/SaveVaultModal";
+import {
+  buildRecord,
+  defaultTitle,
+  KEEP_TEXT_LABEL,
+  PASSPHRASE_NOTE,
+  SAVED_NOTICE,
+  savedDay,
+  SaveVaultModal,
+} from "@/components/SaveVaultModal";
+import { ResultCard } from "@/components/ResultCard";
 import { Navbar } from "@/components/shell/Navbar";
 import { clearReopen, peekReopen, setReopen } from "@/components/vaultStore";
 import { LEGIT_OFFER, SCAM_OFFER } from "@/lib/agents/fixtures";
 import { runManager } from "@/lib/agents/manager";
 import { toResultView } from "@/lib/resultView";
-import { addToVault, openVault, PASSPHRASE_MIN, saveVault, VAULT_COUNT_KEY, VAULT_KEY, vaultState, type VaultRecord } from "@/lib/vault";
+import {
+  addToVault,
+  openVault,
+  PASSPHRASE_MIN,
+  SAVED_TEXT_MAX,
+  saveVault,
+  TEXT_NOT_KEPT,
+  VAULT_COUNT_KEY,
+  VAULT_KEY,
+  vaultState,
+  type VaultRecord,
+} from "@/lib/vault";
 import { DecryptError } from "@/lib/vaultCrypto";
 
 function stubStorage() {
@@ -103,6 +124,8 @@ describe("vault page", () => {
     stubStorage();
     const markup = html(createElement(EncryptedVault));
     expect(markup).toContain(VAULT_EMPTY);
+    // The heading says "No saved results yet" once; the line under it does not repeat it.
+    expect(markup.match(/No saved results yet/g)).toHaveLength(1);
     expect(markup).toContain('href="/check"');
     expect(markup).toContain("Go to the Offer Analyzer");
     expect(markup).not.toContain("vault-open-pass");
@@ -200,5 +223,95 @@ describe("View result", () => {
 
   it("cannot re-open a record saved before View result was added", () => {
     expect(checkedFromVault(record("old"))).toBeNull();
+  });
+});
+
+// Decision 2h (2026-11-11): by default only the result is saved. The checked text is kept only when
+// the person ticks "Also keep the checked text"; it starts unticked.
+describe("saved text scope (decision 2h)", () => {
+  const response = { ...runManager(SCAM_OFFER), runId: "synthetic-run", audit: [] };
+  const base = {
+    title: "Synthetic title",
+    channel: "Email",
+    checkedText: SCAM_OFFER,
+    view,
+    notes: " synthetic private note ",
+    bandLabel: "High risk indicators",
+    points: "synthetic points",
+    check: { response, coverage: { state: "full" } as never, offerSignals: [], redacted: 0, sourceLang: null },
+  };
+  // A stretch of the offer that no rule quotes, so it can only be in a record that kept the text.
+  const unquoted = SCAM_OFFER.split(/\r?\n/).find(
+    (line) => line.trim().length > 20 && !response.findings.some((f) => f.evidence.some((q) => line.includes(q) || q.includes(line.trim()))),
+  )!.trim();
+
+  it("the dialog has the keep-text box, unticked", () => {
+    stubStorage();
+    const markup = html(
+      createElement(SaveVaultModal, {
+        view,
+        channel: "Email",
+        checkedText: SCAM_OFFER,
+        bandLabel: "High risk indicators",
+        onClose: () => {},
+        onSaved: () => {},
+      }),
+    );
+    expect(markup).toContain(KEEP_TEXT_LABEL);
+    expect(markup).toMatch(/<input id="vault-keep-text" type="checkbox"(?![^>]*checked)[^>]*>/);
+  });
+
+  it("unticked: saves the quoted findings, points, band, channel, title and notes, and no text", async () => {
+    expect(unquoted).toBeTruthy();
+    const store = stubStorage();
+    const saved = buildRecord({ ...base, keepText: false });
+    expect("text" in saved).toBe(false);
+    expect(saved).toMatchObject({ title: "Synthetic title", channel: "Email", bandLabel: "High risk indicators", points: "synthetic points", notes: "synthetic private note" });
+    expect(saved.view.red_flags.some((flag) => flag.matched_text)).toBe(true);
+    await addToVault(saved, "first passphrase");
+    const [opened] = await openVault("first passphrase");
+    expect(opened.text).toBeUndefined();
+    expect(JSON.stringify(opened)).not.toContain(unquoted);
+    expect(store.get(VAULT_KEY)).not.toContain(unquoted);
+  });
+
+  it("ticked: keeps the redacted checked text, cut to the cap", () => {
+    expect(buildRecord({ ...base, keepText: true }).text).toBe(SCAM_OFFER.slice(0, SAVED_TEXT_MAX));
+    const long = "x".repeat(SAVED_TEXT_MAX + 50);
+    expect(buildRecord({ ...base, checkedText: long, keepText: true }).text).toHaveLength(SAVED_TEXT_MAX);
+  });
+
+  it("the detail view says the text was not kept, and shows the text when it was", () => {
+    const without = html(createElement(SavedText, { record: buildRecord({ ...base, keepText: false }) }));
+    expect(without).toContain(TEXT_NOT_KEPT);
+    expect(without).not.toContain("source-text");
+    const kept = html(createElement(SavedText, { record: buildRecord({ ...base, checkedText: "synthetic kept text", keepText: true }) }));
+    expect(kept).toContain("synthetic kept text");
+    expect(kept).not.toContain(TEXT_NOT_KEPT);
+  });
+
+  it("View result still opens a record saved without its text, and says the text was not kept", () => {
+    const saved = buildRecord({ ...base, keepText: false });
+    const checked = checkedFromVault(saved);
+    expect(checked?.response).toBe(response);
+    expect(checked?.boxText).toBe("");
+    expect(checked?.textNotKept).toBe(true);
+    const card = html(createElement(ResultCard, { result: response, ruleCount: 1, sourceText: "", textNotKept: true }));
+    expect(card).toContain(TEXT_NOT_KEPT);
+    expect(checkedFromVault(buildRecord({ ...base, keepText: true }))?.textNotKept).toBeUndefined();
+  });
+});
+
+// Phase 2 follow-up (2026-11-11), measured in headless Chrome at 1280x744: Cancel and "Encrypt and
+// save" end at 658px (English) and 674px (Arabic), with no scroll; at 600px and 480px the dialog
+// scrolls inside itself. These rules keep that true.
+describe("save dialog fits a 744px-high window", () => {
+  const css = readFileSync("src/app/globals.css", "utf8");
+  it("keeps the notes box at its rows, scrolls inside itself, and is pinned to the window", () => {
+    expect(css).toMatch(/\.modal textarea \{\s*min-height: 0;/);
+    expect(css).toMatch(/\.modal \{[^}]*max-height: calc\(100dvh - 2 \* var\(--sp-4\)\);[^}]*overflow-y: auto;/);
+    // A held translate on the page would make it the containing block for the fixed backdrop.
+    expect(css).toMatch(/\.page > \.stack \{\s*animation: page-in 200ms var\(--ease-out\) backwards;/);
+    expect(css).not.toMatch(/animation: page-in[^;]*\bboth\b/);
   });
 });

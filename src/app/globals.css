@@ -2357,7 +2357,23 @@ details.card > summary {
   width: 100%;
   max-width: 512px;
   max-height: calc(100vh - 2 * var(--sp-4));
+  max-height: calc(100dvh - 2 * var(--sp-4));
   overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* A dialog's text box keeps its rows (about 3), so the buttons fit in a 744px-high window; the
+   offer box's 224px minimum is for the analyzer only. */
+.modal textarea {
+  min-height: 0;
+}
+
+/* Two fields side by side, one column when the dialog is narrow. */
+.field-pair {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: var(--sp-3);
+  align-items: end;
 }
 
 .modal-head {
@@ -2647,8 +2663,10 @@ details.card > summary {
 
   /* Page and tab change: the page's blocks fade in and rise, staggered by 80ms. */
   /* Route change: each page's content fades in over 200ms with an 8px rise. */
+  /* Fill "backwards", not "both": a held translate makes the page a containing block for
+     position: fixed, so the save and report dialogs sized to the page, not the window. */
   .page > .stack {
-    animation: page-in 200ms var(--ease-out) both;
+    animation: page-in 200ms var(--ease-out) backwards;
   }
 
   /* Phase 3: radar and portal cards lift 2px on hover; the Legal accordion folds with

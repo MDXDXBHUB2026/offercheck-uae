@@ -94,6 +94,8 @@ export type CheckedResult = {
   languageNotice: LanguageNotice | null;
   offerSignals: OfferSignal[];
   translation: ShownTranslation | null;
+  // Decision 2h: opened from a vault record saved without its checked text.
+  textNotKept?: boolean;
 };
 
 export type CheckMeta = { boxText?: string; channel?: Channel; redacted?: number };
@@ -143,8 +145,10 @@ export function checkedFromVault(record: VaultRecord | null): CheckedResult | nu
   const saved = record?.check;
   if (!record || !saved) return null;
   return {
-    boxText: record.text,
-    checkedText: record.text,
+    // Decision 2h: a record saved without its text opens with an empty box; the result still shows,
+    // and the source panel says the text was not kept.
+    boxText: record.text ?? "",
+    checkedText: record.text ?? "",
     channel: (CHANNELS as readonly string[]).includes(record.channel) ? (record.channel as Channel) : "Email",
     redacted: saved.redacted,
     response: saved.response,
@@ -152,6 +156,7 @@ export function checkedFromVault(record: VaultRecord | null): CheckedResult | nu
     languageNotice: noticeForCoverage(saved.coverage),
     offerSignals: saved.offerSignals,
     translation: null,
+    ...(record.text === undefined ? { textNotKept: true } : {}),
   };
 }
 
@@ -673,6 +678,7 @@ export function OfferChecker({
           sourceText={checked.checkedText}
           channel={checked.channel}
           redacted={checked.redacted}
+          textNotKept={checked.textNotKept ?? false}
           onNewAudit={() => editText("")}
           onSave={() => setModal({ kind: "save" })}
           onReport={(flag) =>

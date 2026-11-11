@@ -639,8 +639,8 @@ const ENTRIES: Record<string, string> = {
   "Encrypt and save in this browser": "شفّر واحفظ في هذا المتصفح",
   "Saved. Open it from the Encrypted Vault tab with the same passphrase.":
     "حُفظ. افتحه من تبويب الخزنة المشفّرة بعبارة المرور نفسها.",
-  "The result and the checked text are encrypted with AES-256-GCM in this browser and kept only here. The passphrase is not stored; if you forget it, the saved records cannot be opened.":
-    "تُشفّر النتيجة والنص المفحوص باستخدام AES-256-GCM في هذا المتصفح وتُحفظ هنا فقط. لا تُخزَّن عبارة المرور؛ وإذا نسيتها، لا يمكن فتح السجلات المحفوظة.",
+  "The result is encrypted with AES-256-GCM in this browser and kept only here. The passphrase is not stored; if you forget it, the saved records cannot be opened.":
+    "تُشفّر النتيجة باستخدام AES-256-GCM في هذا المتصفح وتُحفظ هنا فقط. لا تُخزَّن عبارة المرور؛ وإذا نسيتها، لا يمكن فتح السجلات المحفوظة.",
   "Passphrase": "عبارة المرور",
   "That passphrase does not open the vault already saved in this browser.":
     "عبارة المرور هذه لا تفتح الخزنة المحفوظة مسبقًا في هذا المتصفح.",
@@ -670,8 +670,12 @@ const ENTRIES: Record<string, string> = {
   "No saved results yet": "لا توجد نتائج محفوظة بعد",
   "Saved results are kept only in this browser. They are lost if this browser's data is cleared, and they are not available on another device or browser.":
     "تُحفظ النتائج في هذا المتصفح فقط. وتضيع إذا مُسحت بيانات هذا المتصفح، ولا تتوفر على جهاز أو متصفح آخر.",
-  "No saved results yet. Run a check, then choose Save Encrypted on the result. You will choose your passphrase there. Offer Check cannot recover it.":
-    "لا توجد نتائج محفوظة بعد. أجرِ فحصًا، ثم اختر \"حفظ مشفّر\" في النتيجة. ستختار عبارة المرور هناك. لا يستطيع Offer Check استعادتها.",
+  "Run a check, then choose Save Encrypted on the result. You will choose your passphrase there. Offer Check cannot recover it.":
+    "أجرِ فحصًا، ثم اختر \"حفظ مشفّر\" في النتيجة. ستختار عبارة المرور هناك. لا يستطيع Offer Check استعادتها.",
+  "The checked text was not kept with this result. Only the result was saved.":
+    "لم يُحفظ النص المفحوص مع هذه النتيجة. حُفظت النتيجة فقط.",
+  "Also keep the checked text (it may contain personal details)":
+    "احفظ النص المفحوص أيضًا (قد يحتوي على بيانات شخصية)",
   "Go to the Offer Analyzer": "انتقل إلى محلل العروض",
   "Saved results: {0}": "النتائج المحفوظة: {0}",
   "Offer Check cannot recover a forgotten passphrase.": "لا يستطيع Offer Check استعادة عبارة مرور منسية.",

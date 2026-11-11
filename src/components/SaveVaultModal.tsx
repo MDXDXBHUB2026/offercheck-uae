@@ -13,6 +13,11 @@ import { DecryptError } from "@/lib/vaultCrypto";
 export const PASSPHRASE_NOTE =
   "You choose this passphrase. Offer Check cannot recover it. If you forget it, saved results cannot be opened.";
 export const SAVED_NOTICE = "Saved to your vault in this browser.";
+// Decision 2h: by default only the result is saved (quoted findings, points, band, channel, title,
+// notes). The checked text is kept only if this box is ticked; it starts unticked.
+export const KEEP_TEXT_LABEL = "Also keep the checked text (it may contain personal details)";
+export const SAVE_INTRO =
+  "The result is encrypted with AES-256-GCM in this browser and kept only here. The passphrase is not stored; if you forget it, the saved records cannot be opened.";
 
 // The day of the save, for the default title: "10 Nov 2026".
 export function savedDay(date: Date, lang: UiLang = "en"): string {
@@ -26,12 +31,39 @@ export function defaultTitle(bandLabel: string, channel: string, day: string): s
   return `${bandLabel}, ${channel}, ${day}`;
 }
 
+// The record Save Encrypted writes. Decision 2h: the checked text is in it only when keepText is
+// true (redacted text, cut to SAVED_TEXT_MAX characters); otherwise the record has no text field.
+export function buildRecord(input: {
+  title: string;
+  channel: string;
+  checkedText: string;
+  keepText: boolean;
+  view: ResultView;
+  notes: string;
+  bandLabel: string;
+  points: string | null;
+  check?: SavedCheck;
+}): VaultRecord {
+  return {
+    id: globalThis.crypto.randomUUID(),
+    savedAt: new Date().toISOString(),
+    title: input.title,
+    channel: input.channel,
+    ...(input.keepText && input.checkedText ? { text: Array.from(input.checkedText).slice(0, SAVED_TEXT_MAX).join("") } : {}),
+    view: input.view,
+    notes: input.notes.trim() || undefined,
+    bandLabel: input.bandLabel,
+    points: input.points,
+    check: input.check,
+  };
+}
+
 type Status = "idle" | "saving" | "wrong" | "failed";
 
 // "Save Encrypted": title, optional notes, and the passphrase twice. The passphrase is used once to
 // encrypt and is never stored. With a vault already saved, the passphrase must open it, or nothing is
-// written. The saved text is the text that was checked (after Auto-Redact), cut to SAVED_TEXT_MAX
-// characters. Fixed messages only: no offer text in any message.
+// written. The checked text (after Auto-Redact, cut to SAVED_TEXT_MAX characters) is saved only when
+// "Also keep the checked text" is ticked; otherwise the record has no text field at all. Fixed messages only: no offer text in any message.
 export function SaveVaultModal({
   view,
   channel,
@@ -57,6 +89,7 @@ export function SaveVaultModal({
   const existing = vault !== "none" && vault !== "pending";
   const [title, setTitle] = useState(() => defaultTitle(t(bandLabel), t(channel), savedDay(new Date(), lang)));
   const [notes, setNotes] = useState("");
+  const [keepText, setKeepText] = useState(false);
   const [passphrase, setPassphrase] = useState("");
   const [confirm, setConfirm] = useState("");
   const [status, setStatus] = useState<Status>("idle");
@@ -90,18 +123,17 @@ export function SaveVaultModal({
     event.preventDefault();
     if (reason || status === "saving") return;
     setStatus("saving");
-    const record: VaultRecord = {
-      id: globalThis.crypto.randomUUID(),
-      savedAt: new Date().toISOString(),
+    const record = buildRecord({
       title: title.trim() || defaultTitle(t(bandLabel), t(channel), savedDay(new Date(), lang)),
       channel,
-      text: Array.from(checkedText).slice(0, SAVED_TEXT_MAX).join(""),
+      checkedText,
+      keepText,
       view,
-      notes: notes.trim() || undefined,
+      notes,
       bandLabel,
       points,
       check,
-    };
+    });
     try {
       await addToVault(record, passphrase);
       setPassphrase("");
@@ -121,9 +153,7 @@ export function SaveVaultModal({
         </h2>
         <form className="stack-sm" onSubmit={save}>
           <p className="small muted">
-            {t(
-              "The result and the checked text are encrypted with AES-256-GCM in this browser and kept only here. The passphrase is not stored; if you forget it, the saved records cannot be opened.",
-            )}
+            {t(SAVE_INTRO)}
           </p>
           <div className="field">
             <label htmlFor="vault-title">{t("Title")}</label>
@@ -140,32 +170,46 @@ export function SaveVaultModal({
             <label htmlFor="vault-notes">{t("Notes (optional)")}</label>
             <textarea id="vault-notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
           </div>
-          <div className="field">
-            <label htmlFor="vault-pass">{t("Passphrase")}</label>
+          {checkedText && (
+          <label className="check-item small" htmlFor="vault-keep-text">
             <input
-              id="vault-pass"
-              type="password"
-              autoComplete="new-password"
-              aria-describedby="vault-pass-hint vault-pass-note"
-              value={passphrase}
-              onChange={(e) => edited(setPassphrase)(e.target.value)}
+              id="vault-keep-text"
+              type="checkbox"
+              checked={keepText}
+              onChange={(e) => setKeepText(e.target.checked)}
             />
-            <p id="vault-pass-hint" className="small muted">
-              {existing
-                ? t("A vault is already saved in this browser. Use the passphrase you chose for it.")
-                : t("At least {0} characters.", PASSPHRASE_MIN)}
-            </p>
+            <span>{t(KEEP_TEXT_LABEL)}</span>
+          </label>
+          )}
+          {/* Side by side where there is room, so the buttons fit in a 744px-high window. */}
+          <div className="field-pair">
+            <div className="field">
+              <label htmlFor="vault-pass">{t("Passphrase")}</label>
+              <input
+                id="vault-pass"
+                type="password"
+                autoComplete="new-password"
+                aria-describedby="vault-pass-hint vault-pass-note"
+                value={passphrase}
+                onChange={(e) => edited(setPassphrase)(e.target.value)}
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="vault-pass-confirm">{t("Confirm passphrase")}</label>
+              <input
+                id="vault-pass-confirm"
+                type="password"
+                autoComplete="new-password"
+                value={confirm}
+                onChange={(e) => edited(setConfirm)(e.target.value)}
+              />
+            </div>
           </div>
-          <div className="field">
-            <label htmlFor="vault-pass-confirm">{t("Confirm passphrase")}</label>
-            <input
-              id="vault-pass-confirm"
-              type="password"
-              autoComplete="new-password"
-              value={confirm}
-              onChange={(e) => edited(setConfirm)(e.target.value)}
-            />
-          </div>
+          <p id="vault-pass-hint" className="small muted">
+            {existing
+              ? t("A vault is already saved in this browser. Use the passphrase you chose for it.")
+              : t("At least {0} characters.", PASSPHRASE_MIN)}
+          </p>
           <p id="vault-pass-note" className="small">
             {t(PASSPHRASE_NOTE)}
           </p>

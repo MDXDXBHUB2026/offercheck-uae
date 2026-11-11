@@ -34,6 +34,7 @@ import { HIGH_BAND_MIN, MEDIUM_BAND_MIN, SEVERITY_WEIGHTS } from "@/lib/scoring"
 import { LANGUAGE_NOTICES, type LanguageNotice } from "@/lib/textScript";
 import { languageName, TRANSLATION_PROVIDER_NAME } from "@/lib/translation";
 import type { AnalysisResult, Finding, Severity } from "@/lib/types";
+import { TEXT_NOT_KEPT } from "@/lib/vault";
 import { WARNING_SIGNS } from "@/lib/warningSigns";
 import { useLang, useT } from "@/components/shell/lang";
 import { tr } from "@/lib/i18n";
@@ -199,6 +200,7 @@ export function ResultCard({
   sourceText = "",
   channel = null,
   redacted = 0,
+  textNotKept = false,
   onNewAudit,
   onSave,
   onReport,
@@ -218,6 +220,8 @@ export function ResultCard({
   sourceText?: string;
   channel?: string | null;
   redacted?: number;
+  // Decision 2h: opened from a vault record saved without its checked text.
+  textNotKept?: boolean;
   onNewAudit?: () => void;
   onSave?: () => void;
   onReport?: (flag: ViewRedFlag) => void;
@@ -572,6 +576,7 @@ export function ResultCard({
         </div>
 
         <div id="panel-source" role="tabpanel" aria-labelledby="tab-source" hidden={view !== "source"} className="stack-sm">
+          {textNotKept && <p className="small">{t(TEXT_NOT_KEPT)}</p>}
           <p className="small muted">
             {t(
               redacted > 0

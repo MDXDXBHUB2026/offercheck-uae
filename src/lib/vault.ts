@@ -16,8 +16,11 @@ export const VAULT_COUNT_KEY = "offercheck_vault_count_v1";
 export const VAULT_EVENT = "offercheck-vault";
 // A new vault's passphrase must have at least this many characters.
 export const PASSPHRASE_MIN = 8;
-// The saved text is the text that was checked (after Auto-Redact, if on), cut to this length.
+// When the person ticks "Also keep the checked text", the saved text is the text that was checked
+// (after Auto-Redact, if on), cut to this length. Otherwise no text is saved.
 export const SAVED_TEXT_MAX = 2_000;
+// Decision 2h: shown on a saved result whose checked text was not kept (vault detail, View result).
+export const TEXT_NOT_KEPT = "The checked text was not kept with this result. Only the result was saved.";
 
 // What "View result" needs to show the result again in the analyzer. Inside the encrypted record only.
 export type SavedCheck = {
@@ -33,7 +36,9 @@ export type VaultRecord = {
   savedAt: string;
   title: string;
   channel: string;
-  text: string;
+  // The checked text, only when the person chose to keep it (decision 2h, 2026-11-11). Records saved
+  // before then always have it.
+  text?: string;
   view: ResultView;
   // Added 2026-11-10; records saved before then do not have them.
   notes?: string;

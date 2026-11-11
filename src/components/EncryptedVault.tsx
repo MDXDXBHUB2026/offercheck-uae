@@ -7,7 +7,7 @@ import { useLang, useT } from "@/components/shell/lang";
 import { Button, ButtonLink, Callout, Card, Chip, cx } from "@/components/ui";
 import { clearReopen, setReopen, useVaultState } from "@/components/vaultStore";
 import type { UiLang } from "@/lib/i18n";
-import { openVault, rememberCount, saveVault, type VaultRecord } from "@/lib/vault";
+import { openVault, rememberCount, saveVault, TEXT_NOT_KEPT, type VaultRecord } from "@/lib/vault";
 import { DecryptError } from "@/lib/vaultCrypto";
 
 const LEVEL_TONE = { High: "high", Medium: "caution", Low: "green" } as const;
@@ -16,8 +16,11 @@ const LEVEL_TONE = { High: "high", Medium: "caution", Low: "green" } as const;
 export const VAULT_LOCAL_NOTE =
   "Saved results are kept only in this browser. They are lost if this browser's data is cleared, and they are not available on another device or browser.";
 
+// The heading says "No saved results yet"; this line explains, without repeating it.
 export const VAULT_EMPTY =
-  "No saved results yet. Run a check, then choose Save Encrypted on the result. You will choose your passphrase there. Offer Check cannot recover it.";
+  "Run a check, then choose Save Encrypted on the result. You will choose your passphrase there. Offer Check cannot recover it.";
+
+export { TEXT_NOT_KEPT };
 
 function when(iso: string, lang: UiLang): string {
   const date = new Date(iso);
@@ -45,6 +48,23 @@ export function EmptyVault() {
         {t("Go to the Offer Analyzer")}
       </ButtonLink>
     </Card>
+  );
+}
+
+// The saved record's checked text, or, when it was not kept (decision 2h), a line that says so.
+export function SavedText({ record }: { record: VaultRecord }) {
+  const t = useT();
+  return (
+    <>
+      <h3 className="label-caps">{t("Checked text")}</h3>
+      {record.text !== undefined ? (
+        <div className="source-text" dir="auto">
+          {record.text}
+        </div>
+      ) : (
+        <p className="small muted">{t(TEXT_NOT_KEPT)}</p>
+      )}
+    </>
   );
 }
 
@@ -296,10 +316,7 @@ export function EncryptedVault() {
                   ))}
                 </ul>
               )}
-              <h3 className="label-caps">{t("Checked text")}</h3>
-              <div className="source-text" dir="auto">
-                {current.text}
-              </div>
+              <SavedText record={current} />
               <div className="row">
                 {current.check ? (
                   <Link href="/check" className="btn btn-primary" onClick={() => setReopen(current)}>
@@ -307,10 +324,12 @@ export function EncryptedVault() {
                     <ArrowRight className="icon sample-arrow" aria-hidden="true" />
                   </Link>
                 ) : null}
-                <Button variant="secondary" onClick={() => void copy(current.text)}>
-                  <Copy className="icon" aria-hidden="true" />
-                  {status === "copied" ? t("Copied") : t("Copy text")}
-                </Button>
+                {current.text !== undefined && (
+                  <Button variant="secondary" onClick={() => void copy(current.text ?? "")}>
+                    <Copy className="icon" aria-hidden="true" />
+                    {status === "copied" ? t("Copied") : t("Copy text")}
+                  </Button>
+                )}
                 {!(confirming?.kind === "one" && confirming.id === current.id) && (
                   <Button variant="danger" onClick={() => setConfirming({ kind: "one", id: current.id })}>
                     <Trash2 className="icon" aria-hidden="true" />
