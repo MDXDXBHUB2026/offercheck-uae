@@ -8,6 +8,25 @@ export function cx(...names: (string | false | null | undefined)[]): string {
   return names.filter(Boolean).join(" ");
 }
 
+// Phase 4f: rule IDs stay left-to-right inside Arabic (RTL) lines. Without isolation the bidi
+// algorithm shows "RF-001" as "001-RF" in an RTL paragraph. Each RF-nnn in the text is wrapped in
+// <bdi dir="ltr">; the rest of the text is unchanged.
+export function WithCodes({ text }: { text: string }) {
+  return (
+    <>
+      {text.split(/(RF-\d{3})/).map((part, index) =>
+        index % 2 === 1 ? (
+          <bdi key={index} dir="ltr">
+            {part}
+          </bdi>
+        ) : (
+          part
+        ),
+      )}
+    </>
+  );
+}
+
 export type Tone = "high" | "medium" | "low" | "green" | "neutral";
 
 export function Card({

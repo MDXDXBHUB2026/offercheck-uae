@@ -84,6 +84,8 @@ const KEEP = new Set(
   [
     "Offer", "Check", "UAE", "MoHRE", "MOHRE", "ICP", "GDRFA", "Amer", "MoI", "Google", "Cloud", "Translation",
     "WhatsApp", "LinkedIn", "PDF", "AES", "GCM", "UTC", "IBAN", "OTP", "CVV", "eCrime", "Aman", "SHA",
+    // Phase 4d: ICP's platform keeps its own Latin name on the official Arabic page.
+    "eChannels",
   ].map((word) => word.toLowerCase()),
 );
 

@@ -22,7 +22,7 @@ import {
 import { AgentRun } from "@/components/AgentRun";
 import { scoreArithmetic } from "@/components/scoreArithmetic";
 import { allClearShown, noticeFor, qualifiedSummary, reportLinkShown, scoreChip, type Notice } from "@/components/scoreChip";
-import { Button, ButtonLink, Callout, Card, Chip, Disclosure, cx, type ChipTone, type Tone } from "@/components/ui";
+import { Button, ButtonLink, Callout, Card, Chip, Disclosure, WithCodes, cx, type ChipTone, type Tone } from "@/components/ui";
 import { contact, MOHRE_INQUIRY_URL } from "@/data/uaeContacts";
 import { mainChannels, REPORT_FRAUD_ID, REPORT_FRAUD_NOTE, REPORT_LINK_SENTENCE } from "@/lib/authorities";
 import { CHECK_LABELS, CHECK_NOTES } from "@/lib/checkLabels";
@@ -163,7 +163,9 @@ function FlagCard({
         </div>
       ))}
       <div className="row-between">
-        <p className="small muted">{t("Rule {0}", finding.source)}</p>
+        <p className="small muted">
+          <WithCodes text={t("Rule {0}", finding.source)} />
+        </p>
         <div className="row no-print">
           <Button
             variant="secondary"
@@ -380,7 +382,9 @@ export function ResultCard({
             return (
               <li key={dimension.title} className={cx("dimension", found && `dimension-found tone-${dimTone}`)}>
                 <span className="dimension-title">{t(dimension.title)}</span>
-                <span className="dimension-rules mono">{dimension.rules.join(" / ")}</span>
+                <span className="dimension-rules mono">
+                  <WithCodes text={dimension.rules.join(" / ")} />
+                </span>
                 <span className="dimension-bar" aria-hidden="true">
                   <span className="dimension-fill" />
                 </span>
@@ -568,7 +572,9 @@ export function ResultCard({
                       {quote}
                     </p>
                   ))}
-                  <p className="small muted">{t("Rule {0}", finding.source)}</p>
+                  <p className="small muted">
+          <WithCodes text={t("Rule {0}", finding.source)} />
+        </p>
                 </li>
               ))}
             </ul>

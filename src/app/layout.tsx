@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Navbar } from "@/components/shell/Navbar";
 import { SiteFooter } from "@/components/shell/site";
+import { T } from "@/components/shell/T";
+import { ArabicNote } from "@/components/shell/ArabicNote";
 import "./globals.css";
 
 // Text uses the font stacks set in globals.css. No font files are downloaded: the reference app's
@@ -18,11 +20,13 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html lang="en" dir="ltr">
       <body>
         <a className="skip-link" href="#main">
-          Skip to content
+          <T>Skip to content</T>
         </a>
         <Navbar />
         <main id="main" tabIndex={-1} className="shell page">
           {children}
+          {/* Phase 4a: on paper and in a saved PDF too (the footer is not printed). */}
+          <ArabicNote printOnly />
         </main>
         <SiteFooter />
       </body>

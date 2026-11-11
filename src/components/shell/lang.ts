@@ -6,7 +6,8 @@ import { tr, type Arg } from "@/lib/i18n";
 // The English / Arabic switch. Arabic sets dir="rtl" and lang="ar" on <html>, so the whole layout
 // mirrors (the CSS uses logical properties), and the interface text changes language (useT and <T>,
 // dictionary in src/lib/i18nAr.ts). Offer text is never translated by the switch. The Arabic text
-// has not been reviewed by a native speaker; the footer says so while Arabic is on. The choice is
+// was written with an AI tool and has not been reviewed by a native speaker; the footer (and a
+// printed page) says so while Arabic is on. The choice is
 // kept in this browser only (localStorage), wrapped so blocked storage never breaks the page. The
 // default is English, and the browser's own language settings are never read.
 

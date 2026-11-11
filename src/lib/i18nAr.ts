@@ -32,8 +32,8 @@ const ENTRIES: Record<string, string> = {
   "Offer Check could not be shown. Offer Check did not save your text.":
     "تعذّر عرض Offer Check. لم يحفظ Offer Check النص الذي أدخلته.",
   "Try again": "أعد المحاولة",
-  "The Arabic text has not been reviewed by a native speaker. Offer text, quoted words and official names are shown as written.":
-    "لم يراجع النص العربي متحدثٌ أصلي باللغة العربية. يُعرض نص العرض والكلمات المقتبسة والأسماء الرسمية كما كُتبت.",
+  "The Arabic interface text was written with an AI tool and has not been reviewed by a native speaker.":
+    "كُتب نص الواجهة العربية بأداة ذكاء اصطناعي ولم يراجعه متحدث أصلي باللغة العربية.",
   "Official places to confirm and to report": "الجهات الرسمية للتأكد والإبلاغ",
   "Official portals": "البوابات الرسمية",
   "Report fraud": "الإبلاغ عن احتيال",
@@ -69,6 +69,7 @@ const ENTRIES: Record<string, string> = {
   "Demo data, not your text": "بيانات تجريبية، وليست نصك",
   "Demo animation": "رسوم تجريبية",
   "Pause radar": "إيقاف الرادار مؤقتًا",
+  "Skip to content": "انتقل إلى المحتوى",
   "Pause animations": "إيقاف الحركة مؤقتًا",
   "Resume animations": "استئناف الحركة",
   "Resume radar": "استئناف الرادار",
@@ -107,6 +108,13 @@ const ENTRIES: Record<string, string> = {
   "Clear text": "مسح النص",
   "Check offer": "افحص العرض",
   "Checking...": "جارٍ الفحص...",
+  // Phase 4b (2026-11-11): four strings found with no Arabic (Auto-Redact off, over the limit, the
+  // checking panel title, a dropped file).
+  "Auto-Redact is off: the text is sent as it is in the box.": "الإخفاء التلقائي متوقف: يُرسل النص كما هو في المربع.",
+  "over the limit": "تجاوز الحد",
+  "Checking the offer": "جارٍ فحص العرض",
+  "Paste the text of the letter. Offer Check does not read files or images.":
+    "الصق نص الخطاب. لا يقرأ Offer Check الملفات أو الصور.",
   "Translating...": "جارٍ الترجمة...",
   "Paste an offer or choose a sample, then check it.": "الصق عرضًا أو اختر عينة، ثم افحصه.",
   "Paste an offer to check.": "الصق عرضًا لفحصه.",
@@ -548,42 +556,84 @@ const ENTRIES: Record<string, string> = {
     "الأشخاص في الإمارات الذين يتلقون عرض عمل عبر واتساب أو البريد الإلكتروني أو LinkedIn ويريدون فحصه بحثًا عن علامات تحذير، مثل طلب رسوم أو رمز أو مستندات هوية.",
   "Offer Check's server does not store the text you paste. Your text is sent to Google, for machine translation, only if you press “{0}”. Save Encrypted keeps an encrypted copy in this browser only, locked with a passphrase that is not stored.":
     "لا يخزّن خادم Offer Check النص الذي تلصقه. يُرسل نصك إلى Google للترجمة الآلية فقط إذا ضغطت \"{0}\". ميزة \"حفظ مشفّر\" تحفظ نسخة مشفّرة في هذا المتصفح فقط، مقفلة بعبارة مرور لا تُخزَّن.",
+  // Warning signs (src/lib/warningSigns.ts). Phase 4d, 2026-11-11: checked against the official
+  // Arabic page the English was paraphrased from, UAE Government Portal, "التحقق من صحة عقود العمل،
+  // وأذونات الدخول والتأشيرات", https://u.ae/ar/information-and-services/visa-and-emirates-id/Visa-information/tips-to-avoid-labour-and-visa-fraud
+  // (updated 24 سبتمبر 2026, read 2026-11-11). Each entry is marked:
+  //   [official]          the page's own Arabic sentence, word for word;
+  //   [official, adapted] the page's wording, joined or shortened to match the English;
+  //   [review]            no matching sentence on the page: our wording, kept, needs a native speaker.
+  // Nothing is added beyond the page: no fine, fee, law article or number.
+
+  // [review] heading, not on the page
   "You are asked to pay recruitment fees": "يُطلب منك دفع رسوم توظيف",
+  // [official, adapted] page, point 5: "ينبغي العلم أن صاحب العمل هو المسؤول عن دفع جميع مصاريف عملية
+  // التوظيف بموجب قانون العمل لدولة الإمارات العربية المتحدة." The first sentence is ours [review].
   "Treat this as a red flag. The UAE Government Portal says the employer is responsible for recruitment expenses under the UAE Labour Law.":
-    "اعتبر هذا علامة خطر. تقول البوابة الرسمية لحكومة الإمارات إن صاحب العمل مسؤول عن نفقات التوظيف بموجب قانون العمل الإماراتي.",
+    "اعتبر هذا علامة خطر. تذكر البوابة الرسمية لحكومة الإمارات أن صاحب العمل هو المسؤول عن دفع جميع مصاريف عملية التوظيف بموجب قانون العمل لدولة الإمارات العربية المتحدة.",
+  // [review] action, not on the page
   "Do not pay recruitment fees to get a job.": "لا تدفع رسوم توظيف للحصول على وظيفة.",
-  "No MoHRE offer letter": "لا يوجد خطاب عرض من وزارة الموارد البشرية والتوطين",
+  // [review] heading, not on the page
+  "No MoHRE offer letter": "لا يوجد عرض عمل صادر من وزارة الموارد البشرية والتوطين",
+  // [official, adapted] page, point 1: "لابد أن يقدم لك عرض عمل صادر من وزارة الموارد البشرية والتوطين
+  // بدولة الإمارات، ويجب أن يحمل توقيع المدير المسؤول."
   "A genuine job offer comes as an offer letter issued through the Ministry of Human Resources and Emiratisation (MoHRE) and signed by an authorised manager.":
-    "يأتي عرض العمل الحقيقي في صورة خطاب عرض صادر عبر وزارة الموارد البشرية والتوطين وموقّع من مدير مفوَّض.",
-  "Ask the employer for this offer letter before you accept anything.": "اطلب خطاب العرض هذا من صاحب العمل قبل أن تقبل أي شيء.",
-  "The reference number is not checked": "لم يُفحص الرقم المرجعي",
+    "عرض العمل الحقيقي يكون صادرًا من وزارة الموارد البشرية والتوطين بدولة الإمارات، ويجب أن يحمل توقيع المدير المسؤول.",
+  // [review] action, not on the page
+  "Ask the employer for this offer letter before you accept anything.": "اطلب عرض العمل هذا من صاحب العمل قبل أن تقبل أي شيء.",
+  // [review] heading, not on the page
+  "The reference number is not checked": "لم يُتحقق من رقم عرض العمل",
+  // [official, adapted] page, point 2: "يمكنك استخدام رقم عرض العمل للتحقق من صحة الطلب عبر الموقع
+  // الإلكتروني لوزارة الموارد البشرية والتوطين ( خدمات الاستعلام – حالة الطلب )."
   "An offer letter issued through MoHRE has a reference number, and MoHRE's application status enquiry service lets you look it up yourself.":
-    "لخطاب العرض الصادر عبر وزارة الموارد البشرية والتوطين رقم مرجعي، وتتيح لك خدمة الاستعلام عن حالة الطلب في الوزارة البحث عنه بنفسك.",
+    "يمكنك استخدام رقم عرض العمل للتحقق من صحة الطلب بنفسك عبر الموقع الإلكتروني لوزارة الموارد البشرية والتوطين (خدمات الاستعلام – حالة الطلب).",
+  // [official, adapted] same point 2, as an instruction
   "Check the offer's reference number through MoHRE's application status enquiry service.":
-    "افحص الرقم المرجعي للعرض عبر خدمة الاستعلام عن حالة الطلب في وزارة الموارد البشرية والتوطين.",
+    "تحقق من رقم عرض العمل عبر الموقع الإلكتروني لوزارة الموارد البشرية والتوطين (خدمات الاستعلام – حالة الطلب).",
+  // [review] heading, not on the page
   "The company cannot be found": "لا يمكن العثور على الشركة",
+  // [official, adapted] page, point 6: "تأكد من أن الشركة لها وجود وقائمة قانوناً."
   "You can look up a company in the National Economic Register to see whether it is registered.":
-    "يمكنك البحث عن الشركة في السجل الاقتصادي الوطني لمعرفة ما إذا كانت مسجّلة.",
+    "يمكنك البحث في موقع السجل الاقتصادي الوطني للتأكد من أن الشركة لها وجود وقائمة قانونًا.",
+  // [official, adapted] page, point 6: "يمكنك البحث عن اسم الشركة باللغة الإنجليزية والعربية في موقع
+  // السجل الاقتصادي الوطني"
   "Search the company's English and Arabic names in the National Economic Register.":
-    "ابحث عن اسم الشركة بالإنجليزية والعربية في السجل الاقتصادي الوطني.",
+    "ابحث عن اسم الشركة باللغة الإنجليزية والعربية في موقع السجل الاقتصادي الوطني.",
+  // [review] heading, not on the page
   "The entry permit comes from an unexpected source": "إذن الدخول يأتي من مصدر غير متوقع",
+  // [official, adapted] page, points 10 and 11: "تصدر أذونات الدخول بغرض السياحة عن شركات الطيران القائمة
+  // في دولة الإمارات ... كما تصدر ... عن الفنادق ووكالات السفر المرخصة في دولة الإمارات." and "حتى لا تدفع
+  // أكثر من المستحق، تعرف على رسوم التأشيرات وأذونات الدخول الصادرة من دبي." [review] The page says
+  // these sources issue tourist entry permits; the English says "legitimate sources" without "tourist".
   "The UAE Government Portal names UAE-based airlines, licensed hotels and licensed travel agencies as legitimate sources. It also suggests comparing any Dubai visa or permit fees with the published price list, so you do not overpay.":
-    "تذكر البوابة الرسمية لحكومة الإمارات شركات الطيران العاملة في الإمارات والفنادق المرخّصة ووكالات السفر المرخّصة مصادرَ معتمدة. وتنصح أيضًا بمقارنة أي رسوم لتأشيرات أو أذونات دبي بقائمة الأسعار المنشورة، حتى لا تدفع أكثر من اللازم.",
+    "تذكر البوابة الرسمية لحكومة الإمارات أن أذونات الدخول تصدر عن شركات الطيران القائمة في دولة الإمارات، والفنادق ووكالات السفر المرخصة في دولة الإمارات. وتنصح بالتعرف على رسوم التأشيرات وأذونات الدخول الصادرة من دبي، حتى لا تدفع أكثر من المستحق.",
+  // [review] action, not on the page
   "Get an entry permit only through those sources, and check the fees against the published list.":
     "احصل على إذن الدخول من تلك المصادر فقط، وقارن الرسوم بالقائمة المنشورة.",
-  "The entry permit is not checked after signing": "لم يُفحص إذن الدخول بعد التوقيع",
+  // [review] heading, not on the page
+  "The entry permit is not checked after signing": "لم يُتحقق من إذن الدخول بعد التوقيع",
+  // [official, adapted] page, points 3, 8 and 9: "بعد قيامك بتوقيع عرض العمل"; "يمكنك التحقق من صحته عبر
+  // الموقع الإلكتروني للإدارة العامة للإقامة وشؤون الأجانب"; "عبر المنصة الإلكترونية eChannels التابعة
+  // للهيئة الاتحادية للهوية والجنسية والجمارك وأمن المنافذ".
   "After you sign, you can verify your entry permit: Dubai permits through GDRFA, and permits of the other emirates through ICP eChannels.":
-    "بعد التوقيع، يمكنك التأكد من إذن دخولك: أذونات دبي عبر الإدارة العامة للإقامة وشؤون الأجانب، وأذونات الإمارات الأخرى عبر القنوات الإلكترونية للهيئة الاتحادية للهوية والجنسية.",
+    "بعد قيامك بتوقيع عرض العمل، يمكنك التحقق من صحة إذن الدخول: الصادر من دبي عبر الموقع الإلكتروني للإدارة العامة للإقامة وشؤون الأجانب، والصادر من الإمارات الأخرى عبر المنصة الإلكترونية eChannels التابعة للهيئة الاتحادية للهوية والجنسية والجمارك وأمن المنافذ.",
+  // [official, adapted] same points 8 and 9, as an instruction
   "Check your entry permit through GDRFA for Dubai or ICP eChannels for the other emirates.":
-    "افحص إذن دخولك عبر الإدارة العامة للإقامة وشؤون الأجانب في دبي، أو عبر القنوات الإلكترونية للهيئة الاتحادية للهوية والجنسية في الإمارات الأخرى.",
+    "تحقق من إذن دخولك عبر الموقع الإلكتروني للإدارة العامة للإقامة وشؤون الأجانب في دبي، أو عبر المنصة الإلكترونية eChannels التابعة للهيئة الاتحادية للهوية والجنسية والجمارك وأمن المنافذ في الإمارات الأخرى.",
+  // [review] heading, not on the page
   "A residency visa is promised while you are abroad": "تُوعَد بتأشيرة إقامة وأنت خارج الدولة",
+  // [official] page, point 14, word for word
   "A residency visa cannot be processed while you are outside the UAE. You first enter on a valid entry permit and stay in the country while it is processed.":
-    "لا يمكن إنجاز تأشيرة الإقامة وأنت خارج الإمارات. تدخل أولًا بإذن دخول ساري المفعول وتبقى في الدولة أثناء إنجازها.",
+    "لا يمكن إتمام إجراءات تأشيرة الإقامة لأي شخص لا يزال خارج دولة الإمارات، حيث لا بد من دخول صاحب الطلب إلى الدولة بموجب إذن دخول ساري، وبقائه فيها حتى اكتمال إجراءات إصدار تأشيرة الإقامة.",
+  // [review] action, not on the page
   "Be cautious of any offer that promises a residency visa before you arrive.":
     "احذر من أي عرض يَعِد بتأشيرة إقامة قبل وصولك.",
+  // [review] heading, not on the page
   "Work on a visit or tourist visa": "العمل بتأشيرة زيارة أو سياحة",
+  // [official] page, point 4, word for word
   "A visit or tourist visa does not give you the right to work in the UAE. Working on one can lead to fines and legal liability.":
-    "لا تمنحك تأشيرة الزيارة أو السياحة حق العمل في الإمارات. وقد يؤدي العمل بها إلى غرامات ومسؤولية قانونية.",
+    "لا يعطيك إذن الدخول بغرض السياحة أو الزيارة الحق في العمل داخل دولة الإمارات. وفي حالة قيامك بالعمل بعد دخول الدولة بتأشيرة سياحة أو زيارة، فإنك قد تتعرض لغرامات ومساءلة قانونية.",
+  // [review] action, not on the page
   "Do not start work in the UAE on a visit or tourist visa.": "لا تبدأ العمل في الإمارات بتأشيرة زيارة أو سياحة.",
   "Print": "طباعة",
 

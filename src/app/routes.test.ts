@@ -165,7 +165,7 @@ describe("header", () => {
     const rtlOnly = /(?:\[dir="rtl"\][^{},]*,\s*)*\[dir="rtl"\][^{},]*\{[^}]*\}/g;
     expect(css.replace(rtlOnly, "")).not.toMatch(/(?:margin|padding|border)-(?:left|right)\s*:|(?:^|\s)(?:left|right)\s*:\s*[^;]+;|text-align:\s*(?:left|right)/m);
     expect(ARABIC_NOTE).toBe(
-      "The Arabic text has not been reviewed by a native speaker. Offer text, quoted words and official names are shown as written.",
+      "The Arabic interface text was written with an AI tool and has not been reviewed by a native speaker.",
     );
   });
 

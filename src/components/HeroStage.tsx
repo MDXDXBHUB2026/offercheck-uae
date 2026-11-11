@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getMotion, useMotion } from "@/components/shell/motion";
+import { WithCodes } from "@/components/ui";
 import { Crosshair, Pause, Play, Zap } from "lucide-react";
 import { HeroBackdrop } from "@/components/HeroBackdrop";
 import { useT } from "@/components/shell/lang";
@@ -105,7 +106,9 @@ export function HeroStage({ children }: { children: ReactNode }) {
               <li key={row.text}>
                 <span className={`dot dot-${row.tone}`} aria-hidden="true" />
                 <span>{t(row.text)}</span>
-                <span className="hud-tag">{t(row.tag)}</span>
+                <span className="hud-tag">
+                  <WithCodes text={t(row.tag)} />
+                </span>
               </li>
             ))}
           </ul>

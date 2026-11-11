@@ -3,11 +3,14 @@
 import { useLang } from "@/components/shell/lang";
 import { tr } from "@/lib/i18n";
 
+// Phase 4a (owner wording, 2026-11-11).
 export const ARABIC_NOTE =
-  "The Arabic text has not been reviewed by a native speaker. Offer text, quoted words and official names are shown as written.";
+  "The Arabic interface text was written with an AI tool and has not been reviewed by a native speaker.";
 
-// Shown in the footer only while Arabic is on, in Arabic.
-export function ArabicNote() {
+// Shown only while Arabic is on, in Arabic: in the footer beside "Pause animations", and (print
+// only) at the end of the page, so a printed page or a saved PDF carries it too.
+export function ArabicNote({ printOnly = false }: { printOnly?: boolean }) {
   const lang = useLang();
-  return lang === "ar" ? <p>{tr(lang, ARABIC_NOTE)}</p> : null;
+  if (lang !== "ar") return null;
+  return <p className={printOnly ? "print-only arabic-note small" : "arabic-note small"}>{tr(lang, ARABIC_NOTE)}</p>;
 }
