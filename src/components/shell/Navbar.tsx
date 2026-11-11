@@ -128,11 +128,8 @@ export function Navbar() {
           </nav>
 
           <div className="header-actions">
-            {/* True of the engine: the score comes from fixed rules (scoring.ts), with no AI model. */}
-            <span className="status-pill">
-              <span className="status-dot" aria-hidden="true" />
-              <span>{t("Fixed rules")}</span>
-            </span>
+            {/* Phase 3 option A: no "Fixed rules" pill here. The hero's "Fixed rules, no AI scoring"
+                is the one place that says it. */}
             <div className="dropdown">
               <Button
                 ref={toggleRef}

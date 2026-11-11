@@ -17,7 +17,6 @@ const ENTRIES: Record<string, string> = {
   "Main (compact)": "التنقل الرئيسي (مختصر)",
   "Arabic": "العربية",
   "English": "الإنجليزية",
-  "Fixed rules": "قواعد ثابتة",
   "Fixed rules, no AI scoring": "قواعد ثابتة، دون تقييم بالذكاء الاصطناعي",
   "UAE Hotlines": "أرقام الإمارات الساخنة",
   "UAE hotlines": "أرقام الإمارات الساخنة",

@@ -20,6 +20,7 @@ import { WARNING_SIGNS } from "@/lib/warningSigns";
 import { contact, MOHRE_INQUIRY_URL, UAE_CONTACTS } from "@/data/uaeContacts";
 import { THREAT_SAMPLES } from "@/data/threatSamples";
 import { EncryptedVault } from "@/components/EncryptedVault";
+import { NAV_ITEMS } from "@/components/shell/site";
 import LegalPage from "@/app/legal/page";
 import PortalsPage from "@/app/portals/page";
 import RadarPage from "@/app/radar/page";
@@ -137,7 +138,6 @@ describe("AI Studio port: motion only when allowed", () => {
       "details[open] > :not(summary)",
       // Part 2: header and hero radar.
       ".brand-ping::after",
-      ".status-dot",
       ".flag-ribbon",
       ".hero-backdrop::after",
       ".ping-icon::after",
@@ -494,9 +494,26 @@ describe("Header: the brand stays fully visible", () => {
     expect(nav).toMatch(/overflow-x: auto;/);
     expect(nav).toMatch(/padding: 6px;/);
     expect(desktop).toMatch(/\.nav-desktop \.tab \{\s*flex-shrink: 0;/);
-    // Without the decorative tab icons all five labels fit in the capped header (measured 1280 to
-    // 1920 px, English and Arabic); the scroll is only a fallback.
-    expect(desktop).toMatch(/\.nav-desktop \.tab \.icon \{\s*display: none;/);
+    // Phase 3 option A (2026-11-11): tighter tabs with their 16px icons. Measured in headless Chrome
+    // at 1280, 1440, 1568 and 1920 px, English and Arabic: brand fully visible, no tab clipped or
+    // overlapped, no tab scrolling (the Arabic row overflowed by 19px before). The scroll is only a
+    // fallback.
+    expect(desktop).toMatch(/\.nav-desktop \.tab \{\s*flex-shrink: 0;\s*gap: 4px;\s*padding-inline: 6px;/);
+    expect(desktop).toMatch(/\.nav-desktop \.tab \.icon \{\s*flex-shrink: 0;\s*width: 16px;\s*height: 16px;/);
+    expect(desktop).not.toMatch(/\.nav-desktop \.tab \.icon \{[^}]*display: none/);
+  });
+
+  it("shows all five tab icons and no Fixed rules pill in the header; the hero says it once", () => {
+    const navbar = read("src/components/shell/Navbar.tsx");
+    expect(navbar).not.toContain("status-pill");
+    expect(navbar).not.toContain('t("Fixed rules")');
+    expect(navbar).toMatch(/<Icon className="icon" aria-hidden="true" \/>/);
+    expect(css).not.toContain(".status-pill");
+    expect(read("src/app/check/page.tsx").match(/Fixed rules, no AI scoring/g)).toHaveLength(1);
+  });
+
+  it("the three longest Arabic tab labels are shortened to the compact bar's words", () => {
+    expect(NAV_ITEMS.map((item) => item.labelAr)).toEqual(["فاحص العروض", "الرادار", "بوابات التحقق", "الإرشادات", "الخزنة"]);
   });
 });
 

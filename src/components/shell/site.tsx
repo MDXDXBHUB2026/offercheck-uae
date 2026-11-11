@@ -22,12 +22,15 @@ export type NavItem = {
   short: string;
 };
 
+// Phase 3 option A (2026-11-11): the three longest Arabic tab labels are shortened to the words the
+// compact bar already uses, so all five tabs fit with their icons. Page headings keep the full
+// names. Not yet reviewed by a native speaker.
 export const NAV_ITEMS: readonly NavItem[] = [
   { id: "analyzer", href: "/check", label: "Offer Analyzer", labelAr: "فاحص العروض", short: "Analyzer" },
-  { id: "radar", href: "/radar", label: "Threat Radar", labelAr: "رادار التهديدات", short: "Radar" },
+  { id: "radar", href: "/radar", label: "Threat Radar", labelAr: "الرادار", short: "Radar" },
   { id: "portals", href: "/portals", label: "Gov Portals Hub", labelAr: "بوابات التحقق", short: "Portals" },
-  { id: "legal", href: "/legal", label: "Legal Guidelines", labelAr: "الدليل القانوني", short: "Legal" },
-  { id: "vault", href: "/vault", label: "Encrypted Vault", labelAr: "الخزنة المشفرة", short: "Vault" },
+  { id: "legal", href: "/legal", label: "Legal Guidelines", labelAr: "الإرشادات", short: "Legal" },
+  { id: "vault", href: "/vault", label: "Encrypted Vault", labelAr: "الخزنة", short: "Vault" },
 ];
 
 export const FOOTER_DISCLAIMER =

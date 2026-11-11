@@ -903,29 +903,6 @@ html {
   text-overflow: ellipsis;
 }
 
-/* "Fixed rules": true of the engine (scoring.ts, no AI model). A label, not a control. */
-.status-pill {
-  display: none;
-  align-items: center;
-  gap: var(--sp-2);
-  padding: var(--sp-1) var(--sp-3);
-  border: 1px solid var(--green-line);
-  border-radius: var(--r-full);
-  background: var(--green-bg);
-  color: var(--green-soft);
-  font-size: var(--fs-xs);
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.status-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: var(--r-full);
-  background: var(--green);
-  box-shadow: 0 0 8px var(--green);
-}
-
 .nav-desktop {
   display: none;
 }
@@ -970,12 +947,6 @@ html {
   }
 }
 
-@media (min-width: 900px) {
-  .status-pill {
-    display: inline-flex;
-  }
-}
-
 @media (min-width: 1200px) {
   /* With the tabs on the header row the brand keeps its own space: it never shrinks under the
      tab row, in either direction. Below 1200px the tabs sit in their own bar and the brand may
@@ -997,15 +968,18 @@ html {
     scrollbar-width: thin;
   }
 
+  /* Phase 3 option A: tighter tabs, so all five fit with their icons beside the brand and the
+     actions in the capped header, English and Arabic (measured 1280 to 1920 px). */
   .nav-desktop .tab {
     flex-shrink: 0;
-    padding-inline: var(--sp-2);
+    gap: 4px;
+    padding-inline: 6px;
   }
 
-  /* The header is capped at the content width, so all five labels fit beside the brand and the
-     actions only without the tab icons (decorative, aria-hidden). Measured: docs/test-report.md. */
   .nav-desktop .tab .icon {
-    display: none;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
   }
 
   .nav-mobile {
@@ -2693,14 +2667,10 @@ details.card > summary {
     animation: pulse 2s ease-in-out infinite;
   }
 
-  /* Header (AI Studio port, part 2): the red attention mark sends out a ping ring; the "Fixed
-     rules" dot pulses; the flag line's colours drift slowly. */
+  /* Header (AI Studio port, part 2): the red attention mark sends out a ping ring; the flag line's
+     colours drift slowly. (The "Fixed rules" pill and its pulsing dot left the header in Phase 3.) */
   .brand-ping::after {
     animation: ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
-  }
-
-  .status-dot {
-    animation: pulse 2s ease-in-out infinite;
   }
 
   .flag-ribbon {
