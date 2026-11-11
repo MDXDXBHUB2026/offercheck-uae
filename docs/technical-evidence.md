@@ -103,7 +103,7 @@ Offer Check is an MVP prototype. A low score or "No risk indicators found" does 
 
 ### What this check cannot do
 
-The page shows a plain-language version of each bullet below, from `src/components/publicLimitations.ts` (COPY-1); a test keeps one public item per bullet. Change both together.
+Internal only. Until 2026-11-11 the check page showed a plain-language version of these bullets in a closed "What this check cannot do" section (COPY-1). The owner removed that section, its footer link and its Arabic strings (LIMITS-2 in `docs/defects.md`); the check page keeps only the one-line notice under the analyzer (`src/components/publicLimitations.ts`). Nothing in the app reads this list.
 
 - **Some honest offers can score high.** An employer named at the start of a list (`covers`, `pays`, `pays for`, `bears`, `provides`) covers an item it usually pays, such as a visa, medical or a flight. Still High: `sponsors` and other verbs such as `arranges` (`The company arranges visa and medical fees of AED 500`), a head in an earlier sentence, a list longer than 160 characters, a fee noun in the item (processing, registration, admin, application, security, deposit, training, clearance, agency, service, handling, documentation, verification, courier), and a candidate marker such as `before joining` near the cost.
 - **A request for a code can be missed when it is worded indirectly.** Still missed: `What number did you get by SMS?`, and a code to type into a form with no link, URL, "click" or WhatsApp in the sentence, such as `Type the code into the form we emailed you`. `Enter the code we send you on our portal` stays unflagged on purpose, because a real careers portal asks for that.

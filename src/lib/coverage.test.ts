@@ -4,7 +4,6 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { resultAnnouncement } from "@/components/OfferChecker";
-import { PUBLIC_LIMITS } from "@/components/publicLimitations";
 import { ResultCard as ResultsPanel } from "@/components/ResultCard";
 import {
   activeNotice,
@@ -277,10 +276,12 @@ describe("Stage 1 claims", () => {
     }
   });
 
-  it("limitations 6 and 7 describe the word check and its cut-offs", () => {
-    expect(PUBLIC_LIMITS[5].title).toBe("Other languages typed in English letters are only partly detected.");
-    expect(PUBLIC_LIMITS[5].text).toContain(`under ${LATIN_MIN_WORDS} words`);
-    expect(PUBLIC_LIMITS[6].title).toBe("The language check uses simple cut-offs.");
+  // The public list was removed (LIMITS-2, 2026-11-11); the internal limitations doc keeps the detail.
+  it("the limitations doc describes the word check and its cut-offs", () => {
+    const doc = readFileSync(join(process.cwd(), "docs/known-limitations.md"), "utf8");
+    expect(doc).toContain("**Non-English text in Latin script is only partly detected.**");
+    expect(doc).toContain(`It abstains under ${LATIN_MIN_WORDS} Latin words`);
+    expect(doc).toContain("**The language cut-offs are design choices.**");
   });
 });
 

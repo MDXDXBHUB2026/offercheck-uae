@@ -1,6 +1,4 @@
 import { ExternalLink, Lock, ShieldAlert, ShieldCheck } from "lucide-react";
-import { LimitsLink } from "@/components/LimitsLink";
-import { LIMITS_SECTION } from "@/components/publicLimitations";
 import { ArabicNote } from "@/components/shell/ArabicNote";
 import { MotionToggle } from "@/components/shell/MotionToggle";
 import { contact } from "@/data/uaeContacts";
@@ -91,11 +89,6 @@ export function SiteFooter() {
                 </a>
               </li>
             ))}
-            <li>
-              <LimitsLink>
-                <T>{LIMITS_SECTION}</T>
-              </LimitsLink>
-            </li>
           </ul>
         </div>
         <div className="footer-bottom">

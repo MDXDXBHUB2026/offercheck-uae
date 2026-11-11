@@ -32,7 +32,7 @@ import {
   RESULT_CLEARED,
   resultAnnouncement,
 } from "@/components/OfferChecker";
-import { PUBLIC_LIMITS, PUBLIC_LIMITS_INTRO } from "@/components/publicLimitations";
+import { PUBLIC_LIMITS_INTRO } from "@/components/publicLimitations";
 import { ReportModal } from "@/components/radar/ReportModal";
 import { intakeNote, ResultCard } from "@/components/ResultCard";
 import { EmptyVault, VAULT_EMPTY, VAULT_LOCAL_NOTE } from "@/components/EncryptedVault";
@@ -239,7 +239,6 @@ describe("Arabic interface: every message of the existing flow has Arabic", () =
     RESULT_CLEARED,
     OFFER_NOTICE,
     PUBLIC_LIMITS_INTRO,
-    ...PUBLIC_LIMITS.flatMap((item) => [item.title, item.text]),
     ...Object.values(LANGUAGE_NOTICES),
     ...(Object.keys(TRANSLATE_ERRORS) as TranslateFailure[]).map((code) => translateFailureMessage(code)),
     ...[networkFailure(true), networkFailure(false), ...[413, 400, 500, 200].map((status) => responseFailure(status, null))].flatMap(

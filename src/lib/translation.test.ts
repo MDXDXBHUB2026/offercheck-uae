@@ -171,11 +171,10 @@ describe("translation claims (BATCHB-2)", () => {
   });
 
   it("no public or page copy claims translation accuracy, and all of it is ASCII", async () => {
-    const { PUBLIC_LIMITS, PUBLIC_LIMITS_INTRO } = await import("@/components/publicLimitations");
+    const { PUBLIC_LIMITS_INTRO } = await import("@/components/publicLimitations");
     const flow = await import("@/components/translateFlow");
     const copy = [
       PUBLIC_LIMITS_INTRO,
-      ...PUBLIC_LIMITS.flatMap((item) => [item.title, item.text]),
       flow.TRANSLATE_CONSENT_TEXT,
       flow.TRANSLATION_NOTE,
       flow.LANGUAGE_GATE_TRANSLATE_NOTE,
@@ -187,6 +186,9 @@ describe("translation claims (BATCHB-2)", () => {
       expect(text).toMatch(/^[\x20-\x7e]+$/);
       expect(text).not.toMatch(/accura|reliabl|guarantee|high.quality|precise/i);
     }
-    expect(PUBLIC_LIMITS.at(-1)?.text).toContain("has not been measured");
+    // The public list was removed (LIMITS-2, 2026-11-11); the internal limitations doc keeps saying it.
+    expect(readFileSync(join(process.cwd(), "docs/known-limitations.md"), "utf8")).toContain(
+      "Translation quality has not been measured for any language, and no accuracy is claimed.",
+    );
   });
 });

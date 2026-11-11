@@ -4,10 +4,7 @@ import { createElement, type ReactElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { networkFailure, responseFailure } from "@/components/checkRequest";
-import { LimitationsPanel } from "@/components/LimitationsPanel";
-import { LimitsLink } from "@/components/LimitsLink";
-import { LIMITS_ID, openLimits, syncLimitsToHash } from "@/components/limitsAnchor";
-import { LIMITS_SECTION, PUBLIC_LIMITS_INTRO } from "@/components/publicLimitations";
+import { PUBLIC_LIMITS_INTRO } from "@/components/publicLimitations";
 import { ARABIC_NOTE } from "@/components/shell/ArabicNote";
 import { isCurrent, Navbar } from "@/components/shell/Navbar";
 import { BrandBadge, NAV_ITEMS, PROTOTYPE_NOTICE, SiteFooter } from "@/components/shell/site";
@@ -311,15 +308,16 @@ describe("footer", () => {
     expect(html).toContain(PROTOTYPE_NOTICE.replace("'", "&#x27;"));
   });
 
-  it("links the official portals from the contacts file, in a new tab, and the limitations", () => {
+  // The limitations link was removed with the section (LIMITS-2, owner decision 2026-11-11).
+  it("links the official portals from the contacts file, in a new tab, and nothing else", () => {
     const links = [...html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)].map((m) => [text(m[2]), m[1].match(/href="([^"]*)"/)?.[1]]);
     expect(links).toEqual([
       ["MoHRE Portal", contact("mohre").url],
       ["ICP Smart Services", contact("icp").url],
       ["GDRFA Dubai (Amer)", contact("amer").url],
       [`Dubai Police eCrime (${contact("ecrime").hotlineLabel})`, contact("ecrime").url],
-      [LIMITS_SECTION, "/check#limits"],
     ]);
+    expect(html).not.toContain("#limits");
     expect(html.match(/target="_blank" rel="noopener noreferrer"/g)).toHaveLength(4);
     expect(html).not.toMatch(/<address|mailto:/i);
   });
@@ -334,31 +332,6 @@ describe("footer", () => {
     expect(prepared.events.map((event) => event.event)).toEqual(["gate_pending"]);
   });
 
-  it("the limits link opens the details element, on a click, on arrival and on back or forward", () => {
-    expect(LIMITS_ID).toBe("limits");
-    const panel = renderToStaticMarkup(createElement(LimitationsPanel));
-    expect(panel).toContain('<details id="limits" class="card accordion limits-details">');
-    expect(read("src/components/LimitationsPanel.tsx")).toContain("<LimitsOpener />");
-    const details = { open: false };
-    expect(openLimits({ getElementById: (id: string) => (id === LIMITS_ID ? details : null) })).toBe(true);
-    expect(details.open).toBe(true);
-    expect(openLimits({ getElementById: () => null })).toBe(false);
-    const arrival = { open: false };
-    syncLimitsToHash({ getElementById: () => arrival }, "#offer");
-    expect(arrival.open).toBe(false);
-    syncLimitsToHash({ getElementById: () => arrival }, "#limits");
-    expect(arrival.open).toBe(true);
-    const clicked = { open: false };
-    vi.stubGlobal("document", { getElementById: (id: string) => (id === LIMITS_ID ? clicked : null) });
-    try {
-      const link = LimitsLink({ children: "x" }) as ReactElement<{ href: string; onClick: () => void }>;
-      expect(link.props.href).toBe("/check#limits");
-      link.props.onClick();
-    } finally {
-      vi.unstubAllGlobals();
-    }
-    expect(clicked.open).toBe(true);
-  });
 
   it("what the site says about itself is true in the code today", () => {
     // English rules, translation first (BATCHB-2).

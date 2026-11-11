@@ -136,8 +136,6 @@ const ENTRIES: Record<string, string> = {
     "لا يبدو هذا النص مكتوبًا بالإنجليزية، أو أن جزءًا منه فقط كذلك. تقرأ القواعد الإنجليزية فقط، لذا لن تُفحص الأجزاء المكتوبة بلغات أخرى.",
   "We could not confirm that all of this text is in English. The rules read English only. You can have it machine translated first, or check the original; parts that are not English will not be checked.":
     "لم نتمكن من التأكد من أن هذا النص كله بالإنجليزية. تقرأ القواعد الإنجليزية فقط. يمكنك ترجمته آليًا أولًا، أو فحص الأصل؛ ولن تُفحص الأجزاء غير الإنجليزية.",
-  "If you agree, text in other languages is sent to Google Cloud Translation, a machine translation service, and the rules read the English it returns. Scam wording can be lost or softened in translation. How well each language is translated has not been measured.":
-    "إذا وافقت، يُرسل النص المكتوب بلغات أخرى إلى Google Cloud Translation، وهي خدمة ترجمة آلية، وتقرأ القواعد النص الإنجليزي الذي تعيده. قد تضيع صياغة الاحتيال أو تخفّ في الترجمة. لم تُقَس جودة ترجمة كل لغة.",
   "Offer text is too long": "نص العرض طويل جدًا",
   "Offer text must be 20,000 characters or fewer.": "يجب ألا يتجاوز نص العرض 20,000 حرف.",
   "Could not reach the server": "تعذّر الوصول إلى الخادم",
@@ -200,7 +198,6 @@ const ENTRIES: Record<string, string> = {
   "low": "منخفض",
   "Most of the text is not in English and was not checked.": "معظم النص ليس بالإنجليزية ولم يُفحص.",
   "Part of the text is not in English and was not checked.": "جزء من النص ليس بالإنجليزية ولم يُفحص.",
-  "A translation can change the meaning.": "قد تغيّر الترجمة المعنى.",
   "Most of this text is not in English, so the rules could not check it. This does not confirm that the offer is genuine.":
     "معظم هذا النص ليس بالإنجليزية، لذا لم تتمكن القواعد من فحصه. هذا لا يؤكد أن العرض حقيقي.",
   "None of the rules matched. This does not confirm that the offer is genuine.":
@@ -451,36 +448,11 @@ const ENTRIES: Record<string, string> = {
     "اختر \"تعديل المسودة\" واستبدل {0} بالتفاصيل الفعلية قبل أن توافق.",
   "and": "و",
 
-  // Limitations
-  "What this check cannot do": "ما لا يستطيع هذا الفحص فعله",
+  // Footer disclaimer lines (the "What this check cannot do" section and its 9 items were removed 2026-11-11, LIMITS-2)
   "Risk indicators, not a verdict. It has been tested on synthetic offers only, not validated on real scam data.":
     "مؤشرات خطر، وليست حكمًا. اختُبر على عروض مصطنعة فقط، ولم يُختبر على بيانات احتيال حقيقية.",
   "A low score does not confirm an offer is genuine. Offer Check does not report anything for you and does not give legal advice. A translation can lose or change meaning.":
     "الدرجة المنخفضة لا تؤكد أن العرض حقيقي. لا يبلّغ Offer Check عن أي شيء نيابةً عنك ولا يقدّم استشارة قانونية. قد تُفقد الترجمة المعنى أو تغيّره.",
-  "Other languages typed in English letters are only partly detected.":
-    "اللغات الأخرى المكتوبة بحروف إنجليزية لا تُكتشف إلا جزئيًا.",
-  "A word check catches common Hindi, Urdu, Arabic, Tagalog, Malayalam, Bengali, Tamil and French words written in English letters, and then shows the text as not checked. Messages under 6 words, and languages it has no words for, can still look like English to the check, and then no translation is offered.":
-    "يلتقط فحص الكلمات كلمات شائعة من الهندية والأردية والعربية والتاغالوغية والمالايالامية والبنغالية والتاميلية والفرنسية مكتوبة بحروف إنجليزية، ثم يعرض النص على أنه لم يُفحص. قد تبدو الرسائل التي تقل عن 6 كلمات، واللغات التي لا يعرف كلماتها، إنجليزيةً للفحص، وعندها لا تُعرض الترجمة.",
-  "The language check uses simple cut-offs.": "يستخدم فحص اللغة حدودًا بسيطة.",
-  "Text counts as not English when at least half of its letters come from another alphabet, or when too few of its words are common English words or too many are common words from other languages. Fewer such letters or words, but still some, mark it as partly English. Very short non-English text, such as a single name, may get no notice. The cut-offs are a design choice and have not been tested on real offers.":
-    "يُعدّ النص غير إنجليزي إذا كان نصف حروفه على الأقل من أبجدية أخرى، أو إذا قلّت فيه الكلمات الإنجليزية الشائعة أو كثرت فيه الكلمات الشائعة من لغات أخرى. وإذا وُجد عدد أقل من هذه الحروف أو الكلمات، لكنه ليس صفرًا، يُعدّ النص إنجليزيًا جزئيًا. قد لا يظهر أي تنبيه لنص قصير جدًا غير إنجليزي، مثل اسم واحد. هذه الحدود خيار تصميمي ولم تُختبر على عروض حقيقية.",
-  "A few of them stay below the cut-off, so no notice is shown.": "بعضها يبقى تحت الحد، فلا يظهر أي تنبيه.",
-  "Look-alike letters can hide words.": "قد تُخفي الحروف المتشابهة بعض الكلمات.",
-  "Some letters from other alphabets look like English letters. If a message uses them, the check can miss the words they appear in.":
-    "بعض حروف الأبجديات الأخرى تشبه الحروف الإنجليزية. إذا استخدمتها رسالة، فقد يفوت الفحص الكلمات التي تظهر فيها.",
-  "Look-alike letters can also keep the language notice away.": "قد تمنع الحروف المتشابهة أيضًا ظهور تنبيه اللغة.",
-  "A request for a code can be missed.": "قد يفوت الفحص طلب رمز.",
-  "It may not be flagged when it is worded indirectly, such as asking what number you received by text message, or when it asks you to type the code into a form without mentioning a link.":
-    "قد لا يُرصد الطلب إذا صيغ بشكل غير مباشر، مثل السؤال عن الرقم الذي وصلك برسالة نصية، أو طلب كتابة الرمز في نموذج دون ذكر رابط.",
-  "A request for a photo of a card can be missed.": "قد يفوت الفحص طلب صورة لبطاقة.",
-  "It may not be flagged if it does not say which kind of card, such as a bank, debit or credit card, and does not mention a card detail, such as the CVV, the expiry date or both sides, in the same sentence. A request for a video of a card can also be missed.":
-    "قد لا يُرصد الطلب إذا لم يذكر نوع البطاقة، مثل البطاقة البنكية أو بطاقة الخصم أو البطاقة الائتمانية، ولم يذكر أحد بياناتها، مثل رمز CVV أو تاريخ الانتهاء أو الوجهين، في الجملة نفسها. وقد يفوت الفحص أيضًا طلب مقطع فيديو لبطاقة.",
-  "Some honest offers can score high.": "قد تحصل بعض العروض الصادقة على درجة مرتفعة.",
-  "Unusual wording about who pays a fee can still be flagged as a fee request, for example when an offer says the company \"sponsors\" or \"arranges\" your visa and medical fees, or names the company in an earlier sentence.":
-    "قد تُرصد صياغة غير معتادة حول من يدفع الرسوم على أنها طلب رسوم، مثلًا عندما يقول العرض إن الشركة \"تكفل\" أو \"ترتّب\" رسوم تأشيرتك وفحصك الطبي، أو عندما يُذكر اسم الشركة في جملة سابقة.",
-  "The check is built for job offers.": "صُمّم الفحص لعروض العمل.",
-  "When a low-scoring text shows no sign of a job offer, such as a role, a salary or an employer, a notice says so. The score still comes only from the fixed rules.":
-    "عندما لا يحمل نص منخفض الدرجة أي علامة على عرض عمل، مثل وظيفة أو راتب أو صاحب عمل، يظهر تنبيه بذلك. وتبقى الدرجة ناتجة عن القواعد الثابتة وحدها.",
 
   // Reference helper and portals
   "Offer letter or work permit reference": "مرجع خطاب العرض أو تصريح العمل",

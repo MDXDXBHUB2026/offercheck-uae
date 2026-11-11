@@ -22,9 +22,9 @@ Job seekers in the UAE who want to check an unsolicited job offer for common sca
 | Language notices | Built: when most or part of the text is not in English, including common Hindi, Urdu, Arabic, Tagalog, Malayalam, Bengali, Tamil or French words typed in English letters, a notice says that text was not checked. Mostly not English shows "Not checked" in place of the score; partly not English with no finding shows "Score 0 on the English part". Never an all-clear. Two buttons then: "Send to Google and translate" and "Check original anyway (not checked)". Offline word lists |
 | Translation (optional) | Built: for text that is not clearly English, a notice says what translation sends and to whom, before any click; only the "Send to Google and translate" button sends the text, once per press, every time, through `/api/translate` to Google Cloud Translation (Basic, v2). The English it returns is checked by the same fixed rules and shown read-only under the original, marked as a machine translation. With no finding the chip is grey, never green. A failure shows an alert and checks nothing. Without a server key the send button is hidden after the first try. Editing the text clears the previous result and stops a request in flight |
 | Offer-likeness notice | Built: a low-scoring text with no signs of a job offer gets a notice. With no finding, the chip reads "Score 0. This text does not look like a job offer." It never changes the score |
-| Limitations disclosure | Built: a short intro is always visible; the 9 limitations sit in a closed "What this check cannot do" section |
+| Limitations disclosure | The one-line notice under the analyzer (English text only, translation can change meaning, a low score does not mean an offer is genuine). The "What this check cannot do" section and its footer link were removed on 2026-11-11 (owner decision, LIMITS-2); the full list is internal, in `docs/known-limitations.md` |
 | Shared header | Built: one header on every page, with the logo, the main navigation (Check, Warning signs, About) and a "Check an offer" link |
-| Footer | Built: one footer on every page, with a "Check an offer" link, a link that opens the limitations, four fact chips (English rules, translation first; No sign-in; Not stored by Offer Check; Human approval) each checked by a test, and the disclaimer |
+| Footer | Built: one footer on every page, with a "Check an offer" link, four fact chips (English rules, translation first; No sign-in; Not stored by Offer Check; Human approval) each checked by a test, and the disclaimer |
 | Warning signs page | Built (`/guide`): eight warning signs of labour and visa fraud, each with why it matters and what to do, paraphrased from one official page (UAE Government Portal, "Tips to avoid labour and visa fraud"), linked at the bottom |
 | About page | Built (`/about`): in plain language, what Offer Check is, the problem, what it does and does not do, who it is for, privacy, and the synthetic-data and legal-advice note; a short "If you think it is a scam" box links four official UAE channels (`src/lib/authorities.ts`), with no phone number or email address. Medium and High results on `/check` link there |
 | Verification (domain and company checks) | Not built yet |
@@ -41,7 +41,7 @@ The checker is at `/check`. The other pages are `/guide` (Warning signs) and `/a
 - Server-side storage of anything, including the audit trail.
 - A real rate limit and cost cap. `/api/translate` has a best-effort throttle (10 requests a minute per client address, in server memory, per instance). The real spend limit is the quota set on the Google Cloud project.
 
-See [docs/known-limitations.md](docs/known-limitations.md) for what the current rules miss and over-match.
+See [docs/known-limitations.md](docs/known-limitations.md) for what the current rules miss and over-match. It is internal documentation; the app does not show this list.
 
 ## How to run
 
@@ -76,7 +76,7 @@ The risk score comes from fixed weights over the rules that fired, so the same E
 ## Docs
 
 - [docs/offercheck-plan.md](docs/offercheck-plan.md): build plan, agent design and acceptance criteria
-- [docs/known-limitations.md](docs/known-limitations.md): known limitations and known misses
+- [docs/known-limitations.md](docs/known-limitations.md): known limitations and known misses (internal; not shown in the app since 2026-11-11)
 - [docs/product-roadmap-v2.md](docs/product-roadmap-v2.md): roadmap
 - [docs/test-report.md](docs/test-report.md): test and evaluation report
 - [docs/defects.md](docs/defects.md): defect register

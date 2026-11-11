@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Gauge, Landmark, Quote, Radio, ShieldCheck } from "lucide-react";
 import { HeroStage } from "@/components/HeroStage";
-import { LimitationsPanel } from "@/components/LimitationsPanel";
+import { AnalyzerNotice } from "@/components/AnalyzerNotice";
 import { OfferChecker } from "@/components/OfferChecker";
 import { SAMPLE_OFFERS } from "@/data/sampleOffers";
 import { RULES } from "@/lib/agents/redFlag";
@@ -71,7 +71,7 @@ export default function CheckPage() {
   return (
     <div className="stack">
       <OfferChecker ruleCount={RULES.length} samples={SAMPLE_OFFERS} hero={hero} />
-      <LimitationsPanel />
+      <AnalyzerNotice />
     </div>
   );
 }

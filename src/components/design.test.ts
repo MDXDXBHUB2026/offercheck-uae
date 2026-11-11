@@ -14,8 +14,7 @@ import { languageNotice } from "@/lib/textScript";
 import { offerSignals } from "@/lib/offerLikeness";
 import { SAMPLE_OFFERS } from "@/data/sampleOffers";
 import { activeNotice } from "./scoreChip";
-import { readLimitations } from "./limitations";
-import { PUBLIC_LIMITS, PUBLIC_LIMITS_INTRO } from "./publicLimitations";
+import { PUBLIC_LIMITS_INTRO } from "./publicLimitations";
 import { OfferChecker, resultAnnouncement } from "./OfferChecker";
 import { ResultCard as ResultsPanel } from "./ResultCard";
 import { scoreArithmetic } from "./scoreArithmetic";
@@ -507,70 +506,29 @@ describe("results panel design", () => {
   });
 });
 
-// COPY-1: the page shows plain-language copy from publicLimitations.ts. The internal detail (file
-// paths, defect ids, phases) stays in docs/known-limitations.md.
-describe("limitations panel (COPY-1)", () => {
-  const publicText = [PUBLIC_LIMITS_INTRO, ...PUBLIC_LIMITS.flatMap((item) => [item.title, item.text])];
-  const FORBIDDEN = ["docs/", "QA defect", "Phase", "Intake v2", "RF-", "LANG-", "COPY-", "holdout", "rules-backlog", "known-limitations", "`"];
-
-  it.each(FORBIDDEN)("public text contains no %j", (term) => {
-    for (const text of publicText) expect(text.toLowerCase()).not.toContain(term.toLowerCase());
-  });
-
-  it("public text is plain ASCII: straight quotes and hyphens, no other script", () => {
-    for (const text of publicText) expect(text).toMatch(/^[\x20-\x7E]+$/);
-  });
-
-  it("has one public item per bullet in the doc section, so no limitation is dropped", () => {
-    expect(PUBLIC_LIMITS).toHaveLength(9);
-    expect(readLimitations().items).toHaveLength(PUBLIC_LIMITS.length);
-  });
-
-  it("the page shows the intro and all 9 items, and none of the doc's internal text", () => {
-    const html = renderToStaticMarkup(createElement(Home));
-    const panel = html.slice(html.indexOf('aria-labelledby="limits-heading"'));
-    expect(panel).toContain("What this check cannot do");
-    expect(panel).toContain(`<p class="small">${escapeHtml(PUBLIC_LIMITS_INTRO)}</p>`);
-    for (const item of PUBLIC_LIMITS) {
-      expect(panel).toContain(`<li><strong>${escapeHtml(item.title)}</strong> ${escapeHtml(item.text)}</li>`);
+// The one-line notice under the analyzer stays (owner, 2026-11-11). The "What this check cannot do"
+// section that followed it was removed (LIMITS-2); the full list is internal, in docs/known-limitations.md.
+describe("the notice under the analyzer", () => {
+  it("is plain ASCII and names no internal detail", () => {
+    for (const term of ["docs/", "QA defect", "Phase", "Intake v2", "RF-", "LANG-", "COPY-", "holdout", "rules-backlog", "known-limitations", "`"]) {
+      expect(PUBLIC_LIMITS_INTRO.toLowerCase()).not.toContain(term.toLowerCase());
     }
-    expect(panel.match(/<li>/g)).toHaveLength(9);
-    for (const term of ["docs/", "QA defect", "Intake v2", "<code>"]) expect(panel).not.toContain(term);
+    expect(PUBLIC_LIMITS_INTRO).toMatch(/^[\x20-\x7E]+$/);
+    expect(PUBLIC_LIMITS_INTRO).toContain('A low score, or "No risk indicators found", does not mean an offer is genuine.');
   });
 
-  // 5b: the intro pair stays visible; the items (9 since BATCHB-2) sit in a native details element, closed on load.
-  it("keeps the intro visible and puts the 9 items in a closed details element with a visible summary", () => {
-    const html = renderToStaticMarkup(createElement(Home));
-    const panel = html.slice(html.indexOf('aria-labelledby="limits-heading"'));
-    const details = panel.match(/<details[^>]*>(.*?)<\/details>/)?.[0] ?? "";
-    const opening = details.match(/<details[^>]*>/)?.[0] ?? "";
-    // UX-3: the id is the footer link's target (#limits); the element is still closed on load.
-    expect(opening).toBe('<details id="limits" class="card accordion limits-details">');
-    expect(opening).not.toContain("open");
-    // The summary is a native, keyboard-focusable control with the visible text.
-    expect(details).toMatch(/^<details[^>]*><summary><span id="limits-heading" class="limits-summary">What this check cannot do<\/span><\/summary>/);
-    expect(details).not.toMatch(/<summary[^>]*(hidden|tabindex="-1"|visually-hidden)/);
-    expect(details.match(/<li>/g)).toHaveLength(9);
-    for (const item of PUBLIC_LIMITS) expect(details).toContain(escapeHtml(item.title));
-    // The intro pair is outside the details element, so it is never hidden.
-    const intro = panel.indexOf(`<p class="small">${escapeHtml(PUBLIC_LIMITS_INTRO)}</p>`);
-    expect(intro).toBeGreaterThan(-1);
-    expect(intro).toBeLessThan(panel.indexOf("<details"));
-    expect(details).not.toContain(escapeHtml(PUBLIC_LIMITS_INTRO));
-    const css = readFileSync(join(process.cwd(), "src/app/globals.css"), "utf8");
-    expect(css).not.toMatch(/\.limits[^{]*summary[^{]*\{[^}]*display:\s*none/);
-  });
-
-  it("shows the intro on the empty state and after the results, below the checker", () => {
+  it("shows on the empty state, below the checker, with no section or details element around it", () => {
     const html = renderToStaticMarkup(createElement(Home));
     const form = html.indexOf('class="card stack input-card"');
-    const limits = html.indexOf('aria-labelledby="limits-heading"');
+    const notice = html.indexOf(`<p class="small">${escapeHtml(PUBLIC_LIMITS_INTRO)}</p>`);
     expect(form).toBeGreaterThan(-1);
-    expect(limits).toBeGreaterThan(form);
-    expect(html.slice(limits)).toContain(escapeHtml(PUBLIC_LIMITS_INTRO));
-    // The panel is a sibling of the checker on the page, so it stays under every result.
+    expect(notice).toBeGreaterThan(form);
+    expect(html).not.toContain("limits-heading");
+    expect(html).not.toContain('id="limits"');
+    expect(html).not.toContain("<details");
+    // A sibling of the checker on the page, so it stays under every result.
     const page = readFileSync(join(process.cwd(), "src/app/check/page.tsx"), "utf8");
-    expect(page).toMatch(/<OfferChecker [^>]*\/>\s*<LimitationsPanel \/>/);
+    expect(page).toMatch(/<OfferChecker [^>]*\/>\s*<AnalyzerNotice \/>/);
   });
 });
 

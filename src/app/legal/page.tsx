@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { BookOpen, Info } from "lucide-react";
-import { LimitsLink } from "@/components/LimitsLink";
 import { PrintButton } from "@/components/PrintButton";
 import { SignAccordion } from "@/components/SignAccordion";
-import { LIMITS_SECTION } from "@/components/publicLimitations";
 import { FOOTER_DISCLAIMER, SYNTHETIC_STATEMENT } from "@/components/shell/site";
 import { TRANSLATE_BUTTON } from "@/components/translateFlow";
 import { Card } from "@/components/ui";
@@ -71,11 +69,6 @@ const ABOUT: { id: string; title: string; body: React.ReactNode }[] = [
             <T>It does not give legal advice.</T>
           </li>
         </ul>
-        <p>
-          <LimitsLink>
-            <T>{LIMITS_SECTION}</T>
-          </LimitsLink>
-        </p>
       </>
     ),
   },
