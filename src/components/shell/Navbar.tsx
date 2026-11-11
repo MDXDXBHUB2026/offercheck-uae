@@ -3,17 +3,40 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { BookOpen, ChevronDown, FileCheck2, Languages, Lock, PhoneCall, Radio, ShieldCheck } from "lucide-react";
+import { BookOpen, ChevronDown, FileCheck2, Languages, Lock, PhoneCall, ShieldCheck } from "lucide-react";
 import { BrandBadge, NAV_ITEMS, type NavItem } from "@/components/shell/site";
 import { restoreLang, setLang, useLang, useT } from "@/components/shell/lang";
+import { restoreMotion } from "@/components/shell/motion";
 import { Button } from "@/components/ui";
 import { useVaultState } from "@/components/vaultStore";
 import { HEADER_HOTLINE_IDS, contact } from "@/data/uaeContacts";
 import { REPORT_FRAUD_NOTE } from "@/lib/authorities";
 
-const ICONS: Record<NavItem["id"], typeof ShieldCheck> = {
+// Threat Radar's icon: a centre dot with an inner and an outer arc on each side, drawn inline so each
+// arc can animate on its own (Phase 3b: the arcs expand and fade like a signal, inner then outer;
+// the dot stays still). Decorative.
+export function SignalIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <circle className="signal-dot" cx="12" cy="12" r="2" fill="currentColor" stroke="none" />
+      <path className="signal-arc signal-arc-inner" d="M8.5 8.5a5 5 0 0 0 0 7M15.5 15.5a5 5 0 0 0 0-7" />
+      <path className="signal-arc signal-arc-outer" d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 18.4a9 9 0 0 0 0-12.8" />
+    </svg>
+  );
+}
+
+const ICONS: Record<NavItem["id"], typeof ShieldCheck | typeof SignalIcon> = {
   analyzer: ShieldCheck,
-  radar: Radio,
+  radar: SignalIcon,
   portals: FileCheck2,
   legal: BookOpen,
   vault: Lock,
@@ -37,6 +60,7 @@ export function Navbar() {
 
   useEffect(() => {
     restoreLang();
+    restoreMotion();
   }, []);
 
   // The tab title follows the interface language on the five main pages. Next sets the page's own
@@ -119,7 +143,10 @@ export function Navbar() {
                   aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
                 >
                   {isCurrent(pathname, item.href) && <span className="tab-dot" aria-hidden="true" />}
-                  <Icon className="icon" aria-hidden="true" />
+                  {/* Phase 3b: only this icon wrapper animates (CSS, no-preference only); the label never does. */}
+                  <span className="nav-icon" data-icon={item.id} aria-hidden="true">
+                    <Icon className="icon" aria-hidden="true" />
+                  </span>
                   <span>{label(item)}</span>
                   {countBadge(item)}
                 </Link>
@@ -134,11 +161,14 @@ export function Navbar() {
               <Button
                 ref={toggleRef}
                 variant="secondary"
+                className="hotline-btn"
                 aria-expanded={hotlinesOpen}
                 aria-controls="hotlines-panel"
                 onClick={() => setHotlinesOpen((open) => !open)}
               >
-                <PhoneCall className="icon text-red" aria-hidden="true" />
+                <span className="hotline-icon" aria-hidden="true">
+                  <PhoneCall className="icon text-red" aria-hidden="true" />
+                </span>
                 <span className="btn-label-wide">{t("UAE Hotlines")}</span>
                 <span className="visually-hidden">{t("UAE hotlines")}</span>
                 <ChevronDown className="icon text-red" aria-hidden="true" />

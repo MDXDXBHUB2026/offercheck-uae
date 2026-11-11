@@ -100,7 +100,9 @@ describe("AI Studio port: motion only when allowed", () => {
       const at = m.index!;
       const inMotion = at > motion.start && at < motion.end;
       const inReduce = at > reduce.start && at < reduce.end;
-      expect(inMotion || inReduce, `${m[0]} at ${at}`).toBe(true);
+      // Phase 3d/3e: outside the block only "animation: none" is allowed (paused switch, print).
+      const stops = css.slice(at, css.indexOf(";", at)) === "animation: none !important";
+      expect(inMotion || inReduce || stops, `${m[0]} at ${at}`).toBe(true);
     }
   });
 

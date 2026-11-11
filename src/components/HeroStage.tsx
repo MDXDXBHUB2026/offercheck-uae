@@ -1,6 +1,7 @@
 "use client";
 
-import { useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { getMotion, useMotion } from "@/components/shell/motion";
 import { Crosshair, Pause, Play, Zap } from "lucide-react";
 import { HeroBackdrop } from "@/components/HeroBackdrop";
 import { useT } from "@/components/shell/lang";
@@ -25,6 +26,24 @@ const EXAMPLES = [
 export function HeroStage({ children }: { children: ReactNode }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [paused, setPaused] = useState(false);
+  // The footer's "Pause animations" (S5-2) also holds the hero: its CSS loops stop through
+  // data-motion on <html>, and the video is paused here. Resuming plays it again only when the
+  // hero's own Pause radar is off and there is no reduced-motion preference.
+  const motion = useMotion();
+  const pausedRef = useRef(paused);
+  useEffect(() => {
+    pausedRef.current = paused;
+  }, [paused]);
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (motion === "paused") video.pause();
+    else if (!pausedRef.current && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      video.play().catch(() => {
+        // Play refused: the poster stays.
+      });
+    }
+  }, [motion]);
   const [glow, setGlow] = useState<"max" | "normal">("max");
   const t = useT();
 
@@ -34,7 +53,7 @@ export function HeroStage({ children }: { children: ReactNode }) {
     const video = videoRef.current;
     if (!video) return;
     if (next) video.pause();
-    else if (!window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    else if (getMotion() !== "paused" && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
       video.play().catch(() => {
         // Play refused: the poster stays.
       });

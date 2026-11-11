@@ -2827,6 +2827,293 @@ details.card > summary {
   details[open] > :not(summary) {
     animation: rise-in var(--dur) var(--ease-out);
   }
+
+  /* Phase 3b: only the icon inside each header label moves; labels never animate. Opacity and
+     transform (or a pseudo-element's opacity) only, so nothing shifts the layout. Every loop is
+     slower than one cycle a second, so nothing flashes. The calmest icons dim to 0.7 at most (the
+     signal arcs to 0.55): measured contrast stays above 3:1 on the header (docs/test-report.md). */
+
+  /* Offer Analyzer: a soft glow rises and falls behind the shield. Inside the tab, which clips it,
+     so it never reaches the next label. */
+  .nav-icon[data-icon="analyzer"]::before {
+    position: absolute;
+    inset: 0;
+    border-radius: var(--r-full);
+    box-shadow: 0 0 8px 2px var(--glow-green);
+    opacity: 0;
+    content: "";
+    pointer-events: none;
+    animation: icon-glow 3.6s ease-in-out infinite;
+  }
+
+  /* Threat Radar: the arcs swell and fade like a signal going out, inner then outer; the centre dot
+     stays still. */
+  .signal-arc {
+    transform-box: view-box;
+    transform-origin: 12px 12px;
+    animation: signal-arc 2.4s ease-in-out infinite;
+  }
+
+  .signal-arc-outer {
+    animation-delay: 0.5s;
+  }
+
+  /* Gov Portals Hub, Legal Guidelines, Encrypted Vault: one calm breath each, out of phase. */
+  .nav-icon[data-icon="portals"] .icon,
+  .nav-icon[data-icon="legal"] .icon,
+  .nav-icon[data-icon="vault"] .icon {
+    animation: icon-breathe 6s ease-in-out infinite;
+  }
+
+  .nav-icon[data-icon="legal"] .icon {
+    animation-delay: -2s;
+  }
+
+  .nav-icon[data-icon="vault"] .icon {
+    animation-delay: -4s;
+  }
+
+  /* UAE Hotlines: a red halo ring spreads from the phone and fades; the button's red glow rises
+     from nothing to a clear halo, then starts again. The glow is a shadow outside the button, so the
+     button's own text and background (and their contrast) never change. The hover sheen is off on
+     this button so the glow is not clipped. */
+  .hotline-icon::after {
+    position: absolute;
+    inset: -3px;
+    border: 2px solid var(--red);
+    border-radius: var(--r-full);
+    opacity: 0;
+    content: "";
+    pointer-events: none;
+    animation: halo-ring 2.8s ease-out infinite;
+  }
+
+  .btn.hotline-btn:not([aria-disabled="true"]):not(:disabled) {
+    overflow: visible;
+  }
+
+  .btn.hotline-btn:not([aria-disabled="true"]):not(:disabled)::after {
+    content: none;
+  }
+
+  .hotline-btn::before {
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    box-shadow: 0 0 10px 1px var(--glow-red);
+    opacity: 0;
+    content: "";
+    pointer-events: none;
+    animation: glow-rise 4s ease-in infinite;
+  }
+
+  @keyframes icon-glow {
+    0%,
+    100% {
+      opacity: 0.15;
+    }
+
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes signal-arc {
+    0%,
+    100% {
+      opacity: 0.55;
+      scale: 0.88;
+    }
+
+    50% {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+
+  @keyframes icon-breathe {
+    0%,
+    100% {
+      opacity: 1;
+    }
+
+    50% {
+      opacity: 0.7;
+    }
+  }
+
+  @keyframes halo-ring {
+    0% {
+      opacity: 0.8;
+      scale: 0.6;
+    }
+
+    100% {
+      opacity: 0;
+      scale: 1.45;
+    }
+  }
+
+  @keyframes glow-rise {
+    0% {
+      opacity: 0;
+    }
+
+    80% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0;
+    }
+  }
+
+  /* Phase 3e: every keyframe lives inside this block, so with a reduced-motion preference no
+     animation exists at all. */
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+
+  @keyframes pulse {
+    50% {
+      opacity: 0.5;
+    }
+  }
+
+  @keyframes aurora-flow {
+    0%,
+    100% {
+      background-position: 0% 0;
+    }
+
+    50% {
+      background-position: 100% 0;
+    }
+  }
+
+  @keyframes drop-in {
+    from {
+      opacity: 0;
+      translate: 0 -8px;
+    }
+  }
+
+  @keyframes page-in {
+    from {
+      opacity: 0;
+      translate: 0 8px;
+    }
+  }
+
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      translate: 0 16px;
+    }
+  }
+
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      scale: 0.96;
+    }
+  }
+
+  @keyframes orb-drift {
+    to {
+      translate: -40px 24px;
+      scale: 1.15;
+    }
+  }
+
+  @keyframes ping {
+    from {
+      opacity: 0.8;
+      scale: 1;
+    }
+
+    to {
+      opacity: 0;
+      scale: 2.4;
+    }
+  }
+
+  @keyframes ribbon-drift {
+    to {
+      background-position: 100% 0;
+    }
+  }
+
+  @keyframes blip {
+    0% {
+      opacity: 1;
+      scale: 1.5;
+    }
+
+    6% {
+      opacity: 1;
+      scale: 1;
+    }
+
+    60%,
+    100% {
+      opacity: 0.25;
+      scale: 1;
+    }
+  }
+
+  @keyframes orb-pulse {
+    50% {
+      opacity: 0.55;
+      scale: 1.12;
+    }
+  }
+
+  @keyframes progress-sweep {
+    from {
+      translate: -100% 0;
+    }
+
+    to {
+      translate: 100% 0;
+    }
+  }
+
+  @keyframes gauge-fill {
+    from {
+      stroke-dashoffset: 100;
+    }
+  }
+}
+
+
+/* Phase 3b: the header icon wrappers. Static: the size and place of the 16px icon do not change. */
+.nav-icon,
+.hotline-icon {
+  position: relative;
+  display: inline-flex;
+  flex-shrink: 0;
+}
+
+.nav-icon .icon {
+  position: relative;
+}
+
+.footer-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-3);
+}
+
+/* "Pause animations" (S5-2): one attribute on <html> stops every loop on the page, the header
+   icons, the logo ping, the flag line, the aurora band and the hero included. */
+:root[data-motion="paused"] *,
+:root[data-motion="paused"] *::before,
+:root[data-motion="paused"] *::after {
+  animation: none !important;
 }
 
 /* With a reduced-motion preference nothing above applies; this also stops any motion a browser or
@@ -2842,129 +3129,19 @@ details.card > summary {
   }
 }
 
-@keyframes spin {
-  to {
-    transform: rotate(360deg);
-  }
-}
-
-@keyframes pulse {
-  50% {
-    opacity: 0.5;
-  }
-}
-
-@keyframes aurora-flow {
-  0%,
-  100% {
-    background-position: 0% 0;
-  }
-
-  50% {
-    background-position: 100% 0;
-  }
-}
-
-@keyframes drop-in {
-  from {
-    opacity: 0;
-    translate: 0 -8px;
-  }
-}
-
-@keyframes page-in {
-  from {
-    opacity: 0;
-    translate: 0 8px;
-  }
-}
-
-@keyframes rise-in {
-  from {
-    opacity: 0;
-    translate: 0 16px;
-  }
-}
-
-@keyframes pop-in {
-  from {
-    opacity: 0;
-    scale: 0.96;
-  }
-}
-
-@keyframes orb-drift {
-  to {
-    translate: -40px 24px;
-    scale: 1.15;
-  }
-}
-
-@keyframes ping {
-  from {
-    opacity: 0.8;
-    scale: 1;
-  }
-
-  to {
-    opacity: 0;
-    scale: 2.4;
-  }
-}
-
-@keyframes ribbon-drift {
-  to {
-    background-position: 100% 0;
-  }
-}
-
-@keyframes blip {
-  0% {
-    opacity: 1;
-    scale: 1.5;
-  }
-
-  6% {
-    opacity: 1;
-    scale: 1;
-  }
-
-  60%,
-  100% {
-    opacity: 0.25;
-    scale: 1;
-  }
-}
-
-@keyframes orb-pulse {
-  50% {
-    opacity: 0.55;
-    scale: 1.12;
-  }
-}
-
-@keyframes progress-sweep {
-  from {
-    translate: -100% 0;
-  }
-
-  to {
-    translate: 100% 0;
-  }
-}
-
-@keyframes gauge-fill {
-  from {
-    stroke-dashoffset: 100;
-  }
-}
-
 /* ---------- Print (Export PDF) ---------- */
 .print-only {
   display: none;
 }
 
 @media print {
+  /* Nothing moves on paper or in a PDF. */
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+  }
+
   .accordion-panel {
     grid-template-rows: 1fr !important;
     visibility: visible !important;

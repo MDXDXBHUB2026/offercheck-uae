@@ -138,7 +138,7 @@ describe("header", () => {
 
   it("the hotlines dropdown is a button that names what it controls; closed on load", () => {
     const html = header();
-    expect(html).toMatch(/<button type="button" class="btn btn-secondary" aria-expanded="false" aria-controls="hotlines-panel">/);
+    expect(html).toMatch(/<button type="button" class="btn btn-secondary hotline-btn" aria-expanded="false" aria-controls="hotlines-panel">/);
     expect(html).not.toContain('id="hotlines-panel"');
     expect(HEADER_HOTLINE_IDS).toEqual(["mohre", "amer", "ecrime"]);
     // The numbers it lists come from the one contacts file.
@@ -219,7 +219,8 @@ describe("Offer Analyzer hero", () => {
       expect(backdrop).not.toMatch(/autoplay|controls/i);
       // Started from script only when motion is allowed.
       const source = read("src/components/HeroBackdrop.tsx");
-      expect(source).toContain('window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;');
+      // Phase 3d: nor while "Pause animations" is on.
+      expect(source).toContain('window.matchMedia("(prefers-reduced-motion: reduce)").matches || getMotion() === "paused") return;');
     });
 
     // S5-1 closed (WCAG 2.2.2, Pause, Stop, Hide): the hero has a Pause radar control that stops the

@@ -69,6 +69,8 @@ const ENTRIES: Record<string, string> = {
   "Demo data, not your text": "بيانات تجريبية، وليست نصك",
   "Demo animation": "رسوم تجريبية",
   "Pause radar": "إيقاف الرادار مؤقتًا",
+  "Pause animations": "إيقاف الحركة مؤقتًا",
+  "Resume animations": "استئناف الحركة",
   "Resume radar": "استئناف الرادار",
   "Glow: Max": "التوهج: أقصى",
   "Glow: Normal": "التوهج: عادي",

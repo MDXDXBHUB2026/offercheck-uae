@@ -2,6 +2,7 @@ import { ExternalLink, Lock, ShieldAlert, ShieldCheck } from "lucide-react";
 import { LimitsLink } from "@/components/LimitsLink";
 import { LIMITS_SECTION } from "@/components/publicLimitations";
 import { ArabicNote } from "@/components/shell/ArabicNote";
+import { MotionToggle } from "@/components/shell/MotionToggle";
 import { contact } from "@/data/uaeContacts";
 import { T } from "@/components/shell/T";
 
@@ -113,7 +114,10 @@ export function SiteFooter() {
               <T>Encrypted Vault data stays in this browser</T>
             </span>
           </p>
-          <ArabicNote />
+          <div className="footer-controls">
+            <MotionToggle />
+            <ArabicNote />
+          </div>
         </div>
       </div>
     </footer>

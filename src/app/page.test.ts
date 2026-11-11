@@ -36,7 +36,12 @@ describe("home page", () => {
 // Two files may use browser storage, both named in the notice or the footer and checked below: the
 // Encrypted Vault (only ciphertext, on the user's Save Encrypted) and the language switch (only
 // "en" or "ar"). Every other file stays free of storage.
-const STORAGE_ALLOWED = [join("src", "lib", "vault.ts"), join("src", "components", "shell", "lang.ts")];
+const STORAGE_ALLOWED = [
+  join("src", "lib", "vault.ts"),
+  join("src", "components", "shell", "lang.ts"),
+  // Phase 3d: the "Pause animations" choice, and nothing else.
+  join("src", "components", "shell", "motion.ts"),
+];
 
 describe("no logging or storage of offer text", () => {
   const files = [...sourceFiles(join(process.cwd(), "src")), join(process.cwd(), "next.config.ts")];
@@ -55,6 +60,9 @@ describe("no logging or storage of offer text", () => {
     const lang = read(STORAGE_ALLOWED[1]);
     expect(lang.match(/localStorage\.setItem\(([^)]*)\)/g)).toEqual(["localStorage.setItem(STORAGE_KEY, lang)"]);
     expect(lang).not.toMatch(/\bconsole\.\w+|sessionStorage|indexedDB|document\.cookie/);
+    const motion = read(STORAGE_ALLOWED[2]);
+    expect(motion.match(/localStorage\.setItem\(([^)]*)\)/g)).toEqual(["localStorage.setItem(MOTION_STORAGE_KEY, motion)"]);
+    expect(motion).not.toMatch(/\bconsole\.\w+|sessionStorage|indexedDB|document\.cookie/);
   });
 
   it("finds the source files", () => {

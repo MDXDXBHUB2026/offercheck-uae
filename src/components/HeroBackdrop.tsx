@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type RefObject } from "react";
+import { getMotion } from "@/components/shell/motion";
 
 // The silent, looping, decorative video behind the Offer Analyzer hero: a tilted wall of glass
 // offer cards in emerald and cyan (made by scripts/make-hero-loop.py; no words, no numbers, no audio
@@ -13,7 +14,7 @@ export function HeroBackdrop({ videoRef }: { videoRef?: RefObject<HTMLVideoEleme
   const ref = videoRef ?? ownRef;
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || getMotion() === "paused") return;
     ref.current?.play().catch(() => {
       // Autoplay refused: the poster stays, which is fine for a decorative backdrop.
     });
