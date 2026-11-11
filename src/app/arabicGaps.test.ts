@@ -124,13 +124,16 @@ describe("4a: the review note", () => {
 });
 
 describe("4f: rule IDs stay left-to-right in Arabic lines", () => {
-  it("every RF-nnn on the Arabic result card is inside <bdi dir=\"ltr\">", () => {
+  // Since the plain-language findings change (2026-11-11) the IDs are only in "How this was
+  // checked" (and the audit trail, which is kept in English); each one is still isolated.
+  it("every RF-nnn on the Arabic result card is inside an LTR <bdi>, and only in How this was checked", () => {
     nav.lang = "ar";
     const markup = renderToStaticMarkup(createElement(ResultCard, { result: runManager(SCAM_OFFER), ruleCount: 5 }));
-    const all = markup.match(/RF-\d{3}/g) ?? [];
-    const isolated = markup.match(/<bdi dir="ltr">RF-\d{3}<\/bdi>/g) ?? [];
+    const all = markup.match(/RF-\d{3}(?:-W)?/g) ?? [];
+    const isolated = markup.match(/<bdi [^>]*dir="ltr"[^>]*>RF-\d{3}(?:-W)?<\/bdi>/g) ?? [];
     expect(all.length).toBeGreaterThan(0);
     expect(isolated.length).toBe(all.length);
+    expect(markup.slice(0, markup.indexOf('class="stack-sm rule-refs"'))).not.toMatch(/RF-\d{3}/);
   });
 
   it("the Arabic tab labels shortened in Phase 3 are the compact bar's words", () => {

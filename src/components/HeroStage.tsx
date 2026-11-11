@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getMotion, useMotion } from "@/components/shell/motion";
-import { WithCodes } from "@/components/ui";
+import { heroExamples } from "@/data/heroExamples";
 import { Crosshair, Pause, Play, Zap } from "lucide-react";
 import { HeroBackdrop } from "@/components/HeroBackdrop";
 import { useT } from "@/components/shell/lang";
@@ -16,13 +16,13 @@ import { useT } from "@/components/shell/lang";
 // animation and the video (WCAG 2.2.2, closes S5-1). All motion is in the no-preference block of
 // globals.css, so with a reduced-motion preference the radar is a still picture.
 
-// Three example rows, each a rule the engine really has (src/lib/agents/redFlag.ts) or the official
-// check it points to. Demo data: they do not come from the user's text. The badge counts these rows.
-const EXAMPLES = [
-  { tone: "high", text: "fee asked", tag: "RF-001" },
-  { tone: "medium", text: "free e-mail sender", tag: "RF-005" },
-  { tone: "green", text: "MoHRE reference", tag: "check on MoHRE" },
-] as const;
+// Three example rows with concrete values read from the synthetic "Visa fee before joining" sample
+// (src/data/heroExamples.ts): what the rules find in it, and the official check it points to. Demo
+// data: they do not come from the user's text. The badge counts these rows. No rule IDs here; they
+// appear only in "How this was checked" and the audit trail.
+const EXAMPLES = heroExamples();
+// Stands in for {0} in the translated template, so the value can be placed as its own element.
+const SLOT = "\u0000";
 
 export function HeroStage({ children }: { children: ReactNode }) {
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -103,20 +103,36 @@ export function HeroStage({ children }: { children: ReactNode }) {
           </div>
           <ul className="hud-rows mono">
             {EXAMPLES.map((row) => (
-              <li key={row.text}>
+              <li key={row.label}>
                 <span className={`dot dot-${row.tone}`} aria-hidden="true" />
-                <span>{t(row.text)}</span>
+                <span>{t(row.label)}</span>
                 <span className="hud-tag">
-                  <WithCodes text={t(row.tag)} />
+                  {row.arg === undefined ? (
+                    t(row.value)
+                  ) : (
+                    // The sample value (an amount, a domain) is data: isolated left to right inside
+                    // the translated words, so "AED 1,950" and "gmail.com" read correctly in Arabic.
+                    t(row.value, SLOT)
+                      .split(SLOT)
+                      .map((part, index) =>
+                        index === 0 ? (
+                          part
+                        ) : (
+                          <span key={index}>
+                            <bdi dir="ltr" lang="en">
+                              {row.arg}
+                            </bdi>
+                            {part}
+                          </span>
+                        ),
+                      )
+                  )}
                 </span>
               </li>
             ))}
           </ul>
           <p className="hud-foot">
             <span>{t("Demo data, not your text")}</span>
-            <span className="mono" dir="ltr">
-              {t("Dubai")} 25.20° N, 55.27° E
-            </span>
           </p>
         </div>
 

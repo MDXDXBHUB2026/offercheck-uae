@@ -22,7 +22,7 @@ import {
 import { AgentRun } from "@/components/AgentRun";
 import { scoreArithmetic } from "@/components/scoreArithmetic";
 import { allClearShown, noticeFor, qualifiedSummary, reportLinkShown, scoreChip, type Notice } from "@/components/scoreChip";
-import { Button, ButtonLink, Callout, Card, Chip, Disclosure, WithCodes, cx, type ChipTone, type Tone } from "@/components/ui";
+import { Button, ButtonLink, Callout, Card, Chip, Disclosure, cx, type ChipTone, type Tone } from "@/components/ui";
 import { contact, MOHRE_INQUIRY_URL } from "@/data/uaeContacts";
 import { mainChannels, REPORT_FRAUD_ID, REPORT_FRAUD_NOTE, REPORT_LINK_SENTENCE } from "@/lib/authorities";
 import { CHECK_LABELS, CHECK_NOTES } from "@/lib/checkLabels";
@@ -163,10 +163,8 @@ function FlagCard({
           <p className="quote">{quote}</p>
         </div>
       ))}
+      {/* No rule ID here: the title above is the plain name. The ID is in "How this was checked". */}
       <div className="row-between">
-        <p className="small muted">
-          <WithCodes text={t("Rule {0}", finding.source)} />
-        </p>
         <div className="row no-print">
           <Button
             variant="secondary"
@@ -413,9 +411,6 @@ export function ResultCard({
             return (
               <li key={dimension.title} className={cx("dimension", found && `dimension-found tone-${dimTone}`)}>
                 <span className="dimension-title">{t(dimension.title)}</span>
-                <span className="dimension-rules mono">
-                  <WithCodes text={dimension.rules.join(" / ")} />
-                </span>
                 <span className="dimension-bar" aria-hidden="true">
                   <span className="dimension-fill" />
                 </span>
@@ -579,9 +574,6 @@ export function ResultCard({
                       {quote}
                     </p>
                   ))}
-                  <p className="small muted">
-          <WithCodes text={t("Rule {0}", finding.source)} />
-        </p>
                 </li>
               ))}
             </ul>
@@ -699,6 +691,31 @@ export function ResultCard({
           aggregatorSummary={qualifiedSummary(risk, findings, notice) ?? undefined}
           intakeNote={intakeNote(state, sourceLang)}
         />
+        {/* The only place on the card with rule IDs: each matched rule's plain name, its points and
+            its ID as a small reference, so the score can be traced to the rules. */}
+        {findings.length > 0 && (
+          <div className="stack-sm rule-refs">
+            <h3 className="h3">{t("Rules that matched")}</h3>
+            <ul className="stack-sm small">
+              {riskFindings.map((finding) => (
+                <li key={finding.source}>
+                  {t(CHECK_LABELS[finding.check] ?? finding.check)}: {t("+{0} points", SEVERITY_WEIGHTS[finding.severity])}{" "}
+                  <bdi className="rule-ref muted" dir="ltr">
+                    {finding.source}
+                  </bdi>
+                </li>
+              ))}
+              {warningMentions.map((finding) => (
+                <li key={finding.source}>
+                  {t(CHECK_LABELS[finding.check] ?? finding.check)}: {t("Mentioned in a warning, not counted in the score")}{" "}
+                  <bdi className="rule-ref muted" dir="ltr">
+                    {finding.source}
+                  </bdi>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </Disclosure>
 
       {children}

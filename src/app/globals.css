@@ -1842,7 +1842,6 @@ select:focus-visible {
   font-weight: 700;
 }
 
-.dimension-rules,
 .dimension-status {
   color: var(--muted);
   font-size: var(--fs-xs);
@@ -1999,6 +1998,17 @@ select:focus-visible {
 
 .result-head-row {
   align-items: flex-start;
+}
+
+/* "How this was checked": the rule ID as a small reference after each plain name. */
+.rule-refs ul {
+  margin: 0;
+  padding-inline-start: var(--sp-4);
+}
+
+.rule-ref {
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
 }
 
 /* The result actions on the score's row: at the end of the row (right in English, left in Arabic),

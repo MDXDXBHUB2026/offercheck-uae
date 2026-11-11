@@ -86,9 +86,14 @@ const ENTRIES: Record<string, string> = {
   "Look-alike sender": "مرسل منتحل",
   "Standard offer letter": "خطاب عرض عادي",
   "Deposit and bank documents": "عربون ومستندات بنكية",
-  "fee asked": "طلب رسوم",
-  "check on MoHRE": "تحقق عبر الوزارة",
-  "free e-mail sender": "مرسل ببريد مجاني",
+  // [review] hero "Example findings" rows, values read from the "Visa fee before joining" sample (2026-11-11).
+  "Fee asked before joining": "رسوم مطلوبة قبل الالتحاق بالعمل",
+  // [review]
+  "Free email sender": "مرسل ببريد مجاني",
+  // [review] {0} is the sender's domain, such as gmail.com.
+  "{0} address": "عنوان {0}",
+  // [review]
+  "check on the MoHRE site": "تحقق عبر موقع وزارة الموارد البشرية والتوطين",
   "WhatsApp code request": "طلب رمز عبر واتساب",
 
   // Offer checker
@@ -283,7 +288,10 @@ const ENTRIES: Record<string, string> = {
   "Highlights in your text": "التمييز في نصك",
   "{0} rule, +{1} points": "قاعدة {0}، +{1} نقطة",
   "Quoted from the offer": "مقتبس من العرض",
-  "Rule {0}": "القاعدة {0}",
+  // [review] "How this was checked": each matched rule's plain name, points and ID (2026-11-11).
+  "Rules that matched": "القواعد المتطابقة",
+  // [review]
+  "+{0} points": "+{0} نقطة",
   "Copy quote": "نسخ الاقتباس",
   "Copied": "تم النسخ",
   "Add to Threat Radar": "أضف إلى رادار التهديدات",

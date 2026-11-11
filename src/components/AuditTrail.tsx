@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Chip, Disclosure, type ChipTone } from "@/components/ui";
 import { verifyAuditLog, type AuditEntry, type AuditValue, type ChainCheck } from "@/lib/audit";
+import { ruleName } from "@/lib/ruleNames";
 import { useT } from "@/components/shell/lang";
 
 const HASH_SHOWN = 12;
@@ -11,7 +12,14 @@ const STATUS_LABELS: Record<string, string> = {
   not_implemented: "not implemented yet",
 };
 
+// Rule IDs are shown with their plain name first, the ID as the reference, for example
+// "Uses a free email address (RF-005)". Display only: the entry and its hash keep the bare IDs.
+const RULE_ID_KEYS = new Set(["ruleIds", "warningIds"]);
+
 function show(key: string, value: AuditValue): string {
+  if (Array.isArray(value) && RULE_ID_KEYS.has(key)) {
+    return value.length === 0 ? "none" : value.map((id) => `${ruleName(String(id))} (${String(id)})`).join(", ");
+  }
   if (Array.isArray(value)) return value.length === 0 ? "none" : value.join(", ");
   if (key === "status" && typeof value === "string") return STATUS_LABELS[value] ?? value;
   return value === null ? "n/a" : String(value);
