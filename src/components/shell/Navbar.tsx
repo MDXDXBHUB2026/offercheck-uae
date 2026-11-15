@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { BookOpen, ChevronDown, FileCheck2, Languages, Lock, PhoneCall, ShieldCheck } from "lucide-react";
-import { BrandBadge, NAV_ITEMS, type NavItem } from "@/components/shell/site";
+import { Fragment, useEffect, useRef, useState, type KeyboardEvent } from "react";
+import { BookOpen, ChevronDown, FileCheck2, Info, Languages, Lock, PhoneCall, ShieldCheck } from "lucide-react";
+import { BrandBadge, NAV_GROUPS, NAV_ITEMS, type NavItem } from "@/components/shell/site";
 import { restoreLang, setLang, useLang, useT } from "@/components/shell/lang";
 import { restoreMotion } from "@/components/shell/motion";
 import { Button } from "@/components/ui";
@@ -40,16 +40,17 @@ const ICONS: Record<NavItem["id"], typeof ShieldCheck | typeof SignalIcon> = {
   portals: FileCheck2,
   legal: BookOpen,
   vault: Lock,
+  about: Info,
 };
 
-// The page the link points at is the current one. "/" shows the Offer Analyzer; /guide and /about
-// redirect to the tabs that now hold their content.
+// The page the link points at is the current one. "/" shows the Offer Analyzer; /guide redirects
+// to Legal Guidelines.
 export function isCurrent(pathname: string, href: string): boolean {
   return pathname === href || (href === "/check" && pathname === "/");
 }
 
-// The reference app's header: UAE flag ribbon (its colours drift slowly when motion is allowed), logo and title, five tabs (a bar under the header
-// below 1200px), the hotlines dropdown and the English / Arabic switch. Tabs are real links, so
+// The reference app's header: UAE flag ribbon (its colours drift slowly when motion is allowed), logo and title, six tabs in two groups, Tools and
+// Information, with a divider between them (a three-by-two bar under the header below 1200px), the hotlines dropdown and the English / Arabic switch. Tabs are real links, so
 // navigation works without JavaScript.
 export function Navbar() {
   const pathname = usePathname() ?? "/";
@@ -63,7 +64,7 @@ export function Navbar() {
     restoreMotion();
   }, []);
 
-  // The tab title follows the interface language on the five main pages. Next sets the page's own
+  // The tab title follows the interface language on the six main pages. Next sets the page's own
   // (English) title after a navigation, so while Arabic is on the title is set again when it changes.
   useEffect(() => {
     const item = NAV_ITEMS.find((entry) => isCurrent(pathname, entry.href));
@@ -97,7 +98,7 @@ export function Navbar() {
   }
 
   const t = useT();
-  const label = (item: NavItem) => (lang === "ar" ? item.labelAr : item.label);
+  const label = (item: NavItem) => (lang === "ar" ? item.labelAr : item.short);
   // The number of saved results on the Vault tab, from the plain count kept beside the encrypted
   // vault: no passphrase needed, and no title or text is read.
   const vault = useVaultState();
@@ -133,25 +134,32 @@ export function Navbar() {
           </Link>
 
           <nav aria-label={t("Main")} className="nav-desktop">
-            {NAV_ITEMS.map((item) => {
-              const Icon = ICONS[item.id];
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="tab"
-                  aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
-                >
-                  {isCurrent(pathname, item.href) && <span className="tab-dot" aria-hidden="true" />}
-                  {/* Phase 3b: only this icon wrapper animates (CSS, no-preference only); the label never does. */}
-                  <span className="nav-icon" data-icon={item.id} aria-hidden="true">
-                    <Icon className="icon" aria-hidden="true" />
-                  </span>
-                  <span>{label(item)}</span>
-                  {countBadge(item)}
-                </Link>
-              );
-            })}
+            {NAV_GROUPS.map((group, index) => (
+              <Fragment key={group.id}>
+                {index > 0 && <span className="nav-divider" aria-hidden="true" />}
+                <div role="group" aria-label={t(group.label)} className="nav-group" data-group={group.id}>
+                  {NAV_ITEMS.filter((item) => item.group === group.id).map((item) => {
+                    const Icon = ICONS[item.id];
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href}
+                        className="tab"
+                        aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
+                      >
+                        {isCurrent(pathname, item.href) && <span className="tab-dot" aria-hidden="true" />}
+                        {/* Phase 3b: only this icon wrapper animates (CSS, no-preference only); the label never does. */}
+                        <span className="nav-icon" data-icon={item.id} aria-hidden="true">
+                          <Icon className="icon" aria-hidden="true" />
+                        </span>
+                        <span>{label(item)}</span>
+                        {countBadge(item)}
+                      </Link>
+                    );
+                  })}
+                </div>
+              </Fragment>
+            ))}
           </nav>
 
           <div className="header-actions">
@@ -204,12 +212,14 @@ export function Navbar() {
           </div>
         </div>
 
+        {/* Below 1200px: the same six links, one row per group (Tools, then Information). */}
         <nav aria-label={t("Main (compact)")} className="nav-mobile">
           {NAV_ITEMS.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className="tab"
+              data-group={item.group}
               aria-current={isCurrent(pathname, item.href) ? "page" : undefined}
             >
               {t(item.short)}

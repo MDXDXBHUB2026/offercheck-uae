@@ -112,7 +112,8 @@ describe("the button is called Save to Encrypted Vault everywhere", () => {
     expect(vault).toContain(`choose ${NEW_NAME} on the result`);
     expect(vault).toContain(`Results you save with ${NEW_NAME} stay in this browser`);
     expect(read("src/components/shell/site.tsx")).toContain(`${NEW_NAME} keeps an encrypted copy`);
-    expect(read("src/app/legal/page.tsx")).toContain(`${NEW_NAME} keeps an encrypted copy`);
+    // Production hardening Phase 3 (2026-11-15): the privacy line moved from /legal#about to /about.
+    expect(read("src/app/about/page.tsx")).toContain(`${NEW_NAME} keeps an encrypted copy`);
   });
 
   it("Arabic: every entry that names it uses the vault's Arabic name, marked for review", () => {

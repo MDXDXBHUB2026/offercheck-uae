@@ -3,19 +3,21 @@ import { join } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { FOOTER_DISCLAIMER, SYNTHETIC_STATEMENT } from "@/components/shell/site";
-import { TRANSLATE_BUTTON } from "@/components/translateFlow";
 import { AUTHORITIES, mainChannels, REPORT_FRAUD_ID, REPORT_FRAUD_NOTE } from "@/lib/authorities";
 import { WARNING_SIGNS, WARNING_SIGNS_SOURCE } from "@/lib/warningSigns";
 import { REDIRECTS } from "../../next.config";
+import * as about from "./about/page";
 import * as legal from "./legal/page";
 import * as portals from "./portals/page";
+import * as privacy from "./privacy/page";
+import * as terms from "./terms/page";
 import * as radar from "./radar/page";
 import * as vault from "./vault/page";
 
 // The public doc pages after the redesign: Legal Guidelines (/legal) holds the Warning signs (was
-// /guide) and the About text (was /about, now /legal#about); the Gov Portals Hub (/portals) holds
-// the report-fraud box. Plain language, static, fixed text only.
+// /guide); the Gov Portals Hub (/portals) holds the report-fraud box. Plain language, static, fixed
+// text only. About, Privacy and Terms (production hardening Phase 3) are checked in
+// src/app/policyPages.test.ts.
 const read = (file: string) => readFileSync(join(process.cwd(), file), "utf8").replaceAll("\r\n", "\n");
 const render = (page: () => React.ReactNode) => renderToStaticMarkup(createElement(page));
 const decode = (html: string) =>
@@ -29,80 +31,23 @@ const decode = (html: string) =>
     .replace(/\s+/g, " ");
 const LEGAL = render(legal.default);
 const PORTALS = render(portals.default);
-const ABOUT = LEGAL.slice(LEGAL.indexOf('id="about"'));
-const GUIDE = LEGAL.slice(0, LEGAL.indexOf('id="about"'));
+const GUIDE = LEGAL;
 
-describe("/about and /guide keep working", () => {
-  it("redirect to their new places in Legal Guidelines", () => {
-    expect(REDIRECTS).toEqual([
-      { source: "/guide", destination: "/legal", permanent: false },
-      { source: "/about", destination: "/legal#about", permanent: false },
-    ]);
-    expect(existsSync(join(process.cwd(), "src/app/about/page.tsx"))).toBe(false);
+describe("/guide keeps working; /about is its own page again", () => {
+  // Production hardening Phase 3 (owner decision, 2026-11-15): /about no longer redirects to
+  // /legal#about; the About text moved out of Legal Guidelines into src/app/about/page.tsx.
+  it("only /guide redirects, to Legal Guidelines", () => {
+    expect(REDIRECTS).toEqual([{ source: "/guide", destination: "/legal", permanent: false }]);
+    expect(existsSync(join(process.cwd(), "src/app/about/page.tsx"))).toBe(true);
     expect(existsSync(join(process.cwd(), "src/app/guide/page.tsx"))).toBe(false);
     expect(read("next.config.ts")).toContain("return REDIRECTS;");
   });
-});
 
-describe("/legal#about (was /about)", () => {
-  it("says what Offer Check UAE is, the problem, what it does, who it is for", () => {
-    const text = decode(ABOUT);
-    expect(text).toContain("Offer Check UAE is a free tool that looks for common warning signs in a job offer");
-    expect(text).toContain("Some job offers sent in the UAE by WhatsApp, email or LinkedIn are fake or risky.");
-    expect(text).toContain("It reads the offer text you paste and points out warning signs in plain words");
-    expect(text).toContain("People in the UAE who receive a job offer by WhatsApp, email or LinkedIn");
-  });
-
-  // The redesign: "It does not store your text" became "Its server does not store your text",
-  // because Save to Encrypted Vault can keep an encrypted copy in the browser, by the person's choice.
-  it("keeps the six 'what it does not do' bullets", () => {
-    const list = ABOUT.slice(ABOUT.indexOf('id="not-heading"'), ABOUT.indexOf("</ul>", ABOUT.indexOf('id="not-heading"')));
-    expect(list.match(/<li>/g)).toHaveLength(6);
-    const text = decode(list);
-    for (const line of [
-      "It does not check whether a company, a sender or an offer is real.",
-      "It does not contact anyone or send any message for you.",
-      "Its server does not store your text.",
-      "It does not use an AI model to score your text.",
-      "It reads English only.",
-      "It does not give legal advice.",
-    ]) {
-      expect(text).toContain(line);
-    }
-  });
-
-  it("has one privacy paragraph that stays true: Google only on translate, the vault only in this browser", () => {
-    const text = decode(ABOUT);
-    expect(text).toContain(
-      `Offer Check's server does not store the text you paste. Your text is sent to Google, for machine translation, only if you press “${TRANSLATE_BUTTON}”. Save to Encrypted Vault keeps an encrypted copy in this browser only, locked with a passphrase that is not stored.`,
-    );
-    expect(text).not.toMatch(/zero storage|nothing is stored|never stored anywhere/i);
-  });
-
-  it("puts the footer's synthetic-data and legal-advice wording in one paragraph", () => {
-    expect(ABOUT).toContain(`<p>${SYNTHETIC_STATEMENT} ${FOOTER_DISCLAIMER}</p>`);
-  });
-
-  it("uses no technical terms", () => {
-    expect(decode(ABOUT)).not.toMatch(/\b(?:pipeline|deterministic|hash|audit|agents?|tests?)\b/i);
-  });
-
-  it("does not show the technical limitation list (it lives in docs/technical-evidence.md)", () => {
-    expect(LEGAL).not.toContain("Technical detail");
-    const first = read("docs/known-limitations.md").match(/^- \*\*([^*]+)\*\*/m)?.[1] ?? "";
-    expect(first.length).toBeGreaterThan(0);
-    expect(decode(LEGAL)).not.toContain(first);
-  });
-
-  it("has no contact for reporting problems with Offer Check (owner decision): no section, no address, no phone", () => {
-    expect(existsSync(join(process.cwd(), "src/lib/siteConfig.ts"))).toBe(false);
-    expect(LEGAL).not.toContain('id="report-heading"');
-    expect(decode(LEGAL)).not.toMatch(/report a problem/i);
+  it("/legal no longer holds the About section, and links to no contact address", () => {
+    expect(LEGAL).not.toContain('id="about"');
+    expect(LEGAL).not.toContain("About Offer Check UAE");
     expect(LEGAL).not.toMatch(/mailto:|tel:/);
-  });
-
-  it("links to the report-fraud box in the Gov Portals Hub", () => {
-    expect(ABOUT).toContain(`href="/portals#${REPORT_FRAUD_ID}"`);
+    expect(String(legal.metadata.description)).not.toMatch(/what Offer Check is/i);
   });
 });
 
@@ -185,6 +130,9 @@ describe("static pages: one h1, no landmark of their own, fixed text", () => {
     ["src/app/portals/page.tsx", PORTALS],
     ["src/app/radar/page.tsx", render(radar.default)],
     ["src/app/vault/page.tsx", render(vault.default)],
+    ["src/app/about/page.tsx", render(about.default)],
+    ["src/app/privacy/page.tsx", render(privacy.default)],
+    ["src/app/terms/page.tsx", render(terms.default)],
   ])("%s", (file, html) => {
     const source = read(file);
     // Not force-static: a prerendered page has no CSP nonce, and the policy would block its inline

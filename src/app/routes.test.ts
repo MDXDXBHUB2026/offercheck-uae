@@ -7,13 +7,14 @@ import { networkFailure, responseFailure } from "@/components/checkRequest";
 import { PUBLIC_LIMITS_INTRO } from "@/components/publicLimitations";
 import { ARABIC_NOTE } from "@/components/shell/ArabicNote";
 import { isCurrent, Navbar } from "@/components/shell/Navbar";
-import { BrandBadge, NAV_ITEMS, PROTOTYPE_NOTICE, SiteFooter } from "@/components/shell/site";
+import { BrandBadge, FOOTER_SITE_LINKS, NAV_GROUPS, NAV_ITEMS, PROTOTYPE_NOTICE, SiteFooter } from "@/components/shell/site";
 import { Button, ButtonLink, Callout, Card, Chip, Disclosure, HelperText } from "@/components/ui";
 import { HEADER_HOTLINE_IDS, UAE_CONTACTS, contact } from "@/data/uaeContacts";
 import { runManager } from "@/lib/agents/manager";
 import { SCAM_OFFER } from "@/lib/agents/fixtures";
 import { gateReducer, INITIAL_GATE_FLOW } from "@/lib/approvalGate";
 import { languageNotice } from "@/lib/textScript";
+import * as about from "./about/page";
 import * as check from "./check/page";
 import ErrorPage from "./error";
 import GlobalError from "./global-error";
@@ -22,7 +23,9 @@ import Loading from "./loading";
 import NotFound, { metadata as notFoundMetadata } from "./not-found";
 import * as root from "./page";
 import * as portals from "./portals/page";
+import * as privacy from "./privacy/page";
 import * as radar from "./radar/page";
+import * as terms from "./terms/page";
 import * as vault from "./vault/page";
 import { tr } from "@/lib/i18n";
 
@@ -43,6 +46,8 @@ const CANARY = "CANARY-offer-text Desert Star hr@example.test";
 const read = (file: string) => readFileSync(join(process.cwd(), file), "utf8");
 
 // The redesign: the reference app's five tabs, one route each. "/" is the Offer Analyzer.
+// Production hardening Phase 3 (2026-11-15): About is a sixth tab; Privacy and Terms are linked from
+// the footer and from About, not from the header.
 const ROUTES = [
   { path: "/", module: root, title: "Offer Analyzer" },
   { path: "/check", module: check, title: "Offer Analyzer" },
@@ -50,6 +55,9 @@ const ROUTES = [
   { path: "/portals", module: portals, title: "Gov Portals Hub" },
   { path: "/legal", module: legal, title: "Legal Guidelines" },
   { path: "/vault", module: vault, title: "Encrypted Vault" },
+  { path: "/about", module: about, title: "About" },
+  { path: "/privacy", module: privacy, title: "Privacy" },
+  { path: "/terms", module: terms, title: "Terms" },
 ];
 
 describe("routes", () => {
@@ -62,19 +70,26 @@ describe("routes", () => {
     expect(html).not.toMatch(/<main[\s>]|<header[\s>]|<footer[\s>]/);
   });
 
-  it("has exactly the five tabs of the reference app, and no /how-it-works or /lab route", () => {
-    expect(NAV_ITEMS.map((item) => [item.label, item.href])).toEqual([
-      ["Offer Analyzer", "/check"],
-      ["Threat Radar", "/radar"],
-      ["Gov Portals Hub", "/portals"],
-      ["Legal Guidelines", "/legal"],
-      ["Encrypted Vault", "/vault"],
+  it("has exactly six tabs in two groups, Tools then Information, and no /how-it-works, /lab or /guide route", () => {
+    expect(NAV_ITEMS.map((item) => [item.group, item.label, item.short, item.href])).toEqual([
+      ["tools", "Offer Analyzer", "Analyzer", "/check"],
+      ["tools", "Threat Radar", "Radar", "/radar"],
+      ["tools", "Encrypted Vault", "Vault", "/vault"],
+      ["info", "Gov Portals Hub", "Portals", "/portals"],
+      ["info", "Legal Guidelines", "Guidelines", "/legal"],
+      ["info", "About", "About", "/about"],
     ]);
-    for (const dir of ["how-it-works", "lab", "about", "guide"]) expect(existsSync(join(process.cwd(), "src/app", dir)), dir).toBe(false);
+    expect(NAV_GROUPS).toEqual([
+      { id: "tools", label: "Tools" },
+      { id: "info", label: "Information" },
+    ]);
+    for (const dir of ["how-it-works", "lab", "guide"]) expect(existsSync(join(process.cwd(), "src/app", dir)), dir).toBe(false);
   });
 
-  it("every navigation item has a page", () => {
-    expect(NAV_ITEMS.map((item) => item.href).sort()).toEqual(ROUTES.slice(1).map((route) => route.path).sort());
+  it("every navigation item has a page; Privacy and Terms are pages outside the header", () => {
+    const paths = ROUTES.slice(1).map((route) => route.path);
+    expect(NAV_ITEMS.map((item) => item.href).sort()).toEqual(paths.filter((path) => !["/privacy", "/terms"].includes(path)).sort());
+    for (const route of ROUTES.slice(1)) expect(existsSync(join(process.cwd(), "src/app", route.path, "page.tsx")), route.path).toBe(true);
   });
 
   it("the layout has a skip link, the header, one main landmark, the footer and a title template", () => {
@@ -103,20 +118,40 @@ describe("header", () => {
     return html.slice(start, html.indexOf("</nav>", start));
   };
 
-  it("lists the five tabs as real links in a named nav, and marks the current page once", () => {
+  it("lists the six tabs as real links in a named nav, and marks the current page once", () => {
     const html = header();
     const main = navOf(html, "Main");
     const links = [...main.matchAll(/<a [^>]*href="([^"]*)"[^>]*>(.*?)<\/a>/g)].map((m) => [m[2].replace(/<[^>]+>/g, ""), m[1]]);
-    expect(links).toEqual(NAV_ITEMS.map((item) => [item.label, item.href]));
+    expect(links).toEqual(NAV_ITEMS.map((item) => [item.short, item.href]));
     expect(main.match(/aria-current="page"/g)).toHaveLength(1);
     expect(main).toMatch(/<a class="tab" aria-current="page" href="\/check">/);
     expect(html).not.toMatch(/Soon|coming soon|aria-disabled|how-it-works|"\/lab/);
   });
 
-  it("has a compact tab bar for narrow screens with the same links", () => {
+  // Production hardening Phase 3 (2026-11-15).
+  it("groups the tabs: Tools, a divider, then Information, each a named group", () => {
+    const main = navOf(header(), "Main");
+    const groups = [...main.matchAll(/<div role="group" aria-label="([^"]+)" class="nav-group" data-group="(\w+)">([\s\S]*?)<\/div>/g)];
+    expect(groups.map((m) => [m[1], m[2]])).toEqual([
+      ["Tools", "tools"],
+      ["Information", "info"],
+    ]);
+    for (const [, , id, body] of groups) {
+      expect([...body.matchAll(/href="([^"]*)"/g)].map((m) => m[1])).toEqual(NAV_ITEMS.filter((item) => item.group === id).map((item) => item.href));
+    }
+    expect(main.match(/<span class="nav-divider" aria-hidden="true"><\/span>/g)).toHaveLength(1);
+    expect(main.indexOf('class="nav-divider"')).toBeGreaterThan(main.indexOf('data-group="tools"'));
+    expect(main.indexOf('class="nav-divider"')).toBeLessThan(main.indexOf('data-group="info"'));
+    const arabic = navOf(header("/check", "ar"), tr("ar", "Main"));
+    expect(arabic).toContain(`aria-label="${tr("ar", "Tools")}"`);
+    expect(arabic).toContain(`aria-label="${tr("ar", "Information")}"`);
+  });
+
+  it("has a compact tab bar for narrow screens with the same six links, Tools first", () => {
     const compact = navOf(header("/legal"), "Main (compact)");
     expect([...compact.matchAll(/href="([^"]*)"/g)].map((m) => m[1])).toEqual(NAV_ITEMS.map((item) => item.href));
-    expect(compact).toMatch(/<a class="tab" aria-current="page" href="\/legal">Legal<\/a>/);
+    expect(compact).toMatch(/<a class="tab" data-group="info" aria-current="page" href="\/legal">Guidelines<\/a>/);
+    expect([...compact.matchAll(/data-group="(\w+)"/g)].map((m) => m[1])).toEqual(["tools", "tools", "tools", "info", "info", "info"]);
   });
 
   it("brand: logo badge, name and caption, linking to the Offer Analyzer; the name is 'Offer Check UAE'", () => {
@@ -310,14 +345,21 @@ describe("footer", () => {
   });
 
   // The limitations link was removed with the section (LIMITS-2, owner decision 2026-11-11).
-  it("links the official portals from the contacts file, in a new tab, and nothing else", () => {
+  // Production hardening Phase 3 (2026-11-15): About, Privacy and Terms, in the same tab, in their own
+  // list after the portals.
+  it("links the official portals from the contacts file in a new tab, then About, Privacy and Terms, and nothing else", () => {
     const links = [...html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/g)].map((m) => [text(m[2]), m[1].match(/href="([^"]*)"/)?.[1]]);
     expect(links).toEqual([
       ["MoHRE Portal", contact("mohre").url],
       ["ICP Smart Services", contact("icp").url],
       ["GDRFA Dubai (Amer)", contact("amer").url],
       [`Dubai Police eCrime (${contact("ecrime").hotlineLabel})`, contact("ecrime").url],
+      ["About", "/about"],
+      ["Privacy", "/privacy"],
+      ["Terms", "/terms"],
     ]);
+    expect(FOOTER_SITE_LINKS.map((link) => link.href)).toEqual(["/about", "/privacy", "/terms"]);
+    expect(html).toMatch(/<nav class="footer-site" aria-labelledby="footer-site-heading">/);
     expect(html).not.toContain("#limits");
     expect(html.match(/target="_blank" rel="noopener noreferrer"/g)).toHaveLength(4);
     expect(html).not.toMatch(/<address|mailto:/i);

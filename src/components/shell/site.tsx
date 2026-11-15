@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { ExternalLink, Lock, ShieldAlert, ShieldCheck } from "lucide-react";
 import { ArabicNote } from "@/components/shell/ArabicNote";
 import { MotionToggle } from "@/components/shell/MotionToggle";
@@ -12,25 +13,35 @@ import { T } from "@/components/shell/T";
 export const PROTOTYPE_NOTICE =
   "Prototype. Use synthetic or redacted offers only. Emirates ID, passport and UAE IBAN numbers in common formats are hidden in your browser before the text is sent. Offer Check's server does not store offer text. If you choose translation, Google Cloud Translation receives it. Save to Encrypted Vault keeps an encrypted copy in this browser only.";
 
-// The five tabs of the reference app. The Arabic labels are the reference app's own, not reviewed by
-// a native speaker. short: the compact bar under the header below 1200px.
+// The header's six tabs, in two groups (production hardening Phase 3, 2026-11-15): Tools (the
+// analyzer, Threat Radar and the vault) and Information (portals, guidelines and About). label: the
+// full page name (the browser tab title). short: the English tab text, in the desktop header and the
+// compact bar below 1200px; shortened so the six tabs fit beside the brand at 1280px
+// (docs/header-measurements.json). labelAr: the Arabic tab text (the reference app's own words, page
+// headings keep the full names); not yet reviewed by a native speaker.
+export type NavGroup = "tools" | "info";
 export type NavItem = {
-  id: "analyzer" | "radar" | "portals" | "legal" | "vault";
+  id: "analyzer" | "radar" | "vault" | "portals" | "legal" | "about";
+  group: NavGroup;
   href: string;
   label: string;
   labelAr: string;
   short: string;
 };
 
-// Phase 3 option A (2026-11-11): the three longest Arabic tab labels are shortened to the words the
-// compact bar already uses, so all five tabs fit with their icons. Page headings keep the full
-// names. Not yet reviewed by a native speaker.
+export const NAV_GROUPS: readonly { id: NavGroup; label: string }[] = [
+  { id: "tools", label: "Tools" },
+  { id: "info", label: "Information" },
+];
+
 export const NAV_ITEMS: readonly NavItem[] = [
-  { id: "analyzer", href: "/check", label: "Offer Analyzer", labelAr: "فاحص العروض", short: "Analyzer" },
-  { id: "radar", href: "/radar", label: "Threat Radar", labelAr: "الرادار", short: "Radar" },
-  { id: "portals", href: "/portals", label: "Gov Portals Hub", labelAr: "بوابات التحقق", short: "Portals" },
-  { id: "legal", href: "/legal", label: "Legal Guidelines", labelAr: "الإرشادات", short: "Legal" },
-  { id: "vault", href: "/vault", label: "Encrypted Vault", labelAr: "الخزنة", short: "Vault" },
+  { id: "analyzer", group: "tools", href: "/check", label: "Offer Analyzer", labelAr: "فاحص العروض", short: "Analyzer" },
+  { id: "radar", group: "tools", href: "/radar", label: "Threat Radar", labelAr: "الرادار", short: "Radar" },
+  { id: "vault", group: "tools", href: "/vault", label: "Encrypted Vault", labelAr: "الخزنة", short: "Vault" },
+  { id: "portals", group: "info", href: "/portals", label: "Gov Portals Hub", labelAr: "بوابات التحقق", short: "Portals" },
+  { id: "legal", group: "info", href: "/legal", label: "Legal Guidelines", labelAr: "الإرشادات", short: "Guidelines" },
+  // [review] Arabic tab label added 2026-11-15.
+  { id: "about", group: "info", href: "/about", label: "About", labelAr: "حول", short: "About" },
 ];
 
 export const FOOTER_DISCLAIMER =
@@ -49,6 +60,13 @@ export function BrandBadge() {
     </span>
   );
 }
+
+// The footer's links to Offer Check's own pages (Phase 3, 2026-11-15), apart from the official portals.
+export const FOOTER_SITE_LINKS = [
+  { href: "/about", label: "About" },
+  { href: "/privacy", label: "Privacy" },
+  { href: "/terms", label: "Terms" },
+] as const;
 
 const FOOTER_LINKS = [
   { id: "mohre", label: "MoHRE Portal" },
@@ -92,6 +110,20 @@ export function SiteFooter() {
             ))}
           </ul>
         </div>
+        <nav className="footer-site" aria-labelledby="footer-site-heading">
+          <h3 id="footer-site-heading" className="visually-hidden">
+            <T>About this site</T>
+          </h3>
+          <ul className="footer-site-links">
+            {FOOTER_SITE_LINKS.map((link) => (
+              <li key={link.href}>
+                <Link href={link.href}>
+                  <T>{link.label}</T>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
         <div className="footer-bottom">
           <p className="footer-disclaimer">
             <T>{FOOTER_DISCLAIMER}</T>

@@ -522,31 +522,8 @@ const ENTRIES: Record<string, string> = {
   ", page last updated": "، آخر تحديث للصفحة",
   "About Offer Check UAE": "عن Offer Check UAE",
   "Offer Check UAE is a free tool that looks for common warning signs in a job offer before you pay or share anything.":
-    "Offer Check UAE أداة مجانية تبحث عن علامات التحذير الشائعة في عرض العمل قبل أن تدفع أو تشارك أي شيء.",
+    "أداة Offer Check UAE مجانية، تبحث عن علامات التحذير الشائعة في عرض العمل قبل أن تدفع أو تشارك أي شيء.",
   "Where to report a job scam": "أين تبلّغ عن احتيال وظيفي",
-  "The problem": "المشكلة",
-  "What it does": "ماذا يفعل",
-  "What it does not do": "ما لا يفعله",
-  "Who it is for": "لمن هو",
-  "Your privacy": "خصوصيتك",
-  "Example offers and legal advice": "أمثلة العروض والاستشارة القانونية",
-  "Some job offers sent in the UAE by WhatsApp, email or LinkedIn are fake or risky. They may ask you to pay a fee, share a code or send your identity documents before you have a real job.":
-    "بعض عروض العمل المرسلة في الإمارات عبر واتساب أو البريد الإلكتروني أو LinkedIn مزيفة أو محفوفة بالمخاطر. قد تطلب منك دفع رسوم أو مشاركة رمز أو إرسال مستندات هويتك قبل أن تحصل على وظيفة فعلية.",
-  "It reads the offer text you paste and points out warning signs in plain words, with the words that matched. It shows how worrying the signs are as low, medium or high. These are warning signs, not a verdict on any company.":
-    "يقرأ نص العرض الذي تلصقه ويشير إلى علامات التحذير بكلمات بسيطة، مع الكلمات التي تطابقت. ويبيّن مدى خطورة العلامات: منخفضة أو متوسطة أو مرتفعة. هذه علامات تحذير، وليست حكمًا على أي شركة.",
-  "It does not check whether a company, a sender or an offer is real.":
-    "لا يفحص ما إذا كانت الشركة أو المرسل أو العرض حقيقيًا.",
-  "It does not contact anyone or send any message for you.": "لا يتواصل مع أي أحد ولا يرسل أي رسالة نيابةً عنك.",
-  "Its server does not store your text.": "لا يخزّن خادمه النص الذي تدخله.",
-  "It does not use an AI model to score your text.": "لا يستخدم نموذج ذكاء اصطناعي لتقييم نصك.",
-  "It reads English only. Words in other languages are not checked unless you choose machine translation first.":
-    "يقرأ الإنجليزية فقط. لا تُفحص الكلمات المكتوبة بلغات أخرى ما لم تختر الترجمة الآلية أولًا.",
-  "It does not give legal advice.": "لا يقدّم استشارة قانونية.",
-  "People in the UAE who receive a job offer by WhatsApp, email or LinkedIn and want to check it for warning signs, such as a request for a fee, a code or identity documents.":
-    "الأشخاص في الإمارات الذين يتلقون عرض عمل عبر واتساب أو البريد الإلكتروني أو LinkedIn ويريدون فحصه بحثًا عن علامات تحذير، مثل طلب رسوم أو رمز أو مستندات هوية.",
-  // [review] button renamed "Save to Encrypted Vault" (2026-11-11); Arabic name follows "Encrypted Vault".
-  "Offer Check's server does not store the text you paste. Your text is sent to Google, for machine translation, only if you press “{0}”. Save to Encrypted Vault keeps an encrypted copy in this browser only, locked with a passphrase that is not stored.":
-    "لا يخزّن خادم Offer Check النص الذي تلصقه. يُرسل نصك إلى Google للترجمة الآلية فقط إذا ضغطت \"{0}\". ميزة \"حفظ في الخزنة المشفّرة\" تحفظ نسخة مشفّرة في هذا المتصفح فقط، مقفلة بعبارة مرور لا تُخزَّن.",
   // Warning signs (src/lib/warningSigns.ts). Phase 4d, 2026-11-11: checked against the official
   // Arabic page the English was paraphrased from, UAE Government Portal, "التحقق من صحة عقود العمل،
   // وأذونات الدخول والتأشيرات", https://u.ae/ar/information-and-services/visa-and-emirates-id/Visa-information/tips-to-avoid-labour-and-visa-fraud
@@ -803,6 +780,131 @@ const ENTRIES: Record<string, string> = {
     "الإبلاغ عن الجرائم الإلكترونية مثل الاحتيال عبر الإنترنت. متاح في تطبيق MoI UAE.",
   "Verify a job offer by its reference number through the MOHRE enquiry service, and contact MOHRE through its official channels.":
     "تحقّق من عرض العمل برقمه المرجعي عبر خدمة الاستعلام في وزارة الموارد البشرية والتوطين، وتواصل مع الوزارة عبر قنواتها الرسمية.",
+
+  // Production hardening Phase 3 (2026-11-15): the grouped header, the footer's site links, and the
+  // About, Privacy and Terms pages. Every entry in this block is [review]: written for this app, not
+  // yet reviewed by a native speaker. The operator line is in src/lib/siteConfig.ts, not here.
+  // [review] header groups, tab and footer labels
+  "Tools": "الأدوات",
+  "Information": "معلومات",
+  "Guidelines": "الإرشادات",
+  "About": "حول",
+  "About this site": "عن هذا الموقع",
+  "Privacy": "الخصوصية",
+  "Terms": "الشروط",
+  // [review] About page (/about)
+  "What it is for, and who it is for": "الغرض منه، ولمن هو",
+  "Some job offers sent in the UAE by WhatsApp, email or LinkedIn are fake or risky. They may ask you to pay a fee, share a code or send your identity documents before you have a real job.":
+    "بعض عروض العمل المرسلة في الإمارات عبر واتساب أو البريد الإلكتروني أو LinkedIn مزيفة أو محفوفة بالمخاطر. قد تطلب منك دفع رسوم أو مشاركة رمز أو إرسال مستندات هويتك قبل أن تحصل على وظيفة فعلية.",
+  "People in the UAE who receive a job offer by WhatsApp, email or LinkedIn and want to check it for warning signs, such as a request for a fee, a code or identity documents.":
+    "الأشخاص في الإمارات الذين يتلقون عرض عمل عبر واتساب أو البريد الإلكتروني أو LinkedIn ويريدون فحصه بحثًا عن علامات تحذير، مثل طلب رسوم أو رمز أو مستندات هوية.",
+  "You paste the text of an offer: a message, an email or a post. Emirates ID, passport and UAE IBAN numbers in common formats are hidden in your browser before the text is sent.":
+    "تلصق نص العرض: رسالة أو بريدًا إلكترونيًا أو منشورًا. تُخفى أرقام الهوية الإماراتية وجواز السفر والآيبان الإماراتي بالصيغ الشائعة في متصفحك قبل إرسال النص.",
+  "Five fixed rules read the text for warning signs: a request to pay a fee or money; a request for a code, password or card details; a request for identity or bank documents; pressure to act quickly; and a free email address.":
+    "تقرأ خمس قواعد ثابتة النص بحثًا عن علامات التحذير: طلب دفع رسوم أو مال؛ وطلب رمز أو كلمة مرور أو بيانات بطاقة؛ وطلب مستندات هوية أو مستندات بنكية؛ والضغط للتصرف بسرعة؛ وعنوان بريد إلكتروني مجاني.",
+  "Each sign found adds 20 or 40 points, by how serious it is, up to 100. A request to pay, or for a code, password or card details, puts the score at 60 or more on its own. 0 to 29 is low, 30 to 59 is medium, 60 and over is high.":
+    "كل علامة يُعثر عليها تضيف 20 أو 40 نقطة بحسب خطورتها، حتى 100. طلب الدفع، أو طلب رمز أو كلمة مرور أو بيانات بطاقة، يرفع الدرجة وحده إلى 60 أو أكثر. من 0 إلى 29 منخفضة، ومن 30 إلى 59 متوسطة، و60 فأكثر مرتفعة.",
+  "Each finding quotes the words in your text that matched, so you can see why it was flagged.":
+    "تقتبس كل نتيجة الكلمات التي تطابقت في نصك، لترى سبب الإشارة إليها.",
+  "Cross-checks point out other things in the text, such as a shortened link or a request to continue only on WhatsApp. They do not change the score.":
+    "تشير الفحوص المتقاطعة إلى أمور أخرى في النص، مثل رابط مختصر أو طلب المتابعة عبر واتساب فقط. ولا تغيّر الدرجة.",
+  "Official steps tell you which UAE government channel to use to confirm the offer yourself.":
+    "تخبرك الخطوات الرسمية بالقناة الحكومية الإماراتية التي تستخدمها للتأكد من العرض بنفسك.",
+  "It does not use an AI model to score your text.": "لا يستخدم نموذج ذكاء اصطناعي لتقييم نصك.",
+  "Fixed rules set the score, so the same English text always gets the same score.":
+    "تحدد القواعد الثابتة الدرجة، لذا يحصل النص الإنجليزي نفسه دائمًا على الدرجة نفسها.",
+  "What it cannot do": "ما لا يستطيع فعله",
+  "The rules look for known patterns only. An offer worded another way can be missed.":
+    "تبحث القواعد عن أنماط معروفة فقط. قد يفوتها عرض مكتوب بصياغة أخرى.",
+  "The rules read English. Text in other languages is checked only if you choose machine translation first, and a translation can lose or change meaning.":
+    "تقرأ القواعد الإنجليزية. لا يُفحص النص المكتوب بلغات أخرى إلا إذا اخترت الترجمة الآلية أولًا، وقد تُفقد الترجمة المعنى أو تغيّره.",
+  "It has been tested on made-up example offers only, not validated on real scams.":
+    "اختُبر على عروض مثال مصطنعة فقط، ولم يُختبر على حالات احتيال حقيقية.",
+  "A low score does not mean an offer is genuine.": "الدرجة المنخفضة لا تعني أن العرض حقيقي.",
+  "Cross-checks read only the text you paste. No company, website or offer number is looked up anywhere.":
+    "تقرأ الفحوص المتقاطعة النص الذي تلصقه فقط. لا يُبحث عن أي شركة أو موقع أو رقم عرض في أي مكان.",
+  "Your privacy": "خصوصيتك",
+  // [review] button renamed "Save to Encrypted Vault" (2026-11-11); Arabic name follows "Encrypted Vault".
+  "Offer Check's server does not store or log the text you check. Text is sent to Google only if you choose translation. Save to Encrypted Vault keeps an encrypted copy in this browser only. There are no advertising or tracking scripts.":
+    "لا يخزّن خادم Offer Check النص الذي تفحصه ولا يسجّله. لا يُرسل النص إلى Google إلا إذا اخترت الترجمة. ميزة \"حفظ في الخزنة المشفّرة\" تحفظ نسخة مشفّرة في هذا المتصفح فقط. لا توجد نصوص برمجية للإعلانات أو التتبع.",
+  "Read the privacy notice": "اقرأ إشعار الخصوصية",
+  "Read the terms of use": "اقرأ شروط الاستخدام",
+  "Who runs it": "من يديره",
+  "Offer Check UAE is not affiliated with any government body. It does not report anything for you and does not give legal advice.":
+    "لا يتبع Offer Check UAE أي جهة حكومية. لا يبلّغ عن أي شيء نيابةً عنك ولا يقدّم استشارة قانونية.",
+  "Contact:": "التواصل:",
+  // [review] Privacy page (/privacy)
+  "Privacy notice": "إشعار الخصوصية",
+  "Last updated:": "آخر تحديث:",
+  "What Offer Check sends, keeps and does not keep when you use it.":
+    "ما يرسله Offer Check وما يحتفظ به وما لا يحتفظ به عند استخدامك له.",
+  "When you check an offer": "عند فحص عرض",
+  "Your browser sends Offer Check's server the text in the box and, if you translated it first, whether the translation worked and which language was detected. Like any web request, it also carries your network (IP) address.":
+    "يرسل متصفحك إلى خادم Offer Check النص الموجود في المربع، وإذا ترجمته أولًا، ما إذا نجحت الترجمة واللغة التي اكتُشفت. ومثل أي طلب ويب، يحمل الطلب أيضًا عنوان شبكتك (IP).",
+  "The server runs the check and sends the result back. It does not store the text or the result, and Offer Check's code does not write them to any log.":
+    "يجري الخادم الفحص ويعيد النتيجة. لا يخزّن النص ولا النتيجة، ولا تكتبهما شيفرة Offer Check في أي سجل.",
+  "Numbers hidden in your browser": "أرقام تُخفى في متصفحك",
+  "Before any text leaves your browser, Emirates ID numbers, UAE IBANs and passport numbers written as one letter and 7 or 8 digits are replaced with a mask.":
+    "قبل أن يغادر أي نص متصفحك، تُستبدل بقناع أرقام الهوية الإماراتية وأرقام الآيبان الإماراتية وأرقام جوازات السفر المكتوبة بحرف واحد و7 أو 8 أرقام.",
+  "Not caught: IBANs from other countries, other passport formats, an Emirates ID written with dots, and numbers in Arabic-Indic digits. Remove names, phone numbers and other personal details yourself.":
+    "لا يُلتقط: أرقام الآيبان من دول أخرى، وصيغ جوازات السفر الأخرى، ورقم الهوية الإماراتية المكتوب بنقاط، والأرقام المكتوبة بالأرقام العربية الهندية. احذف الأسماء وأرقام الهواتف والتفاصيل الشخصية الأخرى بنفسك.",
+  "Translation, only if you choose it": "الترجمة، فقط إذا اخترتها",
+  "Text that is not in English can be translated first. The text is sent only when you press “{0}”, each time you press it, and the page says so next to the button before you do.":
+    "يمكن ترجمة النص غير المكتوب بالإنجليزية أولًا. لا يُرسل النص إلا عندما تضغط \"{0}\"، في كل مرة تضغط فيها، وتذكر الصفحة ذلك بجانب الزر قبل أن تضغط.",
+  "Offer Check's server passes the text to Google Cloud Translation, a machine translation service run by Google. Offer Check does not store it; Google's terms apply to the text it receives.":
+    "يمرّر خادم Offer Check النص إلى Google Cloud Translation، وهي خدمة ترجمة آلية تديرها Google. لا يخزّنه Offer Check؛ وتسري شروط Google على النص الذي تستلمه.",
+  "Where it is processed": "أين تجري المعالجة",
+  "Checks and translations run in Vercel functions in Mumbai, India.":
+    "تعمل عمليات الفحص والترجمة في دوال Vercel في مومباي بالهند.",
+  "Rate-limit counters": "عدّادات حدود الاستخدام",
+  "To limit how often one visitor can check or translate, the server keeps counters. Each counter is keyed by a salted hash of your network address and a time window, never the address itself, and holds only a number.":
+    "للحد من عدد مرات الفحص أو الترجمة لكل زائر، يحتفظ الخادم بعدّادات. يُعرَّف كل عدّاد بتجزئة مملّحة (salted hash) لعنوان شبكتك وبفترة زمنية، وليس بالعنوان نفسه أبدًا، ولا يحمل إلا رقمًا.",
+  "Each counter expires on its own: after 2 minutes for a per-minute limit, after 25 hours for a daily one. They are kept in an Upstash Redis store in Mumbai.":
+    "تنتهي صلاحية كل عدّاد تلقائيًا: بعد دقيقتين لحد الدقيقة، وبعد 25 ساعة للحد اليومي. وتُحفظ في مخزن Upstash Redis في مومباي.",
+  "What stays in your browser": "ما يبقى في متصفحك",
+  "The Encrypted Vault: results you choose to save, encrypted with a passphrase that is not stored, and the number of saved results.":
+    "الخزنة المشفّرة: النتائج التي تختار حفظها، مشفّرة بعبارة مرور لا تُخزَّن، وعدد النتائج المحفوظة.",
+  "Your language choice and your animation choice.": "اختيارك للغة واختيارك للحركة.",
+  "Reports you write on the Threat Radar stay in the open tab's memory only, are not sent anywhere, and are gone after a reload.":
+    "تبقى البلاغات التي تكتبها في رادار التهديدات في ذاكرة علامة التبويب المفتوحة فقط، ولا تُرسل إلى أي مكان، وتختفي بعد إعادة التحميل.",
+  "To clear them: in the Encrypted Vault, unlock it and use Delete all. Or clear this site's data in your browser's settings, which removes the vault and both choices.":
+    "لمسحها: افتح الخزنة المشفّرة واستخدم \"حذف الكل\". أو امسح بيانات هذا الموقع من إعدادات متصفحك، فيُزال ذلك الخزنة والاختيارين معًا.",
+  "The hosting provider": "مزوّد الاستضافة",
+  "Offer Check runs on Vercel. Vercel keeps its own infrastructure logs of requests, under its own terms.":
+    "يعمل Offer Check على Vercel. تحتفظ Vercel بسجلات البنية التحتية الخاصة بها للطلبات، وفق شروطها.",
+  "No advertising or tracking": "لا إعلانات ولا تتبع",
+  "Offer Check has no advertising, analytics or tracking scripts, and its code sets no cookies.":
+    "لا يحتوي Offer Check على نصوص برمجية للإعلانات أو التحليلات أو التتبع، ولا تضع شيفرته أي ملفات تعريف ارتباط (cookies).",
+  "Contact": "التواصل",
+  "Questions about this notice:": "أسئلة حول هذا الإشعار:",
+  // [review] Terms page (/terms)
+  "Terms of use": "شروط الاستخدام",
+  "The terms for using Offer Check UAE.": "شروط استخدام Offer Check UAE.",
+  "An early prototype": "نموذج أولي مبكر",
+  "Offer Check UAE is an early prototype. It has been tested on made-up example offers only, not validated on real scams. It may change, stop working or be wrong.":
+    "هذا نموذج أولي مبكر من Offer Check UAE. اختُبر على عروض مثال مصطنعة فقط، ولم يُختبر على حالات احتيال حقيقية. قد يتغيّر أو يتوقف عن العمل أو يخطئ.",
+  "Risk indicators, not a verdict": "مؤشرات خطر، وليست حكمًا",
+  "A result shows risk indicators found in the text you paste. It is not a verdict on any offer, sender or company, and it is not legal advice.":
+    "تعرض النتيجة مؤشرات الخطر الموجودة في النص الذي تلصقه. وهي ليست حكمًا على أي عرض أو مرسل أو شركة، وليست استشارة قانونية.",
+  "A low score, or “No risk indicators found”, does not mean an offer is genuine.":
+    "الدرجة المنخفضة، أو \"لم يُعثر على مؤشرات خطر\"، لا تعني أن العرض حقيقي.",
+  "No guarantee of accuracy": "لا ضمان للدقة",
+  "Offer Check gives no guarantee that a result is accurate or complete. It can miss warning signs, and it can flag an honest offer. A machine translation can lose or change meaning.":
+    "لا يقدّم Offer Check أي ضمان بأن النتيجة دقيقة أو كاملة. قد تفوته علامات تحذير، وقد يشير إلى عرض نزيه. وقد تُفقد الترجمة الآلية المعنى أو تغيّره.",
+  "Confirm through official channels": "تأكّد عبر القنوات الرسمية",
+  "Before you pay, share documents or accept an offer, confirm it yourself through the official UAE channels listed in the Gov Portals Hub. Offer Check does not report anything for you.":
+    "قبل أن تدفع أو تشارك مستندات أو تقبل عرضًا، تأكّد منه بنفسك عبر القنوات الرسمية الإماراتية المدرجة في مركز البوابات الحكومية. لا يبلّغ Offer Check عن أي شيء نيابةً عنك.",
+  "Open the Gov Portals Hub": "افتح مركز البوابات الحكومية",
+  "Acceptable use": "الاستخدام المقبول",
+  "Use Offer Check to check job offers for yourself or for someone you are helping.":
+    "استخدم Offer Check لفحص عروض العمل لنفسك أو لشخص تساعده.",
+  "Do not send checks or translations with scripts or other automated tools, try to get around the limits, or try to disrupt the service.":
+    "لا ترسل عمليات فحص أو ترجمة بنصوص برمجية أو أدوات آلية أخرى، ولا تحاول تجاوز الحدود أو تعطيل الخدمة.",
+  "Do not paste unlawful content.": "لا تلصق محتوى غير قانوني.",
+  "Limits and changes to the service": "حدود الخدمة وتغييراتها",
+  "The operator may limit, change or stop the service, or any part of it, at any time. Limits on how often you can check or translate already apply.":
+    "يجوز للمشغّل تقييد الخدمة أو تغييرها أو إيقافها، أو أي جزء منها، في أي وقت. وتسري بالفعل حدود على عدد مرات الفحص أو الترجمة.",
+  "Questions about these terms:": "أسئلة حول هذه الشروط:",
 };
 
 // Official names: in Arabic, each contact shows its own official Arabic name (src/data/uaeContacts.ts).

@@ -137,7 +137,8 @@ describe("4f: rule IDs stay left-to-right in Arabic lines", () => {
   });
 
   it("the Arabic tab labels shortened in Phase 3 are the compact bar's words", () => {
-    expect(NAV_ITEMS.map((item) => item.labelAr)).toEqual(["فاحص العروض", "الرادار", "بوابات التحقق", "الإرشادات", "الخزنة"]);
+    // Production hardening Phase 3 (2026-11-15): six tabs, Tools then Information; About added.
+    expect(NAV_ITEMS.map((item) => item.labelAr)).toEqual(["فاحص العروض", "الرادار", "الخزنة", "بوابات التحقق", "الإرشادات", "حول"]);
   });
 });
 

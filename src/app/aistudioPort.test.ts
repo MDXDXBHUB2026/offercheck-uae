@@ -21,7 +21,10 @@ import { contact, MOHRE_INQUIRY_URL, UAE_CONTACTS } from "@/data/uaeContacts";
 import { THREAT_SAMPLES } from "@/data/threatSamples";
 import { EncryptedVault } from "@/components/EncryptedVault";
 import { NAV_ITEMS } from "@/components/shell/site";
+import AboutPage from "@/app/about/page";
 import LegalPage from "@/app/legal/page";
+import PrivacyPage from "@/app/privacy/page";
+import TermsPage from "@/app/terms/page";
 import PortalsPage from "@/app/portals/page";
 import RadarPage from "@/app/radar/page";
 
@@ -515,7 +518,8 @@ describe("Header: the brand stays fully visible", () => {
   });
 
   it("the three longest Arabic tab labels are shortened to the compact bar's words", () => {
-    expect(NAV_ITEMS.map((item) => item.labelAr)).toEqual(["فاحص العروض", "الرادار", "بوابات التحقق", "الإرشادات", "الخزنة"]);
+    // Production hardening Phase 3 (2026-11-15): six tabs, Tools then Information; About added.
+    expect(NAV_ITEMS.map((item) => item.labelAr)).toEqual(["فاحص العروض", "الرادار", "الخزنة", "بوابات التحقق", "الإرشادات", "حول"]);
   });
 });
 
@@ -545,6 +549,10 @@ describe("Copy: Offer Check does not report anything for the user", () => {
       html(createElement(PortalsPage)),
       html(createElement(RadarPage)),
       html(createElement(LegalPage)),
+      // Production hardening Phase 3 (2026-11-15): the three new pages.
+      html(createElement(AboutPage)),
+      html(createElement(PrivacyPage)),
+      html(createElement(TermsPage)),
       html(createElement(ResultCard, { result: runManager(SCAM_OFFER), ruleCount: RULES.length, onReport: () => {} })),
       html(createElement(ResultCard, { result: runManager(LEGIT_OFFER), ruleCount: RULES.length })),
     ].join(" ");

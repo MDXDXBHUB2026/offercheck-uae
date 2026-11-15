@@ -19,10 +19,13 @@ Job seekers in the UAE who want to check an unsolicited job offer for common sca
 | Offer Analyzer | `/check` (also `/`) | The checker. Paste text or load one of 4 synthetic samples, then get the score, the findings with their quoted words, "Cross-checks on the offer", "Official steps for these findings" and a "Highlights in your text" view. From the result: Listen (the browser's own speech), Export PDF (the browser's print dialog), Save to Encrypted Vault, and a reply draft. |
 | Threat Radar | `/radar` | Common job-scam patterns shown with 4 made-up demo reports. They are not real reports and not live data; the page says so. A report typed in its form is shown on that page only and is not sent anywhere. |
 | Gov Portals Hub | `/portals` | Official UAE portals and hotlines for confirming an offer, and where to report a job scam. Medium and High results on `/check` link to its reporting section. |
-| Legal Guidelines | `/legal` | Eight warning signs of labour and visa fraud, each with why it matters and what to do, paraphrased from one official page (UAE Government Portal, "Tips to avoid labour and visa fraud"), and an "About Offer Check" section. Not legal advice. |
+| Legal Guidelines | `/legal` | Eight warning signs of labour and visa fraud, each with why it matters and what to do, paraphrased from one official page (UAE Government Portal, "Tips to avoid labour and visa fraud"). Not legal advice. |
 | Encrypted Vault | `/vault` | Results the user chose to save, encrypted with their passphrase and kept in this browser only. |
+| About | `/about` | What Offer Check is for and who it is for, how a check works, what it cannot do, privacy in short, and who runs it with the contact address. Not affiliated with any government body. |
+| Privacy | `/privacy` | What is sent, kept and not kept. Drafted, pending legal review; each statement is traced to the code in [docs/privacy-terms.md](docs/privacy-terms.md). |
+| Terms | `/terms` | Prototype status, not a verdict or legal advice, no guarantee, confirm through official channels, acceptable use. Drafted, pending legal review. |
 
-The old `/guide` and `/about` links redirect to `/legal` and `/legal#about`. Every page has the same header (the five tabs, a UAE Hotlines menu and the language switch) and footer.
+The old `/guide` link redirects to `/legal`. Every page has the same header and footer. The header has six tabs in two groups with a divider between them: Tools (Analyzer, Radar, Vault) and Information (Portals, Guidelines, About), then a UAE Hotlines menu and the language switch. Below 1200 px the same six links sit in a three-by-two bar under the header, one row per group. The footer links About, Privacy and Terms. The operator line and the contact address are kept in `src/lib/siteConfig.ts` only. The header's fit was measured in Chrome at 1280, 1440, 1568 and 1920 px in English and Arabic (`scripts/measure-header.mjs`, results in `docs/header-measurements.json`, checked by `src/app/headerMeasurements.test.ts`).
 
 ## What is built
 
@@ -67,6 +70,7 @@ The result card's "How this was checked" panel shows the six trace steps for eac
 - **Encrypted Vault.** Saving is the user's choice. A saved result is kept in this browser's local storage, encrypted with AES-256-GCM using a key derived from the user's passphrase with PBKDF2-SHA-256 at 600,000 iterations (vaults saved before 11 Nov 2026 used 100,000 and move to 600,000 at their next save or delete). The passphrase is chosen by the user (at least 8 characters) and cannot be recovered by Offer Check; if it is forgotten, the saved results cannot be opened. By default a record holds the result with its quoted findings and cross-check quotes, its title and notes, and not the full checked text; the full text (up to 2,000 characters, always after Auto-Redact) is kept only if the user ticks "Also keep the checked text". Saved quotes and kept text come from the masked text. Records saved before 11 Nov 2026 always hold the text, and can hold unmasked numbers if Auto-Redact was switched off then; they still open. Nothing in the vault is sent to the server. Next to the encrypted vault, the number of saved results is kept unencrypted, so the Vault tab can show it while the vault is locked.
 - **Audit trail.** `/api/analyze` builds it for each run and returns it to the page, where approval-gate decisions are added. Entries hold fixed values only: a random run ID, times, the length of the checked text, each step's status and duration, the language coverage and detector result, the translation outcome and a language code, the rule IDs that matched, the cross-check IDs that matched and their count, the official-step count with the rule and cross-check IDs it covers, the score and band, and the gate decisions with the draft's block IDs. No offer text, draft text, quotes, names or contact details, and no hash of any of them. Each entry carries the SHA-256 hash of the previous one, so a changed, removed or reordered entry shows as a broken chain; it is tamper-evident, not tamper-proof. It is kept in page memory and is lost on reload, except that a result saved to the Encrypted Vault includes the run's audit entries inside the encrypted record.
 - The browser also keeps the language choice and the animation setting in local storage. Neither holds offer text.
+- No advertising, analytics or tracking scripts, and no cookies set by the app. The public privacy notice is `/privacy` (drafted, pending legal review).
 
 ## Rate limits
 
@@ -112,7 +116,7 @@ From [docs/product-roadmap-v2.md](docs/product-roadmap-v2.md):
 - Hardening (Phase 11, rest): no end-to-end browser or accessibility tests, no threat model document.
 - The documentation set (Phase 12): system card and architecture document.
 
-See [docs/known-limitations.md](docs/known-limitations.md) for what the rules and cross-checks miss and over-match. It is internal documentation; the app does not show this list.
+See [docs/known-limitations.md](docs/known-limitations.md) for what the rules and cross-checks miss and over-match. It is internal documentation; the About page shows five plain lines drawn from it.
 
 ## How to run
 
@@ -137,7 +141,8 @@ Every offer in this repo, in the tests, the evaluation sets, the sample buttons 
 - [docs/offercheck-plan.md](docs/offercheck-plan.md): build plan, agent design and acceptance criteria
 - [docs/product-roadmap-v2.md](docs/product-roadmap-v2.md): roadmap, with a status note per phase
 - [docs/technical-evidence.md](docs/technical-evidence.md): steps and their status, dev-set counts, holdout records (not served by the app)
-- [docs/known-limitations.md](docs/known-limitations.md): known limitations and known misses (internal; not shown in the app since 11 Nov 2026)
+- [docs/known-limitations.md](docs/known-limitations.md): known limitations and known misses (internal; five plain lines from it are on `/about` since 15 Nov 2026)
+- [docs/privacy-terms.md](docs/privacy-terms.md): the Privacy and Terms pages (drafted, pending legal review), with the source file for each privacy statement
 - [docs/test-report.md](docs/test-report.md): test and evaluation report
 - [docs/defects.md](docs/defects.md): defect register
 - [docs/locked-files.md](docs/locked-files.md): files that change only with the owner's approval, with their hashes and how they are computed

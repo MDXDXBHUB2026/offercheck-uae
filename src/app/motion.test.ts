@@ -78,7 +78,8 @@ describe("3b/3c: only the header icons loop, slowly, with opacity or transform",
   const LOOPS: [string, string][] = [
     ['.nav-icon[data-icon="analyzer"]::before', "icon-glow"],
     [".signal-arc", "signal-arc"],
-    ['.nav-icon[data-icon="vault"] .icon', "icon-breathe"],
+    // The shared breathe rule lists portals, legal, vault and about; its last selector names it.
+    ['.nav-icon[data-icon="about"] .icon', "icon-breathe"],
     [".hotline-icon::after", "halo-ring"],
     [".hotline-btn::before", "glow-rise"],
   ];
@@ -91,8 +92,10 @@ describe("3b/3c: only the header icons loop, slowly, with opacity or transform",
     expect(seconds).toBeGreaterThanOrEqual(2);
   });
 
-  it("the three calm icons breathe out of phase; the radar's outer arc follows the inner one", () => {
-    expect(motion).toMatch(/\.nav-icon\[data-icon="portals"\] \.icon,\s*\.nav-icon\[data-icon="legal"\] \.icon,\s*\.nav-icon\[data-icon="vault"\] \.icon \{\s*animation: icon-breathe 6s/);
+  // Production hardening Phase 3 (2026-11-15): About joins them, out of phase with the rest.
+  it("the four calm icons breathe out of phase; the radar's outer arc follows the inner one", () => {
+    expect(motion).toMatch(/\.nav-icon\[data-icon="portals"\] \.icon,\s*\.nav-icon\[data-icon="legal"\] \.icon,\s*\.nav-icon\[data-icon="vault"\] \.icon,\s*\.nav-icon\[data-icon="about"\] \.icon \{\s*animation: icon-breathe 6s/);
+    expect(motion).toMatch(/\.nav-icon\[data-icon="about"\] \.icon \{\s*animation-delay: -3s;/);
     expect(motion).toMatch(/\.nav-icon\[data-icon="legal"\] \.icon \{\s*animation-delay: -2s;/);
     expect(motion).toMatch(/\.nav-icon\[data-icon="vault"\] \.icon \{\s*animation-delay: -4s;/);
     expect(motion).toMatch(/\.signal-arc-outer \{\s*animation-delay: 0\.5s;/);

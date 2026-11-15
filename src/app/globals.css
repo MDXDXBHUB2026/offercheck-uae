@@ -918,9 +918,10 @@ html {
   padding-inline: var(--sp-3);
 }
 
+/* Phase 3 (2026-11-15): six links, three a row, so each row is one group: Tools, then Information. */
 .nav-mobile {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--sp-1);
   padding-block: var(--sp-2);
   border-top: 1px solid var(--border);
@@ -960,6 +961,8 @@ html {
   .nav-desktop {
     display: flex;
     flex: 1 1 0;
+    /* Centred in the space it has; 'safe' keeps the start reachable if it ever overflows. */
+    justify-content: safe center;
     gap: 0;
     min-width: 0;
     /* 3px ring + 2px offset fits in the 6px padding, so overflow does not clip it. */
@@ -968,8 +971,26 @@ html {
     scrollbar-width: thin;
   }
 
-  /* Phase 3 option A: tighter tabs, so all five fit with their icons beside the brand and the
-     actions in the capped header, English and Arabic (measured 1280 to 1920 px). */
+  /* Production hardening Phase 3: two groups, Tools and Information, each a row of tabs, with a
+     thin divider and a small gap between them. */
+  .nav-group {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+  }
+
+  .nav-divider {
+    flex-shrink: 0;
+    align-self: center;
+    width: 1px;
+    height: 24px;
+    margin-inline: var(--sp-2);
+    background: var(--border-strong);
+  }
+
+  /* Phase 3 option A: tighter tabs, so all six fit with their icons beside the brand and the
+     actions in the capped header, English and Arabic (measured 1280 to 1920 px,
+     docs/header-measurements.json). */
   .nav-desktop .tab {
     flex-shrink: 0;
     gap: 4px;
@@ -1107,6 +1128,26 @@ html {
   color: var(--green);
 }
 
+/* Offer Check's own pages (About, Privacy, Terms), under the portal links. */
+.footer-site-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 var(--sp-4);
+  margin-top: var(--sp-2);
+}
+
+.footer-site-links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target);
+  color: var(--muted);
+}
+
+.footer-site-links a:hover {
+  color: var(--green);
+}
+
 .footer-bottom {
   display: flex;
   flex-direction: column;
@@ -1121,6 +1162,10 @@ html {
     flex-direction: row;
     justify-content: space-between;
     text-align: start;
+  }
+
+  .footer-site-links {
+    justify-content: flex-start;
   }
 }
 
@@ -2346,6 +2391,10 @@ details.card > summary {
   margin-top: var(--sp-1);
 }
 
+ol.bullets {
+  list-style: decimal;
+}
+
 .vault-layout {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -2917,11 +2966,16 @@ details.card > summary {
     animation-delay: 0.5s;
   }
 
-  /* Gov Portals Hub, Legal Guidelines, Encrypted Vault: one calm breath each, out of phase. */
+  /* Gov Portals Hub, Legal Guidelines, Encrypted Vault, About: one calm breath each, out of phase. */
   .nav-icon[data-icon="portals"] .icon,
   .nav-icon[data-icon="legal"] .icon,
-  .nav-icon[data-icon="vault"] .icon {
+  .nav-icon[data-icon="vault"] .icon,
+  .nav-icon[data-icon="about"] .icon {
     animation: icon-breathe 6s ease-in-out infinite;
+  }
+
+  .nav-icon[data-icon="about"] .icon {
+    animation-delay: -3s;
   }
 
   .nav-icon[data-icon="legal"] .icon {

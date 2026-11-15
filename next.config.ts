@@ -15,12 +15,10 @@ export const SECURITY_HEADERS = [
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=()" },
 ];
 
-// The redesign moved the Warning signs page into Legal Guidelines and the About page into its
-// #about section. Old links and bookmarks keep working.
-export const REDIRECTS = [
-  { source: "/guide", destination: "/legal", permanent: false },
-  { source: "/about", destination: "/legal#about", permanent: false },
-];
+// The redesign moved the Warning signs page into Legal Guidelines; old links keep working. /about
+// was redirected to /legal#about until production hardening Phase 3 (2026-11-15), when it became
+// its own page again (src/app/about/page.tsx).
+export const REDIRECTS = [{ source: "/guide", destination: "/legal", permanent: false }];
 
 const nextConfig: NextConfig = {
   async redirects() {

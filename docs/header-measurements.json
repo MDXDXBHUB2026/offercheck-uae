@@ -1,0 +1,758 @@
+{
+  "measuredAt": "2026-11-15",
+  "base": "next start (production build)",
+  "results": [
+    {
+      "lang": "en",
+      "dir": "ltr",
+      "viewport": 1280,
+      "row": {
+        "left": 32,
+        "right": 1248,
+        "width": 1216
+      },
+      "brand": {
+        "left": 32,
+        "right": 252,
+        "width": 220
+      },
+      "brandText": [
+        {
+          "cls": "brand-name",
+          "scroll": 168,
+          "client": 168
+        },
+        {
+          "cls": "brand-caption",
+          "scroll": 168,
+          "client": 168
+        }
+      ],
+      "nav": {
+        "left": 264,
+        "right": 978,
+        "width": 714,
+        "scrollWidth": 714,
+        "clientWidth": 714
+      },
+      "actions": {
+        "left": 990,
+        "right": 1248,
+        "width": 258
+      },
+      "tabs": [
+        {
+          "label": "Analyzer",
+          "left": 371,
+          "right": 469,
+          "width": 98
+        },
+        {
+          "label": "Radar",
+          "left": 469,
+          "right": 539,
+          "width": 70
+        },
+        {
+          "label": "Vault",
+          "left": 539,
+          "right": 605,
+          "width": 66
+        },
+        {
+          "label": "Portals",
+          "left": 622,
+          "right": 699,
+          "width": 77
+        },
+        {
+          "label": "Guidelines",
+          "left": 699,
+          "right": 799,
+          "width": 100
+        },
+        {
+          "label": "About",
+          "left": 799,
+          "right": 871,
+          "width": 72
+        }
+      ],
+      "groups": [
+        {
+          "left": 371,
+          "right": 605,
+          "width": 234
+        },
+        {
+          "left": 622,
+          "right": 871,
+          "width": 249
+        }
+      ],
+      "divider": {
+        "left": 613,
+        "right": 614,
+        "width": 1
+      }
+    },
+    {
+      "lang": "en",
+      "dir": "ltr",
+      "viewport": 1440,
+      "row": {
+        "left": 112,
+        "right": 1328,
+        "width": 1216
+      },
+      "brand": {
+        "left": 112,
+        "right": 332,
+        "width": 220
+      },
+      "brandText": [
+        {
+          "cls": "brand-name",
+          "scroll": 168,
+          "client": 168
+        },
+        {
+          "cls": "brand-caption",
+          "scroll": 168,
+          "client": 168
+        }
+      ],
+      "nav": {
+        "left": 344,
+        "right": 1058,
+        "width": 714,
+        "scrollWidth": 714,
+        "clientWidth": 714
+      },
+      "actions": {
+        "left": 1070,
+        "right": 1328,
+        "width": 258
+      },
+      "tabs": [
+        {
+          "label": "Analyzer",
+          "left": 451,
+          "right": 549,
+          "width": 98
+        },
+        {
+          "label": "Radar",
+          "left": 549,
+          "right": 619,
+          "width": 70
+        },
+        {
+          "label": "Vault",
+          "left": 619,
+          "right": 685,
+          "width": 66
+        },
+        {
+          "label": "Portals",
+          "left": 702,
+          "right": 779,
+          "width": 77
+        },
+        {
+          "label": "Guidelines",
+          "left": 779,
+          "right": 879,
+          "width": 100
+        },
+        {
+          "label": "About",
+          "left": 879,
+          "right": 951,
+          "width": 72
+        }
+      ],
+      "groups": [
+        {
+          "left": 451,
+          "right": 685,
+          "width": 234
+        },
+        {
+          "left": 702,
+          "right": 951,
+          "width": 249
+        }
+      ],
+      "divider": {
+        "left": 693,
+        "right": 694,
+        "width": 1
+      }
+    },
+    {
+      "lang": "en",
+      "dir": "ltr",
+      "viewport": 1568,
+      "row": {
+        "left": 176,
+        "right": 1392,
+        "width": 1216
+      },
+      "brand": {
+        "left": 176,
+        "right": 396,
+        "width": 220
+      },
+      "brandText": [
+        {
+          "cls": "brand-name",
+          "scroll": 168,
+          "client": 168
+        },
+        {
+          "cls": "brand-caption",
+          "scroll": 168,
+          "client": 168
+        }
+      ],
+      "nav": {
+        "left": 408,
+        "right": 1122,
+        "width": 714,
+        "scrollWidth": 714,
+        "clientWidth": 714
+      },
+      "actions": {
+        "left": 1134,
+        "right": 1392,
+        "width": 258
+      },
+      "tabs": [
+        {
+          "label": "Analyzer",
+          "left": 515,
+          "right": 613,
+          "width": 98
+        },
+        {
+          "label": "Radar",
+          "left": 613,
+          "right": 683,
+          "width": 70
+        },
+        {
+          "label": "Vault",
+          "left": 683,
+          "right": 749,
+          "width": 66
+        },
+        {
+          "label": "Portals",
+          "left": 766,
+          "right": 843,
+          "width": 77
+        },
+        {
+          "label": "Guidelines",
+          "left": 843,
+          "right": 943,
+          "width": 100
+        },
+        {
+          "label": "About",
+          "left": 943,
+          "right": 1015,
+          "width": 72
+        }
+      ],
+      "groups": [
+        {
+          "left": 515,
+          "right": 749,
+          "width": 234
+        },
+        {
+          "left": 766,
+          "right": 1015,
+          "width": 249
+        }
+      ],
+      "divider": {
+        "left": 757,
+        "right": 758,
+        "width": 1
+      }
+    },
+    {
+      "lang": "en",
+      "dir": "ltr",
+      "viewport": 1920,
+      "row": {
+        "left": 352,
+        "right": 1568,
+        "width": 1216
+      },
+      "brand": {
+        "left": 352,
+        "right": 572,
+        "width": 220
+      },
+      "brandText": [
+        {
+          "cls": "brand-name",
+          "scroll": 168,
+          "client": 168
+        },
+        {
+          "cls": "brand-caption",
+          "scroll": 168,
+          "client": 168
+        }
+      ],
+      "nav": {
+        "left": 584,
+        "right": 1298,
+        "width": 714,
+        "scrollWidth": 714,
+        "clientWidth": 714
+      },
+      "actions": {
+        "left": 1310,
+        "right": 1568,
+        "width": 258
+      },
+      "tabs": [
+        {
+          "label": "Analyzer",
+          "left": 691,
+          "right": 789,
+          "width": 98
+        },
+        {
+          "label": "Radar",
+          "left": 789,
+          "right": 859,
+          "width": 70
+        },
+        {
+          "label": "Vault",
+          "left": 859,
+          "right": 925,
+          "width": 66
+        },
+        {
+          "label": "Portals",
+          "left": 942,
+          "right": 1019,
+          "width": 77
+        },
+        {
+          "label": "Guidelines",
+          "left": 1019,
+          "right": 1119,
+          "width": 100
+        },
+        {
+          "label": "About",
+          "left": 1119,
+          "right": 1191,
+          "width": 72
+        }
+      ],
+      "groups": [
+        {
+          "left": 691,
+          "right": 925,
+          "width": 234
+        },
+        {
+          "left": 942,
+          "right": 1191,
+          "width": 249
+        }
+      ],
+      "divider": {
+        "left": 933,
+        "right": 934,
+        "width": 1
+      }
+    },
+    {
+      "lang": "ar",
+      "dir": "rtl",
+      "viewport": 1280,
+      "row": {
+        "left": 32,
+        "right": 1248,
+        "width": 1216
+      },
+      "brand": {
+        "left": 994,
+        "right": 1248,
+        "width": 254
+      },
+      "brandText": [
+        {
+          "cls": "brand-name",
+          "scroll": 202,
+          "client": 202
+        },
+        {
+          "cls": "brand-caption",
+          "scroll": 202,
+          "client": 202
+        }
+      ],
+      "nav": {
+        "left": 350,
+        "right": 982,
+        "width": 632,
+        "scrollWidth": 632,
+        "clientWidth": 632
+      },
+      "actions": {
+        "left": 32,
+        "right": 338,
+        "width": 306
+      },
+      "tabs": [
+        {
+          "label": "فاحص العروض",
+          "left": 809,
+          "right": 943,
+          "width": 134
+        },
+        {
+          "label": "الرادار",
+          "left": 740,
+          "right": 809,
+          "width": 69
+        },
+        {
+          "label": "الخزنة",
+          "left": 672,
+          "right": 740,
+          "width": 68
+        },
+        {
+          "label": "بوابات التحقق",
+          "left": 539,
+          "right": 655,
+          "width": 116
+        },
+        {
+          "label": "الإرشادات",
+          "left": 447,
+          "right": 539,
+          "width": 92
+        },
+        {
+          "label": "حول",
+          "left": 389,
+          "right": 447,
+          "width": 58
+        }
+      ],
+      "groups": [
+        {
+          "left": 672,
+          "right": 943,
+          "width": 271
+        },
+        {
+          "left": 389,
+          "right": 655,
+          "width": 266
+        }
+      ],
+      "divider": {
+        "left": 663,
+        "right": 664,
+        "width": 1
+      }
+    },
+    {
+      "lang": "ar",
+      "dir": "rtl",
+      "viewport": 1440,
+      "row": {
+        "left": 112,
+        "right": 1328,
+        "width": 1216
+      },
+      "brand": {
+        "left": 1074,
+        "right": 1328,
+        "width": 254
+      },
+      "brandText": [
+        {
+          "cls": "brand-name",
+          "scroll": 202,
+          "client": 202
+        },
+        {
+          "cls": "brand-caption",
+          "scroll": 202,
+          "client": 202
+        }
+      ],
+      "nav": {
+        "left": 430,
+        "right": 1062,
+        "width": 632,
+        "scrollWidth": 632,
+        "clientWidth": 632
+      },
+      "actions": {
+        "left": 112,
+        "right": 418,
+        "width": 306
+      },
+      "tabs": [
+        {
+          "label": "فاحص العروض",
+          "left": 889,
+          "right": 1023,
+          "width": 134
+        },
+        {
+          "label": "الرادار",
+          "left": 820,
+          "right": 889,
+          "width": 69
+        },
+        {
+          "label": "الخزنة",
+          "left": 752,
+          "right": 820,
+          "width": 68
+        },
+        {
+          "label": "بوابات التحقق",
+          "left": 619,
+          "right": 735,
+          "width": 116
+        },
+        {
+          "label": "الإرشادات",
+          "left": 527,
+          "right": 619,
+          "width": 92
+        },
+        {
+          "label": "حول",
+          "left": 469,
+          "right": 527,
+          "width": 58
+        }
+      ],
+      "groups": [
+        {
+          "left": 752,
+          "right": 1023,
+          "width": 271
+        },
+        {
+          "left": 469,
+          "right": 735,
+          "width": 266
+        }
+      ],
+      "divider": {
+        "left": 743,
+        "right": 744,
+        "width": 1
+      }
+    },
+    {
+      "lang": "ar",
+      "dir": "rtl",
+      "viewport": 1568,
+      "row": {
+        "left": 176,
+        "right": 1392,
+        "width": 1216
+      },
+      "brand": {
+        "left": 1138,
+        "right": 1392,
+        "width": 254
+      },
+      "brandText": [
+        {
+          "cls": "brand-name",
+          "scroll": 202,
+          "client": 202
+        },
+        {
+          "cls": "brand-caption",
+          "scroll": 202,
+          "client": 202
+        }
+      ],
+      "nav": {
+        "left": 494,
+        "right": 1126,
+        "width": 632,
+        "scrollWidth": 632,
+        "clientWidth": 632
+      },
+      "actions": {
+        "left": 176,
+        "right": 482,
+        "width": 306
+      },
+      "tabs": [
+        {
+          "label": "فاحص العروض",
+          "left": 953,
+          "right": 1087,
+          "width": 134
+        },
+        {
+          "label": "الرادار",
+          "left": 884,
+          "right": 953,
+          "width": 69
+        },
+        {
+          "label": "الخزنة",
+          "left": 816,
+          "right": 884,
+          "width": 68
+        },
+        {
+          "label": "بوابات التحقق",
+          "left": 683,
+          "right": 799,
+          "width": 116
+        },
+        {
+          "label": "الإرشادات",
+          "left": 591,
+          "right": 683,
+          "width": 92
+        },
+        {
+          "label": "حول",
+          "left": 533,
+          "right": 591,
+          "width": 58
+        }
+      ],
+      "groups": [
+        {
+          "left": 816,
+          "right": 1087,
+          "width": 271
+        },
+        {
+          "left": 533,
+          "right": 799,
+          "width": 266
+        }
+      ],
+      "divider": {
+        "left": 807,
+        "right": 808,
+        "width": 1
+      }
+    },
+    {
+      "lang": "ar",
+      "dir": "rtl",
+      "viewport": 1920,
+      "row": {
+        "left": 352,
+        "right": 1568,
+        "width": 1216
+      },
+      "brand": {
+        "left": 1314,
+        "right": 1568,
+        "width": 254
+      },
+      "brandText": [
+        {
+          "cls": "brand-name",
+          "scroll": 202,
+          "client": 202
+        },
+        {
+          "cls": "brand-caption",
+          "scroll": 202,
+          "client": 202
+        }
+      ],
+      "nav": {
+        "left": 670,
+        "right": 1302,
+        "width": 632,
+        "scrollWidth": 632,
+        "clientWidth": 632
+      },
+      "actions": {
+        "left": 352,
+        "right": 658,
+        "width": 306
+      },
+      "tabs": [
+        {
+          "label": "فاحص العروض",
+          "left": 1129,
+          "right": 1263,
+          "width": 134
+        },
+        {
+          "label": "الرادار",
+          "left": 1060,
+          "right": 1129,
+          "width": 69
+        },
+        {
+          "label": "الخزنة",
+          "left": 992,
+          "right": 1060,
+          "width": 68
+        },
+        {
+          "label": "بوابات التحقق",
+          "left": 859,
+          "right": 975,
+          "width": 116
+        },
+        {
+          "label": "الإرشادات",
+          "left": 767,
+          "right": 859,
+          "width": 92
+        },
+        {
+          "label": "حول",
+          "left": 709,
+          "right": 767,
+          "width": 58
+        }
+      ],
+      "groups": [
+        {
+          "left": 992,
+          "right": 1263,
+          "width": 271
+        },
+        {
+          "left": 709,
+          "right": 975,
+          "width": 266
+        }
+      ],
+      "divider": {
+        "left": 983,
+        "right": 984,
+        "width": 1
+      }
+    }
+  ]
+}

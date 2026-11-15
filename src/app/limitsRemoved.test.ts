@@ -8,6 +8,11 @@ import { describe, expect, it, vi } from "vitest";
 // its #limits anchor and its Arabic strings are gone. Kept: the one-line notice under the analyzer,
 // the footer disclaimer lines, the result card's "not a verdict" line and the coverage notices.
 // docs/known-limitations.md stays as internal documentation.
+//
+// LIMITS-3 (owner decision, 2026-11-15, production hardening Phase 3): reversed for a dedicated
+// About page only. /about has a "What it cannot do" section of five plain lines drawn from
+// docs/known-limitations.md. The check page, /legal and the footer still have no limits section,
+// link or anchor, and the old section's heading and nine items stay out of the copy.
 
 const env = vi.hoisted(() => ({ lang: "en" as "en" | "ar" }));
 vi.mock("next/navigation", () => ({ usePathname: () => "/check" }));
@@ -20,6 +25,7 @@ vi.mock("react", async (importOriginal) => {
   return { ...real, useSyncExternalStore: scripted };
 });
 
+import AboutPage from "@/app/about/page";
 import CheckPage from "@/app/check/page";
 import LegalPage from "@/app/legal/page";
 import { PUBLIC_LIMITS_INTRO } from "@/components/publicLimitations";
@@ -61,6 +67,7 @@ function renderAll(lang: "en" | "ar") {
     check: decode(renderToStaticMarkup(createElement(CheckPage))),
     legal: decode(renderToStaticMarkup(createElement(LegalPage))),
     footer: decode(renderToStaticMarkup(createElement(SiteFooter))),
+    about: decode(renderToStaticMarkup(createElement(AboutPage))),
   };
 }
 
@@ -89,7 +96,7 @@ describe("LIMITS-2: the section is gone from user-facing copy", () => {
     expect(existsSync(join(process.cwd(), "docs/known-limitations.md"))).toBe(true);
   });
 
-  it.each(["en", "ar"] as const)("%s: the check page, /legal and the footer show no section, link, anchor or item", (lang) => {
+  it.each(["en", "ar"] as const)("%s: the check page, /legal, the footer and /about show no old section, link, anchor or item", (lang) => {
     for (const [page, html] of Object.entries(renderAll(lang))) {
       for (const text of [PHRASE, PHRASE_AR, ...OLD_TITLES]) expect(html, `${page}: ${text}`).not.toContain(text);
       expect(html, page).not.toContain("#limits");
@@ -105,6 +112,42 @@ describe("LIMITS-2: the section is gone from user-facing copy", () => {
     expect(items.length).toBe(4);
     for (const item of items) expect(item).toMatch(/<a href="https:\/\//);
     expect(legal).not.toMatch(/<p>\s*<\/p>/);
+  });
+});
+
+// The five lines, in the order /about shows them, and the known-limitations bullet each comes from.
+const ABOUT_LIMITS: [string, string][] = [
+  ["The rules look for known patterns only. An offer worded another way can be missed.", "- **Fixed rules can miss wording.**"],
+  [
+    "The rules read English. Text in other languages is checked only if you choose machine translation first, and a translation can lose or change meaning.",
+    "- **English wording only.**",
+  ],
+  ["It has been tested on made-up example offers only, not validated on real scams.", "- **Tested on a small synthetic set.**"],
+  ["A low score does not mean an offer is genuine.", 'A low score or "No risk indicators found" does not confirm that an offer is genuine.'],
+  [
+    "Cross-checks read only the text you paste. No company, website or offer number is looked up anywhere.",
+    "- **Cross-checks are text-only and score-neutral.**",
+  ],
+];
+
+describe("LIMITS-3: /about has its own short 'What it cannot do' section", () => {
+  it.each(["en", "ar"] as const)("%s: the section has the five lines, in order, under its own heading", (lang) => {
+    const { about } = renderAll(lang);
+    const heading = lang === "en" ? "What it cannot do" : AR["What it cannot do"];
+    const start = about.indexOf(`id="cannot-heading" class="h2">${heading}</h2>`);
+    expect(start).toBeGreaterThan(-1);
+    const list = about.slice(start, about.indexOf("</ul>", start));
+    const items = [...list.matchAll(/<li>([\s\S]*?)<\/li>/g)].map((m) => m[1]);
+    expect(items).toEqual(ABOUT_LIMITS.map(([line]) => (lang === "en" ? line : AR[line])));
+  });
+
+  it("each line comes from a bullet in docs/known-limitations.md", () => {
+    const doc = read("docs/known-limitations.md");
+    for (const [line, source] of ABOUT_LIMITS) expect(doc, line).toContain(source);
+  });
+
+  it("the owner decision is recorded in docs/defects.md", () => {
+    expect(read("docs/defects.md")).toMatch(/\| LIMITS-3 \| 2026-11-15 \|/);
   });
 });
 
