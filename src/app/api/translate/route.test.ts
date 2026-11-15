@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createThrottle, GOOGLE_TRANSLATE_URL, translateWithGoogle } from "@/lib/translateServer";
+import { GOOGLE_TRANSLATE_URL, translateWithGoogle } from "@/lib/translateServer";
 import { TRANSLATE_ERRORS, TRANSLATE_MAX_CHARS } from "@/lib/translation";
 import * as route from "./route";
 
@@ -10,6 +10,13 @@ import * as route from "./route";
 const FAKE_KEY = "fake-key-canary-0000";
 const CANARY_TEXT = "canary offer text 7f3a";
 const ARABIC = "رسوم التأشيرة 750 درهم يجب دفعها اليوم";
+
+// Saved before any test fakes timers: the rate limit's keyed hash (crypto.subtle) completes on the
+// real event loop, so a fake-timer test waits with this until the provider has been called.
+const realSetTimeout = globalThis.setTimeout;
+async function providerCalled(): Promise<void> {
+  for (let i = 0; i < 500 && provider.mock.calls.length === 0; i++) await new Promise((resolve) => realSetTimeout(resolve, 2));
+}
 
 let ip = 0;
 // Each request gets its own client address, so the throttle never couples two tests.
@@ -39,6 +46,12 @@ let provider: ReturnType<typeof vi.fn>;
 
 beforeEach(() => {
   vi.stubEnv("GOOGLE_TRANSLATE_API_KEY", FAKE_KEY);
+  // Phase 2: no store, not on Vercel, so the limits run in this instance's memory (src/lib/rateLimit.ts).
+  // A high cap, so the shared daily character count never couples two tests here.
+  vi.stubEnv("KV_REST_API_URL", "");
+  vi.stubEnv("KV_REST_API_TOKEN", "");
+  vi.stubEnv("VERCEL", "");
+  vi.stubEnv("OFFERCHECK_DAILY_CHAR_CAP", "100000000");
   provider = vi.fn(async () => googleReply("Visa fees of 750 dirhams must be paid today", "ar"));
   vi.stubGlobal("fetch", provider);
 });
@@ -226,6 +239,7 @@ describe("POST /api/translate: provider errors and timeouts", () => {
         }),
     );
     const pending = post({ text: ARABIC, consent: true });
+    await providerCalled();
     await vi.advanceTimersByTimeAsync(7_999);
     expect((provider.mock.calls[0][1] as RequestInit).signal?.aborted).toBe(false);
     await vi.advanceTimersByTimeAsync(1);
@@ -256,27 +270,35 @@ describe("POST /api/translate: no key in any response", () => {
   });
 });
 
-describe("POST /api/translate: best-effort throttle", () => {
+describe("POST /api/translate: per-visitor limit (Phase 2, in memory here)", () => {
   it("allows 10 requests a minute per client address, then 429 rate_limited, without calling the provider", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-15T10:00:05Z"));
     const headers = { "x-forwarded-for": "203.0.113.7, 10.0.0.1" };
     for (let i = 0; i < 10; i++) expect((await post({ text: ARABIC, consent: true }, headers)).status).toBe(200);
     const limited = await post({ text: ARABIC, consent: true }, headers);
     expect(limited.status).toBe(429);
+    expect(limited.headers.get("cache-control")).toBe("no-store");
     await expect(limited.json()).resolves.toEqual({ error: "rate_limited" });
     expect(provider).toHaveBeenCalledTimes(10);
     // Another address is not limited.
     expect((await post({ text: ARABIC, consent: true }, { "x-forwarded-for": "203.0.113.8" })).status).toBe(200);
   });
 
-  it("forgets requests older than the window, and keeps only times per address in memory", () => {
-    const throttle = createThrottle(2, 60_000, 3);
-    expect(throttle.allow("a", 0)).toBe(true);
-    expect(throttle.allow("a", 1)).toBe(true);
-    expect(throttle.allow("a", 2)).toBe(false);
-    expect(throttle.allow("a", 60_001)).toBe(true);
-    // A full table drops old entries, so it never grows past its cap.
-    for (const client of ["b", "c", "d", "e"]) throttle.allow(client, 60_002);
-    expect(throttle.clients()).toBeLessThanOrEqual(3);
+  it("refuses with 503 translation_unavailable, before Google, when the daily character cap is reached", async () => {
+    vi.stubEnv("OFFERCHECK_DAILY_CHAR_CAP", "1");
+    const response = await post({ text: ARABIC, consent: true });
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toEqual({ error: "translation_unavailable" });
+    expect(provider).not.toHaveBeenCalled();
+  });
+
+  it("refuses with 503 translation_unavailable when deployed without a store", async () => {
+    vi.stubEnv("VERCEL", "1");
+    const response = await post({ text: ARABIC, consent: true });
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toEqual({ error: "translation_unavailable" });
+    expect(provider).not.toHaveBeenCalled();
   });
 });
 
@@ -287,11 +309,11 @@ describe("privacy and isolation of the translation route", () => {
     for (const file of ["src/app/api/translate/route.ts", "src/lib/translateServer.ts"]) {
       const source = read(file);
       expect(source, file).not.toMatch(/\bconsole\.\w+|localStorage|sessionStorage|indexedDB|writeFile|appendFile|createWriteStream|caches\.|unstable_cache|revalidate/);
-      // No module-level variable can keep a text: the only state is the throttle's request times.
+      // No module-level variable can keep a text, and neither file keeps any state (Phase 2: the
+      // counters are in src/lib/rateLimit.ts and hold no text).
       expect(source, file).not.toMatch(/^(?:let|var) /m);
+      expect(source, file).not.toMatch(/new (?:Map|Set)/);
     }
-    expect(read("src/lib/translateServer.ts").match(/new Map</g)).toHaveLength(1);
-    expect(read("src/lib/translateServer.ts")).toContain("new Map<string, number[]>()");
   });
 
   it("only the route reads the key, from process.env on the server, never a NEXT_PUBLIC variable", () => {

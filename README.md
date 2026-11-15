@@ -68,6 +68,13 @@ The result card's "How this was checked" panel shows the six trace steps for eac
 - **Audit trail.** `/api/analyze` builds it for each run and returns it to the page, where approval-gate decisions are added. Entries hold fixed values only: a random run ID, times, the length of the checked text, each step's status and duration, the language coverage and detector result, the translation outcome and a language code, the rule IDs that matched, the cross-check IDs that matched and their count, the official-step count with the rule and cross-check IDs it covers, the score and band, and the gate decisions with the draft's block IDs. No offer text, draft text, quotes, names or contact details, and no hash of any of them. Each entry carries the SHA-256 hash of the previous one, so a changed, removed or reordered entry shows as a broken chain; it is tamper-evident, not tamper-proof. It is kept in page memory and is lost on reload, except that a result saved to the Encrypted Vault includes the run's audit entries inside the encrypted record.
 - The browser also keeps the language choice and the animation setting in local storage. Neither holds offer text.
 
+## Rate limits
+
+- **Checks:** 30 a minute per visitor on `/api/analyze`. Over that, the page says there were too many checks in a short time and keeps the text in the box.
+- **Translations:** 10 a minute and 20 a UTC day per visitor on `/api/translate`, and a daily cap on the characters the whole app sends to Google (`OFFERCHECK_DAILY_CHAR_CAP`, 15,000 when unset). At the cap, nothing is sent and the page shows the existing "translation unavailable" message.
+- **Where:** counters in an Upstash Redis store in Mumbai (`src/lib/rateLimit.ts`), called over its REST API. The visitor key is an HMAC-SHA-256 hash of the client address with `OFFERCHECK_RATE_SALT`; the store holds only counters with an expiry, never an address, a user agent or any text. Nothing is logged.
+- **If the store is down:** translation is refused (it costs money); checks still run, limited per instance in memory. Locally and in tests, with no store, the limits run in memory.
+
 ## Security headers
 
 - **Content-Security-Policy** on every page, with a new random nonce per request (`src/proxy.ts`, policy in `src/lib/csp.ts`). In production: `default-src 'self'; script-src 'self' 'nonce-…' 'strict-dynamic'; style-src 'self' 'nonce-…'; img-src 'self'; font-src 'self'; connect-src 'self'; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'`. No `'unsafe-inline'`, no `'unsafe-eval'` and no external origin: the browser loads and calls nothing outside the app's own origin (Google Translate is called by the server). `next dev` alone adds `'unsafe-eval'` for scripts and `'unsafe-inline'` for styles.
@@ -102,7 +109,7 @@ From [docs/product-roadmap-v2.md](docs/product-roadmap-v2.md):
 - The Rules v2 cycle with a new tuning set and a blind holdout 3 (Phase 8).
 - The guarded, optional explainer (Phase 9). No language model is called; a code search finds no model client or model API call.
 - Arabic reply blocks for the drafter, and the full report export the roadmap describes (Phase 10). Export PDF today uses the browser's print dialog.
-- Hardening (Phase 11, rest): no rate limit on `/api/analyze`, no end-to-end browser or accessibility tests, no threat model document. `/api/translate` has a best-effort throttle of 10 requests a minute per client address, in server memory, per instance; the real spend limit is the quota set on the Google Cloud project.
+- Hardening (Phase 11, rest): no end-to-end browser or accessibility tests, no threat model document.
 - The documentation set (Phase 12): system card and architecture document.
 
 See [docs/known-limitations.md](docs/known-limitations.md) for what the rules and cross-checks miss and over-match. It is internal documentation; the app does not show this list.
@@ -117,7 +124,7 @@ npm run dev     # dev server at http://localhost:3000
 npm run check   # tests, typecheck, lint, production build, no-bypass check
 ```
 
-Translation needs one server environment variable: `GOOGLE_TRANSLATE_API_KEY`. Set it in the server environment only (for example in the Vercel project settings), never in a `NEXT_PUBLIC_` variable or in the repo, and set a quota on the Google Cloud project. The app works without it except for translation: the route answers `translation_unavailable`, nothing is sent, the send button is hidden, and the user can still check the original text.
+Server environment variables are listed, without values, in `.env.example`. Rate limits use `KV_REST_API_URL`, `KV_REST_API_TOKEN`, `OFFERCHECK_RATE_SALT` and `OFFERCHECK_DAILY_CHAR_CAP`; with none of them set and outside Vercel, they run in memory. Translation needs one more: `GOOGLE_TRANSLATE_API_KEY`. Set it in the server environment only (for example in the Vercel project settings), never in a `NEXT_PUBLIC_` variable or in the repo, and set a quota on the Google Cloud project. The app works without it except for translation: the route answers `translation_unavailable`, nothing is sent, the send button is hidden, and the user can still check the original text.
 
 On 11 Nov 2026, `npm run check` passed on Node v24.19.0 with npm 11.17.0: 52 test files, 2,891 tests, then typecheck, lint, the production build and the no-bypass check.
 

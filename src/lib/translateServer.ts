@@ -1,7 +1,7 @@
 // BATCHB-2, server only: the call to Google Cloud Translation (Basic, v2 REST) and the guards around
 // /api/translate. Imported only by that route, which alone reads the key and passes it in.
-// Nothing here logs, stores or caches the text or the translation. The only state is the throttle's
-// request times per client address, in this module's memory: never written anywhere, lost on restart.
+// Nothing here logs, stores or caches the text or the translation, and this module keeps no state.
+// The rate limits and the daily character cap are in src/lib/rateLimit.ts (Phase 2, 2026-11-15).
 import { sourceLanguage, type TranslateErrorCode } from "./translation";
 import { MAX_OFFER_CHARS } from "./types";
 
@@ -87,40 +87,4 @@ export function isSameSiteRequest(request: Request): boolean {
   } catch {
     return false;
   }
-}
-
-// Best effort: 10 requests a minute per client address, in this instance's memory only. On
-// serverless hosting each instance has its own table and a cold start empties it, so this is not a
-// spend limit. The real spend limit is the quota set on the Google Cloud project.
-export const THROTTLE_LIMIT = 10;
-export const THROTTLE_WINDOW_MS = 60_000;
-const THROTTLE_MAX_CLIENTS = 5_000;
-
-export function createThrottle(limit = THROTTLE_LIMIT, windowMs = THROTTLE_WINDOW_MS, maxClients = THROTTLE_MAX_CLIENTS) {
-  const hits = new Map<string, number[]>();
-  return {
-    allow(client: string, now = Date.now()): boolean {
-      const recent = (hits.get(client) ?? []).filter((time) => now - time < windowMs);
-      if (recent.length >= limit) {
-        hits.set(client, recent);
-        return false;
-      }
-      if (!hits.has(client) && hits.size >= maxClients) {
-        for (const [key, times] of hits) if (times.every((time) => now - time >= windowMs)) hits.delete(key);
-        if (hits.size >= maxClients) hits.clear();
-      }
-      recent.push(now);
-      hits.set(client, recent);
-      return true;
-    },
-    clients: () => hits.size,
-  };
-}
-
-export const translateThrottle = createThrottle();
-
-// The first address in X-Forwarded-For (set by the host), else X-Real-IP. Used only as a throttle key.
-export function clientAddress(headers: Headers): string {
-  const forwarded = headers.get("x-forwarded-for")?.split(",")[0]?.trim();
-  return (forwarded || headers.get("x-real-ip")?.trim() || "unknown").slice(0, 64);
 }

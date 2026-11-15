@@ -51,6 +51,7 @@ describe("translation values (BATCHB-2)", () => {
       consent_required: 400,
       cross_site: 403,
       rate_limited: 429,
+      daily_limit: 429,
       translation_unavailable: 503,
       provider_denied: 502,
       provider_busy: 503,

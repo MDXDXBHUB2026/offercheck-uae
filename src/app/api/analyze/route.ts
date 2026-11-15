@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runWithAudit } from "@/lib/auditRun";
+import { allowAnalyze } from "@/lib/rateLimit";
 import { readCapped, TooLarge } from "@/lib/readCapped";
 import { parseTranslationRecord } from "@/lib/translation";
 import { MAX_OFFER_CHARS } from "@/lib/types";
@@ -9,12 +10,17 @@ import { MAX_OFFER_CHARS } from "@/lib/types";
 // it. Any offer within the character limit fits; the character limit is checked after parsing.
 const MAX_BODY_BYTES = MAX_OFFER_CHARS * 6 + 2048;
 const TOO_LONG = `Offer text must be ${MAX_OFFER_CHARS.toLocaleString("en-US")} characters or fewer.`;
+// Phase 2: at most 30 checks a minute per visitor (src/lib/rateLimit.ts). Fixed text, shown by the
+// page only through its own fixed message for a 429.
+const TOO_MANY_CHECKS = "Too many checks in a short time.";
 
 function errorResponse(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
 
 export async function POST(request: Request) {
+  if (!(await allowAnalyze(request.headers))) return errorResponse(TOO_MANY_CHECKS, 429);
+
   // A declared size over the cap is refused before anything is read. A request with no
   // Content-Length is read, and refused only if the body passes the cap.
   if (Number(request.headers.get("content-length")) > MAX_BODY_BYTES) {

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { readCapped, TooLarge } from "@/lib/readCapped";
-import { clientAddress, isSameSiteRequest, translateThrottle, translateWithGoogle } from "@/lib/translateServer";
+import { allowTranslate } from "@/lib/rateLimit";
+import { isSameSiteRequest, translateWithGoogle } from "@/lib/translateServer";
 import { TRANSLATE_ERRORS, TRANSLATE_MAX_CHARS, type TranslateErrorCode } from "@/lib/translation";
 
 // BATCHB-2: POST only. After the user agreed on the page, sends the text to Google Cloud Translation
@@ -36,7 +37,10 @@ export async function POST(request: Request) {
   // The page sends this only when the user presses "Send to Google and translate", next to the disclosure.
   if (consent !== true) return fail("consent_required");
 
-  if (!translateThrottle.allow(clientAddress(request.headers))) return fail("rate_limited");
+  // Phase 2: per visitor 10 a minute and 20 a day; for the whole app, a daily cap on the characters
+  // sent to Google. A store that cannot be reached refuses the translation (src/lib/rateLimit.ts).
+  const verdict = await allowTranslate(request.headers, text.length);
+  if (verdict !== "ok") return fail(verdict);
 
   const result = await translateWithGoogle(text, apiKey);
   if (!result.ok) return fail(result.code);

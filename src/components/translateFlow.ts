@@ -81,6 +81,7 @@ const FAILURE_MESSAGES: Record<TranslateFailure, string> = {
   consent_required: `The translation was not confirmed. ${RETRY}`,
   cross_site: `The translation request was refused. ${RETRY}`,
   rate_limited: "Too many translations in a short time. Wait a minute, then try again, or check the original text.",
+  daily_limit: "You have reached today's limit for translations. Try again tomorrow, or check the original text; the parts not in English will not be checked.",
   translation_unavailable: "Nothing was sent for translation. You can check the original text; the parts not in English will not be checked.",
   provider_denied: `The translation service refused the request. ${RETRY}`,
   provider_busy: `The translation service is busy. ${RETRY}`,

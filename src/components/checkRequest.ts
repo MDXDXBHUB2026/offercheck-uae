@@ -18,7 +18,7 @@ export function analyzeRequest(
 // page never shows a string it did not write, so offer text can never be echoed back in an error,
 // even if a proxy or a changed server put it in a reply.
 
-export type CheckFailureKind = "offline" | "network" | "too_long" | "rejected" | "server" | "unreadable";
+export type CheckFailureKind = "offline" | "network" | "too_long" | "rate_limited" | "rejected" | "server" | "unreadable";
 
 export type CheckFailure = {
   kind: CheckFailureKind;
@@ -54,6 +54,15 @@ export function networkFailure(online: boolean): CheckFailure {
 export function responseFailure(status: number, body: unknown): CheckFailure {
   if (status === 413) {
     return { kind: "too_long", title: "Offer text is too long", message: TOO_LONG, retry: false };
+  }
+  // Phase 2: the per-visitor limit on checks (src/lib/rateLimit.ts).
+  if (status === 429) {
+    return {
+      kind: "rate_limited",
+      title: "Too many checks",
+      message: `Too many checks in a short time. ${KEEP_TEXT} Wait a minute, then try again.`,
+      retry: true,
+    };
   }
   const serverText =
     body && typeof body === "object" && "error" in body && typeof body.error === "string" ? body.error : null;

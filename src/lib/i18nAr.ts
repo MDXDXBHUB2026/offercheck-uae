@@ -143,6 +143,11 @@ const ENTRIES: Record<string, string> = {
   "Something went wrong on the server": "حدث خطأ في الخادم",
   "The reply could not be read": "تعذّرت قراءة الرد",
   "The check could not run": "تعذّر إجراء الفحص",
+  // [review] Phase 2 per-visitor limit on checks (2026-11-15).
+  "Too many checks": "عمليات فحص كثيرة",
+  // [review]
+  "Too many checks in a short time. Your text is still in the box. Wait a minute, then try again.":
+    "عمليات فحص كثيرة في وقت قصير. نصك ما زال في المربع. انتظر دقيقة، ثم أعد المحاولة.",
   "The check did not complete. Your text is still in the box. Try again.":
     "لم يكتمل الفحص. نصك ما زال في المربع. أعد المحاولة.",
   "The check did not complete. Your text is still in the box. Try again in a moment.":
@@ -394,6 +399,9 @@ const ENTRIES: Record<string, string> = {
     "لم تُؤكَّد الترجمة. أعد المحاولة، أو افحص النص الأصلي؛ لن تُفحص الأجزاء غير المكتوبة بالإنجليزية.",
   "Too many translations in a short time. Wait a minute, then try again, or check the original text.":
     "طلبات ترجمة كثيرة في وقت قصير. انتظر دقيقة، ثم أعد المحاولة، أو افحص النص الأصلي.",
+  // [review] Phase 2 daily translation limit per visitor (2026-11-15).
+  "You have reached today's limit for translations. Try again tomorrow, or check the original text; the parts not in English will not be checked.":
+    "بلغت الحد اليومي للترجمة. أعد المحاولة غدًا، أو افحص النص الأصلي؛ لن تُفحص الأجزاء غير المكتوبة بالإنجليزية.",
   "Translation takes up to 5,000 characters. Shorten the text, or check the original text; the parts not in English will not be checked.":
     "تقبل الترجمة حتى 5,000 حرف. اختصر النص، أو افحص النص الأصلي؛ لن تُفحص الأجزاء غير المكتوبة بالإنجليزية.",
 

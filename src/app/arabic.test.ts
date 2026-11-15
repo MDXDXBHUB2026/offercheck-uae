@@ -241,7 +241,7 @@ describe("Arabic interface: every message of the existing flow has Arabic", () =
     PUBLIC_LIMITS_INTRO,
     ...Object.values(LANGUAGE_NOTICES),
     ...(Object.keys(TRANSLATE_ERRORS) as TranslateFailure[]).map((code) => translateFailureMessage(code)),
-    ...[networkFailure(true), networkFailure(false), ...[413, 400, 500, 200].map((status) => responseFailure(status, null))].flatMap(
+    ...[networkFailure(true), networkFailure(false), ...[413, 429, 400, 500, 200].map((status) => responseFailure(status, null))].flatMap(
       (failure) => [failure.title, failure.message],
     ),
     responseFailure(400, { error: "Paste an offer to check." }).message,
