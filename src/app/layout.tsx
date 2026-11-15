@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { connection } from "next/server";
 import { Navbar } from "@/components/shell/Navbar";
 import { SiteFooter } from "@/components/shell/site";
 import { T } from "@/components/shell/T";
@@ -15,7 +16,11 @@ export const metadata: Metadata = {
 };
 
 // One header, main landmark and footer for every page. Pages render inside <main>.
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  // Every page is rendered per request so that Next.js can put this request's CSP nonce on its
+  // scripts (src/proxy.ts, src/lib/csp.ts). A page prerendered at build time has no nonce, and the
+  // policy would block its inline scripts.
+  await connection();
   return (
     <html lang="en" dir="ltr">
       <body>

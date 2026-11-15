@@ -344,7 +344,13 @@ describe("footer", () => {
     // The redesign added lucide-react (icons only).
     const pkg = JSON.parse(read("package.json")) as { dependencies: Record<string, string> };
     expect(Object.keys(pkg.dependencies).sort()).toEqual(["lucide-react", "next", "react", "react-dom"]);
-    for (const file of ["src/middleware.ts", "src/proxy.ts", "middleware.ts", "proxy.ts"]) expect(existsSync(join(process.cwd(), file)), file).toBe(false);
+    for (const file of ["src/middleware.ts", "middleware.ts", "proxy.ts"]) expect(existsSync(join(process.cwd(), file)), file).toBe(false);
+    // Production hardening, 2026-11-15: src/proxy.ts exists for the CSP nonce only. It reads no
+    // cookie or token, does not redirect or rewrite, and skips the API routes.
+    const proxy = read("src/proxy.ts");
+    expect(proxy).not.toMatch(/cookies|authorization|session|token|redirect\(|rewrite\(/i);
+    expect(proxy).toContain("NextResponse.next({ request: { headers: requestHeaders } })");
+    expect(proxy).toContain("(?!api/|");
     expect(readdirSync(join(process.cwd(), "src/app/api"))).toEqual(["analyze", "translate"]);
     const route = read("src/app/api/analyze/route.ts");
     const translate = read("src/app/api/translate/route.ts");

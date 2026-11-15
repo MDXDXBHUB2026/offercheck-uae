@@ -11,9 +11,9 @@ export const metadata: Metadata = {
   description: "Official UAE portals and hotlines to confirm a job offer, and where to report a job scam.",
 };
 
-// Static: fixed text only. Every number and link comes from src/data/uaeContacts.ts (confirmed by
+// Fixed text only. Every number and link comes from src/data/uaeContacts.ts (confirmed by
 // the owner) or src/lib/authorities.ts, which imports from it.
-export const dynamic = "force-static";
+// Rendered per request only so that it gets the CSP nonce (src/proxy.ts); it reads no request data.
 
 // The directory cards' category and level, for each contact in src/data/uaeContacts.ts.
 const DIRECTORY: Record<UaeContact["id"], { category: string; authority: string }> = {

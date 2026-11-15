@@ -187,7 +187,9 @@ describe("static pages: one h1, no landmark of their own, fixed text", () => {
     ["src/app/vault/page.tsx", render(vault.default)],
   ])("%s", (file, html) => {
     const source = read(file);
-    expect(source).toContain('export const dynamic = "force-static";');
+    // Not force-static: a prerendered page has no CSP nonce, and the policy would block its inline
+    // scripts (src/proxy.ts). The page still reads no request data.
+    expect(source).not.toMatch(/export const dynamic/);
     expect(source).not.toMatch(/next\/headers|cookies\(|headers\(|searchParams|"use client"|dangerouslySetInnerHTML/);
     expect(html.match(/<h1[\s>]/g)).toHaveLength(1);
     // AI Studio port, Phase 3: the banner may carry a tint (red on Threat Radar, green elsewhere).

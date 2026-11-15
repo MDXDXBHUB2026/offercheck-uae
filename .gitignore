@@ -11,3 +11,10 @@ next-env.d.ts
 
 # AI Studio export: local reference only, never committed
 docs/reference/aistudio/
+
+# Pitch video build: local only
+/public/OfferCheck_UAE_Pitch.mp4
+/public/video-demo.html
+/scripts/generate_pitch_video.py
+/scripts/test.wav
+/scripts/video_build/

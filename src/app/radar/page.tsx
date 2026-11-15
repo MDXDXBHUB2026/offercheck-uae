@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   description: "Common job-scam patterns in the UAE, shown with labelled demo examples.",
 };
 
-export const dynamic = "force-static";
+// Rendered per request only so that it gets the CSP nonce (src/proxy.ts); it reads no request data.
 
 export default function RadarPage() {
   return <ThreatRadar />;

@@ -68,6 +68,13 @@ The result card's "How this was checked" panel shows the six trace steps for eac
 - **Audit trail.** `/api/analyze` builds it for each run and returns it to the page, where approval-gate decisions are added. Entries hold fixed values only: a random run ID, times, the length of the checked text, each step's status and duration, the language coverage and detector result, the translation outcome and a language code, the rule IDs that matched, the cross-check IDs that matched and their count, the official-step count with the rule and cross-check IDs it covers, the score and band, and the gate decisions with the draft's block IDs. No offer text, draft text, quotes, names or contact details, and no hash of any of them. Each entry carries the SHA-256 hash of the previous one, so a changed, removed or reordered entry shows as a broken chain; it is tamper-evident, not tamper-proof. It is kept in page memory and is lost on reload, except that a result saved to the Encrypted Vault includes the run's audit entries inside the encrypted record.
 - The browser also keeps the language choice and the animation setting in local storage. Neither holds offer text.
 
+## Security headers
+
+- **Content-Security-Policy** on every page, with a new random nonce per request (`src/proxy.ts`, policy in `src/lib/csp.ts`). In production: `default-src 'self'; script-src 'self' 'nonce-…' 'strict-dynamic'; style-src 'self' 'nonce-…'; img-src 'self'; font-src 'self'; connect-src 'self'; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'`. No `'unsafe-inline'`, no `'unsafe-eval'` and no external origin: the browser loads and calls nothing outside the app's own origin (Google Translate is called by the server). `next dev` alone adds `'unsafe-eval'` for scripts and `'unsafe-inline'` for styles.
+- Because the nonce is new on every request, every page is rendered per request (`await connection()` in the root layout) instead of being prerendered at build time.
+- On every route (`next.config.ts`): `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-Frame-Options: DENY` and `Permissions-Policy: camera=(), microphone=(), geolocation=()`.
+- `Strict-Transport-Security` is sent by Vercel (`max-age=63072000; includeSubDomains; preload`), not by the app.
+
 ## Deterministic score
 
 Five fixed rules, fixed weights, so the same English text always gets the same score:
@@ -95,7 +102,7 @@ From [docs/product-roadmap-v2.md](docs/product-roadmap-v2.md):
 - The Rules v2 cycle with a new tuning set and a blind holdout 3 (Phase 8).
 - The guarded, optional explainer (Phase 9). No language model is called; a code search finds no model client or model API call.
 - Arabic reply blocks for the drafter, and the full report export the roadmap describes (Phase 10). Export PDF today uses the browser's print dialog.
-- Hardening (Phase 11): no Content-Security-Policy yet (only `X-Content-Type-Options`, `Referrer-Policy` and `X-Frame-Options` are set), no rate limit on `/api/analyze`, no end-to-end browser or accessibility tests, no threat model document. `/api/translate` has a best-effort throttle of 10 requests a minute per client address, in server memory, per instance; the real spend limit is the quota set on the Google Cloud project.
+- Hardening (Phase 11, rest): no rate limit on `/api/analyze`, no end-to-end browser or accessibility tests, no threat model document. `/api/translate` has a best-effort throttle of 10 requests a minute per client address, in server memory, per instance; the real spend limit is the quota set on the Google Cloud project.
 - The documentation set (Phase 12): system card and architecture document.
 
 See [docs/known-limitations.md](docs/known-limitations.md) for what the rules and cross-checks miss and over-match. It is internal documentation; the app does not show this list.

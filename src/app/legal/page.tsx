@@ -15,11 +15,11 @@ export const metadata: Metadata = {
     "Eight warning signs of a fake or risky job offer in the UAE, what to do about each one, and what Offer Check is.",
 };
 
-// Static: fixed text only, no request data. The offline library: the eight warning signs from one
+// Fixed text only, no request data. The offline library: the eight warning signs from one
 // official page (src/lib/warningSigns.ts) and the plain-language About text (owner decision,
 // 2026-11-09). The reference app's law articles and penalties are not copied: they had no source.
 // /guide and /about redirect here (next.config.ts).
-export const dynamic = "force-static";
+// Rendered per request only so that it gets the CSP nonce (src/proxy.ts); it reads no request data.
 
 const ABOUT: { id: string; title: string; body: React.ReactNode }[] = [
   {
