@@ -69,7 +69,7 @@ export default function AboutPage() {
         </p>
         <p>
           <T>
-            People in the UAE who receive a job offer by WhatsApp, email or LinkedIn and want to check it for warning signs, such as a request for a fee, a code or identity documents.
+            It is for anyone who has received a job offer for work in the UAE, whether they are already in the country or still abroad, and wants to check it for warning signs before they pay or share anything.
           </T>
         </p>
       </Card>

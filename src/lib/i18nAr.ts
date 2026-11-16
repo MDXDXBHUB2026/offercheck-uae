@@ -796,8 +796,9 @@ const ENTRIES: Record<string, string> = {
   "What it is for, and who it is for": "الغرض منه، ولمن هو",
   "Some job offers sent in the UAE by WhatsApp, email or LinkedIn are fake or risky. They may ask you to pay a fee, share a code or send your identity documents before you have a real job.":
     "بعض عروض العمل المرسلة في الإمارات عبر واتساب أو البريد الإلكتروني أو LinkedIn مزيفة أو محفوفة بالمخاطر. قد تطلب منك دفع رسوم أو مشاركة رمز أو إرسال مستندات هويتك قبل أن تحصل على وظيفة فعلية.",
-  "People in the UAE who receive a job offer by WhatsApp, email or LinkedIn and want to check it for warning signs, such as a request for a fee, a code or identity documents.":
-    "الأشخاص في الإمارات الذين يتلقون عرض عمل عبر واتساب أو البريد الإلكتروني أو LinkedIn ويريدون فحصه بحثًا عن علامات تحذير، مثل طلب رسوم أو رمز أو مستندات هوية.",
+  // [review] audience sentence rewritten (2026-11-16): covers people abroad as well as in the UAE.
+  "It is for anyone who has received a job offer for work in the UAE, whether they are already in the country or still abroad, and wants to check it for warning signs before they pay or share anything.":
+    "إنه لكل من تلقى عرض عمل للعمل في الإمارات، سواء كان داخل الدولة بالفعل أو لا يزال في الخارج، ويريد فحصه بحثًا عن علامات التحذير قبل أن يدفع أو يشارك أي شيء.",
   "You paste the text of an offer: a message, an email or a post. Emirates ID, passport and UAE IBAN numbers in common formats are hidden in your browser before the text is sent.":
     "تلصق نص العرض: رسالة أو بريدًا إلكترونيًا أو منشورًا. تُخفى أرقام الهوية الإماراتية وجواز السفر والآيبان الإماراتي بالصيغ الشائعة في متصفحك قبل إرسال النص.",
   "Five fixed rules read the text for warning signs: a request to pay a fee or money; a request for a code, password or card details; a request for identity or bank documents; pressure to act quickly; and a free email address.":
