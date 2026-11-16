@@ -14,6 +14,7 @@ import { tr, type Arg } from "@/lib/i18n";
 export type Lang = "en" | "ar";
 
 const STORAGE_KEY = "offercheck_lang";
+export const LANG_STORAGE_KEY = STORAGE_KEY;
 let current: Lang = "en";
 const listeners = new Set<() => void>();
 
@@ -47,6 +48,13 @@ export function restoreLang() {
     saved = null;
   }
   if (saved === "ar" || saved === "en") setLang(saved);
+}
+
+// Settings > Clear my data: back to English on this page, without writing anything.
+export function resetLang() {
+  current = "en";
+  apply(current);
+  listeners.forEach((listener) => listener());
 }
 
 function subscribe(listener: () => void) {

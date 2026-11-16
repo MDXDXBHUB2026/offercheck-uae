@@ -863,13 +863,27 @@ const ENTRIES: Record<string, string> = {
   "Each counter expires on its own: after 2 minutes for a per-minute limit, after 25 hours for a daily one. They are kept in an Upstash Redis store in Mumbai.":
     "تنتهي صلاحية كل عدّاد تلقائيًا: بعد دقيقتين لحد الدقيقة، وبعد 25 ساعة للحد اليومي. وتُحفظ في مخزن Upstash Redis في مومباي.",
   "What stays in your browser": "ما يبقى في متصفحك",
-  "The Encrypted Vault: results you choose to save, encrypted with a passphrase that is not stored, and the number of saved results.":
-    "الخزنة المشفّرة: النتائج التي تختار حفظها، مشفّرة بعبارة مرور لا تُخزَّن، وعدد النتائج المحفوظة.",
-  "Your language choice and your animation choice.": "اختيارك للغة واختيارك للحركة.",
+  // [review] Phase 4a (2026-11-16): the vault line, the Settings choices, export, Clear my data, the
+  // installed app and the offline copy are new or rewritten.
+  "The Encrypted Vault: results you choose to save, encrypted with a passphrase that is not stored, and the number of saved results. Titles and notes are saved inside it, with Emirates ID, passport and UAE IBAN numbers hidden.":
+    "الخزنة المشفّرة: النتائج التي تختار حفظها، مشفّرة بعبارة مرور لا تُخزَّن، وعدد النتائج المحفوظة. تُحفظ العناوين والملاحظات داخلها، مع إخفاء أرقام الهوية الإماراتية وجواز السفر والآيبان الإماراتي.",
+  "Your choices in Settings: language, animations and text size, and whether you dismissed the install hint.":
+    "اختياراتك في الإعدادات: اللغة والحركة وحجم النص، وما إذا كنت أخفيت تلميح التثبيت.",
   "Reports you write on the Threat Radar stay in the open tab's memory only, are not sent anywhere, and are gone after a reload.":
     "تبقى البلاغات التي تكتبها في رادار التهديدات في ذاكرة علامة التبويب المفتوحة فقط، ولا تُرسل إلى أي مكان، وتختفي بعد إعادة التحميل.",
-  "To clear them: in the Encrypted Vault, unlock it and use Delete all. Or clear this site's data in your browser's settings, which removes the vault and both choices.":
-    "لمسحها: افتح الخزنة المشفّرة واستخدم \"حذف الكل\". أو امسح بيانات هذا الموقع من إعدادات متصفحك، فيُزال ذلك الخزنة والاختيارين معًا.",
+  "If you export the vault, the file is saved where your browser puts downloads. It is still encrypted, and Offer Check keeps no copy.":
+    "إذا صدّرت الخزنة، يُحفظ الملف حيث يضع متصفحك التنزيلات. يبقى مشفّرًا، ولا يحتفظ Offer Check بأي نسخة منه.",
+  "To clear them: open Settings and use Clear my data on this device. It removes the vault and every choice without the passphrase. Clearing this site's data in your browser's settings does the same.":
+    "لمسحها: افتح الإعدادات واستخدم \"امسح بياناتي على هذا الجهاز\". يُزيل ذلك الخزنة وكل الاختيارات دون الحاجة إلى عبارة المرور. ومسح بيانات هذا الموقع من إعدادات متصفحك يفعل الشيء نفسه.",
+  "If you install the app, it keeps its own storage: results saved in the installed app stay there, and results saved in the browser stay in the browser.":
+    "إذا ثبّت التطبيق، فله تخزينه الخاص: تبقى النتائج المحفوظة في التطبيق المثبّت هناك، وتبقى النتائج المحفوظة في المتصفح في المتصفح.",
+  "Pages kept for offline reading": "صفحات محفوظة للقراءة دون اتصال",
+  "After your first visit, your browser keeps a copy of the Check page and the About, Guidelines, Portals, Privacy and Terms pages, with the files they need, so you can read them offline.":
+    "بعد زيارتك الأولى، يحتفظ متصفحك بنسخة من صفحة الفحص وصفحات حول والإرشادات والبوابات والخصوصية والشروط، مع الملفات التي تحتاجها، لتقرأها دون اتصال.",
+  "The copy holds only these public pages and the app's own files. It never holds the text you paste, a result, or any reply from Offer Check's server to a check or a translation.":
+    "لا تحتوي النسخة إلا على هذه الصفحات العامة وملفات التطبيق نفسه. ولا تحتوي أبدًا على النص الذي تلصقه، ولا على نتيجة، ولا على أي رد من خادم Offer Check على فحص أو ترجمة.",
+  "Each new version of the site replaces the copy. Clearing this site's data in your browser's settings removes it.":
+    "كل إصدار جديد من الموقع يستبدل النسخة. ومسح بيانات هذا الموقع من إعدادات متصفحك يُزيلها.",
   "The hosting provider": "مزوّد الاستضافة",
   "Offer Check runs on Vercel. Vercel keeps its own infrastructure logs of requests, under its own terms.":
     "يعمل Offer Check على Vercel. تحتفظ Vercel بسجلات البنية التحتية الخاصة بها للطلبات، وفق شروطها.",
@@ -906,6 +920,83 @@ const ENTRIES: Record<string, string> = {
   "The operator may limit, change or stop the service, or any part of it, at any time. Limits on how often you can check or translate already apply.":
     "يجوز للمشغّل تقييد الخدمة أو تغييرها أو إيقافها، أو أي جزء منها، في أي وقت. وتسري بالفعل حدود على عدد مرات الفحص أو الترجمة.",
   "Questions about these terms:": "أسئلة حول هذه الشروط:",
+
+  // Production hardening Phase 4a (2026-11-16): Settings, vault tools, installable app, offline.
+  // Every entry in this block is [review]: written for this app, not yet reviewed by a native speaker.
+  // [review] Settings dialog
+  "Settings": "الإعدادات",
+  "Close settings": "إغلاق الإعدادات",
+  "These choices are kept in this browser only.": "تُحفظ هذه الاختيارات في هذا المتصفح فقط.",
+  "Text size": "حجم النص",
+  "Standard": "عادي",
+  "Large": "كبير",
+  "Animations": "الحركة",
+  "On": "تعمل",
+  "Paused": "متوقفة",
+  "Language": "اللغة",
+  "Theme": "المظهر",
+  "System": "حسب النظام",
+  "Dark": "داكن",
+  "Light": "فاتح",
+  "coming soon": "قريبًا",
+  "The light theme is coming soon. The site uses the dark theme for now.":
+    "المظهر الفاتح قادم قريبًا. يستخدم الموقع المظهر الداكن حاليًا.",
+  "App": "التطبيق",
+  "Clear my data on this device": "امسح بياناتي على هذا الجهاز",
+  "Removes your Encrypted Vault, its count and every choice saved in this browser (language, animations, text size). Nothing is stored on Offer Check's server.":
+    "يحذف خزنتك المشفّرة وعدد نتائجها وكل اختيار محفوظ في هذا المتصفح (اللغة والحركة وحجم النص). لا يُخزَّن أي شيء على خادم Offer Check.",
+  "Clear all Offer Check data on this device? Your saved results will be permanently deleted. This cannot be undone.":
+    "هل تريد مسح كل بيانات Offer Check على هذا الجهاز؟ ستُحذف نتائجك المحفوظة نهائيًا. لا يمكن التراجع عن ذلك.",
+  "Delete everything": "احذف كل شيء",
+  "Clear my data": "امسح بياناتي",
+  "Your Offer Check data was removed from this browser.": "أُزيلت بيانات Offer Check من هذا المتصفح.",
+  // [review] Install app and the iPhone / iPad hint
+  "Install app": "ثبّت التطبيق",
+  "Dismiss": "إخفاء",
+  "To install on iPhone or iPad: tap Share, then Add to Home Screen.":
+    "للتثبيت على iPhone أو iPad: اضغط على مشاركة، ثم على إضافة إلى الشاشة الرئيسية.",
+  "Saved results stay with the browser or the installed app they were saved in.":
+    "تبقى النتائج المحفوظة في المتصفح أو التطبيق المثبّت الذي حُفظت فيه.",
+  "Offer Check is installed on this device.": "Offer Check مثبّت على هذا الجهاز.",
+  "This browser does not offer to install the app.": "هذا المتصفح لا يتيح تثبيت التطبيق.",
+  // [review] Check page while offline
+  "You are offline. Checking an offer needs a connection. Your text stays in the box.":
+    "أنت غير متصل بالإنترنت. فحص العرض يحتاج إلى اتصال. يبقى نصك في المربع.",
+  // [review] Save to Encrypted Vault: title and notes masked
+  "Emirates ID, passport and UAE IBAN numbers in the title and notes are hidden before saving, as in the offer text.":
+    "تُخفى أرقام الهوية الإماراتية وجواز السفر والآيبان الإماراتي في العنوان والملاحظات قبل الحفظ، كما في نص العرض.",
+  // [review] Vault: forgot passphrase and reset
+  "Forgot your passphrase?": "نسيت عبارة المرور؟",
+  "Offer Check cannot recover a passphrase, and nothing in the vault can be opened without it. Resetting the vault permanently deletes the saved results in this browser, so you can start again.":
+    "لا يستطيع Offer Check استعادة عبارة المرور، ولا يمكن فتح أي شيء في الخزنة بدونها. إعادة تعيين الخزنة تحذف النتائج المحفوظة في هذا المتصفح نهائيًا، لتبدأ من جديد.",
+  "Reset vault": "أعد تعيين الخزنة",
+  "Permanently delete the {0} saved results in this browser? This cannot be undone.":
+    "هل تريد حذف النتائج المحفوظة ({0}) في هذا المتصفح نهائيًا؟ لا يمكن التراجع عن ذلك.",
+  "Permanently delete the saved results in this browser? This cannot be undone.":
+    "هل تريد حذف النتائج المحفوظة في هذا المتصفح نهائيًا؟ لا يمكن التراجع عن ذلك.",
+  "Delete and reset": "احذف وأعد التعيين",
+  // [review] Vault: backup (export and import)
+  "Backup": "نسخة احتياطية",
+  "Export saves the vault to a file, still encrypted. Import puts a saved file back in this browser. Opening it still needs the passphrase it was saved with. Keep the file somewhere private.":
+    "التصدير يحفظ الخزنة في ملف وهي لا تزال مشفّرة. والاستيراد يعيد ملفًا محفوظًا إلى هذا المتصفح. فتحها لا يزال يحتاج إلى عبارة المرور التي حُفظت بها. احفظ الملف في مكان خاص.",
+  "Export vault": "صدّر الخزنة",
+  "Import vault": "استورد الخزنة",
+  "Replace the saved results in this browser with the ones in this file? The current ones will be permanently deleted.":
+    "هل تريد استبدال النتائج المحفوظة في هذا المتصفح بالنتائج الموجودة في هذا الملف؟ ستُحذف النتائج الحالية نهائيًا.",
+  "Replace": "استبدل",
+  "Vault exported. Your browser saved the file.": "صُدّرت الخزنة. حفظ متصفحك الملف.",
+  "Vault imported. Open it with the passphrase it was saved with.": "استُوردت الخزنة. افتحها بعبارة المرور التي حُفظت بها.",
+  "This file is not an Offer Check vault backup, or it is damaged. Nothing was changed.":
+    "هذا الملف ليس نسخة احتياطية لخزنة Offer Check، أو أنه تالف. لم يتغيّر شيء.",
+  // [review] Vault: change passphrase
+  "Change passphrase": "غيّر عبارة المرور",
+  "Current passphrase": "عبارة المرور الحالية",
+  "New passphrase": "عبارة المرور الجديدة",
+  "Confirm new passphrase": "أكّد عبارة المرور الجديدة",
+  "Enter your current passphrase.": "أدخل عبارة المرور الحالية.",
+  "Save new passphrase": "احفظ عبارة المرور الجديدة",
+  "Passphrase changed. Use the new one from now on.": "تغيّرت عبارة المرور. استخدم الجديدة من الآن.",
+  "That is not the current passphrase. Nothing was changed.": "هذه ليست عبارة المرور الحالية. لم يتغيّر شيء.",
 };
 
 // Official names: in Arabic, each contact shows its own official Arabic name (src/data/uaeContacts.ts).

@@ -3343,3 +3343,169 @@ ol.bullets {
   background: var(--amber-bg);
   color: var(--ink);
 }
+
+/* ---------- Production hardening Phase 4a (2026-11-16): settings, install, offline ---------- */
+
+/* The gear button: a square 44px target beside the language button. */
+.header-actions .settings-btn {
+  min-width: var(--target);
+  padding-inline: var(--sp-2);
+}
+
+/* Phones: three buttons beside the brand, so tighter padding and gaps keep the whole name visible
+   at 390px (checked in Chrome, English and Arabic). Each button stays 44px tall and wide. */
+@media (max-width: 639px) {
+  .header-actions {
+    gap: var(--sp-1);
+  }
+
+  .header-actions .btn {
+    min-width: var(--target);
+    padding-inline: var(--sp-2);
+  }
+
+  /* The hotlines button keeps its phone icon and its name (visually hidden); the arrow goes. The
+     language button keeps its label (the other language's name); its icon goes. */
+  .hotline-chevron,
+  .lang-icon {
+    display: none;
+  }
+}
+
+/* A close or dismiss button: icon only, 44px target, its name in visually hidden text. */
+.icon-button {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: var(--target);
+  height: var(--target);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.icon-button:hover {
+  background: var(--surface-raised);
+  color: var(--heading);
+}
+
+/* Settings dialog: above the sticky header, one group per setting. Logical properties only, so
+   Arabic mirrors it. */
+.settings-backdrop {
+  z-index: 70;
+}
+
+.settings-panel {
+  max-width: 480px;
+}
+
+.setting-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+  min-width: 0;
+  margin: 0;
+  padding: var(--sp-3) 0 0;
+  border: 0;
+  border-top: 1px solid var(--border);
+}
+
+.setting-group legend {
+  float: inline-start;
+  width: 100%;
+  margin-bottom: var(--sp-2);
+  padding: 0;
+}
+
+.setting-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-2);
+  clear: both;
+}
+
+.setting-choice {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  min-height: var(--target);
+  padding: var(--sp-1) var(--sp-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--r-sm);
+  background: var(--surface);
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.setting-choice:has(input:checked) {
+  border-color: var(--green-line);
+  background: var(--green-bg);
+  color: var(--heading);
+}
+
+.setting-choice:has(input:focus-visible) {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.setting-choice input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--green);
+}
+
+.setting-choice[data-disabled] {
+  color: var(--muted);
+  cursor: not-allowed;
+}
+
+.chip-soon {
+  margin-inline-start: var(--sp-1);
+}
+
+/* The iPhone / iPad Add to Home Screen hint, in Settings and (dismissible) in the footer. */
+.install-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--sp-3);
+  max-width: 560px;
+  padding: var(--sp-3);
+  border: 1px solid var(--green-line);
+  border-radius: var(--r-md);
+  background: var(--surface-sunken);
+}
+
+.install-hint > .icon {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.install-hint > .stack-sm {
+  flex: 1;
+  min-width: 0;
+}
+
+/* Check page, offline: said above the box; the pasted text stays where it is. */
+.offline-banner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+}
+
+/* Settings > Text size > Large: a larger type scale inside the page, the footer and the dialogs.
+   The header keeps the standard scale, so its six tabs still fit beside the brand at 1280px
+   (docs/header-measurements.json). Controls grow with their text; the 44px minimum stays. */
+:root[data-text="large"] :is(#main, .site-footer, .modal, .dropdown-panel) {
+  --fs-xs: 14px;
+  --fs-sm: 16px;
+  --fs-base: 18px;
+  --fs-lg: 20px;
+  --fs-xl: 23px;
+  --fs-2xl: 28px;
+  --fs-3xl: 34px;
+  font-size: var(--fs-sm);
+}

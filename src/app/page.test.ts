@@ -41,6 +41,11 @@ const STORAGE_ALLOWED = [
   join("src", "components", "shell", "lang.ts"),
   // Phase 3d: the "Pause animations" choice, and nothing else.
   join("src", "components", "shell", "motion.ts"),
+  // Production hardening Phase 4a (2026-11-16): the text size choice, the dismissed install hint,
+  // and Clear my data, which only removes keys.
+  join("src", "components", "shell", "textSize.ts"),
+  join("src", "components", "shell", "install.ts"),
+  join("src", "components", "shell", "clearData.ts"),
 ];
 
 describe("no logging or storage of offer text", () => {
@@ -63,6 +68,17 @@ describe("no logging or storage of offer text", () => {
     const motion = read(STORAGE_ALLOWED[2]);
     expect(motion.match(/localStorage\.setItem\(([^)]*)\)/g)).toEqual(["localStorage.setItem(MOTION_STORAGE_KEY, motion)"]);
     expect(motion).not.toMatch(/\bconsole\.\w+|sessionStorage|indexedDB|document\.cookie/);
+    // Phase 4a: "standard" or "large"; "1" for a dismissed install hint; Clear my data writes nothing.
+    const size = read(STORAGE_ALLOWED[3]);
+    expect(size.match(/localStorage\.setItem\(([^)]*)\)/g)).toEqual(["localStorage.setItem(TEXT_SIZE_STORAGE_KEY, size)"]);
+    const install = read(STORAGE_ALLOWED[4]);
+    expect(install.match(/localStorage\.setItem\(([^)]*)\)/g)).toEqual(['localStorage.setItem(INSTALL_HINT_STORAGE_KEY, "1")']);
+    const clear = read(STORAGE_ALLOWED[5]);
+    expect(clear).not.toMatch(/setItem|getItem/);
+    expect(clear).toContain("window.localStorage.removeItem(key)");
+    for (const source of [size, install, clear]) {
+      expect(source).not.toMatch(/\bconsole\.\w+|sessionStorage|indexedDB|document\.cookie/);
+    }
   });
 
   it("finds the source files", () => {

@@ -14,6 +14,9 @@ import { DecryptError } from "@/lib/vaultCrypto";
 export const PASSPHRASE_NOTE =
   "You choose this passphrase. Offer Check cannot recover it. If you forget it, saved results cannot be opened.";
 export const SAVED_NOTICE = "Saved to your vault in this browser.";
+// Phase 4a: said under the notes, since the title and notes are now masked too.
+export const MASK_NOTE =
+  "Emirates ID, passport and UAE IBAN numbers in the title and notes are hidden before saving, as in the offer text.";
 // Decision 2h: by default only the result is saved (quoted findings, points, band, channel, title,
 // notes). The checked text is kept only if this box is ticked; it starts unticked.
 export const KEEP_TEXT_LABEL = "Also keep the checked text (it may contain personal details)";
@@ -51,13 +54,15 @@ export function buildRecord(input: {
   return {
     id: globalThis.crypto.randomUUID(),
     savedAt: new Date().toISOString(),
-    title: input.title,
+    // Phase 4a (2026-11-16): the title and notes are masked like the offer text, so a number typed
+    // or pasted there is hidden before it is encrypted and saved.
+    title: redactSensitive(input.title).text,
     channel: input.channel,
     ...(input.keepText && input.checkedText
       ? { text: Array.from(redactSensitive(input.checkedText).text).slice(0, SAVED_TEXT_MAX).join("") }
       : {}),
     view: input.view,
-    notes: input.notes.trim() || undefined,
+    notes: redactSensitive(input.notes.trim()).text || undefined,
     bandLabel: input.bandLabel,
     points: input.points,
     check: input.check,
@@ -158,8 +163,10 @@ export function SaveVaultModal({
           <span>{t("Encrypt and save in this browser")}</span>
         </h2>
         <form className="stack-sm" onSubmit={save}>
+          {/* Phase 4a: the masking note shares the intro's paragraph, so the buttons still fit a
+              744px-high window in English and Arabic. */}
           <p className="small muted">
-            {t(SAVE_INTRO)}
+            {t(SAVE_INTRO)} <span id="vault-hidden-numbers">{t(MASK_NOTE)}</span>
           </p>
           <div className="field">
             <label htmlFor="vault-title">{t("Title")}</label>
@@ -174,7 +181,13 @@ export function SaveVaultModal({
           </div>
           <div className="field">
             <label htmlFor="vault-notes">{t("Notes (optional)")}</label>
-            <textarea id="vault-notes" rows={3} value={notes} onChange={(e) => setNotes(e.target.value)} />
+            <textarea
+              id="vault-notes"
+              rows={3}
+              aria-describedby="vault-hidden-numbers"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+            />
           </div>
           {checkedText && (
           <label className="check-item small" htmlFor="vault-keep-text">

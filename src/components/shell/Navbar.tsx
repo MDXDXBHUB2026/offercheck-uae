@@ -7,6 +7,10 @@ import { BookOpen, ChevronDown, FileCheck2, Info, Languages, Lock, PhoneCall, Sh
 import { BrandBadge, NAV_GROUPS, NAV_ITEMS, type NavItem } from "@/components/shell/site";
 import { restoreLang, setLang, useLang, useT } from "@/components/shell/lang";
 import { restoreMotion } from "@/components/shell/motion";
+import { registerServiceWorker } from "@/components/shell/offline";
+import { startInstallWatch } from "@/components/shell/install";
+import { SettingsButton } from "@/components/shell/SettingsPanel";
+import { restoreTextSize } from "@/components/shell/textSize";
 import { Button } from "@/components/ui";
 import { useVaultState } from "@/components/vaultStore";
 import { HEADER_HOTLINE_IDS, contact } from "@/data/uaeContacts";
@@ -62,6 +66,9 @@ export function Navbar() {
   useEffect(() => {
     restoreLang();
     restoreMotion();
+    restoreTextSize();
+    startInstallWatch();
+    registerServiceWorker();
   }, []);
 
   // The tab title follows the interface language on the six main pages. Next sets the page's own
@@ -179,7 +186,7 @@ export function Navbar() {
                 </span>
                 <span className="btn-label-wide">{t("UAE Hotlines")}</span>
                 <span className="visually-hidden">{t("UAE hotlines")}</span>
-                <ChevronDown className="icon text-red" aria-hidden="true" />
+                <ChevronDown className="icon text-red hotline-chevron" aria-hidden="true" />
               </Button>
               {hotlinesOpen && (
                 <div id="hotlines-panel" ref={panelRef} className="dropdown-panel">
@@ -206,9 +213,11 @@ export function Navbar() {
               )}
             </div>
             <Button variant="secondary" lang={lang === "en" ? "ar" : "en"} onClick={() => setLang(lang === "en" ? "ar" : "en")}>
-              <Languages className="icon text-green" aria-hidden="true" />
+              <Languages className="icon text-green lang-icon" aria-hidden="true" />
               <span>{lang === "en" ? "العربية" : "English"}</span>
             </Button>
+            {/* Phase 4a: Settings, beside the language button, on every width. */}
+            <SettingsButton />
           </div>
         </div>
 

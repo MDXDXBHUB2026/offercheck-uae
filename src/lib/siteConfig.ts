@@ -16,4 +16,4 @@ export const SITE_OPERATOR = {
 export const SITE_CONTACT_EMAIL = "offercheck.uae@gmail.com";
 
 // The "Last updated" date at the top of /privacy and /terms (ISO date, shown as written).
-export const POLICY_LAST_UPDATED = "2026-11-15";
+export const POLICY_LAST_UPDATED = "2026-11-16";

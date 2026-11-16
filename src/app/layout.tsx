@@ -1,4 +1,5 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
+import { APP_BACKGROUND } from "@/lib/appColors";
 import type { ReactNode } from "react";
 import { connection } from "next/server";
 import { Navbar } from "@/components/shell/Navbar";
@@ -13,6 +14,17 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: { default: "Offer Check UAE", template: "%s · Offer Check UAE" },
   description: "Rule-based risk indicators for a pasted job offer.",
+  // Phase 4a (installable web app): the manifest link comes from src/app/manifest.ts; these are the
+  // tab icon and the iPhone / iPad home screen icon and name.
+  icons: {
+    icon: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }],
+    apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+  },
+  appleWebApp: { capable: true, title: "Offer Check", statusBarStyle: "black" },
+};
+
+export const viewport: Viewport = {
+  themeColor: APP_BACKGROUND,
 };
 
 // One header, main landmark and footer for every page. Pages render inside <main>.

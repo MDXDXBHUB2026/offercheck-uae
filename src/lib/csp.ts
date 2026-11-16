@@ -16,6 +16,11 @@
 // - style-src: the app's stylesheet is same-origin and it emits no <style> tags. Style values set
 //   from script (the checklist meter, the hero animation) go through the CSSOM, which CSP allows.
 //   `next dev` injects styles without a nonce, so dev alone adds 'unsafe-inline' for styles.
+// - worker-src 'self' (production hardening Phase 4a, 2026-11-16): registers /sw.js, the installable
+//   app's service worker. Needed: without it workers fall back to script-src, where
+//   'strict-dynamic' makes 'self' ignored, so the registration would be blocked.
+// - manifest-src 'self' (Phase 4a): /manifest.webmanifest. default-src 'self' already allows it; it
+//   is named so that a later change to default-src cannot stop the app from installing.
 // - object-src 'none', base-uri 'self', form-action 'self', frame-ancestors 'none'.
 // Not set: upgrade-insecure-requests (every URL is relative and Vercel already sends HSTS, so it
 // adds nothing, and it would break plain-http `next start` on localhost).
@@ -32,6 +37,8 @@ export function buildCsp(nonce: string, { dev = false }: CspOptions = {}): strin
     ["font-src", ["'self'"]],
     ["connect-src", ["'self'"]],
     ["media-src", ["'self'"]],
+    ["worker-src", ["'self'"]],
+    ["manifest-src", ["'self'"]],
     ["object-src", ["'none'"]],
     ["base-uri", ["'self'"]],
     ["form-action", ["'self'"]],

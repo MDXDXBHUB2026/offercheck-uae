@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ExternalLink, Lock, ShieldAlert, ShieldCheck } from "lucide-react";
 import { ArabicNote } from "@/components/shell/ArabicNote";
+import { InstallControl } from "@/components/shell/InstallControl";
 import { MotionToggle } from "@/components/shell/MotionToggle";
 import { contact } from "@/data/uaeContacts";
 import { T } from "@/components/shell/T";
@@ -143,6 +144,8 @@ export function SiteFooter() {
           <div className="footer-controls">
             <MotionToggle />
             <ArabicNote />
+            {/* Phase 4a: Install app where the browser offers it; the Add to Home Screen hint on iPhone and iPad. */}
+            <InstallControl place="footer" />
           </div>
         </div>
       </div>

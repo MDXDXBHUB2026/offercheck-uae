@@ -47,6 +47,13 @@ export function restoreMotion() {
   if (saved === "paused" || saved === "running") setMotion(saved);
 }
 
+// Settings > Clear my data: animations running again on this page, without writing anything.
+export function resetMotion() {
+  current = "running";
+  apply(current);
+  listeners.forEach((listener) => listener());
+}
+
 function subscribe(listener: () => void) {
   listeners.add(listener);
   return () => listeners.delete(listener);

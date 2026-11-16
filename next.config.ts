@@ -1,4 +1,7 @@
 import type { NextConfig } from "next";
+import { SW_HEADERS } from "./src/lib/serviceWorker";
+
+export const SW_HEADER_LIST = Object.entries(SW_HEADERS).map(([key, value]) => ({ key, value }));
 
 // Static security headers on every route, API included.
 // - Content-Security-Policy is not here: it carries a per-request nonce, so src/proxy.ts sets it
@@ -25,7 +28,12 @@ const nextConfig: NextConfig = {
     return REDIRECTS;
   },
   async headers() {
-    return [{ source: "/:path*", headers: SECURITY_HEADERS }];
+    return [
+      { source: "/:path*", headers: SECURITY_HEADERS },
+      // Phase 4a: the service worker is never cached, so a new deploy's worker is found at once
+      // (also set by its route, src/app/sw.js/route.ts; this wins over any default for static routes).
+      { source: "/sw.js", headers: SW_HEADER_LIST },
+    ];
   },
 };
 

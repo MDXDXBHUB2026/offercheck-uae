@@ -1,14 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { ArrowRight, Copy, Eye, EyeOff, KeyRound, Lock, ScanSearch, Trash2 } from "lucide-react";
 import { CrossChecksGroup, OfficialStepsGroup } from "@/components/CrossCheckGroups";
 import { useLang, useT } from "@/components/shell/lang";
 import { Button, ButtonLink, Callout, Card, Chip, cx } from "@/components/ui";
 import { clearReopen, setReopen, useVaultState } from "@/components/vaultStore";
+import { ChangePassphrase, ForgotPassphrase, VaultBackup } from "@/components/VaultTools";
 import type { UiLang } from "@/lib/i18n";
-import { openVault, rememberCount, saveVault, TEXT_NOT_KEPT, type VaultRecord } from "@/lib/vault";
+import { openVault, rememberCount, saveVault, TEXT_NOT_KEPT, VAULT_EVENT, vaultState, type VaultRecord } from "@/lib/vault";
 import { DecryptError } from "@/lib/vaultCrypto";
 
 const LEVEL_TONE = { High: "high", Medium: "caution", Low: "green" } as const;
@@ -140,6 +141,20 @@ export function EncryptedVault() {
     }
   }
 
+  // Phase 4a: the vault was deleted while open (Settings > Clear my data, or another tab), so the
+  // opened records and the passphrase leave memory too.
+  useEffect(() => {
+    const onChange = () => {
+      if (vaultState() === "none") lock();
+    };
+    window.addEventListener(VAULT_EVENT, onChange);
+    window.addEventListener("storage", onChange);
+    return () => {
+      window.removeEventListener(VAULT_EVENT, onChange);
+      window.removeEventListener("storage", onChange);
+    };
+  }, []);
+
   const current = records?.find((record) => record.id === selected) ?? null;
   const count = Number(vault);
 
@@ -223,6 +238,7 @@ export function EncryptedVault() {
               </p>
               <p className="small muted">{t("Offer Check cannot recover a forgotten passphrase.")}</p>
             </form>
+            <ForgotPassphrase count={count > 0 ? count : 0} />
           </Card>
         )
       ) : records.length === 0 ? (
@@ -272,6 +288,7 @@ export function EncryptedVault() {
                 {t("Delete all")}
               </Button>
             )}
+            <ChangePassphrase onChanged={setPassphrase} />
           </Card>
           {current && (
             <Card
@@ -374,6 +391,9 @@ export function EncryptedVault() {
           )}
         </div>
       )}
+
+      {/* Phase 4a: Export and Import, locked or open. An import replaces the vault, so an open one locks. */}
+      {vault !== "pending" && <VaultBackup onImported={lock} />}
     </div>
   );
 }

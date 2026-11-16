@@ -61,10 +61,21 @@ const SECTIONS: readonly Section[] = [
     id: "browser-heading",
     title: "What stays in your browser",
     lines: [
-      "The Encrypted Vault: results you choose to save, encrypted with a passphrase that is not stored, and the number of saved results.",
-      "Your language choice and your animation choice.",
+      "The Encrypted Vault: results you choose to save, encrypted with a passphrase that is not stored, and the number of saved results. Titles and notes are saved inside it, with Emirates ID, passport and UAE IBAN numbers hidden.",
+      "Your choices in Settings: language, animations and text size, and whether you dismissed the install hint.",
       "Reports you write on the Threat Radar stay in the open tab's memory only, are not sent anywhere, and are gone after a reload.",
-      "To clear them: in the Encrypted Vault, unlock it and use Delete all. Or clear this site's data in your browser's settings, which removes the vault and both choices.",
+      "If you export the vault, the file is saved where your browser puts downloads. It is still encrypted, and Offer Check keeps no copy.",
+      "To clear them: open Settings and use Clear my data on this device. It removes the vault and every choice without the passphrase. Clearing this site's data in your browser's settings does the same.",
+      "If you install the app, it keeps its own storage: results saved in the installed app stay there, and results saved in the browser stay in the browser.",
+    ],
+  },
+  {
+    id: "offline-heading",
+    title: "Pages kept for offline reading",
+    lines: [
+      "After your first visit, your browser keeps a copy of the Check page and the About, Guidelines, Portals, Privacy and Terms pages, with the files they need, so you can read them offline.",
+      "The copy holds only these public pages and the app's own files. It never holds the text you paste, a result, or any reply from Offer Check's server to a check or a translation.",
+      "Each new version of the site replaces the copy. Clearing this site's data in your browser's settings removes it.",
     ],
   },
   {

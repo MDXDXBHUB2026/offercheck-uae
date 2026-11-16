@@ -19,7 +19,8 @@ function directives(policy: string): Map<string, string[]> {
 describe("response headers", () => {
   it("sends the three basic headers and a Permissions-Policy on every route, and no static CSP", async () => {
     const rules = (await nextConfig.headers?.()) ?? [];
-    expect(rules).toHaveLength(1);
+    // Phase 4a: a second rule for the service worker only (its own headers, checked below).
+    expect(rules).toHaveLength(2);
     expect(rules[0].source).toBe("/:path*");
     expect(Object.fromEntries(rules[0].headers.map((h) => [h.key, h.value]))).toEqual({
       "X-Content-Type-Options": "nosniff",
@@ -29,7 +30,18 @@ describe("response headers", () => {
     });
     // The CSP carries a per-request nonce, so it comes from src/proxy.ts, not from next.config.ts.
     // HSTS comes from Vercel (see the comment in next.config.ts).
-    expect(JSON.stringify(rules)).not.toMatch(/content-security-policy|strict-transport-security/i);
+    expect(JSON.stringify(rules[0])).not.toMatch(/content-security-policy|strict-transport-security/i);
+    expect(JSON.stringify(rules)).not.toMatch(/strict-transport-security/i);
+  });
+
+  it("Phase 4a: /sw.js is never cached and has a strict policy of its own (a worker script, not a page)", async () => {
+    const rules = (await nextConfig.headers?.()) ?? [];
+    expect(rules[1].source).toBe("/sw.js");
+    expect(Object.fromEntries(rules[1].headers.map((h) => [h.key, h.value]))).toEqual({
+      "Content-Type": "application/javascript; charset=utf-8",
+      "Cache-Control": "no-cache, no-store, must-revalidate",
+      "Content-Security-Policy": "default-src 'self'; script-src 'self'",
+    });
   });
 });
 
@@ -47,6 +59,9 @@ describe("Content-Security-Policy (production)", () => {
         "font-src 'self'",
         "connect-src 'self'",
         "media-src 'self'",
+        // Phase 4a (installable app): the service worker and the manifest, same origin only.
+        "worker-src 'self'",
+        "manifest-src 'self'",
         "object-src 'none'",
         "base-uri 'self'",
         "form-action 'self'",

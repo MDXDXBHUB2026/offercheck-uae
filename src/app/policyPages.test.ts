@@ -94,13 +94,13 @@ describe("the three pages render in English and Arabic", () => {
   });
 
   it("Privacy and Terms show the same 'Last updated' date, from siteConfig, at the top", () => {
-    expect(POLICY_LAST_UPDATED).toBe("2026-11-15");
+    expect(POLICY_LAST_UPDATED).toBe("2026-11-16");
     for (const page of ["privacy", "terms"] as const) {
       const html = render(page, "en");
       const at = html.indexOf("Last updated:");
       expect(at).toBeGreaterThan(-1);
       expect(at).toBeLessThan(html.indexOf('class="lead"'));
-      expect(html).toContain(`<time dateTime="2026-11-15" lang="en" dir="ltr">2026-11-15</time>`);
+      expect(html).toContain(`<time dateTime="2026-11-16" lang="en" dir="ltr">2026-11-16</time>`);
       expect(render(page, "ar")).toContain(AR["Last updated:"]);
     }
   });
@@ -167,7 +167,8 @@ describe("no personal name in user-facing copy", () => {
     `About Acceptable Before Check Checks Confirm Contact Cross Delete Do Each Emirates Encrypted English Five Fixed Google Gov Hub
     IBAN IBANs ID If India It Last Like Limits Mumbai No Not Numbers Offer Official Open Or Portals Privacy Questions Rate Read Redis
     Reports Risk Save Some Terms Text The There They To Translation Translate Threat Radar UAE Upstash Use Vercel Vault Your WhatsApp
-    LinkedIn People Cloud What When Where Who An Arabic Indic Information Tools IP A Before How You AI Remove Send`.split(/\s+/),
+    LinkedIn People Cloud What When Where Who An Arabic Indic Information Tools IP A Before How You AI Remove Send
+    After Clear Clearing Guidelines Pages Settings Titles`.split(/\s+/),
   );
   it.each(["about", "privacy", "terms", "footer"] as const)("%s: every capitalised word is on the list", (page) => {
     const words = new Set(text(render(page, "en")).match(/\b[A-Z][A-Za-z]+\b/g) ?? []);
@@ -246,9 +247,18 @@ describe("privacy statements that can be checked on the code", () => {
     expect(source).toContain('["EXPIRE", key, String(ttlSeconds), "NX"]');
   });
 
-  it("what stays in the browser: exactly the vault, its count, the language and the animation choice", () => {
+  it("what stays in the browser: exactly the vault, its count, the language, animation and text size choices, and a dismissed install hint", () => {
     const storage = sources("src").filter((path) => /localStorage|sessionStorage|indexedDB/.test(read(path)));
-    expect(storage.sort()).toEqual(["src/components/shell/lang.ts", "src/components/shell/motion.ts", "src/lib/vault.ts"]);
+    expect(storage.sort()).toEqual([
+      "src/components/shell/clearData.ts",
+      "src/components/shell/install.ts",
+      "src/components/shell/lang.ts",
+      "src/components/shell/motion.ts",
+      "src/components/shell/textSize.ts",
+      "src/lib/vault.ts",
+    ]);
+    expect(read("src/components/shell/textSize.ts")).toMatch(/TEXT_SIZE_STORAGE_KEY = "offercheck_text_size"/);
+    expect(read("src/components/shell/install.ts")).toMatch(/INSTALL_HINT_STORAGE_KEY = "offercheck_install_hint_dismissed"/);
     expect(storage.some((path) => /sessionStorage|indexedDB/.test(read(path)))).toBe(false);
     expect(read("src/components/shell/lang.ts")).toContain('const STORAGE_KEY = "offercheck_lang";');
     expect(read("src/components/shell/motion.ts")).toMatch(/MOTION_STORAGE_KEY = "offercheck_motion"/);
@@ -256,8 +266,9 @@ describe("privacy statements that can be checked on the code", () => {
     expect(read("src/lib/vault.ts")).toMatch(/offercheck_vault_count_v1/);
     // Threat Radar reports: tab memory only.
     expect(read("src/components/radar/localReports.ts")).not.toMatch(/localStorage|sessionStorage|fetch\(/);
-    // How to clear them: the vault's own Delete all.
+    // How to clear them: the vault's own Delete all, and (Phase 4a) Settings > Clear my data.
     expect(read("src/components/EncryptedVault.tsx")).toContain('{t("Delete all")}');
+    expect(read("src/components/shell/SettingsPanel.tsx")).toContain('{t("Clear my data")}');
   });
 
   it("Privacy and Terms are marked drafted, pending legal review, in the docs", () => {

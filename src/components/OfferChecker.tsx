@@ -46,6 +46,7 @@ import type { TranslationRecord } from "@/lib/translation";
 import type { LanguageNotice } from "@/lib/textScript";
 import { MAX_OFFER_CHARS } from "@/lib/types";
 import { useLang, useT } from "@/components/shell/lang";
+import { useOffline } from "@/components/shell/offline";
 
 // Where the offer came from, as in the reference app. Display and saving only: the rules read the
 // text the same way for every channel. "Offer Letter PDF" means the letter's text, pasted.
@@ -132,6 +133,8 @@ export const LANGUAGE_GATE_NOTE =
 export const LANGUAGE_GATE_BUTTON = "Check original anyway (not checked)";
 // STALE-1: announced in the status region when an edit removes a result. No offer text.
 export const RESULT_CLEARED = "Result cleared because the text changed.";
+// Phase 4a (installable web app): shown on the Check page while the browser is offline.
+export const OFFLINE_NOTICE = "You are offline. Checking an offer needs a connection. Your text stays in the box.";
 
 // The checking panel (AI Studio port) appears only when a check takes longer than this, so a fast
 // check never flashes it. Nothing waits for it: the result shows the moment the server answers.
@@ -221,6 +224,7 @@ export function OfferChecker({
   // "View result" from the vault: the record handed over in memory, read on the first render only.
   const reopen = checkedFromVault(peekReopen());
   const [text, setText] = useState(reopen?.boxText ?? "");
+  const offline = useOffline();
   const [channel, setChannel] = useState<Channel>(reopen?.channel ?? "Email");
   const [modal, setModal] = useState<Modal>(null);
   const [checked, setChecked] = useState<CheckedResult | null>(noCheck);
@@ -531,6 +535,13 @@ export function OfferChecker({
           </ul>
           <p className="small muted">{t("Made-up examples written for this app. No real company or person.")}</p>
         </section>
+      )}
+      {/* Phase 4a: said as soon as the browser goes offline. Nothing is cleared: the pasted text stays in
+          the box, and a check started anyway gets the "offline" message below without losing it. */}
+      {offline && (
+        <Callout tone="high" role="status" className="offline-banner">
+          <p>{t(OFFLINE_NOTICE)}</p>
+        </Callout>
       )}
       <form className="card stack input-card" onSubmit={handleSubmit} aria-busy={loading || sending || undefined}>
         <div className="controls-bar">
