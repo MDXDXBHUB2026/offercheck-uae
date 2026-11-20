@@ -42,7 +42,7 @@ Source: `src/lib/agents/eval/offers.ts`, run through `runManager` with no transl
 
 ## Holdouts (consumed, recorded)
 
-Both holdouts ran once and are never run again, so these are records copied from `src/lib/agents/eval/records.ts` (itself checked against `docs/test-report.md` and `docs/holdout2-pass-bar.md`), not results this code can compute. Hash prefixes are the first 8 hex characters of `redFlag.ts` at the time.
+Each holdout ran once and is never run again, so these are records copied from `src/lib/agents/eval/records.ts` (itself checked against `docs/test-report.md`, `docs/holdout2-pass-bar.md` and `docs/holdout3-cases.md`), not results this code can compute. Hash prefixes are the first 8 hex characters of `redFlag.ts` at the time.
 
 ### Holdout 1
 
@@ -82,6 +82,35 @@ Cases counted:
 
 Holdout 2 may not be re-run, so these counts cannot be re-checked by running it again.
 
+### Holdout 3 (blind)
+
+- Ran once, blind, on 2026-11-20, after the rules were frozen at `redFlag.ts` sha256 `87a170e7…`.
+- Cases: 24.
+- The advisor had read `docs/defects.md` before writing the set, so it is blind to the rule patterns, not to the defect list.
+- **Result:** 21 of 24 matched their labels. The three that differ are H36 and H38, scams expected high with RF-001 and RF-002, which scored 0, and H53, a legitimate case expected low, which scored 60, High, with RF-001.
+- The misses are open in `docs/rules-backlog.md`; none is fixed. The per-case table is in `docs/test-report.md`.
+
+The pass bar. It was locked on 2026-11-20, before the run. The owner applies it; this report gives counts only.
+
+- At least 10 of the 12 scam cases flagged.
+- At most 1 of the 11 legitimate cases flagged.
+- No legitimate case flagged high.
+
+Cases counted:
+
+- Scam cases (12): H35 to H45, and H58. A scam is "flagged" when its band is medium or high.
+- Legitimate cases (11): H46 to H56. A legitimate case is "flagged" when its band is medium or high, or when it scores any points.
+- H57 (zero-width characters) is a stress case. Report it separately. It is not counted in either number.
+
+| Bar item | Required | Count | Where the count comes from |
+|---|---|---|---|
+| Scam cases flagged (medium or high) | at least 10 of 12 | 10 of 12 | Per-case record. Not flagged: H36 and H38, each 0, Low, no rule. |
+| Legitimate cases flagged (medium or high, or any points) | at most 1 of 11 | 1 of 11 | Per-case record. H53 scored 60, High, RF-001; the other 10 scored 0 with no rule and no info finding. |
+| Legitimate cases flagged high | 0 | 1 | Per-case record. H53. |
+| H57, a stress case reported separately | not counted | 60, High, RF-001 | Per-case record. Matches its label. The quote is `Pay the registration fee of AED 700 to proceed`: cleaning removed both zero-width spaces. |
+
+Holdout 3 may not be re-run, so these counts cannot be re-checked by running it again.
+
 ## Known limitations
 
 Copied from `docs/known-limitations.md`, every bullet; that file stays the source.
@@ -111,7 +140,7 @@ Offer Check is an MVP prototype. A low score or "No risk indicators found" does 
 - **Theme:** only the dark theme exists; System and Light are shown as coming soon.
 - **Offline reading covers six pages** (/check, /about, /legal, /portals, /privacy, /terms) after one online visit. Radar and Vault show the offline page when not reachable.
 
-- **Tested on a small synthetic set.** Holdout 1 is consumed, and it ran on the rules as they were before the Step 1d fixes. Strict result: 11 of 18 passed. With the right rule counted as a pass: 15 of 18. H10 was a real miss, not a band dispute. Holdout 2 is also consumed. It ran on the rules after those fixes, and 15 of 16 passed. That is 16 synthetic cases, so it is a small sample. After tuning (Batch A, 2026-11-08), H21 also passes; that is a tuned result, not a blind one, and the blind result stays 15 of 16. Failures are listed in `docs/rules-backlog.md`. Phase 8 part 1 (2026-11-20) changed the rules for eight documented defects; every case added then is tuned, not blind, and a comparison with the pre-change baseline showed that no holdout 1 or holdout 2 case changed. Holdout 3 has not run.
+- **Tested on a small synthetic set.** Holdout 1 is consumed, and it ran on the rules as they were before the Step 1d fixes. Strict result: 11 of 18 passed. With the right rule counted as a pass: 15 of 18. H10 was a real miss, not a band dispute. Holdout 2 is also consumed. It ran on the rules after those fixes, and 15 of 16 passed. That is 16 synthetic cases, so it is a small sample. After tuning (Batch A, 2026-11-08), H21 also passes; that is a tuned result, not a blind one, and the blind result stays 15 of 16. Failures are listed in `docs/rules-backlog.md`. Phase 8 part 1 (2026-11-20) changed the rules for eight documented defects; every case added then is tuned, not blind, and a comparison with the pre-change baseline showed that no holdout 1 or holdout 2 case changed. Holdout 3 (24 synthetic cases) ran once, blind, on 2026-11-20 against the frozen rules: 21 of 24 matched their labels. It missed two scams (H36, a fee called an "amount"; H38, a request for card number, expiry date and CVV) and flagged one honest line high (H53, `No deposit, fee or payment is required …`). These are open in `docs/rules-backlog.md`; the advisor had read `docs/defects.md` before writing the set, so it is blind to the rule patterns, not to the defect list.
 
 ### What this check cannot do
 

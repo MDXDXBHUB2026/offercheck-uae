@@ -7,6 +7,10 @@ import {
   HOLDOUT_2_BAR_ITEMS,
   HOLDOUT_2_PASS_BAR,
   HOLDOUT_2_RUN,
+  HOLDOUT_3_BAR_COUNTED,
+  HOLDOUT_3_BAR_ITEMS,
+  HOLDOUT_3_PASS_BAR,
+  HOLDOUT_3_RUN,
 } from "./records";
 
 // The holdout records must say what the docs say, word for word. They are records of a run that may
@@ -14,6 +18,7 @@ import {
 const read = (file: string) => readFileSync(join(process.cwd(), file), "utf8").replaceAll("\r\n", "\n");
 const REPORT = read("docs/test-report.md");
 const BAR = read("docs/holdout2-pass-bar.md");
+const BAR_3 = read("docs/holdout3-cases.md").replace(/\s+/g, " ");
 
 describe("holdout records", () => {
   it("holdout 1: every string is in the test report's holdout 1 section", () => {
@@ -31,7 +36,7 @@ describe("holdout records", () => {
   });
 
   it("holdout 2: every string is in the test report's holdout 2 section", () => {
-    const section = REPORT.slice(REPORT.indexOf("## Holdout 2 (consumed)"), REPORT.indexOf("## What none of the numbers above show"));
+    const section = REPORT.slice(REPORT.indexOf("## Holdout 2 (consumed)"), REPORT.indexOf("## Holdout 3 (consumed, blind)"));
     expect(section.length).toBeGreaterThan(0);
     expect(section).toContain(
       `once, on ${HOLDOUT_2_RUN.runDate}, after the rules were frozen at \`redFlag.ts\` sha256 \`${HOLDOUT_2_RUN.ranOnRedFlagPrefix}…\`.`,
@@ -55,10 +60,34 @@ describe("holdout records", () => {
     for (const line of HOLDOUT_2_BAR_ITEMS) expect(BAR).toContain(line);
   });
 
+  it("holdout 3: every string is in the test report's holdout 3 section", () => {
+    const section = REPORT.slice(REPORT.indexOf("## Holdout 3 (consumed, blind)"), REPORT.indexOf("## What none of the numbers above show"));
+    expect(section.length).toBeGreaterThan(0);
+    expect(section).toContain(
+      `once, blind, on ${HOLDOUT_3_RUN.runDate}, after the rules were frozen at \`redFlag.ts\` sha256 \`${HOLDOUT_3_RUN.ranOnRedFlagPrefix}…\`.`,
+    );
+    expect(section).toContain(HOLDOUT_3_RUN.blindNote);
+    expect(section).toContain(`**Result:** ${HOLDOUT_3_RUN.strict} matched their labels. ${HOLDOUT_3_RUN.failureNote}`);
+    expect(section).toContain(HOLDOUT_3_RUN.passBarLocked);
+    expect(section).toContain(HOLDOUT_3_RUN.noRerun);
+    for (const row of HOLDOUT_3_PASS_BAR) {
+      expect(section).toContain(`| ${row.item} | ${row.required} | ${row.count} | ${row.source} |`);
+    }
+  });
+
+  it("holdout 3 bar: the cases counted, the three items and the honest limit are as locked in docs/holdout3-cases.md", () => {
+    expect(BAR_3).toContain("Holdout 3 pass bar (locked 2026-11-20, before the run)");
+    expect(BAR_3).toContain("the advisor had read `docs/defects.md` before writing this set");
+    expect(BAR_3).toContain("the set is blind to the rule patterns, not to the defect list");
+    for (const line of HOLDOUT_3_BAR_COUNTED) expect(BAR_3).toContain(`- ${line}`);
+    for (const line of HOLDOUT_3_BAR_ITEMS) expect(BAR_3).toContain(line);
+  });
+
   it("holds hash prefixes only, never a full 64-character hash", () => {
     const source = read("src/lib/agents/eval/records.ts");
     expect(source).not.toMatch(/[0-9a-f]{64}/);
     expect(HOLDOUT_1_RESULT.ranOnRedFlagPrefix).toMatch(/^[0-9a-f]{8}$/);
     expect(HOLDOUT_2_RUN.ranOnRedFlagPrefix).toMatch(/^[0-9a-f]{8}$/);
+    expect(HOLDOUT_3_RUN.ranOnRedFlagPrefix).toMatch(/^[0-9a-f]{8}$/);
   });
 });

@@ -2,11 +2,19 @@
 
 As of 2026-11-08, updated for QA round 2 (LANG-2 and COPY-1, the QA round 2 commit, see git log) on top of the QA fix batch `34903e2` (UX-1, LANG-1, nav "Soon" badge, approval wording). Every number gives its source. No automated test here ran against a live URL. The live site was checked by hand; see "Manual post-deploy QA (live site)" below.
 
+## Phase 8: rules v2 cycle, part 2 (2026-11-20)
+
+Source: `npm run check` on the same machine, on branch `prod-hardening` after the holdout 3 record: **3440 tests in 63 files, 3440 passed, 0 failed**, then typecheck, lint, the production build and the no-bypass check. Before part 2 (`7b979c9`): 3431 tests in 62 files.
+
+- **Blind holdout 3:** ran once against `redFlag.ts` `87a170e72f33484a` (the freeze); 21 of 24 matched their labels. See "Holdout 3 (consumed, blind) and the locked pass bar" below.
+- **New suite:** `src/lib/agents/eval/holdout3.test.ts`, 6 tests. It guards the set (LF sha256 of `holdout3.ts`), the rules file it ran on and the per-case record; it never runs the rules.
+- **Changed suites:** `records.test.ts` 7 (2 added), `technicalEvidence.test.ts` (holdout 3 lines added to the existing holdouts test).
+
 ## Phase 8: rules v2 cycle, part 1 (2026-11-20)
 
 Source: `npm run check` on Windows 11, Node 24.19.0, npm 11.17.0, on branch `prod-hardening` at the freeze: **3431 tests in 62 files, 3431 passed, 0 failed**, then typecheck, lint, the production build and the no-bypass check. Before the cycle (`f43daa0`): 3247 tests in 60 files. Per-suite counts below are from `npx vitest run --reporter=json` at the same point.
 
-Every result added in this cycle is **tuned**, not blind: the cases were written while fixing the defects. Holdout 3 has not run.
+Every result added in this cycle is **tuned**, not blind: the cases were written while fixing the defects. Holdout 3 ran once afterwards, blind, against the frozen rules; see "Holdout 3 (consumed, blind) and the locked pass bar" below.
 
 - **Rules frozen:** `src/lib/agents/redFlag.ts` sha256 prefix `87a170e72f33484a` (first 16 hex characters; the full hash is in `docs/locked-files.md`), last changed in `656139e`. Before: `c4abfc00e371ccfd`. `scoring.ts` unchanged.
 - **Baseline guard:** `src/lib/agents/eval/baseline.test.ts` (90 tests) compares score, band, rule ids and info ids of the 43 dev cases, the 18 holdout 1 and 16 holdout 2 cases, the 4 sample offers and the 2 agent fixtures, plus the hero examples, with `baseline.json`, recorded before any change at `0bd0bdb`. It compares outputs with outputs, not with labels, so it grades no holdout. One case changed, explained by GAP-4: dev case L13 gained the 0-point RF-001-W (band Low, score 0, unchanged). No holdout 1 or holdout 2 case changed.
@@ -171,8 +179,55 @@ Source: `docs/holdout2-pass-bar.md`, `docs/rules-backlog.md` and `src/lib/agents
 
 Holdout 2 may not be re-run, so these counts cannot be re-checked by running it again.
 
+## Holdout 3 (consumed, blind) and the locked pass bar
+
+Source: `docs/holdout3-cases.md` (the set and its pass bar), `src/lib/agents/eval/holdout3.test.ts` and the per-case record `HOLDOUT_3_CASES` in `src/lib/agents/eval/records.ts`.
+
+- **Run:** once, blind, on 2026-11-20, after the rules were frozen at `redFlag.ts` sha256 `87a170e7…`. The set was opened for the first time after the freeze commit `7b979c9`; the run was a one-off script outside the committed tests, and no rule, pattern, label, threshold or case changed after it.
+- **Honest limit:** The advisor had read `docs/defects.md` before writing the set, so it is blind to the rule patterns, not to the defect list.
+- **Result:** 21 of 24 matched their labels. The three that differ are H36 and H38, scams expected high with RF-001 and RF-002, which scored 0, and H53, a legitimate case expected low, which scored 60, High, with RF-001.
+- The misses are open items in `docs/rules-backlog.md` ("Holdout 3") and `docs/defects.md` (H36, H38, H53). None is fixed.
+
+| ID | Type | Expected band | Expected rules | Score | Band | Rules | Info | Match |
+|---|---|---|---|---|---|---|---|---|
+| H35 | scam | high | RF-001 | 60 | high | RF-001 | none | yes |
+| H36 | scam | high | RF-001 | 0 | low | none | none | no |
+| H37 | scam | high | RF-002 | 60 | high | RF-002 | none | yes |
+| H38 | scam | high | RF-002 | 0 | low | none | none | no |
+| H39 | scam | high | RF-003, RF-004, RF-005 | 60 | high | RF-003, RF-004, RF-005 | none | yes |
+| H40 | scam | medium | RF-003, RF-005 | 40 | medium | RF-003, RF-005 | none | yes |
+| H41 | scam | high | RF-001, RF-004 | 60 | high | RF-001, RF-004 | none | yes |
+| H42 | scam | high | RF-001 | 60 | high | RF-001 | none | yes |
+| H43 | scam | high | RF-001 | 60 | high | RF-001 | none | yes |
+| H44 | scam | high | RF-002 | 60 | high | RF-002 | none | yes |
+| H45 | scam | high | RF-001 | 60 | high | RF-001 | none | yes |
+| H46 | legit | low | none | 0 | low | none | none | yes |
+| H47 | legit | low | none | 0 | low | none | none | yes |
+| H48 | legit | low | none | 0 | low | none | none | yes |
+| H49 | legit | low | none | 0 | low | none | none | yes |
+| H50 | legit | low | none | 0 | low | none | none | yes |
+| H51 | legit | low | none | 0 | low | none | none | yes |
+| H52 | legit | low | none | 0 | low | none | none | yes |
+| H53 | legit | low | none | 60 | high | RF-001 | none | no |
+| H54 | legit | low | none | 0 | low | none | none | yes |
+| H55 | legit | low | none | 0 | low | none | none | yes |
+| H56 | legit | low | none | 0 | low | none | none | yes |
+| H57 | stress | high | RF-001 | 60 | high | RF-001 | none | yes |
+| H58 | adversarial | high | RF-001 | 60 | high | RF-001 | none | yes |
+
+**Pass bar.** It was locked on 2026-11-20, before the run. The owner applies it; this report gives counts only.
+
+| Bar item | Required | Count | Where the count comes from |
+|---|---|---|---|
+| Scam cases flagged (medium or high) | at least 10 of 12 | 10 of 12 | Per-case record. Not flagged: H36 and H38, each 0, Low, no rule. |
+| Legitimate cases flagged (medium or high, or any points) | at most 1 of 11 | 1 of 11 | Per-case record. H53 scored 60, High, RF-001; the other 10 scored 0 with no rule and no info finding. |
+| Legitimate cases flagged high | 0 | 1 | Per-case record. H53. |
+| H57, a stress case reported separately | not counted | 60, High, RF-001 | Per-case record. Matches its label. The quote is `Pay the registration fee of AED 700 to proceed`: cleaning removed both zero-width spaces. |
+
+Holdout 3 may not be re-run, so these counts cannot be re-checked by running it again.
+
 ## What none of the numbers above show
-- **Real offers:** every set is synthetic and small. There are 43 dev cases, 18 in holdout 1 and 16 in holdout 2.
+- **Real offers:** every set is synthetic and small. There are 43 dev cases, 18 in holdout 1, 16 in holdout 2 and 24 in holdout 3.
 - **Other languages:** the fee, credentials, document and urgency rules are English only.
 - **Verification:** no company, domain or offer number is checked; those agents are not built.
 - **Real use:** nothing here measures speed on a deployed URL or behaviour under load.
