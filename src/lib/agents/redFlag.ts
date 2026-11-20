@@ -47,8 +47,14 @@ const NEGATED_ASK = new RegExp(
   `${NEGATOR}\\s+(?:ever\\s+)?(?:be\\s+)?(?:ask|charg|requir|request|collect|demand|need|pay|transfer|deposit|remit|click|open|tap|${SHARE_VERB})\\w*`,
   "i",
 );
-// A new payment verb starts a new ask: "We do not require experience pay the fee".
-const NEW_ASK = /(?<!\b(?:to|or)\s)\b(?:pay|transfer|deposit|remit|send)\b/i;
+// A new payment verb starts a new ask: "We do not require experience pay the fee". After "a",
+// "any", "the" etc. it is a noun, not a verb: "We never ask for a deposit" (GAP-3).
+const NEW_ASK = /(?<!\b(?:to|or|a|an|any|the|your|no)\s)\b(?:pay|transfer|deposit|remit|send)\b/i;
+// GAP-3: a cost with its own verb is a new statement, out of reach of a negated ask before it:
+// "We do not require a degree the fee is AED 500". "We do not charge a fee of AED 500" has none.
+// "and no fee is required" has no determiner, so it stays a negation.
+const NEW_COST_STATEMENT =
+  /\b(?:the|your|this|that|a)\s+(?:\w+\s+){0,2}?(?:fees?|charges?|costs?|payment|deposits?)\s+(?:is|are|will\s+be)\s+(?!not\b|never\b)/i;
 const STARTS_WITH_ASK = /^(?:pay|transfer|deposit|remit|send)\b/i;
 // On the cost itself: "No visa fee is required".
 const NO_COST =
@@ -65,7 +71,8 @@ function isNegated(text: string, match: RegExpExecArray): boolean {
   if (NEGATED_AT_MATCH.test(before.slice(-NEAR_MATCH_CHARS))) return true;
   const ask = NEGATED_ASK.exec(before);
   const matchEnd = match.index + match[0].length;
-  if (ask && !NEW_ASK.test(text.slice(ask.index + ask[0].length, matchEnd))) return true;
+  const afterAsk = ask ? text.slice(ask.index + ask[0].length, matchEnd) : "";
+  if (ask && !NEW_ASK.test(afterAsk) && !NEW_COST_STATEMENT.test(afterAsk)) return true;
   const noCost = NO_COST.exec(text);
   if (noCost && noCost.index <= match.index && match.index < noCost.index + noCost[0].length) {
     return true;
