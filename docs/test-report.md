@@ -2,6 +2,33 @@
 
 As of 2026-11-08, updated for QA round 2 (LANG-2 and COPY-1, the QA round 2 commit, see git log) on top of the QA fix batch `34903e2` (UX-1, LANG-1, nav "Soon" badge, approval wording). Every number gives its source. No automated test here ran against a live URL. The live site was checked by hand; see "Manual post-deploy QA (live site)" below.
 
+## Phase 8 round 2: three holdout 3 gaps fixed by tuning (2026-11-20)
+
+Source: `npm run check` on the same machine, on branch `prod-hardening` after the round 2 freeze: **3509 tests in 64 files, 3509 passed, 0 failed**, then typecheck, lint, the production build and the no-bypass check. Before round 2 (`0286d24`): 3440 tests in 63 files.
+
+Every result here is **tuned**, not blind: the three gaps were found by blind holdout 3 and fixed knowing the misses. The blind holdout 3 result stays as recorded below: 21 of 24 matched; scams flagged 10 of 12, genuine flagged 1 of 11, genuine flagged high 1.
+
+- **Rules frozen:** `src/lib/agents/redFlag.ts` sha256 prefix `4e979a0ce59d2144` (full hash in `docs/locked-files.md`), last changed in `89098d1`. Before: `87a170e72f33484a`. `scoring.ts` unchanged.
+- **H53** (`3723aaf`): `No deposit, fee or payment is required at any stage` was 60, High, RF-001; now 0, Low, info RF-001-W.
+- **H38** (`823ee3e`): `We need your card number, expiry date and CVV …` was 0, Low; now 60, High, RF-002.
+- **H36** (`89098d1`): `A medical test booking amount of 600 dirhams must be paid by the candidate to our agent` was 0, Low; now 60, High, RF-001.
+- **New suite:** `src/lib/agents/redFlag.round2.test.ts`, 44 tests, written before each fix: 32 defect tests (the documented text, the owner's wordings and our own, cases that must fire and look-alikes that must not) and 12 maximum-size runtime tests.
+- **Baseline guard:** `baseline.test.ts` now also compares the 24 holdout 3 cases with their per-case record (output with output; it grades nothing), 25 tests added. After each fix only the fixed case changed: holdout 3 H53, H38 and H36. No dev, holdout 1, holdout 2, sample offer, agent fixture or hero example case changed.
+- **Runtime:** 12 new inputs of 19,964 to 20,000 characters, slowest of 5 runs alone, whole run and rules alone:
+  - H53 no list, never closed len 19992 whole 37.6 ms rules 36.4 ms
+  - H53 no list, closed each time len 19968 whole 15.6 ms rules 12.3 ms
+  - H53 no list with modifiers len 19980 whole 10.5 ms rules 9.4 ms
+  - H53 list broken by a determiner len 20000 whole 22.9 ms rules 20.7 ms
+  - H53 fee is required with no list len 19992 whole 25.2 ms rules 31.0 ms
+  - H38 card number asked, repeated len 20000 whole 10.4 ms rules 6.3 ms
+  - H38 ask with no card item len 20000 whole 8.3 ms rules 7.3 ms
+  - H38 expiry asked, cue far away len 20000 whole 13.4 ms rules 16.8 ms
+  - H38 ID card number len 19980 whole 16.1 ms rules 13.4 ms
+  - H36 booking amount, never paid len 19995 whole 10.3 ms rules 5.8 ms
+  - H36 registration charge with an amount len 19995 whole 8.7 ms rules 4.8 ms
+  - H36 must be paid by the company len 19964 whole 4.6 ms rules 3.4 ms
+  Limit 1000 ms, unchanged.
+
 ## Phase 8: rules v2 cycle, part 2 (2026-11-20)
 
 Source: `npm run check` on the same machine, on branch `prod-hardening` after the holdout 3 record: **3440 tests in 63 files, 3440 passed, 0 failed**, then typecheck, lint, the production build and the no-bypass check. Before part 2 (`7b979c9`): 3431 tests in 62 files.
@@ -186,7 +213,7 @@ Source: `docs/holdout3-cases.md` (the set and its pass bar), `src/lib/agents/eva
 - **Run:** once, blind, on 2026-11-20, after the rules were frozen at `redFlag.ts` sha256 `87a170e7…`. The set was opened for the first time after the freeze commit `7b979c9`; the run was a one-off script outside the committed tests, and no rule, pattern, label, threshold or case changed after it.
 - **Honest limit:** The advisor had read `docs/defects.md` before writing the set, so it is blind to the rule patterns, not to the defect list.
 - **Result:** 21 of 24 matched their labels. The three that differ are H36 and H38, scams expected high with RF-001 and RF-002, which scored 0, and H53, a legitimate case expected low, which scored 60, High, with RF-001.
-- The misses are open items in `docs/rules-backlog.md` ("Holdout 3") and `docs/defects.md` (H36, H38, H53). None is fixed.
+- The misses are recorded in `docs/rules-backlog.md` ("Holdout 3") and `docs/defects.md` (H36, H38, H53). Phase 8 round 2 fixed all three by tuning (H53 now 0, Low; H38 60, High, RF-002; H36 60, High, RF-001). That is a tuned result, not a blind one: the table and the counts below are from the blind run and stay.
 
 | ID | Type | Expected band | Expected rules | Score | Band | Rules | Info | Match |
 |---|---|---|---|---|---|---|---|---|

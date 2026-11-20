@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { MAX_OFFER_CHARS } from "../types";
 import { runManager } from "./manager";
 
 // Phase 8 round 2 (2026-11-20): three gaps found by blind holdout 3 (H53, H38, H36), fixed by tuning.
@@ -108,5 +109,35 @@ describe("H36: a booking, registration or processing amount the candidate must p
     "Your booking amount has been paid by the company",
   ])("does not fire: %s", (text) => {
     expect(outcome(text)).toMatchObject({ score: 0, ruleIds: [] });
+  });
+});
+
+// Round 2 runtime: every new pattern on long and repeated input at the maximum size, through the whole
+// run. Same 1000ms limit as the existing maximum-size tests.
+export const ROUND2_FUZZ_INPUTS: [string, string][] = (() => {
+  const fill = (unit: string) => unit.repeat(Math.floor(MAX_OFFER_CHARS / unit.length));
+  return [
+    ["H53 no list, never closed", fill("no deposit, fee, ")],
+    ["H53 no list, closed each time", fill("No deposit, fee or payment is required ")],
+    ["H53 no list with modifiers", fill("no a b fee, c d fee or e f ")],
+    ["H53 list broken by a determiner", fill("No deposit, the fee ")],
+    ["H53 fee is required with no list", fill("fee or payment is required, ")],
+    ["H38 card number asked, repeated", fill("We need your card number ")],
+    ["H38 ask with no card item", fill("need your a b c ")],
+    ["H38 expiry asked, cue far away", fill("send us the expiry, ")],
+    ["H38 ID card number", fill("need your Emirates ID card number and expiry ")],
+    ["H36 booking amount, never paid", fill("booking amount ")],
+    ["H36 registration charge with an amount", fill("registration charge of AED 500 ")],
+    ["H36 must be paid by the company", fill("processing amount must be paid by the company ")],
+  ];
+})();
+
+describe("Round 2 runtime", () => {
+  it.each(ROUND2_FUZZ_INPUTS)("%s: maximum-size input runs in under 1000ms", (_name, input) => {
+    expect(input.length).toBeLessThanOrEqual(MAX_OFFER_CHARS);
+    expect(input.length).toBeGreaterThan(MAX_OFFER_CHARS - 60);
+    const start = performance.now();
+    runManager(input);
+    expect(performance.now() - start).toBeLessThan(1000);
   });
 });
