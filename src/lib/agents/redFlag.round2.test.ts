@@ -82,3 +82,31 @@ describe("H38: card number, expiry date or CVV asked for in any order", () => {
     expect(ruleIds(text)).not.toContain("RF-002");
   });
 });
+
+describe("H36: a booking, registration or processing amount the candidate must pay", () => {
+  it("documented text fires RF-001", () => {
+    expect(
+      outcome("A medical test booking amount of 600 dirhams must be paid by the candidate to our agent"),
+    ).toMatchObject({ score: 60, band: "high", ruleIds: ["RF-001"] });
+  });
+
+  it.each([
+    // Our own.
+    "The registration amount of AED 450 is payable by the candidate before the interview",
+    "A processing amount must be paid by you before visa stamping",
+    "The booking charge is to be paid by the candidate at the clinic",
+  ])("fires RF-001: %s", (text) => {
+    expect(ruleIds(text)).toEqual(["RF-001"]);
+  });
+
+  it.each([
+    "Medical test cost is paid by the company",
+    "The employer pays the booking amount",
+    // Our own.
+    "The booking amount for the medical test is paid by the company",
+    "The registration amount is payable by the employer",
+    "Your booking amount has been paid by the company",
+  ])("does not fire: %s", (text) => {
+    expect(outcome(text)).toMatchObject({ score: 0, ruleIds: [] });
+  });
+});

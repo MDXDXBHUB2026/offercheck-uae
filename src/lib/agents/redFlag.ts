@@ -395,6 +395,9 @@ export const RULES: Rule[] = [
         /\b(?:fees?|charges|deposits?)\b.{0,30}\b(?:required|due\b(?!\s+to\b)|payable|applicable|mandatory|applies|apply|non-refundable|must be paid|to be paid|on you|from you|on candidate|deducted|collected|charged)\b/i,
         /\b(?:settle|clear|arrange|bring|submit|charged?|collects?)\b.{0,40}\b(?:fees?|charges|deposits?)\b/i,
         /\b(?:candidates?|applicants?|you)\s+(?:bears?|(?:is|are)\s+responsible\s+for|must\s+(?:bear|cover))\b.{0,40}\b(?:fees?|charges|costs?)\b/i,
+        // H36: a booking, registration or processing amount or charge the candidate must pay. A payer
+        // named as the employer is cleared by the exclusion: "must be paid by the company".
+        /\b(?:booking|registration|processing)\s+(?:amount|charges?)\b.{0,60}?\b(?:must\s+be\s+paid|(?:to\s+be\s+paid|payable)\s+by\s+(?:the\s+)?(?:candidates?|applicants?|you))\b/i,
         // GAP-6: a reminder or "keep it ready" aimed at the candidate, with no payment verb.
         new RegExp(
           `\\b(?:(?:do\\s+not|don['’]t|never)\\s+forget|remember)\\b${NOT_THE_CANDIDATES_COST}{0,40}?\\b(?:fees?|charges|deposits?)\\b(?!-)`,
