@@ -13,14 +13,16 @@ import { HOLDOUT_3_CASES, HOLDOUT_3_PASS_BAR, HOLDOUT_3_RUN } from "./records";
 // docs/defects.md before writing the set, so it is blind to the rule patterns, not to the defect list.
 // Its result is the read-only per-case record in records.ts. A later rule change does not update it.
 // Phase 8 round 2 (2026-11-20) fixed H53, H38 and H36 by tuning. baseline.test.ts compares the 24 cases
-// with the record: only those three changed. That is a tuned result; the blind result stands.
+// with the record: only those three changed. That is a tuned result; the blind result stands. The
+// pre-merge H53 follow-up (b0506f5, "ever" before the verb) changed none of the 24.
 const HOLDOUT_3_HASHES = {
   // sha256 of holdout3.ts with LF line endings.
   fileSha256: "0da40072e24119f5a9768c706e72e877e6b8d38da3d116e1155ac0e39d91b629",
   // redFlag.ts when the set ran: the Phase 8 freeze (656139e, recorded at 7b979c9).
   ranOnRedFlagSha256: "87a170e72f33484a0d81997b9e6030e751634bf63356cef6a72ebb6c3bcc7352",
-  // The current file: sha256 prefix, first 16 hex characters. Round 2 freeze (89098d1).
-  redFlagSha256Prefix: "4e979a0ce59d2144",
+  // The current file: sha256 prefix, first 16 hex characters. Pre-merge H53 follow-up (b0506f5); was
+  // 4e979a0ce59d2144 at the round 2 freeze (89098d1).
+  redFlagSha256Prefix: "e79e26411ed1c23e",
 };
 
 const SOURCE = "src/lib/agents/eval/holdout3.ts";

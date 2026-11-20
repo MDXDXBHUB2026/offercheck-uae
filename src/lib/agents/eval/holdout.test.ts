@@ -16,7 +16,8 @@ const HOLDOUT_SHA256 = "6c7ed62f153e04169681e64c18d227dc5a2bb72e3488dbe12cf6626d
 // holdout 1 case changed. It is now 87a170e72f33484a... (Phase 8 part 1, frozen 2026-11-20 at
 // 656139e): baseline.test.ts compared score, band, rule ids and info ids of all 18 cases with the
 // pre-Phase 8 baseline, and none changed. After Phase 8 round 2 (89098d1, 4e979a0ce59d2144..., the
-// three holdout 3 gaps) the same guard showed none changed. These comparisons were guards, not new
+// three holdout 3 gaps) and the pre-merge H53 follow-up (b0506f5, e79e26411ed1c23e...) the same guard showed
+// none changed. These comparisons were guards, not new
 // holdout results.
 // HOLDOUT_1_RESULT (status, run date, rules hash prefix, both results) lives in records.ts, which
 // docs/technical-evidence.md copies; records.test.ts keeps it equal to docs/test-report.md.

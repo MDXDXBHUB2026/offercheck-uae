@@ -2,13 +2,25 @@
 
 As of 2026-11-08, updated for QA round 2 (LANG-2 and COPY-1, the QA round 2 commit, see git log) on top of the QA fix batch `34903e2` (UX-1, LANG-1, nav "Soon" badge, approval wording). Every number gives its source. No automated test here ran against a live URL. The live site was checked by hand; see "Manual post-deploy QA (live site)" below.
 
+## Pre-merge H53 follow-up: "ever" between a "no" list and its verb (2026-11-21)
+
+Source: `npm run check` on branch `prod-hardening` after the freeze: **3523 tests in 64 files, 3523 passed, 0 failed**, then typecheck, lint, the production build and the no-bypass check. Before (`fdb73ad`): 3509 tests in 64 files.
+
+This is a **tuned** result, not a blind one. The blind holdout 3 result stays as recorded below.
+
+- **Rules frozen:** `src/lib/agents/redFlag.ts` sha256 `e79e26411ed1c23e4fa9665d3fe43a7bb71f19901bededc0431cba30498cd1fa`, last changed in `b0506f5`. Before: `4e979a0ce59d2144` (`89098d1`). `scoring.ts` unchanged.
+- **Fix** (`b0506f5`): `No deposit, fee or payment is ever required` was 60, High, RF-001; now 0, Low, info RF-001-W.
+- **Tests:** 11 added to `src/lib/agents/redFlag.round2.test.ts`, written before the fix: 6 that must score 0 (the owner's four and two of our own) and 5 that must still fire RF-001 (the owner's three and two of our own); 3 of them failed before the fix. Also 3 maximum-size runtime inputs.
+- **Baseline guard:** no case changed in the dev set, holdouts 1, 2 and 3, sample offers, agent fixtures or hero examples.
+- **Runtime:** 15 inputs of 19,964 to 20,000 characters, slowest of 5 runs through the whole run: 4.0 to 37.6 ms; the three new ones 7.7, 11.3 and 9.5 ms. Limit 1000 ms.
+
 ## Phase 8 round 2: three holdout 3 gaps fixed by tuning (2026-11-20)
 
 Source: `npm run check` on the same machine, on branch `prod-hardening` after the round 2 freeze: **3509 tests in 64 files, 3509 passed, 0 failed**, then typecheck, lint, the production build and the no-bypass check. Before round 2 (`0286d24`): 3440 tests in 63 files.
 
 Every result here is **tuned**, not blind: the three gaps were found by blind holdout 3 and fixed knowing the misses. The blind holdout 3 result stays as recorded below: 21 of 24 matched; scams flagged 10 of 12, genuine flagged 1 of 11, genuine flagged high 1.
 
-- **Rules frozen:** `src/lib/agents/redFlag.ts` sha256 prefix `4e979a0ce59d2144` (full hash in `docs/locked-files.md`), last changed in `89098d1`. Before: `87a170e72f33484a`. `scoring.ts` unchanged.
+- **Rules frozen:** `src/lib/agents/redFlag.ts` sha256 prefix `4e979a0ce59d2144` (full hash in `docs/locked-files.md`), last changed in `89098d1`. Before: `87a170e72f33484a`. `scoring.ts` unchanged. Since replaced by the pre-merge H53 follow-up below.
 - **H53** (`3723aaf`): `No deposit, fee or payment is required at any stage` was 60, High, RF-001; now 0, Low, info RF-001-W.
 - **H38** (`823ee3e`): `We need your card number, expiry date and CVV …` was 0, Low; now 60, High, RF-002.
 - **H36** (`89098d1`): `A medical test booking amount of 600 dirhams must be paid by the candidate to our agent` was 0, Low; now 60, High, RF-001.

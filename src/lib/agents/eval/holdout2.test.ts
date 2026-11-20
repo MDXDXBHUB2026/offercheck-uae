@@ -22,9 +22,9 @@ import { HOLDOUT_2_RUN } from "./records";
 const HOLDOUT_2_HASHES = {
   fileSha256: "a68da0c26b3fbd4c5813b5b937856ee697090ca42efe7f8d325477cd63fe2ffa",
   ranOnRedFlagSha256: "05d05e13d896352e32624e905fd271fb88a4ada86549ff1dbd522cbda23d41ef",
-  // sha256 prefix, first 16 hex characters. Phase 8 round 2 (2026-11-20, 89098d1); was 87a170e72f33484a
-  // (part 1 freeze, 656139e), before that c4abfc00e371ccfd.
-  redFlagSha256Prefix: "4e979a0ce59d2144",
+  // sha256 prefix, first 16 hex characters. Pre-merge H53 follow-up (b0506f5); was 4e979a0ce59d2144
+  // (round 2, 89098d1), 87a170e72f33484a (part 1 freeze, 656139e), before that c4abfc00e371ccfd.
+  redFlagSha256Prefix: "e79e26411ed1c23e",
 };
 
 const SOURCE = "src/lib/agents/eval/holdout2.ts";

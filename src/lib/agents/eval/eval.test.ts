@@ -48,6 +48,7 @@ describe("eval set", () => {
   // Unchanged after Phase 8 part 1 (2026-11-20, 87a170e72f33484a..., tuned): only L13 changed, and
   // only its info finding (GAP-4); its band stays Low, so these counts do not move.
   // Unchanged after Phase 8 round 2 (2026-11-20, 4e979a0ce59d2144..., tuned): no dev case changed.
+  // Unchanged after the pre-merge H53 follow-up (b0506f5, e79e26411ed1c23e..., tuned): no dev case changed.
   it("matches the recorded tuned precision and recall", () => {
     const results = evaluateAll();
     expect(confusion(results, ["medium", "high"])).toEqual({
