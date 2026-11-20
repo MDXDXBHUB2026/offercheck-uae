@@ -39,6 +39,22 @@ describe("POST /api/analyze input limits", () => {
     await expect(broken.json()).resolves.toEqual({ error: "Request body must be JSON." });
   });
 
+  // Phase 8 QA-11: the empty check runs after cleaning, so hidden characters alone are empty.
+  it.each([
+    ["zero-width spaces", "​​​"],
+    ["a byte order mark, word joiners and spaces", "﻿ ⁠⁡ ⁤"],
+    ["a grapheme joiner, a variation selector and a vowel separator", "͏️᠎\n‍"],
+  ])("rejects text made only of %s as empty", async (_name, text) => {
+    const response = await post(JSON.stringify({ text }));
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: "Paste an offer to check." });
+  });
+
+  it("still checks text with hidden characters and a visible word", async () => {
+    const response = await post(JSON.stringify({ text: "​Pay the visa fee​" }));
+    expect(response.status).toBe(200);
+  });
+
   it("never echoes the offer text in an error", async () => {
     const canary = `CANARY-${"x".repeat(MAX_OFFER_CHARS)}`;
     const response = await post(JSON.stringify({ text: canary }));
@@ -152,9 +168,12 @@ describe("POST /api/analyze worst-case JSON escaping", () => {
     expect(new TextEncoder().encode(body(MAX_OFFER_CHARS)).length).toBeLessThan(MAX_BODY_BYTES);
   });
 
-  it("accepts 20,000 control characters", async () => {
+  // 20,000 control characters fit the body cap (QA-13). Since Phase 8 QA-11 they are also empty
+  // after cleaning, so the answer is the empty-input 400, not a result and not the 413.
+  it("takes 20,000 control characters within the cap, and finds them empty", async () => {
     const response = await POST(streamRequest(jsonStream(body(MAX_OFFER_CHARS), 8192)));
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({ error: "Paste an offer to check." });
   });
 
   it("refuses 20,001 control characters with the same 413 message", async () => {

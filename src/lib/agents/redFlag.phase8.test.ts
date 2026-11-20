@@ -195,3 +195,14 @@ describe("QA-6: hidden characters and look-alike letters", () => {
     expect(outcome(text)).toMatchObject({ score: 0, ruleIds: [] });
   });
 });
+
+describe("QA-11: input made only of hidden characters is empty", () => {
+  it("the page blocks it with the existing empty-input reason", async () => {
+    const { checkBlockedReason } = await import("../../components/OfferChecker");
+    for (const text of ["​​", "﻿ ⁡\n͏"]) {
+      expect(checkBlockedReason(text, true)).toBe(checkBlockedReason("", true));
+      expect(checkBlockedReason(text, false)).toBe(checkBlockedReason("", false));
+    }
+    expect(checkBlockedReason("​Pay the fee", true)).toBe("");
+  });
+});

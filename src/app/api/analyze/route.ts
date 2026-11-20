@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { cleanOfferText } from "@/lib/agents/intake";
 import { runWithAudit } from "@/lib/auditRun";
 import { allowAnalyze } from "@/lib/rateLimit";
 import { readCapped, TooLarge } from "@/lib/readCapped";
@@ -36,11 +37,16 @@ export async function POST(request: Request) {
   }
 
   const text = (body as { text?: unknown } | null)?.text;
-  if (typeof text !== "string" || text.trim().length === 0) {
+  if (typeof text !== "string") {
     return errorResponse("Paste an offer to check.", 400);
   }
   if (text.length > MAX_OFFER_CHARS) {
     return errorResponse(TOO_LONG, 413);
+  }
+  // QA-11: empty after cleaning, so text made only of hidden characters is empty too. The size
+  // check runs first: the limit applies to the text as sent.
+  if (cleanOfferText(text).text.length === 0) {
+    return errorResponse("Paste an offer to check.", 400);
   }
 
   // BATCHB-2: after a translation the page sends a fixed-value record (the result and a language
