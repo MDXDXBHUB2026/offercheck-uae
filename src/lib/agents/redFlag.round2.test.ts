@@ -63,6 +63,15 @@ describe("H53 follow-up: a short intensifier between the 'no' list and the verb"
     expect(outcome(text)).toMatchObject({ score: 0, band: "low", ruleIds: [] });
   });
 
+  it("gives the 0-point warning finding RF-001-W and no counted rule", () => {
+    expect(outcome("No deposit, fee or payment is ever required at any stage of our hiring process.")).toEqual({
+      score: 0,
+      band: "low",
+      ruleIds: [],
+      infoIds: ["RF-001-W"],
+    });
+  });
+
   it.each([
     "No deposit, the fee of AED 500 is ever required",
     "Pay the fee, deposit and registration charge today",
