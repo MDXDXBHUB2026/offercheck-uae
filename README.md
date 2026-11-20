@@ -1,6 +1,6 @@
 # Offer Check UAE
 
-Last updated: 16 Nov 2026
+Last updated: 21 Nov 2026
 
 Offer Check is an MVP prototype. A job seeker pastes a job offer they received, for example by WhatsApp, email or LinkedIn. Offer Check checks it against five fixed rules and returns a risk score from 0 to 100, the risk indicators it found, and the words from the offer that matched, up to 3 quotes per finding. It also runs five text-only cross-checks and lists official steps that apply to the findings; neither changes the score. On request it fills a fixed reply template, which the user reviews before copying. It reports risk indicators, not a verdict. A low score does not confirm an offer is genuine.
 
@@ -34,7 +34,7 @@ The steps of a check, in the order the run trace in `src/lib/agents/manager.ts` 
 | Step | Status | What it does |
 |---|---|---|
 | Manager | Built | Runs the steps in order and merges their results. It never sends, stores or contacts anyone. |
-| Intake | Partly built | Text cleaning only: removes hidden characters. It does not extract claims yet. |
+| Intake | Partly built | Text cleaning only: removes hidden characters. Since Phase 8, for matching only, fullwidth letters and digits become plain ones and a Cyrillic or Greek letter that looks Latin becomes its Latin letter inside a word that also has Latin letters; quotes stay as typed. It does not extract claims yet. |
 | Red-flag | Built | Five fixed rules look for warning signs in English text and quote the words that matched. |
 | Verification | Built (text only) | Five cross-checks on the cleaned text (V-01 to V-05), shown as "Cross-checks on the offer" with the matched words quoted. No outside lookups: no domain lookup, web search or page fetch. No effect on the score. |
 | Official channel | Built (text only) | Links findings, cross-checks and a UAE authority named in the text (MoHRE, ICP, GDRFA or Amer) to existing official entries, each with its official source link, shown as "Official steps for these findings". No new guidance text. No effect on the score. |
@@ -120,7 +120,6 @@ From [docs/product-roadmap-v2.md](docs/product-roadmap-v2.md):
 - Weights for the cross-checks in the score (Phase 5): deferred by owner decision, so they do not count.
 - The typed guidance library (`data/guidance.json`) with a reviewer field (Phase 6). The official-channel step maps findings to the existing warning signs, reporting channels and contacts only.
 - A run plan with skipped and failed steps and timeouts (Phase 7).
-- The Rules v2 cycle with a new tuning set and a blind holdout 3 (Phase 8).
 - The guarded, optional explainer (Phase 9). No language model is called; a code search finds no model client or model API call.
 - Arabic reply blocks for the drafter, and the full report export the roadmap describes (Phase 10). Export PDF today uses the browser's print dialog.
 - Hardening (Phase 11, rest): no end-to-end browser or accessibility tests, no threat model document.
@@ -140,11 +139,17 @@ npm run check   # tests, typecheck, lint, production build, no-bypass check
 
 Server environment variables are listed, without values, in `.env.example`. Rate limits use `KV_REST_API_URL`, `KV_REST_API_TOKEN`, `OFFERCHECK_RATE_SALT` and `OFFERCHECK_DAILY_CHAR_CAP`; with none of them set and outside Vercel, they run in memory. Translation needs one more: `GOOGLE_TRANSLATE_API_KEY`. Set it in the server environment only (for example in the Vercel project settings), never in a `NEXT_PUBLIC_` variable or in the repo, and set a quota on the Google Cloud project. The app works without it except for translation: the route answers `translation_unavailable`, nothing is sent, the send button is hidden, and the user can still check the original text.
 
-On 16 Nov 2026, `npm run check` passed on Node v24.19.0 with npm 11.17.0: 60 test files, 3,247 tests, then typecheck, lint, the production build and the no-bypass check.
+On 21 Nov 2026, `npm run check` passed on Node v24.19.0 with npm 11.17.0: 64 test files, 3,524 tests, then typecheck, lint, the production build and the no-bypass check.
 
 ## Synthetic data only
 
-Every offer in this repo, in the tests, the evaluation sets, the sample buttons and the Threat Radar demo reports, is synthetic. No real person's message is used. The evaluation sets are small: 43 dev cases (`src/lib/agents/eval/offers.ts`), 18 in holdout 1 (`holdout.ts`) and 16 in holdout 2 (`holdout2.ts`). The rules were tuned on the dev set and have not been validated on real scam data. See [docs/test-report.md](docs/test-report.md).
+Every offer in this repo, in the tests, the evaluation sets, the sample buttons and the Threat Radar demo reports, is synthetic. No real person's message is used. The evaluation sets are small: 43 dev cases (`src/lib/agents/eval/offers.ts`), 18 in holdout 1 (`holdout.ts`), 16 in holdout 2 (`holdout2.ts`) and 24 in holdout 3 (`holdout3.ts`). The rules were tuned on the dev set and have not been validated on real scam data. See [docs/test-report.md](docs/test-report.md) and [docs/technical-evidence.md](docs/technical-evidence.md).
+
+Rules v2 (Phase 8) is built. The rules were changed for eight documented defects, then for the three cases holdout 3 got wrong, then once more for the wording `No deposit, fee or payment is ever required`. Every case added for those changes is tuned, not blind.
+
+- **Holdout 1** (consumed): ran once, on 6 Nov 2026, before the Step 1d fixes. Strict: 11 of 18; with the right rule counted as a pass: 15 of 18.
+- **Holdout 2** (consumed): ran once, on 6 Nov 2026. 15 of 16 passed; the one failure, H21, was fixed afterwards by tuning, and the blind result stays 15 of 16.
+- **Holdout 3** (consumed, blind): ran once, on 20 Nov 2026, before the tuning fixes. 21 of 24 matched their labels. Against its pass bar, locked before the run: 10 of 12 scam cases flagged, 1 of 11 genuine cases flagged, and 1 genuine case flagged high. The later fixes for H36, H38 and H53 are tuned, not blind, and the blind result stays as recorded. The advisor who wrote the set had read `docs/defects.md`, so it is blind to the rule patterns, not to the defect list.
 
 ## Docs
 
