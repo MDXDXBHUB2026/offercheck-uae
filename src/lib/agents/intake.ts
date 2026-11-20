@@ -23,6 +23,23 @@ const SPACES_ONLY_LINE = /\n[ \t]+(?=\n)/g;
 const HARD_WRAP =
   /(?<!\n)(?<!^\S+[ \t]*)\n(?!\n|[ \t]*(?:[-*•][ \t]|\d+[.)][ \t]|[a-z][\w /-]{0,30}:|(?:pay|transfer|deposit|remit|send|share)\b))/gim;
 
+// GAP-5: a line that says the employer pays is a whole statement. When the next line starts a new
+// sentence (a capital letter), the break stays, so "Flights are paid by the company" cannot join and
+// clear "You settle the medical fee of AED 400" below it. A lower-case next line still joins.
+const EMPLOYER_PAYS_LINE =
+  /\b(?:covered|borne|paid|sponsored|waived)\s+(?:(?:directly|fully|entirely|for)\s+)?by\s+(?:(?:the|our|your)\s+)?(?:\w+\s+)?(?:company|employer|us|sponsor)\b|\b(?:company|employer|we)\s+(?:will\s+|shall\s+)?(?:covers?|pays?|bears?|sponsors?)\b|\b(?:is|are|will\s+be)\s+(?:covered|waived|sponsored)\b|\bfree of charge\b|\bat no cost\b/i;
+const NEW_SENTENCE = /^[ \t]*[A-Z]/;
+
+function joinHardWraps(text: string): string {
+  return text.replace(HARD_WRAP, (_match, offset: number) => {
+    const lineStart = text.lastIndexOf("\n", offset - 1) + 1;
+    const keep =
+      NEW_SENTENCE.test(text.slice(offset + 1, offset + 3)) &&
+      EMPLOYER_PAYS_LINE.test(text.slice(lineStart, offset));
+    return keep ? "\n" : " ";
+  });
+}
+
 export type CleanedOffer = {
   text: string;
   hiddenCharsRemoved: number;
@@ -31,11 +48,8 @@ export type CleanedOffer = {
 // A simple text cleaner for now. It treats the offer as data and adds nothing to it.
 export function cleanOfferText(rawText: string): CleanedOffer {
   const visible = rawText.replace(HIDDEN_CHARS, "");
-  const text = visible
-    .replace(LINE_ENDINGS, "\n")
-    .replace(NON_BREAKING_SPACES, " ")
-    .trim()
-    .replace(SPACES_ONLY_LINE, "\n")
-    .replace(HARD_WRAP, " ");
+  const text = joinHardWraps(
+    visible.replace(LINE_ENDINGS, "\n").replace(NON_BREAKING_SPACES, " ").trim().replace(SPACES_ONLY_LINE, "\n"),
+  );
   return { text, hiddenCharsRemoved: rawText.length - visible.length };
 }

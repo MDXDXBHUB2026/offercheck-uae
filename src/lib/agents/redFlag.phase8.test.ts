@@ -41,3 +41,26 @@ describe("GAP-3: a negated ask reaches only its own object", () => {
     expect(outcome(text)).toMatchObject({ score: 0, ruleIds: [], infoIds: ["RF-001-W"] });
   });
 });
+
+describe("GAP-5: an employer-covers line does not clear the next line", () => {
+  it("documented shape: the next line asks the candidate to pay", () => {
+    expect(
+      outcome("Visa and flights are covered by the company\nThe candidate must transfer AED 900 for processing"),
+    ).toMatchObject({ score: 60, band: "high", ruleIds: ["RF-001"] });
+  });
+
+  it.each([
+    "Flights are paid by the company\nYou settle the medical fee of AED 400",
+    "Accommodation is free of charge\nA training fee of AED 650 is due before joining",
+  ])("fires on the request on the next line: %j", (text) => {
+    expect(ruleIds(text)).toEqual(["RF-001"]);
+  });
+
+  it.each([
+    "Benefits:\nVisa, medical insurance and air tickets\nare paid by the company\nAccommodation is free of charge",
+    "Your visa fee, medical test and Emirates ID\nare covered by the employer",
+    "Relocation costs are covered by the company\nYour salary is transferred through WPS every month",
+  ])("keeps a multi-line benefits list paid by the employer at 0: %j", (text) => {
+    expect(outcome(text)).toMatchObject({ score: 0, ruleIds: [] });
+  });
+});
