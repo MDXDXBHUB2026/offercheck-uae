@@ -112,3 +112,23 @@ describe("GAP-4: warning mentions are handled the same way", () => {
     expect(outcome(text)).toMatchObject({ score: 60, band: "high", ruleIds: ["RF-001"] });
   });
 });
+
+// GAP-2 is closed by design, not by a rule change: in the documented sentence the employer is the
+// payer of the whole list, so 0 is right. The real risk is an ask with its own verb beside it.
+describe("GAP-2: a list paid by the employer, and a real ask beside one", () => {
+  it.each([
+    "The visa fee of AED 500 and flights are paid by the company",
+    "The visa fee of AED 500 and the medical fee are paid by the company",
+    "The visa fee, medical test and flights are covered by the employer",
+  ])("stays 0 when the employer pays the whole list: %s", (text) => {
+    expect(outcome(text)).toMatchObject({ score: 0, ruleIds: [] });
+  });
+
+  it.each([
+    "Pay the visa fee of AED 500, and flights are paid by the company",
+    "You pay the visa fee of AED 500 and flights are paid by the company",
+    "Transfer AED 500 for the visa, and the hotel is paid by the company",
+  ])("fires on an ask with its own verb: %s", (text) => {
+    expect(outcome(text)).toMatchObject({ score: 60, band: "high", ruleIds: ["RF-001"] });
+  });
+});
