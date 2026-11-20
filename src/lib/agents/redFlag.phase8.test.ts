@@ -166,3 +166,32 @@ describe("QA-14: over-matches", () => {
     expect(outcome(text)).toMatchObject({ score: 20, ruleIds: ["RF-004"] });
   });
 });
+
+describe("QA-6: hidden characters and look-alike letters", () => {
+  // Built from escape sequences, so this file holds no invisible or look-alike characters.
+  const CYR = { a: "а", e: "е", o: "о", i: "і", A: "А" };
+  const fullwidth = (text: string) =>
+    [...text].map((c) => (c >= "!" && c <= "~" ? String.fromCharCode(c.charCodeAt(0) + 0xfee0) : c)).join("");
+
+  it.each([
+    ["Cyrillic letters inside Latin words", `P${CYR.a}y the pr${CYR.o}cessing f${CYR.e}${CYR.e}`],
+    ["fullwidth letters", fullwidth("Pay the visa fee")],
+    ["a combining grapheme joiner inside fee", "Pay the visa f͏ee"],
+    ["invisible operators inside visa fee", "Pay the vi⁡⁢sa f⁣e⁤e"],
+  ])("fires RF-001 through %s", (_name, text) => {
+    expect(outcome(text)).toMatchObject({ score: 60, band: "high", ruleIds: ["RF-001"] });
+  });
+
+  it("quotes the words as typed, look-alike letters and all", () => {
+    const text = `P${CYR.a}y the pr${CYR.o}cessing f${CYR.e}${CYR.e}`;
+    expect(runManager(text).findings[0].evidence).toEqual([text]);
+  });
+
+  it.each([
+    ["Russian", "Оплатите сбор AED 500"],
+    ["an all-Cyrillic word that looks like pay", "рау the visa"],
+    ["Greek", "Πληρωμή τέλους"],
+  ])("leaves %s alone and gives no points", (_name, text) => {
+    expect(outcome(text)).toMatchObject({ score: 0, ruleIds: [] });
+  });
+});

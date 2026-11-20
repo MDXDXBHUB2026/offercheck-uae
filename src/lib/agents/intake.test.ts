@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { cleanOfferText } from "./intake";
+import { cleanOfferText, foldForMatching } from "./intake";
 import { runRedFlagWorker } from "./redFlag";
 
 describe("cleanOfferText", () => {
@@ -80,5 +80,40 @@ describe("cleanOfferText", () => {
   it("lets a rule match a phrase split by a hidden character", () => {
     const { text } = cleanOfferText("Pay the visa\u200B fee today");
     expect(runRedFlagWorker(text).map((finding) => finding.check)).toContain("fee_requested");
+  });
+});
+
+describe("Phase 8 QA-6: hidden characters and folding for matching", () => {
+  it.each(["200B", "200C", "200D", "2060", "2061", "2062", "2063", "2064", "034F", "FE0F", "180E", "FEFF"])(
+    "removes U+%s",
+    (hex) => {
+      const char = String.fromCharCode(Number.parseInt(hex, 16));
+      expect(cleanOfferText(`vi${char}sa`)).toEqual({ text: "visa", hiddenCharsRemoved: 1 });
+    },
+  );
+
+  it("folds fullwidth letters and digits, same length", () => {
+    const typed = "Ｐａｙ ＡＥＤ ５００";
+    expect(foldForMatching(typed)).toBe("Pay AED 500");
+  });
+
+  it("folds Cyrillic and Greek look-alikes only inside a word that mixes them with Latin", () => {
+    expect(foldForMatching("vіsa fее")).toBe("visa fee");
+    expect(foldForMatching("οffer")).toBe("offer");
+    expect(foldForMatching("рау")).toBe("рау");
+  });
+
+  it.each([
+    ["Russian", "Оплатите сбор за визу"],
+    ["Arabic", "ادفع رسوم التأشيرة"],
+    ["Hindi", "वीज़ा शुल्क का भुगतान करें"],
+  ])("leaves genuine %s text unchanged", (_name, text) => {
+    expect(cleanOfferText(text).text).toBe(text);
+    expect(foldForMatching(text)).toBe(text);
+  });
+
+  it("never changes the length, so a match maps back to the text as typed", () => {
+    const typed = "Pаy ＡＥＤ 500 to hr＠gmail.com";
+    expect(foldForMatching(typed)).toHaveLength(typed.length);
   });
 });

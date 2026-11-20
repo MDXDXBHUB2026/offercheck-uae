@@ -14,7 +14,8 @@ type Rule = {
   severity: Severity;
   // Names the info finding emitted when negation suppresses this rule.
   warningCheck?: string;
-  scan: (text: string) => Scan;
+  // text is what the rules match; display is the same text as typed, same length, for quotes (QA-6).
+  scan: (text: string, display: string) => Scan;
 };
 
 // Splits on punctuation so "Do not delay, pay the fee" is two clauses, but keeps "12,000",
@@ -81,10 +82,11 @@ function isNegated(text: string, match: RegExpExecArray): boolean {
   return !STARTS_WITH_ASK.test(match[0]) && NEGATED_AFTER.test(text.slice(match.index));
 }
 
-function quote(clause: string, matchIndex: number): string {
-  if (clause.length <= MAX_QUOTE_CHARS) return clause;
-  const start = Math.max(0, matchIndex - MAX_QUOTE_CHARS / 2);
-  return clause.slice(start, start + MAX_QUOTE_CHARS).trim();
+// The quote comes from display, the text as typed, at the clause's place in the matched text.
+function quote(display: string, clauseStart: number, clause: string, matchIndex: number): string {
+  if (clause.length <= MAX_QUOTE_CHARS) return display.slice(clauseStart, clauseStart + clause.length);
+  const start = clauseStart + Math.max(0, matchIndex - MAX_QUOTE_CHARS / 2);
+  return display.slice(start, start + MAX_QUOTE_CHARS).trim();
 }
 
 // A part with its own payer ends the list: in "Send your CV and we pay the fee", we are paying.
@@ -193,7 +195,7 @@ function matchClauses(
   listEnd?: RegExp,
   listHead?: RegExp,
 ) {
-  return (text: string): Scan => {
+  return (text: string, display: string): Scan => {
     const scan: Scan = { evidence: [], warnings: [] };
     for (const raw of text.matchAll(CLAUSE)) {
       const clause = raw[0].trim();
@@ -223,14 +225,14 @@ function matchClauses(
                 !isNegated(reach, found) && !THIRD_PARTY_WARNING.test(reach.slice(0, found.index)),
             );
             if (request) {
-              scan.evidence.push(quote(clause, offset + request.index));
+              scan.evidence.push(quote(display, clauseStart, clause, offset + request.index));
               break;
             }
             // GAP-4: a mention in a warning about someone else counts like a negated one.
             const warnedAbout = (found: RegExpExecArray) =>
               isNegated(reach, found) || THIRD_PARTY_WARNING.test(reach.slice(0, found.index));
             const suppressed = matches[0] ?? (mentioned && warnedAbout(mentioned) ? mentioned : null);
-            if (suppressed) scan.warnings.push(quote(clause, offset + suppressed.index));
+            if (suppressed) scan.warnings.push(quote(display, clauseStart, clause, offset + suppressed.index));
           }
         }
         offset += part.length;
@@ -282,11 +284,11 @@ function isWarnedContact(text: string, emailStart: number): boolean {
   return warning !== null && !OWN_CONTACT_AFTER_WARNING.test(before.slice(warning.index));
 }
 
-function findFreeEmails(text: string): Scan {
+function findFreeEmails(text: string, display: string): Scan {
   const evidence = [...text.matchAll(EMAIL)]
     .filter((match) => FREE_EMAIL_DOMAINS.has(match[1].toLowerCase()))
     .filter((match) => !isWarnedContact(text, match.index))
-    .map((match) => match[0]);
+    .map((match) => display.slice(match.index, match.index + match[0].length));
   return { evidence, warnings: [] };
 }
 
@@ -475,10 +477,14 @@ function toFinding(check: string, severity: Severity, source: string, quotes: st
 }
 
 // Offer text is untrusted data: it is only ever matched against fixed patterns, never interpreted.
-export function runRedFlagWorker(offerText: string): Finding[] {
+// matchText is the copy the rules match (intake.ts foldForMatching, QA-6). It must have the same
+// length as offerText, because quotes are cut from offerText at the places matched in matchText;
+// any other value is ignored and offerText is matched as it is.
+export function runRedFlagWorker(offerText: string, matchText: string = offerText): Finding[] {
+  const text = matchText.length === offerText.length ? matchText : offerText;
   const findings: Finding[] = [];
   for (const rule of RULES) {
-    const { evidence, warnings } = rule.scan(offerText);
+    const { evidence, warnings } = rule.scan(text, offerText);
     if (evidence.length > 0) {
       findings.push(toFinding(rule.check, rule.severity, rule.id, evidence));
     }

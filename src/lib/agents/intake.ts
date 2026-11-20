@@ -5,10 +5,13 @@ const HIDDEN_CHARS = new RegExp(
     "[\\u0000-\\u0008\\u000B\\u000C\\u000E-\\u001F]", // C0 controls, except tab, newline, return
     "[\\u007F-\\u009F]", // DEL and C1 controls
     "\\u00AD", // soft hyphen
+    "\\u034F", // combining grapheme joiner (QA-6)
+    "\\u180E", // Mongolian vowel separator (QA-6)
     "[\\u200B-\\u200F]", // zero-width characters and direction marks
     "[\\u202A-\\u202E]", // bidi embedding and override controls
-    "\\u2060", // word joiner
+    "[\\u2060-\\u2064]", // word joiner, invisible function application, times, separator, plus (QA-6)
     "[\\u2066-\\u2069]", // bidi isolate controls
+    "\\uFE0F", // variation selector 16 (QA-6)
     "\\uFEFF", // byte order mark
   ].join("|"),
   "g",
@@ -38,6 +41,46 @@ function joinHardWraps(text: string): string {
       EMPLOYER_PAYS_LINE.test(text.slice(lineStart, offset));
     return keep ? "\n" : " ";
   });
+}
+
+// QA-6: look-alike letters, for matching only. Every entry maps one UTF-16 unit to one, so the
+// folded text has the same length as the text as typed and a match maps back to the words as typed.
+// Escape sequences only, so this file holds no look-alike characters.
+const LOOK_ALIKES: Record<string, string> = Object.fromEntries(
+  [
+    // Cyrillic lower case: a e o p c y x i j s h d q w l
+    ["а", "a"], ["е", "e"], ["о", "o"], ["р", "p"], ["с", "c"], ["у", "y"],
+    ["х", "x"], ["і", "i"], ["ј", "j"], ["ѕ", "s"], ["һ", "h"], ["ԁ", "d"],
+    ["ԛ", "q"], ["ԝ", "w"], ["ӏ", "l"],
+    // Cyrillic upper case: A B E K M H O P C T X Y I J S
+    ["А", "A"], ["В", "B"], ["Е", "E"], ["К", "K"], ["М", "M"], ["Н", "H"],
+    ["О", "O"], ["Р", "P"], ["С", "C"], ["Т", "T"], ["Х", "X"], ["Ү", "Y"],
+    ["І", "I"], ["Ј", "J"], ["Ѕ", "S"],
+    // Greek lower case: a o v i k p u
+    ["α", "a"], ["ο", "o"], ["ν", "v"], ["ι", "i"], ["κ", "k"], ["ρ", "p"],
+    ["υ", "u"],
+    // Greek upper case: A B E Z H I K M N O P T Y X
+    ["Α", "A"], ["Β", "B"], ["Ε", "E"], ["Ζ", "Z"], ["Η", "H"], ["Ι", "I"],
+    ["Κ", "K"], ["Μ", "M"], ["Ν", "N"], ["Ο", "O"], ["Ρ", "P"], ["Τ", "T"],
+    ["Υ", "Y"], ["Χ", "X"],
+  ],
+);
+const FULLWIDTH = /[！-～]/g;
+const WORD = /[\p{L}\p{N}]+/gu;
+const LATIN_LETTER = /[A-Za-z]/;
+const CYRILLIC_OR_GREEK = /[Ͱ-ϿЀ-ԯ]/;
+
+// The text the rules match against. Fullwidth letters, digits and signs become ASCII. A Cyrillic or
+// Greek look-alike becomes its Latin letter only inside a word that also has Latin letters, so a
+// word written wholly in Russian or Greek, and all Arabic and Hindi text, comes out unchanged. The
+// person sees, and every quote shows, the text as typed: this copy is never shown.
+export function foldForMatching(text: string): string {
+  const ascii = text.replace(FULLWIDTH, (char) => String.fromCharCode(char.charCodeAt(0) - 0xfee0));
+  return ascii.replace(WORD, (word) =>
+    LATIN_LETTER.test(word) && CYRILLIC_OR_GREEK.test(word)
+      ? word.replace(/./g, (char) => LOOK_ALIKES[char] ?? char)
+      : word,
+  );
 }
 
 export type CleanedOffer = {
