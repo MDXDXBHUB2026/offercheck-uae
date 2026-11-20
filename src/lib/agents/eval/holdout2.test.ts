@@ -13,13 +13,15 @@ import { HOLDOUT_2_RUN } from "./records";
 // changed), then Batch A (2026-11-08), which fixed the documented H21 miss. On the 77 cases only H21
 // changed (0 to 60, High, RF-002); A.1 changed none. H21 now passes after tuning: a tuned result, not a blind one, so
 // the blind result stays 15 of 16. Those comparisons were guards on the changes, not new runs.
+// Phase 8 part 1 (2026-11-20) changed the rules for eight documented defects; the baseline guard
+// (baseline.test.ts) compared all 16 cases before and after, and none changed. Not a new run.
 // The full hashes stay here, in a test file. The rest of the record (status, run date, the 8-character
 // prefix of ranOnRedFlagSha256, the result and the tuned note) lives in records.ts, which docs/technical-evidence.md copies.
 const HOLDOUT_2_HASHES = {
   fileSha256: "a68da0c26b3fbd4c5813b5b937856ee697090ca42efe7f8d325477cd63fe2ffa",
   ranOnRedFlagSha256: "05d05e13d896352e32624e905fd271fb88a4ada86549ff1dbd522cbda23d41ef",
-  // sha256 prefix, first 16 hex characters
-  redFlagSha256Prefix: "c4abfc00e371ccfd",
+  // sha256 prefix, first 16 hex characters. Phase 8 freeze (2026-11-20, 656139e); was c4abfc00e371ccfd.
+  redFlagSha256Prefix: "87a170e72f33484a",
 };
 
 const SOURCE = "src/lib/agents/eval/holdout2.ts";

@@ -45,6 +45,8 @@ describe("eval set", () => {
   // Tuned numbers: the dev eval is the set the rules were tuned on, so these are not blind.
   // Recorded on 2026-11-07 with redFlag.ts sha256 789dc2b29a309409.... A change here needs a reason.
   // Unchanged after Batch A and A.1 (2026-11-08, c4abfc00e371ccfd...): no dev case changed.
+  // Unchanged after Phase 8 part 1 (2026-11-20, 87a170e72f33484a..., tuned): only L13 changed, and
+  // only its info finding (GAP-4); its band stays Low, so these counts do not move.
   it("matches the recorded tuned precision and recall", () => {
     const results = evaluateAll();
     expect(confusion(results, ["medium", "high"])).toEqual({

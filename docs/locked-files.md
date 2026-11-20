@@ -10,7 +10,7 @@ Earlier notes (`docs/test-report.md`, `docs/batch-b-design.md`, the build logs o
 
 | File | sha256 (LF) | Last commit | Why it is locked |
 |---|---|---|---|
-| `src/lib/agents/redFlag.ts` | `c4abfc00e371ccfd7f6df7fc8e59466301bb02613e9fa7f9f3398d419061fa3c` | `e244723` | The rules. Holdout results are tied to this hash. |
+| `src/lib/agents/redFlag.ts` | `87a170e72f33484a0d81997b9e6030e751634bf63356cef6a72ebb6c3bcc7352` | `656139e` | The rules. Holdout results are tied to this hash. Phase 8 rules v2 cycle, part 1, owner-approved 2026-11-20 for the documented defects GAP-3, GAP-4, GAP-6, QA-14 and QA-6 only (commits `fa6d2f9`, `c064bc7`, `bc16583`, `bc34fc4`, `656139e`); frozen at `656139e`. Every new result is tuned, not blind; holdout 3 has not run. Previous hash `c4abfc00…` at `e244723`. |
 | `src/lib/scoring.ts` | `390e4f3feb7d5ebccd3c68d12df9d67b6eed5ed617f09075fb9c0ddee964a217` | `97e811a` | The score and bands must stay deterministic. |
 | `src/lib/vaultCrypto.ts` | `45562e0ae8f1f969da38193530b4b7289f1fe304d6386b09a4dc5e9025f6343d` | `6764d0b` | Vault encryption (PBKDF2-SHA-256 and AES-256-GCM). Phase 5, owner-approved: new saves store version 2 with 600,000 iterations; stored counts accepted from 100,000 to 2,000,000 (defect VAULT-KDF-1). Previous hash `35b20988…` at `317192d`. |
 | `src/lib/approvalGate.ts` | `df64becc300e935a23a58c7a6ef4b4ace08c1b368f7e02110df05dd21368289e` | `39e327d` | Nothing is copied or sent without the person's approval. |
