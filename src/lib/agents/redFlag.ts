@@ -363,6 +363,16 @@ const CREDENTIAL_NOT_ASKED = new RegExp(
 const IMAGE_OF = "\\b(?:photos?|pictures?|pics?|images?|scans?|scanned copy|copy|copies|screenshots?|snaps?)\\s+of\\s+(?:the\\s+)?";
 const BOTH_SIDES = "(?:front\\s+(?:and|&)\\s+back|back\\s+(?:and|&)\\s+front)";
 const CARD_DETAIL = `(?:${BOTH_SIDES}|cvv|cvc|expiry|expiration|pin)`;
+// H38: a payment card's number, expiry date or CVV asked for in any order. "card" after an ID, labour,
+// health or other non-payment card name is not a payment card. The ask counts only when the sentence
+// also names a card number or a CVV, so "We need your passport expiry date" stays clear.
+const NOT_PAYMENT_CARD =
+  String.raw`(?<!\b(?:id|identity|labour|labor|health|insurance|residence|residency|work|national|access|employee|staff|membership|loyalty|sim|business)\s)`;
+const PAYMENT_CARD_ITEM = String.raw`(?:${NOT_PAYMENT_CARD}card\s+(?:number|details|no)\b|\b(?:cvv|cvc)\b)`;
+const CARD_ITEM_ASKED = new RegExp(
+  String.raw`\b(?:need|require|want|send|share|provide|give|submit|confirm|enter|tell|email|whatsapp|forward)\b(?:\s+us)?\s+(?:your|the)\s+(?:[\w-]+\s+){0,3}?(?:${NOT_PAYMENT_CARD}card\s+(?:number|details|no)|cvv|cvc|expiry|expiration)\b`,
+  "i",
+);
 
 export const RULES: Rule[] = [
   {
@@ -431,6 +441,8 @@ export const RULES: Rule[] = [
           "i",
         ),
         /\b(?:bank|debit|credit|atm)\s+cards?\s+(?:photo|picture|pic|image|scan|copy|screenshot|front|back)s?\b/i,
+        // H38: card number, expiry or CVV asked for, with a card number or CVV named in the sentence.
+        { pattern: CARD_ITEM_ASKED, cue: new RegExp(PAYMENT_CARD_ITEM, "i") },
         // GAP-7: a photo of "your card" only with a card detail within 60 characters.
         new RegExp(`${IMAGE_OF}${BOTH_SIDES}\\s+(?:side\\s+)?of\\s+(?:your\\s+|the\\s+)?cards?\\b`, "i"),
         // A.1: the detail may sit across a comma, anywhere in the same sentence.

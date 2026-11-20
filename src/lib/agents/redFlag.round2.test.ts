@@ -48,3 +48,37 @@ describe("H53: a list of cost words after 'no' is negated as a whole", () => {
     expect(ruleIds(text)).toEqual(["RF-001"]);
   });
 });
+
+describe("H38: card number, expiry date or CVV asked for in any order", () => {
+  it("documented text fires RF-002", () => {
+    expect(outcome("We need your card number, expiry date and CVV to set up your salary account.")).toMatchObject({
+      score: 60,
+      band: "high",
+      ruleIds: ["RF-002"],
+    });
+  });
+
+  it.each([
+    "We need your card number, expiry date and CVV",
+    "Please provide the CVV and expiry of your card",
+    "Your card details including CVV are needed",
+    // Our own.
+    "We require your card number and CVV for payroll",
+    "Kindly send us the expiry date, card number and CVV",
+    "We need your card number and expiry date to add you to payroll",
+  ])("fires RF-002: %s", (text) => {
+    expect(ruleIds(text)).toContain("RF-002");
+  });
+
+  it.each([
+    "Never share your card number or CVV with anyone",
+    "We will never ask for your CVV",
+    // Our own: an ID or labour card, a passport, and a negated need.
+    "We need your Emirates ID card number and expiry date",
+    "We need your labour card number and its expiry date",
+    "We need your passport number and expiry date",
+    "Our team will never need your card number or CVV",
+  ])("does not fire RF-002: %s", (text) => {
+    expect(ruleIds(text)).not.toContain("RF-002");
+  });
+});

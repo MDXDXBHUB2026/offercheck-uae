@@ -41,6 +41,8 @@ const CHANGED: Partial<Record<SetName, Record<string, { defect: string; now: Out
   holdout3: {
     // Round 2, tuned: the "no" list is negated as a whole; the 0-point info finding remains.
     H53: { defect: "H53", now: { score: 0, band: "low", ruleIds: [], infoIds: ["RF-001-W"] } },
+    // Round 2, tuned: a card number, expiry date or CVV asked for in any order.
+    H38: { defect: "H38", now: { score: 60, band: "high", ruleIds: ["RF-002"], infoIds: [] } },
   },
 };
 
