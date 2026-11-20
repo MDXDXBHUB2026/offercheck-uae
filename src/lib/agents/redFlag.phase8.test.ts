@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { MAX_OFFER_CHARS } from "../types";
 import { runManager } from "./manager";
 
 // Phase 8, rules v2 cycle, part 1 (2026-11-20). One block per documented defect, through the whole
@@ -204,5 +205,40 @@ describe("QA-11: input made only of hidden characters is empty", () => {
       expect(checkBlockedReason(text, false)).toBe(checkBlockedReason("", false));
     }
     expect(checkBlockedReason("​Pay the fee", true)).toBe("");
+  });
+});
+
+// Phase 8 step 2: every new or changed pattern, and the new cleaning steps, on long and repeated
+// input at the maximum size, through the whole run. Same 1000ms limit as the existing test.
+const PHASE8_FUZZ_INPUTS: [string, string][] = (() => {
+  const fill = (unit: string) => unit.repeat(Math.floor(MAX_OFFER_CHARS / unit.length));
+  return [
+    ["GAP-3 negated ask then cost statement", fill("We do not require a degree the fee is ")],
+    ["GAP-3 noun after a determiner", fill("never ask for a deposit ")],
+    ["GAP-5 employer line then a new sentence", fill("Flights are paid by the company\nThe ")],
+    ["GAP-5 one long line, then many breaks", `${"covered by the company ".repeat(781)}${"\nA".repeat(1000)}`],
+    ["GAP-6 reminder with no fee", fill("do not forget the ")],
+    ["GAP-6 reminder and fees", fill("remember fee ")],
+    ["GAP-6 keep ready, never ready", fill("keep the fee a, ")],
+    ["GAP-4 there is no fee", fill("there is no fee ")],
+    ["GAP-4 third-party warning", fill("beware of agents asking for a fee ")],
+    ["QA-14 warned free-mail addresses", fill("do not trust anyone using a.b@gmail.com ")],
+    ["QA-14 free-mail addresses, no warning", fill("x@gmail.com ")],
+    ["QA-14 reply today with questions", fill("reply today if you have any questions ")],
+    ["QA-6 mixed-script words", fill("pаy fее ")],
+    ["QA-6 one mixed-script word", fill("аa")],
+    ["QA-6 fullwidth", fill("ｐａｙ ｆｅｅ ")],
+    ["QA-6 invisible operators", fill("f⁡e⁢e ")],
+    ["QA-11 hidden only", fill("⁣")],
+  ];
+})();
+
+describe("Phase 8 runtime", () => {
+  it.each(PHASE8_FUZZ_INPUTS)("%s: maximum-size input runs in under 1000ms", (_name, input) => {
+    expect(input.length).toBeLessThanOrEqual(MAX_OFFER_CHARS);
+    expect(input.length).toBeGreaterThan(MAX_OFFER_CHARS - 40);
+    const start = performance.now();
+    runManager(input);
+    expect(performance.now() - start).toBeLessThan(1000);
   });
 });
