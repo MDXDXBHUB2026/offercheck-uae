@@ -56,9 +56,10 @@ const NEW_ASK = /(?<!\b(?:to|or|a|an|any|the|your|no)\s)\b(?:pay|transfer|deposi
 const NEW_COST_STATEMENT =
   /\b(?:the|your|this|that|a)\s+(?:\w+\s+){0,2}?(?:fees?|charges?|costs?|payment|deposits?)\s+(?:is|are|will\s+be)\s+(?!not\b|never\b)/i;
 const STARTS_WITH_ASK = /^(?:pay|transfer|deposit|remit|send)\b/i;
-// On the cost itself: "No visa fee is required".
+// On the cost itself: "No visa fee is required". GAP-4: also "There is no agency fee", unless an
+// amount follows it.
 const NO_COST =
-  /\bno\s+(?:\w+\s+){0,3}?(?:fees?|charges?|payments?|deposits?)\s+(?:(?:is|are)\s+)?(?:required|payable|needed|applicable|apply|applies|charged|collected)\b/i;
+  /\bno\s+(?:\w+\s+){0,3}?(?:fees?|charges?|payments?|deposits?)\s+(?:(?:is|are)\s+)?(?:required|payable|needed|applicable|apply|applies|charged|collected)\b|\bthere\s+(?:is|are|will\s+be)\s+no\s+(?:\w+\s+){0,3}?(?:fees?|charges?|payments?|deposits?)\b(?!\s*(?:[:-]|of\b|is\b|are\b)?\s*(?:aed|dhs?|usd|inr|rs|₹|\$|\d))/i;
 // After the cost: "Recruitment fees are not payable", "Fees will not be deducted".
 const NEGATED_AFTER =
   /\b(?:(?:is|are|will|shall)\s+(?:not|never)|(?:isn|aren|won)['’]t)\s+(?:be\s+)?(?:payable|required|needed|charged|collected|deducted|applicable)\b/i;
@@ -225,8 +226,10 @@ function matchClauses(
               scan.evidence.push(quote(clause, offset + request.index));
               break;
             }
-            const suppressed =
-              matches[0] ?? (mentioned && isNegated(reach, mentioned) ? mentioned : null);
+            // GAP-4: a mention in a warning about someone else counts like a negated one.
+            const warnedAbout = (found: RegExpExecArray) =>
+              isNegated(reach, found) || THIRD_PARTY_WARNING.test(reach.slice(0, found.index));
+            const suppressed = matches[0] ?? (mentioned && warnedAbout(mentioned) ? mentioned : null);
             if (suppressed) scan.warnings.push(quote(clause, offset + suppressed.index));
           }
         }

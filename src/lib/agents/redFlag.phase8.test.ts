@@ -85,10 +85,30 @@ describe("GAP-6: fee wording aimed at the candidate with no payment verb", () =>
   it.each([
     ["Security deposit", []],
     ["No security deposit is required", ["RF-001-W"]],
-    ["Do not forget that there is no processing fee", []],
+    ["Do not forget that there is no processing fee", ["RF-001-W"]],
     ["Remember that the registration fee is covered by the company", []],
     ["Do not forget your salary deposit date", []],
   ])("stays 0: %s", (text, infoIds) => {
     expect(outcome(text as string)).toMatchObject({ score: 0, ruleIds: [], infoIds });
+  });
+});
+
+describe("GAP-4: warning mentions are handled the same way", () => {
+  it.each([
+    "Beware of agents who charge a fee",
+    "Beware of agents asking for a processing fee",
+    "There is no agency fee",
+    "Watch out for recruiters asking for a deposit",
+    "There are no registration charges",
+  ])("gives the 0-point information finding and no points: %s", (text) => {
+    expect(outcome(text)).toEqual({ score: 0, band: "low", ruleIds: [], infoIds: ["RF-001-W"] });
+  });
+
+  it.each([
+    "There is no agency fee but pay AED 500 for the medical test",
+    "There is no agency fee: AED 500",
+    "Beware of delays and pay the processing fee of AED 500 to our agent",
+  ])("a real ask beside the warning wording still fires: %s", (text) => {
+    expect(outcome(text)).toMatchObject({ score: 60, band: "high", ruleIds: ["RF-001"] });
   });
 });

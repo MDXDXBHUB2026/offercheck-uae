@@ -18,7 +18,12 @@ import { EVAL_OFFERS } from "./offers";
 type Outcome = { score: number; band: string; ruleIds: string[]; infoIds: string[] };
 type SetName = Exclude<keyof typeof BASELINE, "heroExamples">;
 
-const CHANGED: Partial<Record<SetName, Record<string, { defect: string; now: Outcome }>>> = {};
+const CHANGED: Partial<Record<SetName, Record<string, { defect: string; now: Outcome }>>> = {
+  devEval: {
+    // The documented GAP-4 example: a third-party warning now gives the 0-point info finding.
+    L13: { defect: "GAP-4", now: { score: 0, band: "low", ruleIds: [], infoIds: ["RF-001-W"] } },
+  },
+};
 
 function outcome(text: string): Outcome {
   const result = runManager(text);
