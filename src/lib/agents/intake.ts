@@ -45,7 +45,9 @@ function joinHardWraps(text: string): string {
 
 // QA-6: look-alike letters, for matching only. Every entry maps one UTF-16 unit to one, so the
 // folded text has the same length as the text as typed and a match maps back to the words as typed.
-// Escape sequences only, so this file holds no look-alike characters.
+// The look-alike letters below, and the ranges in FULLWIDTH and CYRILLIC_OR_GREEK, are typed as the
+// characters themselves, not as escape sequences, so this file does hold Cyrillic, Greek and fullwidth
+// characters. The comment above each group names the Latin letters it maps to. None is invisible.
 const LOOK_ALIKES: Record<string, string> = Object.fromEntries(
   [
     // Cyrillic lower case: a e o p c y x i j s h d q w l
