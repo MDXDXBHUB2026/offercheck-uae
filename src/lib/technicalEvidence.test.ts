@@ -10,6 +10,10 @@ import {
   HOLDOUT_2_BAR_ITEMS,
   HOLDOUT_2_PASS_BAR,
   HOLDOUT_2_RUN,
+  HOLDOUT_3_BAR_COUNTED,
+  HOLDOUT_3_BAR_ITEMS,
+  HOLDOUT_3_PASS_BAR,
+  HOLDOUT_3_RUN,
 } from "./agents/eval/records";
 
 // docs/technical-evidence.md is not served by the app. Every figure in it must be reproducible:
@@ -102,6 +106,16 @@ describe("docs/technical-evidence.md", () => {
     for (const line of HOLDOUT_2_BAR_ITEMS) expect(DOC).toContain(`- ${line}`);
     for (const line of HOLDOUT_2_BAR_COUNTED) expect(DOC).toContain(`- ${line}`);
     for (const row of HOLDOUT_2_PASS_BAR) expect(DOC).toContain(`| ${row.item} | ${row.required} | ${row.count} | ${row.source} |`);
+    const h3 = HOLDOUT_3_RUN;
+    expect(DOC).toContain(`Ran once, blind, on ${h3.runDate}, after the rules were frozen at \`redFlag.ts\` sha256 \`${h3.ranOnRedFlagPrefix}…\`.`);
+    expect(DOC).toContain(`Cases: ${h3.cases}.`);
+    expect(DOC).toContain(h3.blindNote);
+    expect(DOC).toContain(`**Result:** ${h3.strict} matched their labels. ${h3.failureNote}`);
+    expect(DOC).toContain(h3.passBarLocked);
+    expect(DOC).toContain(h3.noRerun);
+    for (const line of HOLDOUT_3_BAR_ITEMS) expect(DOC).toContain(`- ${line}`);
+    for (const line of HOLDOUT_3_BAR_COUNTED) expect(DOC).toContain(`- ${line}`);
+    for (const row of HOLDOUT_3_PASS_BAR) expect(DOC).toContain(`| ${row.item} | ${row.required} | ${row.count} | ${row.source} |`);
     const holdouts = DOC.slice(DOC.indexOf("## Holdouts"), DOC.indexOf("## Known limitations"));
     expect(holdouts).not.toMatch(/\bPASS\b|\bFAIL\b/);
     expect(holdouts).not.toMatch(/bar is met|meets the bar|fails the bar|bar passed|bar failed|bar is not met/i);

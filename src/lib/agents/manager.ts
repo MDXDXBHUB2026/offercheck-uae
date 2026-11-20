@@ -1,7 +1,7 @@
 import { scoreFindings } from "../scoring";
 import type { AnalysisResult, TraceStep } from "../types";
 import { selectOfficialSteps } from "../officialSteps";
-import { cleanOfferText } from "./intake";
+import { cleanOfferText, foldForMatching } from "./intake";
 import { RULES, runRedFlagWorker } from "./redFlag";
 import { authorityMentionIds, CROSS_CHECKS, matchedIds, runVerification } from "./verification";
 
@@ -32,7 +32,8 @@ function officialSummary(forFindings: number, findings: number, forMentionOnly: 
 export function runManager(offerText: string): AnalysisResult {
   const start = performance.now();
   const intake = timed(() => cleanOfferText(offerText));
-  const redFlag = timed(() => runRedFlagWorker(intake.result.text));
+  // QA-6: the rules match a folded copy; findings quote the cleaned text as typed.
+  const redFlag = timed(() => runRedFlagWorker(intake.result.text, foldForMatching(intake.result.text)));
   const aggregator = timed(() => scoreFindings(redFlag.result));
   const findings = redFlag.result;
   const risk = aggregator.result;

@@ -11,9 +11,14 @@ const HOLDOUT_SHA256 = "6c7ed62f153e04169681e64c18d227dc5a2bb72e3488dbe12cf6626d
 // Holdout 1 is consumed: it ran once on 2026-11-06 against redFlag.ts sha256 f3570f8f1169ecb2...
 // Never run it again and never relabel it. Its result is reported two ways from now on.
 // H10 was a real miss, not a band dispute.
-// The hash above records the run, so it stays. redFlag.ts is now c4abfc00e371ccfd... (Batch A.1,
-// 2026-11-08): score, band and rule ids were compared before and after on all 77 cases, and no
-// holdout 1 case changed. That comparison was a guard on the change, not a new holdout result.
+// The hash above records the run, so it stays. redFlag.ts was c4abfc00e371ccfd... after Batch A.1
+// (2026-11-08): score, band and rule ids were compared before and after on all 77 cases, and no
+// holdout 1 case changed. It is now 87a170e72f33484a... (Phase 8 part 1, frozen 2026-11-20 at
+// 656139e): baseline.test.ts compared score, band, rule ids and info ids of all 18 cases with the
+// pre-Phase 8 baseline, and none changed. After Phase 8 round 2 (89098d1, 4e979a0ce59d2144..., the
+// three holdout 3 gaps) and the pre-merge H53 follow-up (b0506f5, e79e26411ed1c23e...) the same guard showed
+// none changed. These comparisons were guards, not new
+// holdout results.
 // HOLDOUT_1_RESULT (status, run date, rules hash prefix, both results) lives in records.ts, which
 // docs/technical-evidence.md copies; records.test.ts keeps it equal to docs/test-report.md.
 const REGRESSION_CASES_IN_DEV_EVAL = ["H02", "H10", "H18"];

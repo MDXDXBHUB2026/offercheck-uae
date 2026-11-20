@@ -2,19 +2,83 @@
 
 As of 2026-11-08, updated for QA round 2 (LANG-2 and COPY-1, the QA round 2 commit, see git log) on top of the QA fix batch `34903e2` (UX-1, LANG-1, nav "Soon" badge, approval wording). Every number gives its source. No automated test here ran against a live URL. The live site was checked by hand; see "Manual post-deploy QA (live site)" below.
 
+## Pre-merge H53 follow-up: "ever" between a "no" list and its verb (2026-11-21)
+
+Source: `npm run check` on branch `prod-hardening` after the freeze: **3523 tests in 64 files, 3523 passed, 0 failed**, then typecheck, lint, the production build and the no-bypass check. Before (`fdb73ad`): 3509 tests in 64 files.
+
+This is a **tuned** result, not a blind one. The blind holdout 3 result stays as recorded below.
+
+- **Rules frozen:** `src/lib/agents/redFlag.ts` sha256 `e79e26411ed1c23e4fa9665d3fe43a7bb71f19901bededc0431cba30498cd1fa`, last changed in `b0506f5`. Before: `4e979a0ce59d2144` (`89098d1`). `scoring.ts` unchanged.
+- **Fix** (`b0506f5`): `No deposit, fee or payment is ever required` was 60, High, RF-001; now 0, Low, info RF-001-W.
+- **Tests:** 11 added to `src/lib/agents/redFlag.round2.test.ts`, written before the fix: 6 that must score 0 (the owner's four and two of our own) and 5 that must still fire RF-001 (the owner's three and two of our own); 3 of them failed before the fix. Also 3 maximum-size runtime inputs.
+- **Baseline guard:** no case changed in the dev set, holdouts 1, 2 and 3, sample offers, agent fixtures or hero examples.
+- **Runtime:** 15 inputs of 19,964 to 20,000 characters, slowest of 5 runs through the whole run: 4.0 to 37.6 ms; the three new ones 7.7, 11.3 and 9.5 ms. Limit 1000 ms.
+
+## Phase 8 round 2: three holdout 3 gaps fixed by tuning (2026-11-20)
+
+Source: `npm run check` on the same machine, on branch `prod-hardening` after the round 2 freeze: **3509 tests in 64 files, 3509 passed, 0 failed**, then typecheck, lint, the production build and the no-bypass check. Before round 2 (`0286d24`): 3440 tests in 63 files.
+
+Every result here is **tuned**, not blind: the three gaps were found by blind holdout 3 and fixed knowing the misses. The blind holdout 3 result stays as recorded below: 21 of 24 matched; scams flagged 10 of 12, genuine flagged 1 of 11, genuine flagged high 1.
+
+- **Rules frozen:** `src/lib/agents/redFlag.ts` sha256 prefix `4e979a0ce59d2144` (full hash in `docs/locked-files.md`), last changed in `89098d1`. Before: `87a170e72f33484a`. `scoring.ts` unchanged. Since replaced by the pre-merge H53 follow-up below.
+- **H53** (`3723aaf`): `No deposit, fee or payment is required at any stage` was 60, High, RF-001; now 0, Low, info RF-001-W.
+- **H38** (`823ee3e`): `We need your card number, expiry date and CVV …` was 0, Low; now 60, High, RF-002.
+- **H36** (`89098d1`): `A medical test booking amount of 600 dirhams must be paid by the candidate to our agent` was 0, Low; now 60, High, RF-001.
+- **New suite:** `src/lib/agents/redFlag.round2.test.ts`, 44 tests, written before each fix: 32 defect tests (the documented text, the owner's wordings and our own, cases that must fire and look-alikes that must not) and 12 maximum-size runtime tests.
+- **Baseline guard:** `baseline.test.ts` now also compares the 24 holdout 3 cases with their per-case record (output with output; it grades nothing), 25 tests added. After each fix only the fixed case changed: holdout 3 H53, H38 and H36. No dev, holdout 1, holdout 2, sample offer, agent fixture or hero example case changed.
+- **Runtime:** 12 new inputs of 19,964 to 20,000 characters, slowest of 5 runs alone, whole run and rules alone:
+  - H53 no list, never closed len 19992 whole 37.6 ms rules 36.4 ms
+  - H53 no list, closed each time len 19968 whole 15.6 ms rules 12.3 ms
+  - H53 no list with modifiers len 19980 whole 10.5 ms rules 9.4 ms
+  - H53 list broken by a determiner len 20000 whole 22.9 ms rules 20.7 ms
+  - H53 fee is required with no list len 19992 whole 25.2 ms rules 31.0 ms
+  - H38 card number asked, repeated len 20000 whole 10.4 ms rules 6.3 ms
+  - H38 ask with no card item len 20000 whole 8.3 ms rules 7.3 ms
+  - H38 expiry asked, cue far away len 20000 whole 13.4 ms rules 16.8 ms
+  - H38 ID card number len 19980 whole 16.1 ms rules 13.4 ms
+  - H36 booking amount, never paid len 19995 whole 10.3 ms rules 5.8 ms
+  - H36 registration charge with an amount len 19995 whole 8.7 ms rules 4.8 ms
+  - H36 must be paid by the company len 19964 whole 4.6 ms rules 3.4 ms
+  Limit 1000 ms, unchanged.
+
+## Phase 8: rules v2 cycle, part 2 (2026-11-20)
+
+Source: `npm run check` on the same machine, on branch `prod-hardening` after the holdout 3 record: **3440 tests in 63 files, 3440 passed, 0 failed**, then typecheck, lint, the production build and the no-bypass check. Before part 2 (`7b979c9`): 3431 tests in 62 files.
+
+- **Blind holdout 3:** ran once against `redFlag.ts` `87a170e72f33484a` (the freeze); 21 of 24 matched their labels. See "Holdout 3 (consumed, blind) and the locked pass bar" below.
+- **New suite:** `src/lib/agents/eval/holdout3.test.ts`, 6 tests. It guards the set (LF sha256 of `holdout3.ts`), the rules file it ran on and the per-case record; it never runs the rules.
+- **Changed suites:** `records.test.ts` 7 (2 added), `technicalEvidence.test.ts` (holdout 3 lines added to the existing holdouts test).
+
+## Phase 8: rules v2 cycle, part 1 (2026-11-20)
+
+Source: `npm run check` on Windows 11, Node 24.19.0, npm 11.17.0, on branch `prod-hardening` at the freeze: **3431 tests in 62 files, 3431 passed, 0 failed**, then typecheck, lint, the production build and the no-bypass check. Before the cycle (`f43daa0`): 3247 tests in 60 files. Per-suite counts below are from `npx vitest run --reporter=json` at the same point.
+
+Every result added in this cycle is **tuned**, not blind: the cases were written while fixing the defects. Holdout 3 ran once afterwards, blind, against the frozen rules; see "Holdout 3 (consumed, blind) and the locked pass bar" below.
+
+- **Rules frozen:** `src/lib/agents/redFlag.ts` sha256 prefix `87a170e72f33484a` (first 16 hex characters; the full hash is in `docs/locked-files.md`), last changed in `656139e`. Before: `c4abfc00e371ccfd`. `scoring.ts` unchanged.
+- **Baseline guard:** `src/lib/agents/eval/baseline.test.ts` (90 tests) compares score, band, rule ids and info ids of the 43 dev cases, the 18 holdout 1 and 16 holdout 2 cases, the 4 sample offers and the 2 agent fixtures, plus the hero examples, with `baseline.json`, recorded before any change at `0bd0bdb`. It compares outputs with outputs, not with labels, so it grades no holdout. One case changed, explained by GAP-4: dev case L13 gained the 0-point RF-001-W (band Low, score 0, unchanged). No holdout 1 or holdout 2 case changed.
+- **Dev eval:** still 42 of 43 passed (S12 is the known miss), TP 17, FP 1, FN 1, TN 24 (`eval.test.ts`, `technicalEvidence.test.ts`); tuned, not blind.
+- **New suite:** `src/lib/agents/redFlag.phase8.test.ts`, 73 tests, written before each fix: GAP-3, GAP-5, GAP-6, GAP-4, GAP-2, QA-14, QA-6, QA-11, each with the documented example, cases that must fire and look-alikes that must not; plus 17 maximum-size runtime tests.
+- **Changed suites:** `intake.test.ts` 50 (18 added for QA-6), `api/analyze/route.test.ts` 20 (4 added for QA-11; the 20,000-control-character test now expects the empty 400), `redFlag.test.ts` 212 (one case moved out of the "bare word" list and two tests updated for GAP-4).
+- **Runtime:** each of 17 new inputs of 19,963 to 20,000 characters, through the whole run, slowest of 5 runs alone: 0.4 to 18.6 ms. The 8 inputs of the existing maximum-size test: 2.9 to 97.9 ms through the whole run, 1.9 to 97.6 ms through the rules alone. Limit 1000 ms, unchanged.
+
 ## Unit and component tests per suite
 
 Source: `npx vitest run --reporter=json` on Windows 11, Node 24.19.0. Total: **1383 tests in 33 files, 1383 passed, 0 failed, 0 skipped** (public-only site: Check, Warning signs, About; technical pages removed by owner decision; `npm run check` on 2026-11-09, committed locally, not pushed). Phases 2 and 3 with the official fraud-reporting references: 1410 in 33 files. Phases 2 and 3 before the references: 1396 in 32 files. UX-4, STALE-1, UX-5 and LANG-4 with two bands: 1345 in 29 files. LANG-4 with one cut-off: 1338. BATCHB-2: 1289 in 29 files. Batch B Stage 1: 1174 in 26 files. (Step 3: 588 in 18 files. Step 4: 680 in 19 files. Phase 1: 755 in 21 files. After `d31f511`: 779 in 21 files. QA fix batch `34903e2`: 832 in 22 files. QA round 2 and COPY-1: 855 in 22 files. Batch A: 957 in 24 files. Batch A and A.1 commit `e244723`: 1003 in 25 files. LANG-3 commit `ef47902`: 1014 in 25 files. OFFER-1: 1023 in 25 files. Items 5b, 6 and 7: 1037. Item 8: 1053. Items 5b to 9: 1055 in 25 files.)
 
 | Suite | Tests | Passed | What it covers | What it does not cover |
 |---|---|---|---|---|
-| `src/lib/agents/redFlag.test.ts` | 213 | 213 | The five rules on fixed sentences: negation, lists, payer wording, warning mentions, evidence quotes, maximum-size timing | Wording nobody wrote a case for, non-English text, look-alike letters (QA-6) |
+| `src/lib/agents/redFlag.test.ts` | 212 | 212 | The five rules on fixed sentences: negation, lists, payer wording, warning mentions, evidence quotes, maximum-size timing (Phase 8: 212, two tests updated for GAP-4) | Wording nobody wrote a case for, non-English text; look-alike letters are covered in `redFlag.phase8.test.ts` |
+| `src/lib/agents/redFlag.phase8.test.ts` | 73 | 73 | Phase 8 part 1, written before each fix: GAP-2 to GAP-6, QA-6, QA-11, QA-14 through the whole run, and 17 maximum-size runtime tests (tuned, not blind) | Wording nobody wrote a case for; Arabic-script and transliterated wording (deferred) |
+| `src/lib/agents/eval/baseline.test.ts` | 115 | 115 | Phase 8 regression guard: every dev, holdout 1, holdout 2, sample and fixture case against the pre-cycle outputs in `baseline.json`, and (round 2) the 24 holdout 3 cases against their per-case record; a change must be listed with its defect | Whether a result is right: it compares with earlier outputs, not with labels |
+| `src/lib/agents/redFlag.round2.test.ts` | 58 | 58 | Phase 8 round 2 and the pre-merge H53 follow-up, written before each fix: H53 (and "ever" before the verb), H38, H36 through the whole run, and 15 maximum-size runtime tests (tuned, not blind) | Wording nobody wrote a case for; the residual limits in `docs/known-limitations.md` |
+| `src/lib/agents/eval/holdout3.test.ts` | 6 | 6 | The holdout 3 set is unchanged, the rules hash it ran on and the current one, its per-case record and the bar counts derived from it | It never runs the rules; `baseline.test.ts` does, as a guard |
 | `src/lib/agents/redFlag.batchA.test.ts` | 73 | 73 | Batch A, written before the change: GAP-1 list-head cover (cost nouns covered, fee nouns, `sponsors` and candidate markers still fire), H21 code requests, GAP-7 card photos (named card, Mastercard, Visa card, generic card only with a card detail), a negation case for each, one test per known residual asserting current behaviour, band thresholds unchanged, 14 timing tests on 50,000 characters of adversarial input | Wording nobody wrote a case for; the residual misses it pins |
 | `src/lib/agents/redFlag.batchA1.test.ts` | 48 | 48 | Batch A.1, written before the change (plus the owner's 4 probe texts, added after they matched): a card detail across a comma in the same sentence, a code to enter with a link, URL, click or WhatsApp, `provides` as a list head with the fee-noun gate; negative, negation and known-residual cases for each; 9 timing tests on 50,000 characters | Wording nobody wrote a case for; the residual misses it pins |
 | `src/lib/audit.test.ts` | 104 | 104 | Run records, hash chain and `verifyAuditLog`, gate records (`placeholders`, `text`), one check for label and log, `isAnalyzeResponse`, privacy over all eval and holdout offers, no env | A real browser session; a tamper-proof chain, which it is not designed to be |
 | `src/lib/agents/eval/eval.test.ts` | 48 | 48 | Every dev eval case, known misses, recorded precision and recall, `confusion()` | Blind performance: these cases were used for tuning |
 | `src/lib/approvalGate.test.ts` | 38 | 38 | Gate states, placeholder refusal, labels, events hold no draft, clipboard | The React wiring in `OfferChecker.tsx` |
-| `src/lib/agents/intake.test.ts` | 32 | 32 | Hidden characters removed, line joins, line endings | Look-alike letters and the hidden characters listed in QA-6 |
+| `src/lib/agents/intake.test.ts` | 50 | 50 | Hidden characters removed (Phase 8: the QA-6 list too), line joins, line endings, folding for matching (fullwidth, mixed-script look-alikes, same length, Russian, Arabic and Hindi unchanged) | A word written wholly in look-alike letters; look-alikes outside Cyrillic and Greek |
 | `src/lib/agents/drafter.test.ts` | 29 | 29 | The five draft cases, block order, no offer text in drafts, template wording with names filled | Tone or quality of the wording as read by a person |
 | `src/components/design.test.ts` | 150 | 150 | Arithmetic line agrees with the score on every fixture; gauge is decorative; only measured times; limitations text; sample buttons and their labelled group; score chip per state (UX-1: clean 0, low with a finding, low with a warning only, medium, high), the announcement uses the chip's wording, amber caution CSS; LANG-2: tier 1 with no finding gets the neutral chip and a "could not check" findings line with no tick, tier 1 with a finding keeps its chip, tier 2 and no notice unchanged, score and findings unchanged, neutral CSS, Risk aggregator row agrees with the chip in tier 1 and shows the server summary otherwise; COPY-1: public limitations copy has no file paths, defect ids, phase names or backticks (one test per banned term), is ASCII only, has one item per bullet of the doc section (8), and the page shows the intro and all 8 items; LANG-3: tier 2 with no finding gets the neutral chip, an info icon instead of the tick, and qualified wording in the Findings card, the Risk aggregator row and the announcement, with no "No risk indicators found" anywhere; tier 2 with a finding keeps its chip and findings; the Clean offer keeps its green signals; score, findings and server trace unchanged; info icon CSS | Visual layout and real screen-reader output. Public-only site (2026-11-09): the test that Soon items get neither the tint nor the underline went with the Soon items; the footer test now asserts no Soon rules are left; OFFER-1: the offer-likeness notice with no finding gets the neutral chip, an info icon instead of the tick, and qualified wording in the Findings card, the Risk aggregator row and the announcement; a warning only with a notice keeps the amber chip but gets the info icon and an amber-worded Risk aggregator row; one invariant test over tier 1, tier 2 and the offer-likeness notice (no "No risk indicators found", no tick) with the Clean offer keeping both |
 | `src/app/page.test.ts` | 63 | 63 | The prototype notice in the site-wide strip and footer; `/` is the Check workspace; no console, logger, file write or browser storage in any source file (one test per file, so new files add tests; the six new Phase 2 and 3 source files added six; the public-only site removed seven source files and added `src/lib/warningSigns.ts`, net minus six) | Logging added by the host or a proxy |
@@ -23,7 +87,7 @@ Source: `npx vitest run --reporter=json` on Windows 11, Node 24.19.0. Total: **1
 | `src/components/ApprovalPanel.test.ts` | 23 | 23 | Markup per gate state, `aria-disabled`, reason live region, focusable buttons; pre-approval note kept, post-approval note for copied and clipboard-blocked | Real focus movement and screen-reader output (no DOM in tests) |
 | `src/lib/textScript.test.ts` | 31 | 31 | LANG-1 helper: tier boundaries at 49/50/51% and 9/10 letters, calibration sentences (letters recounted in code), English, empty, digits/emoji/punctuation only, injection-style text, other scripts, fixed wordings, not imported by rules, scoring or server; on the 77 eval cases tier 1 fires on S12 only and tier 2 on none | Real mixed-language offers; Latin-script non-English text; look-alike letters |
 | `src/lib/offerLikeness.test.ts` | 21 | 21 | Batch A case 4: signal groups, whole words, no signal in non-offer text, injection-style text, 50,000-character timing, the notice condition (Low, no group, not tier 1), fixed wording, score unchanged; on the 77 cases 29 have no signal, the label-based notice set is 10 honest cases and no scam, and on the dev set with the real rules it is the 5 honest cases; not imported by rules, scoring, Intake or server | Real non-offer messages; non-English signal words |
-| `src/app/api/analyze/route.test.ts` | 16 | 16 | 20,000-character limit, body cap, streamed and chunked bodies, false Content-Length, 20,000 control characters, no echo | A real socket. That was checked by hand once; see REV-L2 in `docs/defects.md`. Rate limiting does not exist (REV-O1) |
+| `src/app/api/analyze/route.test.ts` | 20 | 20 | 20,000-character limit, body cap, streamed and chunked bodies, false Content-Length, 20,000 control characters (Phase 8 QA-11: within the cap and empty after cleaning, so the empty 400), hidden-only text is empty, no echo | A real socket. That was checked by hand once; see REV-L2 in `docs/defects.md`. Rate limiting does not exist (REV-O1) |
 | `src/lib/scoring.test.ts` | 14 | 14 | Weights, bands, score floor | Whether the weights are right for real offers |
 | `src/lib/agents/manager.test.ts` | 13 | 13 | Step order, stub statuses, durations | Real agents for verification and official-channel, which are not built |
 | `src/components/ResultsPanel.test.ts` | 18 | 18 | Score-0 note, chips, rule count, stub labels, server-component check (`/`, `/check`, `/about`, `/guide`); no literal rule count on those pages; no `"use client"` module reaches `src/lib/agents/redFlag.ts` through its value imports (the check that no rule pattern reaches a client file, kept when the Test Lab source scan was removed) | Visual layout |
@@ -156,8 +220,55 @@ Source: `docs/holdout2-pass-bar.md`, `docs/rules-backlog.md` and `src/lib/agents
 
 Holdout 2 may not be re-run, so these counts cannot be re-checked by running it again.
 
+## Holdout 3 (consumed, blind) and the locked pass bar
+
+Source: `docs/holdout3-cases.md` (the set and its pass bar), `src/lib/agents/eval/holdout3.test.ts` and the per-case record `HOLDOUT_3_CASES` in `src/lib/agents/eval/records.ts`.
+
+- **Run:** once, blind, on 2026-11-20, after the rules were frozen at `redFlag.ts` sha256 `87a170e7…`. The set was opened for the first time after the freeze commit `7b979c9`; the run was a one-off script outside the committed tests, and no rule, pattern, label, threshold or case changed after it.
+- **Honest limit:** The advisor had read `docs/defects.md` before writing the set, so it is blind to the rule patterns, not to the defect list.
+- **Result:** 21 of 24 matched their labels. The three that differ are H36 and H38, scams expected high with RF-001 and RF-002, which scored 0, and H53, a legitimate case expected low, which scored 60, High, with RF-001.
+- The misses are recorded in `docs/rules-backlog.md` ("Holdout 3") and `docs/defects.md` (H36, H38, H53). Phase 8 round 2 fixed all three by tuning (H53 now 0, Low; H38 60, High, RF-002; H36 60, High, RF-001). That is a tuned result, not a blind one: the table and the counts below are from the blind run and stay.
+
+| ID | Type | Expected band | Expected rules | Score | Band | Rules | Info | Match |
+|---|---|---|---|---|---|---|---|---|
+| H35 | scam | high | RF-001 | 60 | high | RF-001 | none | yes |
+| H36 | scam | high | RF-001 | 0 | low | none | none | no |
+| H37 | scam | high | RF-002 | 60 | high | RF-002 | none | yes |
+| H38 | scam | high | RF-002 | 0 | low | none | none | no |
+| H39 | scam | high | RF-003, RF-004, RF-005 | 60 | high | RF-003, RF-004, RF-005 | none | yes |
+| H40 | scam | medium | RF-003, RF-005 | 40 | medium | RF-003, RF-005 | none | yes |
+| H41 | scam | high | RF-001, RF-004 | 60 | high | RF-001, RF-004 | none | yes |
+| H42 | scam | high | RF-001 | 60 | high | RF-001 | none | yes |
+| H43 | scam | high | RF-001 | 60 | high | RF-001 | none | yes |
+| H44 | scam | high | RF-002 | 60 | high | RF-002 | none | yes |
+| H45 | scam | high | RF-001 | 60 | high | RF-001 | none | yes |
+| H46 | legit | low | none | 0 | low | none | none | yes |
+| H47 | legit | low | none | 0 | low | none | none | yes |
+| H48 | legit | low | none | 0 | low | none | none | yes |
+| H49 | legit | low | none | 0 | low | none | none | yes |
+| H50 | legit | low | none | 0 | low | none | none | yes |
+| H51 | legit | low | none | 0 | low | none | none | yes |
+| H52 | legit | low | none | 0 | low | none | none | yes |
+| H53 | legit | low | none | 60 | high | RF-001 | none | no |
+| H54 | legit | low | none | 0 | low | none | none | yes |
+| H55 | legit | low | none | 0 | low | none | none | yes |
+| H56 | legit | low | none | 0 | low | none | none | yes |
+| H57 | stress | high | RF-001 | 60 | high | RF-001 | none | yes |
+| H58 | adversarial | high | RF-001 | 60 | high | RF-001 | none | yes |
+
+**Pass bar.** It was locked on 2026-11-20, before the run. The owner applies it; this report gives counts only.
+
+| Bar item | Required | Count | Where the count comes from |
+|---|---|---|---|
+| Scam cases flagged (medium or high) | at least 10 of 12 | 10 of 12 | Per-case record. Not flagged: H36 and H38, each 0, Low, no rule. |
+| Legitimate cases flagged (medium or high, or any points) | at most 1 of 11 | 1 of 11 | Per-case record. H53 scored 60, High, RF-001; the other 10 scored 0 with no rule and no info finding. |
+| Legitimate cases flagged high | 0 | 1 | Per-case record. H53. |
+| H57, a stress case reported separately | not counted | 60, High, RF-001 | Per-case record. Matches its label. The quote is `Pay the registration fee of AED 700 to proceed`: cleaning removed both zero-width spaces. |
+
+Holdout 3 may not be re-run, so these counts cannot be re-checked by running it again.
+
 ## What none of the numbers above show
-- **Real offers:** every set is synthetic and small. There are 43 dev cases, 18 in holdout 1 and 16 in holdout 2.
+- **Real offers:** every set is synthetic and small. There are 43 dev cases, 18 in holdout 1, 16 in holdout 2 and 24 in holdout 3.
 - **Other languages:** the fee, credentials, document and urgency rules are English only.
 - **Verification:** no company, domain or offer number is checked; those agents are not built.
 - **Real use:** nothing here measures speed on a deployed URL or behaviour under load.

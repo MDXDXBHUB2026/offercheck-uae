@@ -170,9 +170,11 @@ describe("negation", () => {
     expect(findings[0].evidence).toEqual([text]);
   });
 
+  // Phase 8 GAP-4: the "no agency fee" part now shows the warning finding too, as
+  // "No fee is required but ..." already did.
   it("flags a request after a contrast word", () => {
     const findings = runRedFlagWorker("There is no agency fee but a training fee of AED 900 applies");
-    expect(findings.map((finding) => finding.source)).toEqual(["RF-001"]);
+    expect(findings.map((finding) => finding.source)).toEqual(["RF-001", "RF-001-W"]);
   });
 
   it("flags a request after a condition word", () => {
@@ -240,14 +242,15 @@ describe("negation", () => {
     expect(checks("Our agents who charge the fee of AED 500 will call you")).toContain("fee_requested");
   });
 
-  it("does not report a bare no as a warning", () => {
-    expect(runRedFlagWorker("There is no agency fee")).toEqual([]);
+  // Phase 8 GAP-4 (owner decision): "There is no agency fee" is a negation bound to the cost, so it
+  // shows the 0-point warning finding. A stray "no" elsewhere still clears nothing.
+  it("reports there is no fee as a warning", () => {
+    expect(runRedFlagWorker("There is no agency fee").map((finding) => finding.source)).toEqual(["RF-001-W"]);
   });
 });
 
 describe("RF-001 needs the candidate as payer", () => {
   it.each([
-    "Beware of agents asking for a processing fee",
     "Visa fees are reimbursed after joining",
     "Duties include processing visa fees for clients",
     "Your pay package includes children's school fees allowance",

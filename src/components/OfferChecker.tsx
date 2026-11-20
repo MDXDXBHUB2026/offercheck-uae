@@ -14,6 +14,7 @@ import { clearReopen, peekReopen } from "@/components/vaultStore";
 import type { VaultRecord } from "@/lib/vault";
 import { Button, Callout, Card, Chip, HelperText } from "@/components/ui";
 import type { SampleOffer } from "@/data/sampleOffers";
+import { cleanOfferText } from "@/lib/agents/intake";
 import { redactSensitive } from "@/lib/redact";
 import { toResultView } from "@/lib/resultView";
 import { gateReducer, INITIAL_GATE_FLOW, type GateAction, type GateFlow } from "@/lib/approvalGate";
@@ -70,8 +71,9 @@ const COUNT_FORMAT = new Intl.NumberFormat("en-US");
 
 // Why "Check offer" is blocked, or "" when it is not. Shown under the button, which stays
 // focusable (aria-disabled), the same pattern as the approve button.
+// QA-11: empty means empty after cleaning, the same test as the server's.
 export function checkBlockedReason(text: string, hasSamples: boolean): string {
-  if (text.trim().length > 0) return "";
+  if (cleanOfferText(text).text.length > 0) return "";
   return hasSamples
     ? "Paste an offer or choose a sample, then check it."
     : "Paste an offer, then check it.";
@@ -384,7 +386,7 @@ export function OfferChecker({
     checkMeta: CheckMeta = {},
   ) {
     // The button is aria-disabled, not disabled, so a click or a retry can still arrive here.
-    if (loading || reason || unmasked.trim().length === 0) return;
+    if (loading || reason || cleanOfferText(unmasked).text.length === 0) return;
     // Masked at the request itself, whatever the caller passed: no unmasked text reaches /api/analyze.
     const request = analyzeRequest(unmasked, translation);
     const submitted = request.text;

@@ -1,0 +1,660 @@
+{
+  "devEval": {
+    "S01": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-001"
+      ],
+      "infoIds": []
+    },
+    "S02": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-001"
+      ],
+      "infoIds": []
+    },
+    "S03": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-001"
+      ],
+      "infoIds": []
+    },
+    "S04": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-001"
+      ],
+      "infoIds": []
+    },
+    "S05": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-002"
+      ],
+      "infoIds": []
+    },
+    "S06": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-002"
+      ],
+      "infoIds": []
+    },
+    "S07": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-002"
+      ],
+      "infoIds": []
+    },
+    "S08": {
+      "score": 40,
+      "band": "medium",
+      "ruleIds": [
+        "RF-003",
+        "RF-004"
+      ],
+      "infoIds": []
+    },
+    "S09": {
+      "score": 40,
+      "band": "medium",
+      "ruleIds": [
+        "RF-004",
+        "RF-005"
+      ],
+      "infoIds": []
+    },
+    "S10": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-003",
+        "RF-004",
+        "RF-005"
+      ],
+      "infoIds": []
+    },
+    "S11": {
+      "score": 100,
+      "band": "high",
+      "ruleIds": [
+        "RF-001",
+        "RF-002",
+        "RF-003",
+        "RF-004",
+        "RF-005"
+      ],
+      "infoIds": []
+    },
+    "S12": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "L01": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "L02": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "L03": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "L04": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "L05": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "L06": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "L07": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "L08": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "L09": {
+      "score": 20,
+      "band": "low",
+      "ruleIds": [
+        "RF-003"
+      ],
+      "infoIds": []
+    },
+    "L10": {
+      "score": 20,
+      "band": "low",
+      "ruleIds": [
+        "RF-004"
+      ],
+      "infoIds": []
+    },
+    "L11": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-003",
+        "RF-004",
+        "RF-005"
+      ],
+      "infoIds": []
+    },
+    "L12": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "L13": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "L14": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "L15": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "L16": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "L17": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": [
+        "RF-001-W"
+      ]
+    },
+    "L18": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": [
+        "RF-001-W"
+      ]
+    },
+    "L19": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": [
+        "RF-002-W"
+      ]
+    },
+    "L20": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "L21": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "L22": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "A01": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-001"
+      ],
+      "infoIds": []
+    },
+    "A02": {
+      "score": 80,
+      "band": "high",
+      "ruleIds": [
+        "RF-001",
+        "RF-002"
+      ],
+      "infoIds": []
+    },
+    "A03": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": [
+        "RF-001-W"
+      ]
+    },
+    "A04": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": [
+        "RF-002-W"
+      ]
+    },
+    "A05": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-001"
+      ],
+      "infoIds": []
+    },
+    "A06": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-001"
+      ],
+      "infoIds": []
+    },
+    "R02": {
+      "score": 80,
+      "band": "high",
+      "ruleIds": [
+        "RF-002",
+        "RF-003",
+        "RF-004"
+      ],
+      "infoIds": []
+    },
+    "R10": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-002"
+      ],
+      "infoIds": []
+    },
+    "R18": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    }
+  },
+  "holdout1": {
+    "H01": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-001"
+      ],
+      "infoIds": []
+    },
+    "H02": {
+      "score": 80,
+      "band": "high",
+      "ruleIds": [
+        "RF-002",
+        "RF-003",
+        "RF-004"
+      ],
+      "infoIds": []
+    },
+    "H03": {
+      "score": 40,
+      "band": "medium",
+      "ruleIds": [
+        "RF-004",
+        "RF-005"
+      ],
+      "infoIds": []
+    },
+    "H04": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "H05": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "H06": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "H07": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "H08": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": [
+        "RF-001-W"
+      ]
+    },
+    "H09": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-001"
+      ],
+      "infoIds": []
+    },
+    "H10": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-002"
+      ],
+      "infoIds": []
+    },
+    "H11": {
+      "score": 80,
+      "band": "high",
+      "ruleIds": [
+        "RF-001",
+        "RF-004",
+        "RF-005"
+      ],
+      "infoIds": []
+    },
+    "H12": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "H13": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "H14": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-001"
+      ],
+      "infoIds": []
+    },
+    "H15": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-001",
+        "RF-004"
+      ],
+      "infoIds": []
+    },
+    "H16": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "H17": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-001"
+      ],
+      "infoIds": []
+    },
+    "H18": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    }
+  },
+  "holdout2": {
+    "H19": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-001"
+      ],
+      "infoIds": []
+    },
+    "H20": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-001"
+      ],
+      "infoIds": []
+    },
+    "H21": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-002"
+      ],
+      "infoIds": []
+    },
+    "H22": {
+      "score": 40,
+      "band": "medium",
+      "ruleIds": [
+        "RF-003",
+        "RF-005"
+      ],
+      "infoIds": []
+    },
+    "H23": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "H24": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "H25": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "H26": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": [
+        "RF-001-W"
+      ]
+    },
+    "H27": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "H28": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "H29": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-001"
+      ],
+      "infoIds": []
+    },
+    "H30": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-001"
+      ],
+      "infoIds": []
+    },
+    "H31": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-001",
+        "RF-003"
+      ],
+      "infoIds": []
+    },
+    "H32": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    },
+    "H33": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-001",
+        "RF-004"
+      ],
+      "infoIds": []
+    },
+    "H34": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": [
+        "RF-001-W"
+      ]
+    }
+  },
+  "sampleOffers": {
+    "visa-fee": {
+      "score": 100,
+      "band": "high",
+      "ruleIds": [
+        "RF-001",
+        "RF-003",
+        "RF-004",
+        "RF-005"
+      ],
+      "infoIds": []
+    },
+    "whatsapp-otp": {
+      "score": 60,
+      "band": "high",
+      "ruleIds": [
+        "RF-002",
+        "RF-004"
+      ],
+      "infoIds": []
+    },
+    "documents-deposit": {
+      "score": 100,
+      "band": "high",
+      "ruleIds": [
+        "RF-001",
+        "RF-003",
+        "RF-004",
+        "RF-005"
+      ],
+      "infoIds": []
+    },
+    "genuine-letter": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    }
+  },
+  "agentFixtures": {
+    "SCAM_OFFER": {
+      "score": 100,
+      "band": "high",
+      "ruleIds": [
+        "RF-001",
+        "RF-002",
+        "RF-003",
+        "RF-004",
+        "RF-005"
+      ],
+      "infoIds": []
+    },
+    "LEGIT_OFFER": {
+      "score": 0,
+      "band": "low",
+      "ruleIds": [],
+      "infoIds": []
+    }
+  },
+  "heroExamples": [
+    {
+      "tone": "high",
+      "label": "Fee asked before joining",
+      "value": "{0}",
+      "arg": "AED 1,950"
+    },
+    {
+      "tone": "medium",
+      "label": "Free email sender",
+      "value": "{0} address",
+      "arg": "gmail.com"
+    },
+    {
+      "tone": "green",
+      "label": "MoHRE reference",
+      "value": "check on the MoHRE site"
+    }
+  ]
+}

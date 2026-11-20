@@ -42,7 +42,7 @@ Source: `src/lib/agents/eval/offers.ts`, run through `runManager` with no transl
 
 ## Holdouts (consumed, recorded)
 
-Both holdouts ran once and are never run again, so these are records copied from `src/lib/agents/eval/records.ts` (itself checked against `docs/test-report.md` and `docs/holdout2-pass-bar.md`), not results this code can compute. Hash prefixes are the first 8 hex characters of `redFlag.ts` at the time.
+Each holdout ran once and is never run again, so these are records copied from `src/lib/agents/eval/records.ts` (itself checked against `docs/test-report.md`, `docs/holdout2-pass-bar.md` and `docs/holdout3-cases.md`), not results this code can compute. Hash prefixes are the first 8 hex characters of `redFlag.ts` at the time.
 
 ### Holdout 1
 
@@ -82,13 +82,42 @@ Cases counted:
 
 Holdout 2 may not be re-run, so these counts cannot be re-checked by running it again.
 
+### Holdout 3 (blind)
+
+- Ran once, blind, on 2026-11-20, after the rules were frozen at `redFlag.ts` sha256 `87a170e7…`.
+- Cases: 24.
+- The advisor had read `docs/defects.md` before writing the set, so it is blind to the rule patterns, not to the defect list.
+- **Result:** 21 of 24 matched their labels. The three that differ are H36 and H38, scams expected high with RF-001 and RF-002, which scored 0, and H53, a legitimate case expected low, which scored 60, High, with RF-001.
+- The misses were fixed afterwards by tuning (Phase 8 round 2); that is a tuned result, not a blind one, and the result above stays. The per-case table is in `docs/test-report.md`.
+
+The pass bar. It was locked on 2026-11-20, before the run. The owner applies it; this report gives counts only.
+
+- At least 10 of the 12 scam cases flagged.
+- At most 1 of the 11 legitimate cases flagged.
+- No legitimate case flagged high.
+
+Cases counted:
+
+- Scam cases (12): H35 to H45, and H58. A scam is "flagged" when its band is medium or high.
+- Legitimate cases (11): H46 to H56. A legitimate case is "flagged" when its band is medium or high, or when it scores any points.
+- H57 (zero-width characters) is a stress case. Report it separately. It is not counted in either number.
+
+| Bar item | Required | Count | Where the count comes from |
+|---|---|---|---|
+| Scam cases flagged (medium or high) | at least 10 of 12 | 10 of 12 | Per-case record. Not flagged: H36 and H38, each 0, Low, no rule. |
+| Legitimate cases flagged (medium or high, or any points) | at most 1 of 11 | 1 of 11 | Per-case record. H53 scored 60, High, RF-001; the other 10 scored 0 with no rule and no info finding. |
+| Legitimate cases flagged high | 0 | 1 | Per-case record. H53. |
+| H57, a stress case reported separately | not counted | 60, High, RF-001 | Per-case record. Matches its label. The quote is `Pay the registration fee of AED 700 to proceed`: cleaning removed both zero-width spaces. |
+
+Holdout 3 may not be re-run, so these counts cannot be re-checked by running it again.
+
 ## Known limitations
 
 Copied from `docs/known-limitations.md`, every bullet; that file stays the source.
 
 Offer Check is an MVP prototype. A low score or "No risk indicators found" does not confirm that an offer is genuine.
 
-- **Fixed rules can miss wording.** The red-flag rules match fixed English patterns, so they can miss misspelled, obfuscated or unusual wording, such as `v1sa fee`. The fee rule fires on a payment verb, a stated amount, or a fee marked as required or payable. `Visa fee required` fires, but a bare mention such as `Security deposit` or `Do not forget the processing fee` does not.
+- **Fixed rules can miss wording.** The red-flag rules match fixed English patterns, so they can miss misspelled, obfuscated or unusual wording, such as `v1sa fee`. The fee rule fires on a payment verb, a stated amount, or a fee marked as required or payable. `Visa fee required` fires, and since Phase 8 (2026-11-20) so does a reminder such as `Do not forget the processing fee`, but a bare label such as `Security deposit` on its own does not.
 - **Fixed rules can also over-match.** A rule can fire on text that mentions a fee or code without asking for it. A negation counts only when it is bound to the ask or the cost, as in `We never ask for a fee` or `Fees are not payable`, so other negative wording can still score.
 - **English wording only.** The fee, credential, document and urgency rules match English, so an offer in another language does not fire them. The free email rule works in any language, so such an offer can still score 20, and a low score means even less for it. BATCHB-2 adds an optional machine translation: for text the offline detector marks as not English or mixed, "Send to Google and translate" sends it, once per press and every time, with the disclosure shown before the click, through `/api/translate` to Google Cloud Translation (Basic, v2), and the rules check the English it returns. The score is still set only by the rules, on the English text.
 - **Rules only, for now.** Intake only cleans the text; claim extraction is not implemented yet. Red-flag (fixed rules), the risk aggregator and the drafter (fixed template blocks) are implemented, with no LLM. Verification and official-channel are built as text-only steps (2026-11-11): Verification runs five cross-checks (V-01 to V-05) on the cleaned text, and Official channel links findings and cross-checks to existing official entries. Nothing is looked up outside Offer Check, so no company, domain or offer number is checked against any registry or website.
@@ -111,7 +140,7 @@ Offer Check is an MVP prototype. A low score or "No risk indicators found" does 
 - **Theme:** only the dark theme exists; System and Light are shown as coming soon.
 - **Offline reading covers six pages** (/check, /about, /legal, /portals, /privacy, /terms) after one online visit. Radar and Vault show the offline page when not reachable.
 
-- **Tested on a small synthetic set.** Holdout 1 is consumed, and it ran on the rules as they were before the Step 1d fixes. Strict result: 11 of 18 passed. With the right rule counted as a pass: 15 of 18. H10 was a real miss, not a band dispute. Holdout 2 is also consumed. It ran on the rules after those fixes, and 15 of 16 passed. That is 16 synthetic cases, so it is a small sample. After tuning (Batch A, 2026-11-08), H21 also passes; that is a tuned result, not a blind one, and the blind result stays 15 of 16. Failures are listed in `docs/rules-backlog.md`.
+- **Tested on a small synthetic set.** Holdout 1 is consumed, and it ran on the rules as they were before the Step 1d fixes. Strict result: 11 of 18 passed. With the right rule counted as a pass: 15 of 18. H10 was a real miss, not a band dispute. Holdout 2 is also consumed. It ran on the rules after those fixes, and 15 of 16 passed. That is 16 synthetic cases, so it is a small sample. After tuning (Batch A, 2026-11-08), H21 also passes; that is a tuned result, not a blind one, and the blind result stays 15 of 16. Failures are listed in `docs/rules-backlog.md`. Phase 8 part 1 (2026-11-20) changed the rules for eight documented defects; every case added then is tuned, not blind, and a comparison with the pre-change baseline showed that no holdout 1 or holdout 2 case changed. Holdout 3 (24 synthetic cases) ran once, blind, on 2026-11-20 against the frozen rules: 21 of 24 matched their labels. It missed two scams (H36, a fee called an "amount"; H38, a request for card number, expiry date and CVV) and flagged one honest line high (H53, `No deposit, fee or payment is required …`). Phase 8 round 2 fixed all three by tuning; that is a tuned result, not a blind one, and the blind result stays as recorded (`docs/rules-backlog.md`); the advisor had read `docs/defects.md` before writing the set, so it is blind to the rule patterns, not to the defect list.
 
 ### What this check cannot do
 
@@ -119,12 +148,16 @@ Internal only. Until 2026-11-11 the check page showed a plain-language version o
 
 - **Some honest offers can score high.** An employer named at the start of a list (`covers`, `pays`, `pays for`, `bears`, `provides`) covers an item it usually pays, such as a visa, medical or a flight. Still High: `sponsors` and other verbs such as `arranges` (`The company arranges visa and medical fees of AED 500`), a head in an earlier sentence, a list longer than 160 characters, a fee noun in the item (processing, registration, admin, application, security, deposit, training, clearance, agency, service, handling, documentation, verification, courier), and a candidate marker such as `before joining` near the cost.
 - **A request for a code can be missed when it is worded indirectly.** Still missed: `What number did you get by SMS?`, and a code to type into a form with no link, URL, "click" or WhatsApp in the sentence, such as `Type the code into the form we emailed you`. `Enter the code we send you on our portal` stays unflagged on purpose, because a real careers portal asks for that.
-- **Look-alike letters can slip past cleaning.**
+- **The holdout 3 fixes are narrow (Phase 8 round 2, tuned).** A list of cost words after "no" is cleared only when a word such as "required", "payable" or "taken" follows the list straight away or after "ever", so `No deposit, fee or payment is currently required` still scores High. A request for a card's expiry date needs a card number or a CVV named in the same sentence, so `We need your card expiry date` alone scores 0. An "amount" counts as a fee only after "booking", "registration" or "processing", so `The medical amount of AED 600 must be paid by you` still scores 0.
+- **Look-alike letters can slip past cleaning.** Since Phase 8 (QA-6, 2026-11-20) the rules match a copy in which fullwidth letters and digits are plain ones and a Cyrillic or Greek letter that looks Latin becomes its Latin letter inside a word that also has Latin letters. Still missed: a word written wholly in look-alike letters, digits or symbols used as letters (`v1sa`), accented letters, and look-alikes from other scripts.
+- **Warnings are recognised by fixed wording.** A fee mentioned in a warning about someone else (`Beware of agents asking for a fee`) or after `there is no` gives a 0-point warning finding. A free-mail address after warning wording in the same clause (`Do not trust anyone using ...`) is not counted, unless `except`, `only`, `but` or `other than` follows the warning, so an offer that puts its own free-mail address right after such wording, with none of those words, gets no points for it (`Beware of fakes and email ...`). This is an open limit (security review, 2026-11-21): `To avoid fake offers email hr.jobs@gmail.com` and `Beware of scammers: our recruiter is hr.jobs@gmail.com` each score 0, while `Our recruiter is hr.jobs@gmail.com` scores 20. It removes only the 20 points of the free email rule (RF-005); the other rules still read the same text, so a fee request next to it still scores High. A reply asked for `today` or `now` is not counted when an invitation to ask questions follows (`if you have any questions`).
+- **Line breaks are still a heuristic.** After a line that says the employer pays, the break stays only when the next line starts with a capital letter. A next line in lower case still joins, so the employer wording can still clear it.
+- **A negation can still reach a cost with no verb of its own.** `We do not require a degree the fee is AED 500` fires, because `the fee is` starts a new statement. `We do not require a degree fee AED 500` still reads as part of the negation and gives only the 0-point warning finding.
 - **A request for a photo of a card can be missed if it names neither the kind of card nor a card detail in the same sentence.** Still missed: `Snap your card and send it` (no image word), `Send a photo of your card. Make sure the CVV is visible.` (the detail is in the next sentence), a detail more than 60 characters away, `Send a photo of your Visa` (the brand alone is the work visa) and a video of a card.
 - **The check is built for job offers.** A notice (`src/lib/offerLikeness.ts`) shows when the band is Low, no signal group matches (role, pay, process, organisation) and the tier 1 language notice is not shown. It never changes the score. A non-offer that uses one signal word, such as `company` or `monthly`, gets no notice, and non-English text is not read for signals.
 - **Non-English text in Latin script is only partly detected.** Batch B Stage 1 adds an offline word check (`src/lib/coverage.ts`, word lists in `src/lib/languageWords.ts`). Text is not English when at least 2 different marker words (common Hindi, Urdu, romanised Arabic, Tagalog, Malayalam, Bengali, Tamil or French words) make up at least 30% of its Latin words, or when under 15% of them are common English words; it is partly English when at least 3 different marker words make up at least 10%, or (LANG-4) when 15% up to 30% of them are common English words. In that uncertain band the banner says English could not be confirmed and offers translation; checking the original gives a score from the English words only, marked as partial, so a warning sign in another language can be missed. It abstains under 6 Latin words, and a language with no marker words, or one whose words are left off the lists because they are also English, names or UAE places, can still read as English. The script tiers are unchanged: a notice also shows for non-Latin letters when they are at least half of the letters, or at least 10 of them. The 15% and 30% cut-offs rest on a small synthetic sample (10 English edge cases, 15 non-English texts, one romanised Arabic fee scam; none validated by a native speaker), not on real offers. On that sample 2 of the 10 English texts (heavy with jargon or names) get the language banner and, checked as the original, a partial score; none of the 15 non-English texts passes as English, and 7 of them are only partly checked rather than not checked. Some Latin-script text will still pass as English, for example text that uses enough common English words.
 - **The language cut-offs are design choices.** The floor of 10 letters is based on a few hand-written sentences; the word-check cut-offs are conservative placeholders (Batch B decision 3), set so that none of the 77 eval cases changes. None is validated on real data. Mixed text with 10 or more non-Latin letters gets the notice, so a three-word Arabic name such as `محمد بن راشد` (10 letters) does too, while a short name such as `محمد` does not.
-- **Look-alike letters can keep the language notice away.** A few Cyrillic or Greek letters that look Latin stay below the 10-letter floor, so no notice is shown and the words they sit in can be missed. See QA defect 6 in `docs/rules-backlog.md`; Intake v2 is Phase 4.
+- **Look-alike letters can keep the language notice away.** A few Cyrillic or Greek letters that look Latin stay below the 10-letter floor, so no notice is shown. Since Phase 8 (QA-6, 2026-11-20) the rules still read a word they sit in when it also has Latin letters; a word written wholly in look-alike letters can be missed. See QA-6 in `docs/defects.md`; Intake v2 is Phase 4.
 - **A translation can change the meaning.** BATCHB-2: machine translation by Google Cloud Translation can lose, soften or change scam wording, so a rule that would fire on the original can stay silent. Translation quality has not been measured for any language, and no accuracy is claimed. A translated result is marked as such: with no finding the chip is grey (`TRANSLATED_NONE_LABEL`), never green. Translation is offered only when the offline detector flags the text, so the Latin-script gap above (languages typed in English letters that read as English) also means no translation is offered for them.
 
 ### Known misses in the eval set

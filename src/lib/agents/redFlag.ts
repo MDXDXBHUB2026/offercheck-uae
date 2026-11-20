@@ -14,7 +14,8 @@ type Rule = {
   severity: Severity;
   // Names the info finding emitted when negation suppresses this rule.
   warningCheck?: string;
-  scan: (text: string) => Scan;
+  // text is what the rules match; display is the same text as typed, same length, for quotes (QA-6).
+  scan: (text: string, display: string) => Scan;
 };
 
 // Splits on punctuation so "Do not delay, pay the fee" is two clauses, but keeps "12,000",
@@ -47,12 +48,19 @@ const NEGATED_ASK = new RegExp(
   `${NEGATOR}\\s+(?:ever\\s+)?(?:be\\s+)?(?:ask|charg|requir|request|collect|demand|need|pay|transfer|deposit|remit|click|open|tap|${SHARE_VERB})\\w*`,
   "i",
 );
-// A new payment verb starts a new ask: "We do not require experience pay the fee".
-const NEW_ASK = /(?<!\b(?:to|or)\s)\b(?:pay|transfer|deposit|remit|send)\b/i;
+// A new payment verb starts a new ask: "We do not require experience pay the fee". After "a",
+// "any", "the" etc. it is a noun, not a verb: "We never ask for a deposit" (GAP-3).
+const NEW_ASK = /(?<!\b(?:to|or|a|an|any|the|your|no)\s)\b(?:pay|transfer|deposit|remit|send)\b/i;
+// GAP-3: a cost with its own verb is a new statement, out of reach of a negated ask before it:
+// "We do not require a degree the fee is AED 500". "We do not charge a fee of AED 500" has none.
+// "and no fee is required" has no determiner, so it stays a negation.
+const NEW_COST_STATEMENT =
+  /\b(?:the|your|this|that|a)\s+(?:\w+\s+){0,2}?(?:fees?|charges?|costs?|payment|deposits?)\s+(?:is|are|will\s+be)\s+(?!not\b|never\b)/i;
 const STARTS_WITH_ASK = /^(?:pay|transfer|deposit|remit|send)\b/i;
-// On the cost itself: "No visa fee is required".
+// On the cost itself: "No visa fee is required". GAP-4: also "There is no agency fee", unless an
+// amount follows it.
 const NO_COST =
-  /\bno\s+(?:\w+\s+){0,3}?(?:fees?|charges?|payments?|deposits?)\s+(?:(?:is|are)\s+)?(?:required|payable|needed|applicable|apply|applies|charged|collected)\b/i;
+  /\bno\s+(?:\w+\s+){0,3}?(?:fees?|charges?|payments?|deposits?)\s+(?:(?:is|are)\s+)?(?:required|payable|needed|applicable|apply|applies|charged|collected)\b|\bthere\s+(?:is|are|will\s+be)\s+no\s+(?:\w+\s+){0,3}?(?:fees?|charges?|payments?|deposits?)\b(?!\s*(?:[:-]|of\b|is\b|are\b)?\s*(?:aed|dhs?|usd|inr|rs|₹|\$|\d))/i;
 // After the cost: "Recruitment fees are not payable", "Fees will not be deducted".
 const NEGATED_AFTER =
   /\b(?:(?:is|are|will|shall)\s+(?:not|never)|(?:isn|aren|won)['’]t)\s+(?:be\s+)?(?:payable|required|needed|charged|collected|deducted|applicable)\b/i;
@@ -60,12 +68,37 @@ const NEGATED_AFTER =
 const THIRD_PARTY_WARNING =
   /\b(?:beware|careful|watch out|avoid|report)\b.{0,40}\b(?:agents?|recruiters?|anyone|people|individuals?|scammers?|fraudsters?)\s+(?:who|that|asking|charging|requesting|demanding)\b/i;
 
+// H53: a list of cost words after "no", across commas, ending in a no-cost verb: "No deposit, fee or
+// payment is required". A later item with a determiner or an amount is a new cost, not part of the
+// list: "No deposit, the fee of AED 500 is required" still fires. A lone item is NO_COST's job.
+// "ever" may sit before the verb: "No deposit, fee or payment is ever required".
+const COST_WORD = "(?:fees?|charges?|payments?|deposits?|costs?|money)";
+const LATER_ITEM = String.raw`(?:(?!(?:the|a|an|your|this|that|our|its|their)\b)[a-z-]+\s+){0,2}?${COST_WORD}`;
+const NO_COST_LIST = new RegExp(
+  String.raw`\bno\s+(?:[a-z-]+\s+){0,2}?${COST_WORD}(?:\s*,\s*(?:(?:or|and|nor)\s+)?${LATER_ITEM}|\s+(?:or|and|nor)\s+${LATER_ITEM})+` +
+    String.raw`\s+(?:(?:is|are)\s+(?:ever\s+)?|(?:will|shall|would)\s+(?:ever\s+)?be\s+|ever\s+)?(?:required|payable|needed|applicable|charged|collected|taken|requested|due)\b`,
+  "gi",
+);
+const MAX_COST_LIST_REACH_CHARS = 200;
+
+// index is a match's place in the whole text; the list may start in an earlier clause.
+function inNegatedCostList(text: string, index: number): boolean {
+  const start = Math.max(0, index - MAX_COST_LIST_REACH_CHARS);
+  const window = text.slice(start, index + MAX_COST_LIST_REACH_CHARS);
+  for (const found of window.matchAll(NO_COST_LIST)) {
+    const listStart = start + found.index;
+    if (listStart <= index && index < listStart + found[0].length) return true;
+  }
+  return false;
+}
+
 function isNegated(text: string, match: RegExpExecArray): boolean {
   const before = text.slice(0, match.index);
   if (NEGATED_AT_MATCH.test(before.slice(-NEAR_MATCH_CHARS))) return true;
   const ask = NEGATED_ASK.exec(before);
   const matchEnd = match.index + match[0].length;
-  if (ask && !NEW_ASK.test(text.slice(ask.index + ask[0].length, matchEnd))) return true;
+  const afterAsk = ask ? text.slice(ask.index + ask[0].length, matchEnd) : "";
+  if (ask && !NEW_ASK.test(afterAsk) && !NEW_COST_STATEMENT.test(afterAsk)) return true;
   const noCost = NO_COST.exec(text);
   if (noCost && noCost.index <= match.index && match.index < noCost.index + noCost[0].length) {
     return true;
@@ -73,10 +106,11 @@ function isNegated(text: string, match: RegExpExecArray): boolean {
   return !STARTS_WITH_ASK.test(match[0]) && NEGATED_AFTER.test(text.slice(match.index));
 }
 
-function quote(clause: string, matchIndex: number): string {
-  if (clause.length <= MAX_QUOTE_CHARS) return clause;
-  const start = Math.max(0, matchIndex - MAX_QUOTE_CHARS / 2);
-  return clause.slice(start, start + MAX_QUOTE_CHARS).trim();
+// The quote comes from display, the text as typed, at the clause's place in the matched text.
+function quote(display: string, clauseStart: number, clause: string, matchIndex: number): string {
+  if (clause.length <= MAX_QUOTE_CHARS) return display.slice(clauseStart, clauseStart + clause.length);
+  const start = clauseStart + Math.max(0, matchIndex - MAX_QUOTE_CHARS / 2);
+  return display.slice(start, start + MAX_QUOTE_CHARS).trim();
 }
 
 // A part with its own payer ends the list: in "Send your CV and we pay the fee", we are paying.
@@ -185,7 +219,7 @@ function matchClauses(
   listEnd?: RegExp,
   listHead?: RegExp,
 ) {
-  return (text: string): Scan => {
+  return (text: string, display: string): Scan => {
     const scan: Scan = { evidence: [], warnings: [] };
     for (const raw of text.matchAll(CLAUSE)) {
       const clause = raw[0].trim();
@@ -212,15 +246,19 @@ function matchClauses(
           if ((matches.length > 0 || mentioned) && !isCovered(index, part, clauseStart + offset)) {
             const request = matches.find(
               (found) =>
-                !isNegated(reach, found) && !THIRD_PARTY_WARNING.test(reach.slice(0, found.index)),
+                !isNegated(reach, found) &&
+                !THIRD_PARTY_WARNING.test(reach.slice(0, found.index)) &&
+                !inNegatedCostList(text, clauseStart + offset + found.index),
             );
             if (request) {
-              scan.evidence.push(quote(clause, offset + request.index));
+              scan.evidence.push(quote(display, clauseStart, clause, offset + request.index));
               break;
             }
-            const suppressed =
-              matches[0] ?? (mentioned && isNegated(reach, mentioned) ? mentioned : null);
-            if (suppressed) scan.warnings.push(quote(clause, offset + suppressed.index));
+            // GAP-4: a mention in a warning about someone else counts like a negated one.
+            const warnedAbout = (found: RegExpExecArray) =>
+              isNegated(reach, found) || THIRD_PARTY_WARNING.test(reach.slice(0, found.index));
+            const suppressed = matches[0] ?? (mentioned && warnedAbout(mentioned) ? mentioned : null);
+            if (suppressed) scan.warnings.push(quote(display, clauseStart, clause, offset + suppressed.index));
           }
         }
         offset += part.length;
@@ -254,10 +292,29 @@ const FREE_EMAIL_DOMAINS = new Set([
   "rediffmail.com",
 ]);
 
-function findFreeEmails(text: string): Scan {
+// QA-14: an address named in a warning is not the offer's contact: "Do not trust anyone using
+// hr.fake@gmail.com". Only wording before the address in the same clause counts, and "except",
+// "only", "other than" etc. after the warning hand the address back to the offer.
+const MAX_WARNING_REACH_CHARS = 80;
+const CLAUSE_STOP = /[,;!?\n]|\.(?=\s|$)/g;
+const WARNED_CONTACT =
+  /\b(?:(?:do\s+not|don['’]t|never)\s+(?:trust|reply|respond|deal|engage|believe)|beware|watch\s+out|be\s+careful|fake|impersonat\w*|scammers?|fraudsters?)\b/i;
+const OWN_CONTACT_AFTER_WARNING = /\b(?:except|other than|apart from|but|only|instead)\b/i;
+
+function isWarnedContact(text: string, emailStart: number): boolean {
+  let before = text.slice(Math.max(0, emailStart - MAX_WARNING_REACH_CHARS), emailStart);
+  let stop = -1;
+  for (const found of before.matchAll(CLAUSE_STOP)) stop = found.index;
+  before = before.slice(stop + 1);
+  const warning = WARNED_CONTACT.exec(before);
+  return warning !== null && !OWN_CONTACT_AFTER_WARNING.test(before.slice(warning.index));
+}
+
+function findFreeEmails(text: string, display: string): Scan {
   const evidence = [...text.matchAll(EMAIL)]
     .filter((match) => FREE_EMAIL_DOMAINS.has(match[1].toLowerCase()))
-    .map((match) => match[0]);
+    .filter((match) => !isWarnedContact(text, match.index))
+    .map((match) => display.slice(match.index, match.index + match[0].length));
   return { evidence, warnings: [] };
 }
 
@@ -271,6 +328,10 @@ const MONEY = `(?:${AMOUNT}|${BARE_AMOUNT})`;
 const PAY =
   "(?<!\\b(?:your|our|the|monthly|weekly|daily|hourly|annual|total|starting|overtime|basic|net|gross|base|take-home)\\s)\\bpay\\b(?!\\s+(?:of|is|package|scale|slip|rise|raise|grade|structure|band|period|date|day|rate|cheque|check|review)\\b)";
 const PAYMENT_VERB = `(?:${PAY}|\\b(?:transfer|deposit|remit|send)\\b)`;
+// GAP-6: one character of the wording between a reminder and the cost. None of these words may
+// appear there: "Do not forget that there is no fee", "your salary deposit date".
+const NOT_THE_CANDIDATES_COST =
+  "(?:(?!\\b(?:no|not|never|free|waived|covered|paid|refund\\w*|salary|wages?|bonus)\\b).)";
 const EMPLOYER = "\\b(?:company|employer|we|hr)(?:\\s+(?:will|shall|would|to)|['’]ll)?\\s+";
 
 const COVERED_BY_EMPLOYER =
@@ -303,6 +364,16 @@ const CREDENTIAL_NOT_ASKED = new RegExp(
 const IMAGE_OF = "\\b(?:photos?|pictures?|pics?|images?|scans?|scanned copy|copy|copies|screenshots?|snaps?)\\s+of\\s+(?:the\\s+)?";
 const BOTH_SIDES = "(?:front\\s+(?:and|&)\\s+back|back\\s+(?:and|&)\\s+front)";
 const CARD_DETAIL = `(?:${BOTH_SIDES}|cvv|cvc|expiry|expiration|pin)`;
+// H38: a payment card's number, expiry date or CVV asked for in any order. "card" after an ID, labour,
+// health or other non-payment card name is not a payment card. The ask counts only when the sentence
+// also names a card number or a CVV, so "We need your passport expiry date" stays clear.
+const NOT_PAYMENT_CARD =
+  String.raw`(?<!\b(?:id|identity|labour|labor|health|insurance|residence|residency|work|national|access|employee|staff|membership|loyalty|sim|business)\s)`;
+const PAYMENT_CARD_ITEM = String.raw`(?:${NOT_PAYMENT_CARD}card\s+(?:number|details|no)\b|\b(?:cvv|cvc)\b)`;
+const CARD_ITEM_ASKED = new RegExp(
+  String.raw`\b(?:need|require|want|send|share|provide|give|submit|confirm|enter|tell|email|whatsapp|forward)\b(?:\s+us)?\s+(?:your|the)\s+(?:[\w-]+\s+){0,3}?(?:${NOT_PAYMENT_CARD}card\s+(?:number|details|no)|cvv|cvc|expiry|expiration)\b`,
+  "i",
+);
 
 export const RULES: Rule[] = [
   {
@@ -325,6 +396,18 @@ export const RULES: Rule[] = [
         /\b(?:fees?|charges|deposits?)\b.{0,30}\b(?:required|due\b(?!\s+to\b)|payable|applicable|mandatory|applies|apply|non-refundable|must be paid|to be paid|on you|from you|on candidate|deducted|collected|charged)\b/i,
         /\b(?:settle|clear|arrange|bring|submit|charged?|collects?)\b.{0,40}\b(?:fees?|charges|deposits?)\b/i,
         /\b(?:candidates?|applicants?|you)\s+(?:bears?|(?:is|are)\s+responsible\s+for|must\s+(?:bear|cover))\b.{0,40}\b(?:fees?|charges|costs?)\b/i,
+        // H36: a booking, registration or processing amount or charge the candidate must pay. A payer
+        // named as the employer is cleared by the exclusion: "must be paid by the company".
+        /\b(?:booking|registration|processing)\s+(?:amount|charges?)\b.{0,60}?\b(?:must\s+be\s+paid|(?:to\s+be\s+paid|payable)\s+by\s+(?:the\s+)?(?:candidates?|applicants?|you))\b/i,
+        // GAP-6: a reminder or "keep it ready" aimed at the candidate, with no payment verb.
+        new RegExp(
+          `\\b(?:(?:do\\s+not|don['’]t|never)\\s+forget|remember)\\b${NOT_THE_CANDIDATES_COST}{0,40}?\\b(?:fees?|charges|deposits?)\\b(?!-)`,
+          "i",
+        ),
+        new RegExp(
+          `\\b(?:keep|have)\\b${NOT_THE_CANDIDATES_COST}{0,40}?\\b(?:fees?|charges|deposits?)\\b(?:\\s+[\\w,]+){0,4}?\\s+ready\\b`,
+          "i",
+        ),
       ],
       EMPLOYER_COVERS_COST,
       /\b(?:charg\w*|fees?|deposits?)\b/i,
@@ -362,6 +445,8 @@ export const RULES: Rule[] = [
           "i",
         ),
         /\b(?:bank|debit|credit|atm)\s+cards?\s+(?:photo|picture|pic|image|scan|copy|screenshot|front|back)s?\b/i,
+        // H38: card number, expiry or CVV asked for, with a card number or CVV named in the sentence.
+        { pattern: CARD_ITEM_ASKED, cue: new RegExp(PAYMENT_CARD_ITEM, "i") },
         // GAP-7: a photo of "your card" only with a card detail within 60 characters.
         new RegExp(`${IMAGE_OF}${BOTH_SIDES}\\s+(?:side\\s+)?of\\s+(?:your\\s+|the\\s+)?cards?\\b`, "i"),
         // A.1: the detail may sit across a comma, anywhere in the same sentence.
@@ -404,7 +489,8 @@ export const RULES: Rule[] = [
     warningCheck: "urgency_mentioned_in_warning",
     scan: matchClauses([
       /\bwithin\s+(?:\d{1,3}|one|two|few|a few)\s+(?:hours?|hrs?|minutes?|mins?)\b(?!\s+(?:of|from)\b)/i,
-      /\b(?:act|apply|reply|respond|pay|confirm|send|contact us)\s+(?:now|immediately|today|right away|asap)\b/i,
+      // QA-14: not an invitation to ask: "Please reply today if you have any questions".
+      /\b(?:act|apply|reply|respond|pay|confirm|send|contact us)\s+(?:now|immediately|today|right away|asap)\b(?!\s+(?:if|with|for|should|in\s+case)\s+(?:you\s+(?:have|need)\s+)?(?:any\s+)?(?:further\s+|more\s+|other\s+)?(?:questions?|quer(?:y|ies)|doubts?|clarifications?|concerns?)\b)/i,
       /\b(?:today only|last chance|final notice|final reminder|urgently)\b/i,
       /\burgent\s+(?:hiring|hire|requirement|required|need|needed|vacanc(?:y|ies)|openings?|recruitment|joiners?)\b/i,
       /^\s*urgent\s*$/i,
@@ -432,10 +518,14 @@ function toFinding(check: string, severity: Severity, source: string, quotes: st
 }
 
 // Offer text is untrusted data: it is only ever matched against fixed patterns, never interpreted.
-export function runRedFlagWorker(offerText: string): Finding[] {
+// matchText is the copy the rules match (intake.ts foldForMatching, QA-6). It must have the same
+// length as offerText, because quotes are cut from offerText at the places matched in matchText;
+// any other value is ignored and offerText is matched as it is.
+export function runRedFlagWorker(offerText: string, matchText: string = offerText): Finding[] {
+  const text = matchText.length === offerText.length ? matchText : offerText;
   const findings: Finding[] = [];
   for (const rule of RULES) {
-    const { evidence, warnings } = rule.scan(offerText);
+    const { evidence, warnings } = rule.scan(text, offerText);
     if (evidence.length > 0) {
       findings.push(toFinding(rule.check, rule.severity, rule.id, evidence));
     }

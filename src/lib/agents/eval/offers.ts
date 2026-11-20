@@ -243,7 +243,8 @@ export const EVAL_OFFERS: EvalOffer[] = [
     text: "Beware of agents asking for a processing fee",
     expectedBand: "low",
     expectedRuleIds: [],
-    note: "A warning about third parties: the candidate is not the payer.",
+    expectedInfoIds: ["RF-001-W"],
+    note: "A warning about third parties: the candidate is not the payer. Phase 8 GAP-4 (2026-11-20, tuned): now shows the 0-point warning finding, like \"Beware of agents who charge a fee\".",
   },
   {
     id: "L14",
