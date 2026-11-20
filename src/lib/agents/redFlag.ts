@@ -71,11 +71,12 @@ const THIRD_PARTY_WARNING =
 // H53: a list of cost words after "no", across commas, ending in a no-cost verb: "No deposit, fee or
 // payment is required". A later item with a determiner or an amount is a new cost, not part of the
 // list: "No deposit, the fee of AED 500 is required" still fires. A lone item is NO_COST's job.
+// "ever" may sit before the verb: "No deposit, fee or payment is ever required".
 const COST_WORD = "(?:fees?|charges?|payments?|deposits?|costs?|money)";
 const LATER_ITEM = String.raw`(?:(?!(?:the|a|an|your|this|that|our|its|their)\b)[a-z-]+\s+){0,2}?${COST_WORD}`;
 const NO_COST_LIST = new RegExp(
   String.raw`\bno\s+(?:[a-z-]+\s+){0,2}?${COST_WORD}(?:\s*,\s*(?:(?:or|and|nor)\s+)?${LATER_ITEM}|\s+(?:or|and|nor)\s+${LATER_ITEM})+` +
-    String.raw`\s+(?:(?:is|are|will\s+be|shall\s+be|would\s+be)\s+)?(?:required|payable|needed|applicable|charged|collected|taken|requested|due)\b`,
+    String.raw`\s+(?:(?:is|are)\s+(?:ever\s+)?|(?:will|shall|would)\s+(?:ever\s+)?be\s+|ever\s+)?(?:required|payable|needed|applicable|charged|collected|taken|requested|due)\b`,
   "gi",
 );
 const MAX_COST_LIST_REACH_CHARS = 200;

@@ -50,6 +50,31 @@ describe("H53: a list of cost words after 'no' is negated as a whole", () => {
   });
 });
 
+describe("H53 follow-up: a short intensifier between the 'no' list and the verb", () => {
+  it.each([
+    "No deposit, fee or payment is ever required",
+    "No deposit, fee or payment is required at all",
+    "No deposit, fee or payment is required under any circumstances",
+    "We never take any deposit, fee or payment at any stage",
+    // Our own.
+    "No fee, deposit or charge will ever be collected",
+    "No registration fee, deposit or payment is ever charged to candidates",
+  ])("scores 0: %s", (text) => {
+    expect(outcome(text)).toMatchObject({ score: 0, band: "low", ruleIds: [] });
+  });
+
+  it.each([
+    "No deposit, the fee of AED 500 is ever required",
+    "Pay the fee, deposit and registration charge today",
+    "A fee is ever required, no deposit is needed",
+    // Our own: a determiner still starts a new cost, and a list that ends in another verb is not cleared.
+    "No deposit, the processing fee of AED 400 is still required",
+    "No deposit, fee or payment is ever refunded, so pay the fee of AED 500 today",
+  ])("still fires RF-001: %s", (text) => {
+    expect(ruleIds(text)).toEqual(["RF-001"]);
+  });
+});
+
 describe("H38: card number, expiry date or CVV asked for in any order", () => {
   it("documented text fires RF-002", () => {
     expect(outcome("We need your card number, expiry date and CVV to set up your salary account.")).toMatchObject({
@@ -122,6 +147,9 @@ export const ROUND2_FUZZ_INPUTS: [string, string][] = (() => {
     ["H53 no list with modifiers", fill("no a b fee, c d fee or e f ")],
     ["H53 list broken by a determiner", fill("No deposit, the fee ")],
     ["H53 fee is required with no list", fill("fee or payment is required, ")],
+    ["H53 'ever' with no verb", fill("no deposit, fee or payment is ever ")],
+    ["H53 'will ever be' repeated", fill("No fee, deposit or charge will ever be collected ")],
+    ["H53 'ever' after a short list", fill("no deposit, fee ever ")],
     ["H38 card number asked, repeated", fill("We need your card number ")],
     ["H38 ask with no card item", fill("need your a b c ")],
     ["H38 expiry asked, cue far away", fill("send us the expiry, ")],
