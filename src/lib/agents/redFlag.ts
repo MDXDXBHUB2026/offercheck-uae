@@ -278,6 +278,10 @@ const MONEY = `(?:${AMOUNT}|${BARE_AMOUNT})`;
 const PAY =
   "(?<!\\b(?:your|our|the|monthly|weekly|daily|hourly|annual|total|starting|overtime|basic|net|gross|base|take-home)\\s)\\bpay\\b(?!\\s+(?:of|is|package|scale|slip|rise|raise|grade|structure|band|period|date|day|rate|cheque|check|review)\\b)";
 const PAYMENT_VERB = `(?:${PAY}|\\b(?:transfer|deposit|remit|send)\\b)`;
+// GAP-6: one character of the wording between a reminder and the cost. None of these words may
+// appear there: "Do not forget that there is no fee", "your salary deposit date".
+const NOT_THE_CANDIDATES_COST =
+  "(?:(?!\\b(?:no|not|never|free|waived|covered|paid|refund\\w*|salary|wages?|bonus)\\b).)";
 const EMPLOYER = "\\b(?:company|employer|we|hr)(?:\\s+(?:will|shall|would|to)|['’]ll)?\\s+";
 
 const COVERED_BY_EMPLOYER =
@@ -332,6 +336,15 @@ export const RULES: Rule[] = [
         /\b(?:fees?|charges|deposits?)\b.{0,30}\b(?:required|due\b(?!\s+to\b)|payable|applicable|mandatory|applies|apply|non-refundable|must be paid|to be paid|on you|from you|on candidate|deducted|collected|charged)\b/i,
         /\b(?:settle|clear|arrange|bring|submit|charged?|collects?)\b.{0,40}\b(?:fees?|charges|deposits?)\b/i,
         /\b(?:candidates?|applicants?|you)\s+(?:bears?|(?:is|are)\s+responsible\s+for|must\s+(?:bear|cover))\b.{0,40}\b(?:fees?|charges|costs?)\b/i,
+        // GAP-6: a reminder or "keep it ready" aimed at the candidate, with no payment verb.
+        new RegExp(
+          `\\b(?:(?:do\\s+not|don['’]t|never)\\s+forget|remember)\\b${NOT_THE_CANDIDATES_COST}{0,40}?\\b(?:fees?|charges|deposits?)\\b(?!-)`,
+          "i",
+        ),
+        new RegExp(
+          `\\b(?:keep|have)\\b${NOT_THE_CANDIDATES_COST}{0,40}?\\b(?:fees?|charges|deposits?)\\b(?:\\s+[\\w,]+){0,4}?\\s+ready\\b`,
+          "i",
+        ),
       ],
       EMPLOYER_COVERS_COST,
       /\b(?:charg\w*|fees?|deposits?)\b/i,

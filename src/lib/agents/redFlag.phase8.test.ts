@@ -64,3 +64,31 @@ describe("GAP-5: an employer-covers line does not clear the next line", () => {
     expect(outcome(text)).toMatchObject({ score: 0, ruleIds: [] });
   });
 });
+
+describe("GAP-6: fee wording aimed at the candidate with no payment verb", () => {
+  it("documented example fires RF-001", () => {
+    expect(outcome("Do not forget the processing fee")).toMatchObject({
+      score: 60,
+      band: "high",
+      ruleIds: ["RF-001"],
+    });
+  });
+
+  it.each([
+    "Security deposit: AED 2,000",
+    "Remember the registration fee before your interview",
+    "Please keep the documentation fee ready for Monday",
+  ])("fires: %s", (text) => {
+    expect(ruleIds(text)).toEqual(["RF-001"]);
+  });
+
+  it.each([
+    ["Security deposit", []],
+    ["No security deposit is required", ["RF-001-W"]],
+    ["Do not forget that there is no processing fee", []],
+    ["Remember that the registration fee is covered by the company", []],
+    ["Do not forget your salary deposit date", []],
+  ])("stays 0: %s", (text, infoIds) => {
+    expect(outcome(text as string)).toMatchObject({ score: 0, ruleIds: [], infoIds });
+  });
+});
