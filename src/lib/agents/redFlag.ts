@@ -264,9 +264,28 @@ const FREE_EMAIL_DOMAINS = new Set([
   "rediffmail.com",
 ]);
 
+// QA-14: an address named in a warning is not the offer's contact: "Do not trust anyone using
+// hr.fake@gmail.com". Only wording before the address in the same clause counts, and "except",
+// "only", "other than" etc. after the warning hand the address back to the offer.
+const MAX_WARNING_REACH_CHARS = 80;
+const CLAUSE_STOP = /[,;!?\n]|\.(?=\s|$)/g;
+const WARNED_CONTACT =
+  /\b(?:(?:do\s+not|don['’]t|never)\s+(?:trust|reply|respond|deal|engage|believe)|beware|watch\s+out|be\s+careful|fake|impersonat\w*|scammers?|fraudsters?)\b/i;
+const OWN_CONTACT_AFTER_WARNING = /\b(?:except|other than|apart from|but|only|instead)\b/i;
+
+function isWarnedContact(text: string, emailStart: number): boolean {
+  let before = text.slice(Math.max(0, emailStart - MAX_WARNING_REACH_CHARS), emailStart);
+  let stop = -1;
+  for (const found of before.matchAll(CLAUSE_STOP)) stop = found.index;
+  before = before.slice(stop + 1);
+  const warning = WARNED_CONTACT.exec(before);
+  return warning !== null && !OWN_CONTACT_AFTER_WARNING.test(before.slice(warning.index));
+}
+
 function findFreeEmails(text: string): Scan {
   const evidence = [...text.matchAll(EMAIL)]
     .filter((match) => FREE_EMAIL_DOMAINS.has(match[1].toLowerCase()))
+    .filter((match) => !isWarnedContact(text, match.index))
     .map((match) => match[0]);
   return { evidence, warnings: [] };
 }
@@ -427,7 +446,8 @@ export const RULES: Rule[] = [
     warningCheck: "urgency_mentioned_in_warning",
     scan: matchClauses([
       /\bwithin\s+(?:\d{1,3}|one|two|few|a few)\s+(?:hours?|hrs?|minutes?|mins?)\b(?!\s+(?:of|from)\b)/i,
-      /\b(?:act|apply|reply|respond|pay|confirm|send|contact us)\s+(?:now|immediately|today|right away|asap)\b/i,
+      // QA-14: not an invitation to ask: "Please reply today if you have any questions".
+      /\b(?:act|apply|reply|respond|pay|confirm|send|contact us)\s+(?:now|immediately|today|right away|asap)\b(?!\s+(?:if|with|for|should|in\s+case)\s+(?:you\s+(?:have|need)\s+)?(?:any\s+)?(?:further\s+|more\s+|other\s+)?(?:questions?|quer(?:y|ies)|doubts?|clarifications?|concerns?)\b)/i,
       /\b(?:today only|last chance|final notice|final reminder|urgently)\b/i,
       /\burgent\s+(?:hiring|hire|requirement|required|need|needed|vacanc(?:y|ies)|openings?|recruitment|joiners?)\b/i,
       /^\s*urgent\s*$/i,

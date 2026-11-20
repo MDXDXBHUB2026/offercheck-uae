@@ -132,3 +132,37 @@ describe("GAP-2: a list paid by the employer, and a real ask beside one", () => 
     expect(outcome(text)).toMatchObject({ score: 60, band: "high", ruleIds: ["RF-001"] });
   });
 });
+
+describe("QA-14: over-matches", () => {
+  it.each([
+    "Do not trust anyone using hr.fake@gmail.com",
+    "Beware of messages from jobs.offer.uae@gmail.com",
+    "Scammers use addresses like recruit.dxb@yahoo.com",
+  ])("a free email named in a warning gives no RF-005 points: %s", (text) => {
+    expect(outcome(text)).toMatchObject({ score: 0, ruleIds: [] });
+  });
+
+  it.each([
+    "Contact us at jobs.hr@gmail.com",
+    "Send your CV to hr.jobs@gmail.com, do not trust anyone else",
+    "Do not trust anyone except our recruiter at hr.desk@gmail.com",
+  ])("the offer's own free-email contact still fires RF-005: %s", (text) => {
+    expect(outcome(text)).toMatchObject({ score: 20, ruleIds: ["RF-005"] });
+  });
+
+  it.each([
+    "Please reply today if you have any questions about the benefits",
+    "Feel free to contact us today with any questions",
+    "You may respond today if you need any clarification",
+  ])("an invitation to ask questions gives no RF-004 points: %s", (text) => {
+    expect(outcome(text)).toMatchObject({ score: 0, ruleIds: [] });
+  });
+
+  it.each([
+    "Reply today or the offer is cancelled",
+    "Reply today to confirm your seat",
+    "Contact us now to secure your slot",
+  ])("pressure to reply still fires RF-004: %s", (text) => {
+    expect(outcome(text)).toMatchObject({ score: 20, ruleIds: ["RF-004"] });
+  });
+});
