@@ -68,6 +68,29 @@ const NEGATED_AFTER =
 const THIRD_PARTY_WARNING =
   /\b(?:beware|careful|watch out|avoid|report)\b.{0,40}\b(?:agents?|recruiters?|anyone|people|individuals?|scammers?|fraudsters?)\s+(?:who|that|asking|charging|requesting|demanding)\b/i;
 
+// H53: a list of cost words after "no", across commas, ending in a no-cost verb: "No deposit, fee or
+// payment is required". A later item with a determiner or an amount is a new cost, not part of the
+// list: "No deposit, the fee of AED 500 is required" still fires. A lone item is NO_COST's job.
+const COST_WORD = "(?:fees?|charges?|payments?|deposits?|costs?|money)";
+const LATER_ITEM = String.raw`(?:(?!(?:the|a|an|your|this|that|our|its|their)\b)[a-z-]+\s+){0,2}?${COST_WORD}`;
+const NO_COST_LIST = new RegExp(
+  String.raw`\bno\s+(?:[a-z-]+\s+){0,2}?${COST_WORD}(?:\s*,\s*(?:(?:or|and|nor)\s+)?${LATER_ITEM}|\s+(?:or|and|nor)\s+${LATER_ITEM})+` +
+    String.raw`\s+(?:(?:is|are|will\s+be|shall\s+be|would\s+be)\s+)?(?:required|payable|needed|applicable|charged|collected|taken|requested|due)\b`,
+  "gi",
+);
+const MAX_COST_LIST_REACH_CHARS = 200;
+
+// index is a match's place in the whole text; the list may start in an earlier clause.
+function inNegatedCostList(text: string, index: number): boolean {
+  const start = Math.max(0, index - MAX_COST_LIST_REACH_CHARS);
+  const window = text.slice(start, index + MAX_COST_LIST_REACH_CHARS);
+  for (const found of window.matchAll(NO_COST_LIST)) {
+    const listStart = start + found.index;
+    if (listStart <= index && index < listStart + found[0].length) return true;
+  }
+  return false;
+}
+
 function isNegated(text: string, match: RegExpExecArray): boolean {
   const before = text.slice(0, match.index);
   if (NEGATED_AT_MATCH.test(before.slice(-NEAR_MATCH_CHARS))) return true;
@@ -222,7 +245,9 @@ function matchClauses(
           if ((matches.length > 0 || mentioned) && !isCovered(index, part, clauseStart + offset)) {
             const request = matches.find(
               (found) =>
-                !isNegated(reach, found) && !THIRD_PARTY_WARNING.test(reach.slice(0, found.index)),
+                !isNegated(reach, found) &&
+                !THIRD_PARTY_WARNING.test(reach.slice(0, found.index)) &&
+                !inNegatedCostList(text, clauseStart + offset + found.index),
             );
             if (request) {
               scan.evidence.push(quote(display, clauseStart, clause, offset + request.index));

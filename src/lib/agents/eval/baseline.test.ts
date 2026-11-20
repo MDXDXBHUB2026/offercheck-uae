@@ -6,7 +6,9 @@ import { runManager } from "../manager";
 import BASELINE from "./baseline.json";
 import { HOLDOUT_OFFERS } from "./holdout";
 import { HOLDOUT_2_OFFERS } from "./holdout2";
+import { HOLDOUT_3_OFFERS } from "./holdout3";
 import { EVAL_OFFERS } from "./offers";
+import { HOLDOUT_3_CASES } from "./records";
 
 // Phase 8 regression guard (2026-11-20). baseline.json holds score, band, rule ids and info ids for
 // every case as they were before the rules v2 cycle, with redFlag.ts at sha256 c4abfc00e371ccfd...
@@ -15,13 +17,30 @@ import { EVAL_OFFERS } from "./offers";
 // A case may differ from the baseline only when it is listed in CHANGED with the defect that
 // explains it and its new outcome; an unlisted change fails here.
 
+// Holdout 3 is not in baseline.json: it ran once, blind, after the Phase 8 freeze. Its reference is
+// its read-only per-case record (records.ts), compared the same way, output with output. This guard
+// grades nothing: the blind result stays as recorded, and any change here is a tuned result.
+
 type Outcome = { score: number; band: string; ruleIds: string[]; infoIds: string[] };
-type SetName = Exclude<keyof typeof BASELINE, "heroExamples">;
+type SetName = Exclude<keyof typeof BASELINE, "heroExamples"> | "holdout3";
+
+const HOLDOUT_3_REFERENCE: Record<string, Outcome> = Object.fromEntries(
+  HOLDOUT_3_CASES.map((record) => [
+    record.id,
+    { score: record.score, band: record.band, ruleIds: [...record.ruleIds].sort(), infoIds: [...record.infoIds].sort() },
+  ]),
+);
+const reference = (name: SetName) =>
+  name === "holdout3" ? HOLDOUT_3_REFERENCE : (BASELINE[name] as Record<string, Outcome>);
 
 const CHANGED: Partial<Record<SetName, Record<string, { defect: string; now: Outcome }>>> = {
   devEval: {
     // The documented GAP-4 example: a third-party warning now gives the 0-point info finding.
     L13: { defect: "GAP-4", now: { score: 0, band: "low", ruleIds: [], infoIds: ["RF-001-W"] } },
+  },
+  holdout3: {
+    // Round 2, tuned: the "no" list is negated as a whole; the 0-point info finding remains.
+    H53: { defect: "H53", now: { score: 0, band: "low", ruleIds: [], infoIds: ["RF-001-W"] } },
   },
 };
 
@@ -44,11 +63,12 @@ const SETS: Record<SetName, readonly { id: string; text: string }[]> = {
     { id: "SCAM_OFFER", text: SCAM_OFFER },
     { id: "LEGIT_OFFER", text: LEGIT_OFFER },
   ],
+  holdout3: HOLDOUT_3_OFFERS,
 };
 
 describe("Phase 8 baseline", () => {
   for (const [name, cases] of Object.entries(SETS) as [SetName, readonly { id: string; text: string }[]][]) {
-    const baseline = BASELINE[name] as Record<string, Outcome>;
+    const baseline = reference(name);
 
     it(`${name}: covers every case`, () => {
       expect(Object.keys(baseline).sort()).toEqual(cases.map((c) => c.id).sort());
@@ -63,8 +83,8 @@ describe("Phase 8 baseline", () => {
   it("lists a defect for every explained change, and each one differs from the baseline", () => {
     for (const [name, cases] of Object.entries(CHANGED)) {
       for (const [id, change] of Object.entries(cases ?? {})) {
-        expect(change.defect).toMatch(/^(?:GAP|QA)-\d+$/);
-        expect(change.now).not.toEqual((BASELINE[name as SetName] as Record<string, Outcome>)[id]);
+        expect(change.defect).toMatch(/^(?:GAP|QA|H)-?\d+$/);
+        expect(change.now).not.toEqual(reference(name as SetName)[id]);
       }
     }
   });
