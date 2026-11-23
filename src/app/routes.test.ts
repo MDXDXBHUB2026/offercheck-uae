@@ -98,7 +98,9 @@ describe("routes", () => {
     expect(source).toContain('<main id="main"');
     expect(source).toMatch(/<Navbar \/>[\s\S]*<main[\s\S]*<SiteFooter \/>/);
     expect(source).toContain('template: "%s · Offer Check UAE"');
-    expect(source).toContain('<html lang="en" dir="ltr">');
+    // Phase 4b: changed on purpose. suppressHydrationWarning is added because the head script sets
+    // data-theme on <html> before React hydrates (src/app/themeMechanism.test.ts).
+    expect(source).toContain('<html lang="en" dir="ltr" suppressHydrationWarning>');
   });
 });
 
@@ -565,14 +567,14 @@ describe("colour contrast (WCAG AA, from the tokens in globals.css)", () => {
     ["amber", "surface"],
     ["amber-soft", "amber-bg"],
     ["sky", "surface"],
-    // Button text: white on the primary green and the danger red, both at rest and on hover.
-    ["heading", "green-action"],
-    ["heading", "green-action-hover"],
-    // The primary button's gradient ends in cyan (AI Studio port).
-    ["heading", "cyan-action"],
-    ["heading", "cyan-action-hover"],
-    ["heading", "red-action"],
-    ["heading", "red-action-hover"],
+    // Button text (--on-action since Phase 4b, was --heading): white on the primary action and the
+    // danger red, both at rest and on hover. The primary gradient ends in --action-end (AI Studio port).
+    ["on-action", "action"],
+    ["on-action", "action-hover"],
+    ["on-action", "action-end"],
+    ["on-action", "action-end-hover"],
+    ["on-action", "red-action"],
+    ["on-action", "red-action-hover"],
     // Print.
     ["print-ink", "print-paper"],
   ];
@@ -586,8 +588,8 @@ describe("colour contrast (WCAG AA, from the tokens in globals.css)", () => {
     expect(css).toMatch(/\.chip-caution \{[^}]*background: var\(--amber-bg\);\s*color: var\(--amber-soft\);/);
     expect(css).toMatch(/\.chip-green \{[^}]*background: var\(--green-bg\);\s*color: var\(--green-soft\);/);
     expect(rule(".chip-neutral")).toMatch(/background: var\(--surface-raised\);\s*color: var\(--ink\);/);
-    expect(rule(".btn-primary")).toMatch(/background: var\(--green-action\);\s*color: var\(--heading\);/);
-    expect(rule(".btn-danger")).toMatch(/background: var\(--red-action\);\s*color: var\(--heading\);/);
+    expect(rule(".btn-primary")).toMatch(/background: var\(--action\);\s*color: var\(--on-action\);/);
+    expect(rule(".btn-danger")).toMatch(/background: var\(--red-action\);\s*color: var\(--on-action\);/);
   });
 
   // Graphics (icons, the focus ring, control borders) need 3:1.
@@ -613,9 +615,15 @@ describe("colour contrast (WCAG AA, from the tokens in globals.css)", () => {
     expect(css).toMatch(/\.hero-glass \{[^}]*background: var\(--hero-glass\);/);
   });
 
-  it("is one dark theme, with no light variant to fall out of date", () => {
+  // Phase 4b: changed on purpose. This test used to pin one dark theme (color-scheme: dark and no
+  // prefers-color-scheme in the file). Now the first :root block stays dark and is the default, and a
+  // light theme and a system theme exist beside it (src/app/themeContrast.test.ts checks them).
+  it("is dark by default, with a light theme and a system theme that follows the device", () => {
     expect(root).toContain("color-scheme: dark;");
-    expect(css).not.toContain("prefers-color-scheme");
+    expect(css).toContain(':root[data-theme="light"] {');
+    expect(css).toMatch(/@media \(prefers-color-scheme: light\) \{\s*:root\[data-theme="system"\] \{/);
+    // Nothing else reads the device theme: no rule is light by default.
+    expect([...css.matchAll(/prefers-color-scheme: (\w+)/g)].map((m) => m[1])).toEqual(["light"]);
   });
 
   // Transitions and animations run only when no reduced-motion preference is set.

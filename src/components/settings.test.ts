@@ -33,10 +33,10 @@ import {
   CLEAR_DATA_CONFIRM,
   CLEAR_DATA_EXPLAIN,
   SettingsDialog,
-  THEME_NOTE,
   wrapFocus,
 } from "@/components/shell/SettingsPanel";
 import { getTextSize, restoreTextSize, setTextSize, TEXT_SIZE_STORAGE_KEY } from "@/components/shell/textSize";
+import { getTheme, restoreTheme, setTheme, THEME_STORAGE_KEY } from "@/components/shell/theme";
 import { AR } from "@/lib/i18nAr";
 import { saveVault, VAULT_COUNT_KEY, VAULT_KEY, vaultState } from "@/lib/vault";
 
@@ -62,7 +62,7 @@ function stubBrowser({ userAgent = "Mozilla/5.0 (Windows NT 10.0) Chrome/142", p
     removeEventListener: () => {},
     dispatchEvent: () => true,
   });
-  vi.stubGlobal("document", { documentElement: root });
+  vi.stubGlobal("document", { documentElement: root, querySelectorAll: () => [] });
   vi.stubGlobal("navigator", { userAgent, platform, maxTouchPoints: touch, onLine: true });
   const fire = (type: string, event: object = {}) => (listeners.get(type) ?? []).forEach((fn) => fn(event as Event));
   return { store, root, fire };
@@ -72,6 +72,7 @@ beforeEach(() => {
   setLang("en");
   setMotion("running");
   setTextSize("standard");
+  setTheme("dark");
 });
 
 afterEach(() => {
@@ -88,12 +89,13 @@ function radio(out: string, name: string, value: string): { tag: string; label: 
 }
 
 describe("Clear my data on this device", () => {
-  it("removes every stored key: the vault, its count, language, animations, text size and the install hint", async () => {
+  it("removes every stored key: the vault, its count, language, animations, text size, theme and the install hint", async () => {
     const { store, root } = stubBrowser();
     await saveVault([{ id: "1", savedAt: "2026-11-16T00:00:00Z", title: "t", channel: "Email", view: { overall_risk_level: "Low", summary: "", red_flags: [] } as never }], "a passphrase");
     setLang("ar");
     setMotion("paused");
     setTextSize("large");
+    setTheme("light");
     dismissInstallHint();
     store.set("unrelated_site_key", "kept");
     expect([...store.keys()].sort()).toEqual([...STORED_KEYS, "unrelated_site_key"].sort());
@@ -103,15 +105,16 @@ describe("Clear my data on this device", () => {
     expect([...store.keys()]).toEqual(["unrelated_site_key"]);
     expect(vaultState()).toBe("none");
     // And this page is back to the defaults, without writing them.
-    expect([getLang(), getMotion(), getTextSize(), getHintDismissed()]).toEqual(["en", "running", "standard", false]);
+    expect([getLang(), getMotion(), getTextSize(), getTheme(), getHintDismissed()]).toEqual(["en", "running", "standard", "dark", false]);
     expect(root.dir).toBe("ltr");
     expect(root.dataset.motion).toBeUndefined();
     expect(root.dataset.text).toBeUndefined();
+    expect(root.dataset.theme).toBeUndefined();
   });
 
   it("lists every storage key the code writes: no file in src writes an offercheck_ key not in the list", () => {
     expect([...STORED_KEYS].sort()).toEqual(
-      [VAULT_KEY, VAULT_COUNT_KEY, LANG_STORAGE_KEY, MOTION_STORAGE_KEY, TEXT_SIZE_STORAGE_KEY, INSTALL_HINT_STORAGE_KEY].sort(),
+      [VAULT_KEY, VAULT_COUNT_KEY, LANG_STORAGE_KEY, MOTION_STORAGE_KEY, TEXT_SIZE_STORAGE_KEY, THEME_STORAGE_KEY, INSTALL_HINT_STORAGE_KEY].sort(),
     );
     const files = (dir: string): string[] =>
       readdirSync(dir).flatMap((name) => {
@@ -151,19 +154,55 @@ describe("Settings dialog", () => {
     expect(out).toContain("Close settings");
   });
 
-  it("Theme: System and Light disabled and marked coming soon, Dark chosen", () => {
+  // Phase 4b: changed on purpose. This test used to pin System and Light as disabled, marked "coming
+  // soon", with a note that the light theme was not built. All three are now real choices.
+  it("Theme: System, Dark and Light are all choosable, Dark is chosen by default, nothing says coming soon", () => {
     stubBrowser();
     const out = html(createElement(SettingsDialog, { onClose: () => {} }));
-    for (const [value, name] of [["system", "System"], ["light", "Light"]]) {
+    for (const [value, name] of [["system", "System"], ["dark", "Dark"], ["light", "Light"]]) {
       const choice = radio(out, "theme", value);
-      expect(choice.tag).toContain('disabled=""');
-      expect(choice.tag).not.toContain("checked");
-      expect(choice.label).toBe(`${name} <span class="chip chip-soon">coming soon</span></span>`);
+      expect(choice.tag).not.toContain("disabled");
+      expect(choice.label).toBe(`${name}</span>`);
     }
-    const dark = radio(out, "theme", "dark");
-    expect(dark.tag).toContain('checked=""');
-    expect(dark.tag).not.toContain("disabled");
-    expect(out).toContain(THEME_NOTE);
+    expect(radio(out, "theme", "dark").tag).toContain('checked=""');
+    expect(radio(out, "theme", "light").tag).not.toContain("checked");
+    expect(radio(out, "theme", "system").tag).not.toContain("checked");
+    expect(out).not.toMatch(/coming soon|chip-soon/i);
+  });
+
+  it("Theme: the choice follows the store, in both languages", () => {
+    stubBrowser();
+    setTheme("light");
+    expect(radio(html(createElement(SettingsDialog, { onClose: () => {} })), "theme", "light").tag).toContain('checked=""');
+    setTheme("system");
+    const out = html(createElement(SettingsDialog, { onClose: () => {} }));
+    expect(radio(out, "theme", "system").tag).toContain('checked=""');
+    expect(radio(out, "theme", "light").tag).not.toContain("checked");
+    for (const key of ["Theme", "System", "Dark", "Light"]) expect(AR[key], key).toBeTruthy();
+  });
+
+  it("Theme sets data-theme on <html>, is kept under offercheck_theme_v1 and restores; bad or blocked storage never throws", () => {
+    const { store, root } = stubBrowser();
+    expect(THEME_STORAGE_KEY).toBe("offercheck_theme_v1");
+    setTheme("light");
+    expect(root.dataset.theme).toBe("light");
+    expect(store.get(THEME_STORAGE_KEY)).toBe("light");
+    setTheme("system");
+    expect(root.dataset.theme).toBe("system");
+    setTheme("dark");
+    expect(store.get(THEME_STORAGE_KEY)).toBe("dark");
+    store.set(THEME_STORAGE_KEY, "light");
+    restoreTheme();
+    expect(getTheme()).toBe("light");
+    expect(root.dataset.theme).toBe("light");
+    // Anything else in storage is ignored and the default stays.
+    setTheme("dark");
+    store.set(THEME_STORAGE_KEY, "sepia");
+    restoreTheme();
+    expect(getTheme()).toBe("dark");
+    stubBrowser({ blocked: true });
+    expect(() => setTheme("light")).not.toThrow();
+    expect(() => restoreTheme()).not.toThrow();
   });
 
   it("Language and Animations are the same stores as the header button and the footer Pause control", () => {
@@ -184,7 +223,6 @@ describe("Settings dialog", () => {
     // In Arabic, the dialog's text is Arabic (the page is rtl, so the dialog mirrors).
     expect(out).toContain(AR["Settings"]);
     expect(out).toContain(AR["Text size"]);
-    expect(out).toContain(AR["coming soon"]);
   });
 
   it("Text size Large sets data-text on <html>, is kept, and restores; blocked storage never throws", () => {

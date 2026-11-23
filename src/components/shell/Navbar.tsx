@@ -11,6 +11,7 @@ import { registerServiceWorker } from "@/components/shell/offline";
 import { startInstallWatch } from "@/components/shell/install";
 import { SettingsButton } from "@/components/shell/SettingsPanel";
 import { restoreTextSize } from "@/components/shell/textSize";
+import { restoreTheme } from "@/components/shell/theme";
 import { Button } from "@/components/ui";
 import { useVaultState } from "@/components/vaultStore";
 import { HEADER_HOTLINE_IDS, contact } from "@/data/uaeContacts";
@@ -67,6 +68,7 @@ export function Navbar() {
     restoreLang();
     restoreMotion();
     restoreTextSize();
+    restoreTheme();
     startInstallWatch();
     registerServiceWorker();
   }, []);

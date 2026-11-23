@@ -247,7 +247,7 @@ describe("privacy statements that can be checked on the code", () => {
     expect(source).toContain('["EXPIRE", key, String(ttlSeconds), "NX"]');
   });
 
-  it("what stays in the browser: exactly the vault, its count, the language, animation and text size choices, and a dismissed install hint", () => {
+  it("what stays in the browser: exactly the vault, its count, the language, animation, text size and theme choices, and a dismissed install hint", () => {
     const storage = sources("src").filter((path) => /localStorage|sessionStorage|indexedDB/.test(read(path)));
     expect(storage.sort()).toEqual([
       "src/components/shell/clearData.ts",
@@ -255,8 +255,11 @@ describe("privacy statements that can be checked on the code", () => {
       "src/components/shell/lang.ts",
       "src/components/shell/motion.ts",
       "src/components/shell/textSize.ts",
+      "src/components/shell/theme.ts",
+      "src/lib/themeInit.ts",
       "src/lib/vault.ts",
     ]);
+    expect(read("src/lib/themeInit.ts")).toMatch(/THEME_STORAGE_KEY = "offercheck_theme_v1"/);
     expect(read("src/components/shell/textSize.ts")).toMatch(/TEXT_SIZE_STORAGE_KEY = "offercheck_text_size"/);
     expect(read("src/components/shell/install.ts")).toMatch(/INSTALL_HINT_STORAGE_KEY = "offercheck_install_hint_dismissed"/);
     expect(storage.some((path) => /sessionStorage|indexedDB/.test(read(path)))).toBe(false);

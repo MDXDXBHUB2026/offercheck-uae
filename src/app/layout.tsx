@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
-import { APP_BACKGROUND } from "@/lib/appColors";
+import { APP_BACKGROUND, APP_BACKGROUND_LIGHT } from "@/lib/appColors";
+import { nonceFromCsp, THEME_INIT_SCRIPT } from "@/lib/themeInit";
 import type { ReactNode } from "react";
+import { headers } from "next/headers";
 import { connection } from "next/server";
 import { Navbar } from "@/components/shell/Navbar";
 import { SiteFooter } from "@/components/shell/site";
@@ -23,8 +25,14 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, title: "Offer Check", statusBarStyle: "black" },
 };
 
+// The browser's theme colour follows the device's light or dark setting (Phase 4b); an explicit choice
+// in Settings > Theme also sets it, from src/components/shell/theme.ts. The manifest and the icons
+// stay dark (src/app/manifest.ts).
 export const viewport: Viewport = {
-  themeColor: APP_BACKGROUND,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: APP_BACKGROUND_LIGHT },
+    { media: "(prefers-color-scheme: dark)", color: APP_BACKGROUND },
+  ],
 };
 
 // One header, main landmark and footer for every page. Pages render inside <main>.
@@ -33,8 +41,17 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
   // scripts (src/proxy.ts, src/lib/csp.ts). A page prerendered at build time has no nonce, and the
   // policy would block its inline scripts.
   await connection();
+  // The theme script in the head is the only inline script of our own. It carries the same nonce
+  // (read from the request's CSP header, which src/proxy.ts set), so the policy is unchanged: no
+  // 'unsafe-inline', no new directive.
+  const nonce = nonceFromCsp((await headers()).get("content-security-policy"));
   return (
-    <html lang="en" dir="ltr">
+    // suppressHydrationWarning: the head script sets data-theme on this element before React hydrates.
+    <html lang="en" dir="ltr" suppressHydrationWarning>
+      <head>
+        {/* The browser hides a nonce from the DOM once the script has run, so React sees a mismatch there. */}
+        <script nonce={nonce} suppressHydrationWarning dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
+      </head>
       <body>
         <a className="skip-link" href="#main">
           <T>Skip to content</T>

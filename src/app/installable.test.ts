@@ -16,7 +16,8 @@ vi.mock("next/navigation", () => ({ usePathname: () => "/check", useRouter: () =
 import manifest from "./manifest";
 import { metadata, viewport } from "./layout";
 import { OFFLINE_NOTICE, OfferChecker } from "@/components/OfferChecker";
-import { APP_BACKGROUND } from "@/lib/appColors";
+import { APP_BACKGROUND, APP_BACKGROUND_LIGHT } from "@/lib/appColors";
+import { themeTokens } from "./themeCss";
 import { buildCsp } from "@/lib/csp";
 import { AR } from "@/lib/i18nAr";
 import { OFFLINE_ASSETS } from "@/lib/serviceWorker";
@@ -46,7 +47,14 @@ describe("web app manifest", () => {
     expect(m.theme_color).toBe(APP_BACKGROUND);
     // The colour is the page background token, --bg.
     expect(readFileSync("src/app/globals.css", "utf8")).toContain(`--bg: ${APP_BACKGROUND};`);
-    expect(viewport.themeColor).toBe(APP_BACKGROUND);
+    // Phase 4b: changed on purpose. The browser's theme colour used to be the one dark colour; it is
+    // now the media-query form, so it follows the device: dark is still APP_BACKGROUND, light is the
+    // light theme's --bg. The manifest above stays dark.
+    expect(viewport.themeColor).toEqual([
+      { media: "(prefers-color-scheme: light)", color: APP_BACKGROUND_LIGHT },
+      { media: "(prefers-color-scheme: dark)", color: APP_BACKGROUND },
+    ]);
+    expect(themeTokens("light")["--bg"]).toBe(APP_BACKGROUND_LIGHT);
   });
 
   it("has 192 and 512 icons and a maskable 512, each a real PNG of that size in public/icons", () => {
