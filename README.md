@@ -25,7 +25,7 @@ Job seekers in the UAE who want to check an unsolicited job offer for common sca
 | Privacy | `/privacy` | What is sent, kept and not kept. Drafted, pending legal review; each statement is traced to the code in [docs/privacy-terms.md](docs/privacy-terms.md). |
 | Terms | `/terms` | Prototype status, not a verdict or legal advice, no guarantee, confirm through official channels, acceptable use. Drafted, pending legal review. |
 
-The old `/guide` link redirects to `/legal`. Every page has the same header and footer. The header has six tabs in two groups with a divider between them: Tools (Analyzer, Radar, Vault) and Information (Portals, Guidelines, About), then a UAE Hotlines menu, the language switch and a Settings (gear) button. Below 1200 px the same six links sit in a three-by-two bar under the header, one row per group. The footer links About, Privacy and Terms. The operator line and the contact address are kept in `src/lib/siteConfig.ts` only. The header's fit was measured in Chrome at 1280, 1440, 1568 and 1920 px in English and Arabic (`scripts/measure-header.mjs`, results in `docs/header-measurements.json`, checked by `src/app/headerMeasurements.test.ts`).
+The old `/guide` link redirects to `/legal`. Every page has the same header and footer. The header has six tabs in two groups with a divider between them: Tools (Analyzer, Radar, Vault) and Information (Portals, Guidelines, About), then a UAE Hotlines menu, the language switch and a Settings (gear) button. Each tab is its own pill button (border, gap, hover and focus states; the current page is bolder with a bar under it, as well as green). Below 1200 px the same six links sit in a three-by-two bar under the header, one row per group, with a line between the rows. The footer links About, Privacy and Terms. The operator line and the contact address are kept in `src/lib/siteConfig.ts` only. The header's fit was measured in Chrome at 1280, 1440, 1568 and 1920 px in English and Arabic (`scripts/measure-header.mjs`, results in `docs/header-measurements.json`, checked by `src/app/headerMeasurements.test.ts`).
 
 ## What is built
 
@@ -139,7 +139,7 @@ npm run check   # tests, typecheck, lint, production build, no-bypass check
 
 Server environment variables are listed, without values, in `.env.example`. Rate limits use `KV_REST_API_URL`, `KV_REST_API_TOKEN`, `OFFERCHECK_RATE_SALT` and `OFFERCHECK_DAILY_CHAR_CAP`; with none of them set and outside Vercel, they run in memory. Translation needs one more: `GOOGLE_TRANSLATE_API_KEY`. Set it in the server environment only (for example in the Vercel project settings), never in a `NEXT_PUBLIC_` variable or in the repo, and set a quota on the Google Cloud project. The app works without it except for translation: the route answers `translation_unavailable`, nothing is sent, the send button is hidden, and the user can still check the original text.
 
-On 23 Nov 2026, `npm run check` passed on Node v24.19.0 with npm 11.17.0: 67 test files, 3,662 tests, then typecheck, lint, the production build and the no-bypass check (branch `theme-4b`, Phase 4b).
+On 23 Nov 2026, `npm run check` passed on Node v24.19.0 with npm 11.17.0: 68 test files, 3,674 tests, then typecheck, lint, the production build and the no-bypass check (branch `cleanup-1`).
 
 ## Synthetic data only
 
