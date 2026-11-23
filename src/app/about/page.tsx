@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Info } from "lucide-react";
 import { ContactEmail, SiteOperator } from "@/components/shell/SiteOperator";
+import { MissedScamLink } from "@/components/MissedScamLink";
 import { T } from "@/components/shell/T";
 import { Card } from "@/components/ui";
 import { REPORT_FRAUD_ID } from "@/lib/authorities";
@@ -146,6 +147,7 @@ export default function AboutPage() {
             <T>Where to report a job scam</T>
           </Link>
         </p>
+        <MissedScamLink />
       </Card>
     </div>
   );

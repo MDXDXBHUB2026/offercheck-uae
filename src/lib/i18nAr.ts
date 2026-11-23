@@ -67,9 +67,19 @@ const ENTRIES: Record<string, string> = {
   "Paste a job offer to check it against {0} fixed rules. The rules read English. Other languages can be translated by Google Cloud Translation if you agree. Offer Check's server does not store your text.":
     "الصق عرض عمل لفحصه وفق القواعد الثابتة (عددها {0}). تقرأ القواعد اللغة الإنجليزية. يمكن ترجمة اللغات الأخرى عبر Google Cloud Translation إذا وافقت. لا يخزّن خادم Offer Check النص الذي تدخله.",
   "Example findings": "أمثلة على النتائج",
+  // [review] Phase 5 (2026-11-23): the missed-scam link, its note, the privacy lines about the form and the daily totals.
+  "Offer Check missed a scam? Tell us what it did, without pasting the offer.": "لم يكتشف Offer Check عملية احتيال؟ أخبرنا بما فعله، من دون لصق العرض.",
+  "The link opens a Google Form in a new tab. Google receives what you type there. Offer Check does not send any offer text to the form.":
+    "يفتح الرابط نموذج Google في علامة تبويب جديدة. تستلم Google ما تكتبه هناك. لا يرسل Offer Check أي نص عرض إلى النموذج.",
+  "If Offer Check missed a scam": "إذا لم يكتشف Offer Check عملية احتيال",
+  "The link under a result, and on the About and Privacy pages, opens a Google Form in a new tab. Google receives what you type there, under Google's terms. Offer Check does not send the form any offer text, result or other data from the app, and the form is not part of this app.":
+    "يفتح الرابط الظاهر تحت النتيجة وفي صفحتي «حول» و«الخصوصية» نموذج Google في علامة تبويب جديدة. تستلم Google ما تكتبه هناك، وتسري عليه شروطها. لا يرسل Offer Check إلى النموذج أي نص عرض أو نتيجة أو بيانات أخرى من التطبيق، والنموذج ليس جزءًا من هذا التطبيق.",
+  "Please do not paste the offer into the form: say what Offer Check did and what it missed.": "يُرجى عدم لصق العرض في النموذج: اكتب ما فعله Offer Check وما لم يكتشفه.",
+  "We keep daily totals of how many checks, errors and limit hits happened, with no text and nothing that identifies you.":
+    "نحتفظ بإجماليات يومية لعدد الفحوص والأخطاء ومرات بلوغ الحدّ، من دون أي نص ومن دون أي شيء يعرّف بك.",
   "{0} EXAMPLES": "الأمثلة: {0}",
-  "Demo data, not your text": "بيانات تجريبية، وليست نصك",
-  "Demo animation": "رسوم تجريبية",
+  "Example only, not your text": "مثال فقط، وليس نصك",
+  "Animation only": "رسوم متحركة فقط",
   "Pause radar": "إيقاف الرادار مؤقتًا",
   "Skip to content": "انتقل إلى المحتوى",
   "Pause animations": "إيقاف الحركة مؤقتًا",
@@ -607,7 +617,7 @@ const ENTRIES: Record<string, string> = {
 
   // Threat Radar and report modal
   "Threat Radar": "رادار التهديدات",
-  "Sample reports (demo data)": "بلاغات نموذجية (بيانات تجريبية)",
+  "Example reports": "بلاغات نموذجية",
   "Common job-scam patterns, shown with made-up examples. These are not real reports and are not live data.":
     "أنماط شائعة لاحتيال الوظائف، معروضة بأمثلة مختلقة. هذه ليست بلاغات حقيقية وليست بيانات مباشرة.",
   "Search the reports": "ابحث في البلاغات",
@@ -619,7 +629,7 @@ const ENTRIES: Record<string, string> = {
   "Your reports (this tab only, not sent anywhere)": "بلاغاتك (في هذه النافذة فقط، ولم تُرسل إلى أي جهة)",
   "None of your reports match.": "لا يطابق أي من بلاغاتك.",
   "Your report": "بلاغك",
-  "Demo data": "بيانات تجريبية",
+  Example: "مثال",
   "No sample report matches.": "لا يطابق أي بلاغ نموذجي.",
   "Visa fee asked before any interview": "طلب رسوم تأشيرة قبل أي مقابلة",
   "A made-up example: an email offers a hotel job with a high salary, skips the interview, and asks for a visa processing fee paid to a travel agent.":

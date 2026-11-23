@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { ContactEmail, SiteOperator } from "@/components/shell/SiteOperator";
+import { MissedScamLink } from "@/components/MissedScamLink";
 import { T } from "@/components/shell/T";
 import { TRANSLATE_BUTTON } from "@/components/translateFlow";
 import { Card } from "@/components/ui";
-import { POLICY_LAST_UPDATED } from "@/lib/siteConfig";
+import { POLICY_LAST_UPDATED, SITE_MISSED_SCAM_FORM_URL } from "@/lib/siteConfig";
 
 export const metadata: Metadata = {
   title: "Privacy",
@@ -55,6 +56,7 @@ const SECTIONS: readonly Section[] = [
     lines: [
       "To limit how often one visitor can check or translate, the server keeps counters. Each counter is keyed by a salted hash of your network address and a time window, never the address itself, and holds only a number.",
       "Each counter expires on its own: after 2 minutes for a per-minute limit, after 25 hours for a daily one. They are kept in an Upstash Redis store in Mumbai.",
+      "We keep daily totals of how many checks, errors and limit hits happened, with no text and nothing that identifies you.",
     ],
   },
   {
@@ -90,6 +92,22 @@ const SECTIONS: readonly Section[] = [
   },
 ];
 
+// Shown, after the translation section, only while the form link is on (src/lib/siteConfig.ts).
+const MISSED_FORM_SECTION: Section = {
+  id: "missed-form-heading",
+  title: "If Offer Check missed a scam",
+  lines: [
+    "The link under a result, and on the About and Privacy pages, opens a Google Form in a new tab. Google receives what you type there, under Google's terms. Offer Check does not send the form any offer text, result or other data from the app, and the form is not part of this app.",
+    "Please do not paste the offer into the form: say what Offer Check did and what it missed.",
+  ],
+};
+
+function sectionsToShow(): readonly Section[] {
+  if (!SITE_MISSED_SCAM_FORM_URL.trim()) return SECTIONS;
+  const after = SECTIONS.findIndex((section) => section.id === "translate-heading") + 1;
+  return [...SECTIONS.slice(0, after), MISSED_FORM_SECTION, ...SECTIONS.slice(after)];
+}
+
 // {0} is the translate button's own label, so the notice names the button exactly.
 function Line({ text }: { text: string }) {
   return <T args={text.includes("{0}") ? [TRANSLATE_BUTTON] : []}>{text}</T>;
@@ -121,7 +139,7 @@ export default function PrivacyPage() {
         </div>
       </section>
 
-      {SECTIONS.map((section) => (
+      {sectionsToShow().map((section) => (
         <Card as="section" key={section.id} className="stack-sm" aria-labelledby={section.id}>
           <h2 id={section.id} className="h2">
             <T>{section.title}</T>
@@ -152,6 +170,7 @@ export default function PrivacyPage() {
         <p>
           <T>Questions about this notice:</T> <ContactEmail />
         </p>
+        <MissedScamLink />
         <p>
           <Link href="/terms">
             <T>Read the terms of use</T>

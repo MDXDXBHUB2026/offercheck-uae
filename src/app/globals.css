@@ -3830,3 +3830,20 @@ ol.bullets {
   --fs-3xl: 34px;
   font-size: var(--fs-sm);
 }
+
+/* Production Phase 5: the "Offer Check missed a scam?" link and its note (result, About, Privacy). */
+.missed-scam {
+  display: grid;
+  gap: var(--sp-1);
+  margin-top: var(--sp-3);
+}
+
+.missed-scam p {
+  margin: 0;
+}
+
+.missed-scam .icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+}

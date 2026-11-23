@@ -94,13 +94,13 @@ describe("the three pages render in English and Arabic", () => {
   });
 
   it("Privacy and Terms show the same 'Last updated' date, from siteConfig, at the top", () => {
-    expect(POLICY_LAST_UPDATED).toBe("2026-11-16");
+    expect(POLICY_LAST_UPDATED).toBe("2026-11-23");
     for (const page of ["privacy", "terms"] as const) {
       const html = render(page, "en");
       const at = html.indexOf("Last updated:");
       expect(at).toBeGreaterThan(-1);
       expect(at).toBeLessThan(html.indexOf('class="lead"'));
-      expect(html).toContain(`<time dateTime="2026-11-16" lang="en" dir="ltr">2026-11-16</time>`);
+      expect(html).toContain(`<time dateTime="2026-11-23" lang="en" dir="ltr">2026-11-23</time>`);
       expect(render(page, "ar")).toContain(AR["Last updated:"]);
     }
   });
@@ -168,7 +168,7 @@ describe("no personal name in user-facing copy", () => {
     IBAN IBANs ID If India It Last Like Limits Mumbai No Not Numbers Offer Official Open Or Portals Privacy Questions Rate Read Redis
     Reports Risk Save Some Terms Text The There They To Translation Translate Threat Radar UAE Upstash Use Vercel Vault Your WhatsApp
     LinkedIn People Cloud What When Where Who An Arabic Indic Information Tools IP A Before How You AI Remove Send
-    After Clear Clearing Guidelines Pages Settings Titles`.split(/\s+/),
+    After Clear Clearing Guidelines Pages Settings Titles Tell Form Please We`.split(/\s+/),
   );
   it.each(["about", "privacy", "terms", "footer"] as const)("%s: every capitalised word is on the list", (page) => {
     const words = new Set(text(render(page, "en")).match(/\b[A-Z][A-Za-z]+\b/g) ?? []);

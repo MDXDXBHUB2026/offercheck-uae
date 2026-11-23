@@ -48,6 +48,7 @@ import type { LanguageNotice } from "@/lib/textScript";
 import { MAX_OFFER_CHARS } from "@/lib/types";
 import { useLang, useT } from "@/components/shell/lang";
 import { useOffline } from "@/components/shell/offline";
+import { MissedScamLink } from "@/components/MissedScamLink";
 
 // Where the offer came from, as in the reference app. Display and saving only: the rules read the
 // text the same way for every channel. "Offer Letter PDF" means the letter's text, pasted.
@@ -718,6 +719,7 @@ export function OfferChecker({
           <AuditTrail entries={auditLog} failed={auditFailed} />
         </ResultCard>
       )}
+      {result && checked && <MissedScamLink />}
       {modal?.kind === "save" && result && checked && (
         <SaveVaultModal
           view={toResultView(result, checked.coverage)}
