@@ -5,7 +5,7 @@ import { ContactEmail, SiteOperator } from "@/components/shell/SiteOperator";
 import { MissedScamLink } from "@/components/MissedScamLink";
 import { T } from "@/components/shell/T";
 import { Card } from "@/components/ui";
-import { REPORT_FRAUD_ID } from "@/lib/authorities";
+import { mainChannels, REPORT_FRAUD_ID, REPORT_FRAUD_NOTE } from "@/lib/authorities";
 
 export const metadata: Metadata = {
   title: "About",
@@ -37,6 +37,38 @@ const CANNOT_DO = [
   "It has been tested on made-up example offers only, not validated on real scams.",
   "A low score does not mean an offer is genuine.",
   "Cross-checks read only the text you paste. No company, website or offer number is looked up anywhere.",
+] as const;
+
+// Five common job-scam patterns (production Phase 5b, 2026-11-23). The same five signs the fixed
+// rules look for (src/lib/agents/redFlag.ts: a fee or payment, a code, password or card details,
+// identity or bank documents, pressure to act quickly, and a free email address), in plain words,
+// with what to do. Written fresh; fixed text, no request data.
+const PATTERNS = [
+  {
+    title: "A fee before you join",
+    looks: "You are asked to pay for a visa, training, a uniform, a medical test or \"processing\" before you start work.",
+    todo: "Do not pay. Confirm the offer yourself on the official sites first.",
+  },
+  {
+    title: "A request for card or login details",
+    looks: "You are asked for a one-time code, a password, a card number or an online banking login, for example to \"set up your salary account\".",
+    todo: "Do not share them with anyone who contacted you first.",
+  },
+  {
+    title: "Identity documents sent early",
+    looks: "You are asked for a passport, an Emirates ID or a bank statement before you have a written offer or contract.",
+    todo: "Wait until you have confirmed the employer. Send only what is needed, and hide numbers you do not need to show.",
+  },
+  {
+    title: "Pressure to act today",
+    looks: "The message says the offer ends tonight, or that you must reply or pay within hours.",
+    todo: "Slow down. Take time to check, and ask someone you trust before you reply.",
+  },
+  {
+    title: "A free email sender",
+    looks: "A named company writes to you from a free address such as Gmail or Yahoo, not from the address of its own website.",
+    todo: "Look up the company's own website yourself and compare the address. Do not use contact details from the message.",
+  },
 ] as const;
 
 export default function AboutPage() {
@@ -94,6 +126,69 @@ export default function AboutPage() {
         </p>
       </Card>
 
+      <Card as="section" className="stack-sm" aria-labelledby="patterns-heading">
+        <h2 id="patterns-heading" className="h2">
+          <T>Five common job-scam patterns</T>
+        </h2>
+        <p>
+          <T>
+            {
+              "These are the five warning signs Offer Check's fixed rules look for. One sign does not prove a scam, and finding none does not mean an offer is real."
+            }
+          </T>
+        </p>
+        <ol className="bullets">
+          {PATTERNS.map((pattern) => (
+            <li key={pattern.title} className="stack-sm pattern-item">
+              <strong>
+                <T>{pattern.title}</T>
+              </strong>
+              <span>
+                <strong>
+                  <T>What it looks like:</T>
+                </strong>{" "}
+                <T>{pattern.looks}</T>
+              </span>
+              <span>
+                <strong>
+                  <T>What to do:</T>
+                </strong>{" "}
+                <T>{pattern.todo}</T>
+              </span>
+            </li>
+          ))}
+        </ol>
+        <p>
+          <Link href="/check">
+            <T>Check an offer in the Offer Analyzer</T>
+          </Link>
+        </p>
+        <h3 id="report-heading" className="h3">
+          <T>Report a scam</T>
+        </h3>
+        <p>
+          <T>Official UAE places to report a suspected job scam:</T>
+        </p>
+        <ul className="bullets">
+          {mainChannels().map((channel) => (
+            <li key={channel.id}>
+              <a href={channel.url} target="_blank" rel="noopener noreferrer">
+                <T>{channel.name}</T>
+              </a>
+            </li>
+          ))}
+        </ul>
+        <p>
+          <Link href={`/portals#${REPORT_FRAUD_ID}`}>
+            <T>All hotlines and reporting channels</T>
+          </Link>
+        </p>
+        <p className="small muted">
+          <T>{REPORT_FRAUD_NOTE}</T>
+        </p>
+        <MissedScamLink />
+      </Card>
+
       <Card as="section" className="stack-sm" aria-labelledby="cannot-heading">
         <h2 id="cannot-heading" className="h2">
           <T>What it cannot do</T>
@@ -142,12 +237,6 @@ export default function AboutPage() {
         <p>
           <T>Contact:</T> <ContactEmail />
         </p>
-        <p>
-          <Link href={`/portals#${REPORT_FRAUD_ID}`}>
-            <T>Where to report a job scam</T>
-          </Link>
-        </p>
-        <MissedScamLink />
       </Card>
     </div>
   );
