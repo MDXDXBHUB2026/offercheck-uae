@@ -1,5 +1,5 @@
 {
-  "measuredAt": "2026-11-16",
+  "measuredAt": "2026-11-23",
   "base": "next start (production build)",
   "results": [
     {
@@ -29,11 +29,11 @@
         }
       ],
       "nav": {
-        "left": 264,
-        "right": 926,
-        "width": 662,
-        "scrollWidth": 662,
-        "clientWidth": 662
+        "left": 260,
+        "right": 930,
+        "width": 670,
+        "scrollWidth": 670,
+        "clientWidth": 670
       },
       "actions": {
         "left": 938,
@@ -43,56 +43,56 @@
       "tabs": [
         {
           "label": "Analyzer",
-          "left": 345,
-          "right": 443,
-          "width": 98
+          "left": 334.5,
+          "right": 437.5,
+          "width": 103
         },
         {
           "label": "Radar",
-          "left": 443,
-          "right": 513,
+          "left": 441.5,
+          "right": 511.5,
           "width": 70
         },
         {
           "label": "Vault",
-          "left": 513,
-          "right": 579,
+          "left": 515.5,
+          "right": 581.5,
           "width": 66
         },
         {
           "label": "Portals",
-          "left": 596,
-          "right": 673,
+          "left": 598.5,
+          "right": 675.5,
           "width": 77
         },
         {
           "label": "Guidelines",
-          "left": 673,
-          "right": 773,
+          "left": 679.5,
+          "right": 779.5,
           "width": 100
         },
         {
           "label": "About",
-          "left": 773,
-          "right": 845,
+          "left": 783.5,
+          "right": 855.5,
           "width": 72
         }
       ],
       "groups": [
         {
-          "left": 345,
-          "right": 579,
-          "width": 234
+          "left": 334.5,
+          "right": 581.5,
+          "width": 247
         },
         {
-          "left": 596,
-          "right": 845,
-          "width": 249
+          "left": 598.5,
+          "right": 855.5,
+          "width": 257
         }
       ],
       "divider": {
-        "left": 587,
-        "right": 588,
+        "left": 589.5,
+        "right": 590.5,
         "width": 1
       }
     },
@@ -123,11 +123,11 @@
         }
       ],
       "nav": {
-        "left": 344,
-        "right": 1006,
-        "width": 662,
-        "scrollWidth": 662,
-        "clientWidth": 662
+        "left": 340,
+        "right": 1010,
+        "width": 670,
+        "scrollWidth": 670,
+        "clientWidth": 670
       },
       "actions": {
         "left": 1018,
@@ -137,56 +137,56 @@
       "tabs": [
         {
           "label": "Analyzer",
-          "left": 425,
-          "right": 523,
-          "width": 98
+          "left": 414.5,
+          "right": 517.5,
+          "width": 103
         },
         {
           "label": "Radar",
-          "left": 523,
-          "right": 593,
+          "left": 521.5,
+          "right": 591.5,
           "width": 70
         },
         {
           "label": "Vault",
-          "left": 593,
-          "right": 659,
+          "left": 595.5,
+          "right": 661.5,
           "width": 66
         },
         {
           "label": "Portals",
-          "left": 676,
-          "right": 753,
+          "left": 678.5,
+          "right": 755.5,
           "width": 77
         },
         {
           "label": "Guidelines",
-          "left": 753,
-          "right": 853,
+          "left": 759.5,
+          "right": 859.5,
           "width": 100
         },
         {
           "label": "About",
-          "left": 853,
-          "right": 925,
+          "left": 863.5,
+          "right": 935.5,
           "width": 72
         }
       ],
       "groups": [
         {
-          "left": 425,
-          "right": 659,
-          "width": 234
+          "left": 414.5,
+          "right": 661.5,
+          "width": 247
         },
         {
-          "left": 676,
-          "right": 925,
-          "width": 249
+          "left": 678.5,
+          "right": 935.5,
+          "width": 257
         }
       ],
       "divider": {
-        "left": 667,
-        "right": 668,
+        "left": 669.5,
+        "right": 670.5,
         "width": 1
       }
     },
@@ -217,11 +217,11 @@
         }
       ],
       "nav": {
-        "left": 408,
-        "right": 1070,
-        "width": 662,
-        "scrollWidth": 662,
-        "clientWidth": 662
+        "left": 404,
+        "right": 1074,
+        "width": 670,
+        "scrollWidth": 670,
+        "clientWidth": 670
       },
       "actions": {
         "left": 1082,
@@ -231,56 +231,56 @@
       "tabs": [
         {
           "label": "Analyzer",
-          "left": 489,
-          "right": 587,
-          "width": 98
+          "left": 478.5,
+          "right": 581.5,
+          "width": 103
         },
         {
           "label": "Radar",
-          "left": 587,
-          "right": 657,
+          "left": 585.5,
+          "right": 655.5,
           "width": 70
         },
         {
           "label": "Vault",
-          "left": 657,
-          "right": 723,
+          "left": 659.5,
+          "right": 725.5,
           "width": 66
         },
         {
           "label": "Portals",
-          "left": 740,
-          "right": 817,
+          "left": 742.5,
+          "right": 819.5,
           "width": 77
         },
         {
           "label": "Guidelines",
-          "left": 817,
-          "right": 917,
+          "left": 823.5,
+          "right": 923.5,
           "width": 100
         },
         {
           "label": "About",
-          "left": 917,
-          "right": 989,
+          "left": 927.5,
+          "right": 999.5,
           "width": 72
         }
       ],
       "groups": [
         {
-          "left": 489,
-          "right": 723,
-          "width": 234
+          "left": 478.5,
+          "right": 725.5,
+          "width": 247
         },
         {
-          "left": 740,
-          "right": 989,
-          "width": 249
+          "left": 742.5,
+          "right": 999.5,
+          "width": 257
         }
       ],
       "divider": {
-        "left": 731,
-        "right": 732,
+        "left": 733.5,
+        "right": 734.5,
         "width": 1
       }
     },
@@ -311,11 +311,11 @@
         }
       ],
       "nav": {
-        "left": 584,
-        "right": 1246,
-        "width": 662,
-        "scrollWidth": 662,
-        "clientWidth": 662
+        "left": 580,
+        "right": 1250,
+        "width": 670,
+        "scrollWidth": 670,
+        "clientWidth": 670
       },
       "actions": {
         "left": 1258,
@@ -325,56 +325,56 @@
       "tabs": [
         {
           "label": "Analyzer",
-          "left": 665,
-          "right": 763,
-          "width": 98
+          "left": 654.5,
+          "right": 757.5,
+          "width": 103
         },
         {
           "label": "Radar",
-          "left": 763,
-          "right": 833,
+          "left": 761.5,
+          "right": 831.5,
           "width": 70
         },
         {
           "label": "Vault",
-          "left": 833,
-          "right": 899,
+          "left": 835.5,
+          "right": 901.5,
           "width": 66
         },
         {
           "label": "Portals",
-          "left": 916,
-          "right": 993,
+          "left": 918.5,
+          "right": 995.5,
           "width": 77
         },
         {
           "label": "Guidelines",
-          "left": 993,
-          "right": 1093,
+          "left": 999.5,
+          "right": 1099.5,
           "width": 100
         },
         {
           "label": "About",
-          "left": 1093,
-          "right": 1165,
+          "left": 1103.5,
+          "right": 1175.5,
           "width": 72
         }
       ],
       "groups": [
         {
-          "left": 665,
-          "right": 899,
-          "width": 234
+          "left": 654.5,
+          "right": 901.5,
+          "width": 247
         },
         {
-          "left": 916,
-          "right": 1165,
-          "width": 249
+          "left": 918.5,
+          "right": 1175.5,
+          "width": 257
         }
       ],
       "divider": {
-        "left": 907,
-        "right": 908,
+        "left": 909.5,
+        "right": 910.5,
         "width": 1
       }
     },
@@ -405,11 +405,11 @@
         }
       ],
       "nav": {
-        "left": 402,
-        "right": 982,
-        "width": 580,
-        "scrollWidth": 580,
-        "clientWidth": 580
+        "left": 398,
+        "right": 986,
+        "width": 588,
+        "scrollWidth": 588,
+        "clientWidth": 588
       },
       "actions": {
         "left": 32,
@@ -419,14 +419,14 @@
       "tabs": [
         {
           "label": "فاحص العروض",
-          "left": 835,
-          "right": 969,
+          "left": 843,
+          "right": 977,
           "width": 134
         },
         {
           "label": "الرادار",
-          "left": 766,
-          "right": 835,
+          "left": 770,
+          "right": 839,
           "width": 69
         },
         {
@@ -443,27 +443,27 @@
         },
         {
           "label": "الإرشادات",
-          "left": 473,
-          "right": 565,
+          "left": 469,
+          "right": 561,
           "width": 92
         },
         {
           "label": "حول",
-          "left": 415,
-          "right": 473,
+          "left": 407,
+          "right": 465,
           "width": 58
         }
       ],
       "groups": [
         {
           "left": 698,
-          "right": 969,
-          "width": 271
+          "right": 977,
+          "width": 279
         },
         {
-          "left": 415,
+          "left": 407,
           "right": 681,
-          "width": 266
+          "width": 274
         }
       ],
       "divider": {
@@ -499,11 +499,11 @@
         }
       ],
       "nav": {
-        "left": 482,
-        "right": 1062,
-        "width": 580,
-        "scrollWidth": 580,
-        "clientWidth": 580
+        "left": 478,
+        "right": 1066,
+        "width": 588,
+        "scrollWidth": 588,
+        "clientWidth": 588
       },
       "actions": {
         "left": 112,
@@ -513,14 +513,14 @@
       "tabs": [
         {
           "label": "فاحص العروض",
-          "left": 915,
-          "right": 1049,
+          "left": 923,
+          "right": 1057,
           "width": 134
         },
         {
           "label": "الرادار",
-          "left": 846,
-          "right": 915,
+          "left": 850,
+          "right": 919,
           "width": 69
         },
         {
@@ -537,27 +537,27 @@
         },
         {
           "label": "الإرشادات",
-          "left": 553,
-          "right": 645,
+          "left": 549,
+          "right": 641,
           "width": 92
         },
         {
           "label": "حول",
-          "left": 495,
-          "right": 553,
+          "left": 487,
+          "right": 545,
           "width": 58
         }
       ],
       "groups": [
         {
           "left": 778,
-          "right": 1049,
-          "width": 271
+          "right": 1057,
+          "width": 279
         },
         {
-          "left": 495,
+          "left": 487,
           "right": 761,
-          "width": 266
+          "width": 274
         }
       ],
       "divider": {
@@ -593,11 +593,11 @@
         }
       ],
       "nav": {
-        "left": 546,
-        "right": 1126,
-        "width": 580,
-        "scrollWidth": 580,
-        "clientWidth": 580
+        "left": 542,
+        "right": 1130,
+        "width": 588,
+        "scrollWidth": 588,
+        "clientWidth": 588
       },
       "actions": {
         "left": 176,
@@ -607,14 +607,14 @@
       "tabs": [
         {
           "label": "فاحص العروض",
-          "left": 979,
-          "right": 1113,
+          "left": 987,
+          "right": 1121,
           "width": 134
         },
         {
           "label": "الرادار",
-          "left": 910,
-          "right": 979,
+          "left": 914,
+          "right": 983,
           "width": 69
         },
         {
@@ -631,27 +631,27 @@
         },
         {
           "label": "الإرشادات",
-          "left": 617,
-          "right": 709,
+          "left": 613,
+          "right": 705,
           "width": 92
         },
         {
           "label": "حول",
-          "left": 559,
-          "right": 617,
+          "left": 551,
+          "right": 609,
           "width": 58
         }
       ],
       "groups": [
         {
           "left": 842,
-          "right": 1113,
-          "width": 271
+          "right": 1121,
+          "width": 279
         },
         {
-          "left": 559,
+          "left": 551,
           "right": 825,
-          "width": 266
+          "width": 274
         }
       ],
       "divider": {
@@ -687,11 +687,11 @@
         }
       ],
       "nav": {
-        "left": 722,
-        "right": 1302,
-        "width": 580,
-        "scrollWidth": 580,
-        "clientWidth": 580
+        "left": 718,
+        "right": 1306,
+        "width": 588,
+        "scrollWidth": 588,
+        "clientWidth": 588
       },
       "actions": {
         "left": 352,
@@ -701,14 +701,14 @@
       "tabs": [
         {
           "label": "فاحص العروض",
-          "left": 1155,
-          "right": 1289,
+          "left": 1163,
+          "right": 1297,
           "width": 134
         },
         {
           "label": "الرادار",
-          "left": 1086,
-          "right": 1155,
+          "left": 1090,
+          "right": 1159,
           "width": 69
         },
         {
@@ -725,27 +725,27 @@
         },
         {
           "label": "الإرشادات",
-          "left": 793,
-          "right": 885,
+          "left": 789,
+          "right": 881,
           "width": 92
         },
         {
           "label": "حول",
-          "left": 735,
-          "right": 793,
+          "left": 727,
+          "right": 785,
           "width": 58
         }
       ],
       "groups": [
         {
           "left": 1018,
-          "right": 1289,
-          "width": 271
+          "right": 1297,
+          "width": 279
         },
         {
-          "left": 735,
+          "left": 727,
           "right": 1001,
-          "width": 266
+          "width": 274
         }
       ],
       "divider": {
