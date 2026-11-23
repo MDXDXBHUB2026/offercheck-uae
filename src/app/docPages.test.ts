@@ -5,13 +5,15 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { AUTHORITIES, mainChannels, REPORT_FRAUD_ID, REPORT_FRAUD_NOTE } from "@/lib/authorities";
 import { WARNING_SIGNS, WARNING_SIGNS_SOURCE } from "@/lib/warningSigns";
+import { NAV_ITEMS } from "@/components/shell/site";
+import { AR } from "@/lib/i18nAr";
+import { OFFLINE_PAGES } from "@/lib/serviceWorker";
 import { REDIRECTS } from "../../next.config";
 import * as about from "./about/page";
 import * as legal from "./legal/page";
 import * as portals from "./portals/page";
 import * as privacy from "./privacy/page";
 import * as terms from "./terms/page";
-import * as radar from "./radar/page";
 import * as vault from "./vault/page";
 
 // The public doc pages after the redesign: Legal Guidelines (/legal) holds the Warning signs (was
@@ -36,8 +38,11 @@ const GUIDE = LEGAL;
 describe("/guide keeps working; /about is its own page again", () => {
   // Production hardening Phase 3 (owner decision, 2026-11-15): /about no longer redirects to
   // /legal#about; the About text moved out of Legal Guidelines into src/app/about/page.tsx.
-  it("only /guide redirects, to Legal Guidelines", () => {
-    expect(REDIRECTS).toEqual([{ source: "/guide", destination: "/legal", permanent: false }]);
+  it("only /guide and the removed /radar redirect (to Legal Guidelines and the analyzer)", () => {
+    expect(REDIRECTS).toEqual([
+      { source: "/guide", destination: "/legal", permanent: false },
+      { source: "/radar", destination: "/check", permanent: true },
+    ]);
     expect(existsSync(join(process.cwd(), "src/app/about/page.tsx"))).toBe(true);
     expect(existsSync(join(process.cwd(), "src/app/guide/page.tsx"))).toBe(false);
     expect(read("next.config.ts")).toContain("return REDIRECTS;");
@@ -128,7 +133,6 @@ describe("static pages: one h1, no landmark of their own, fixed text", () => {
   it.each([
     ["src/app/legal/page.tsx", LEGAL],
     ["src/app/portals/page.tsx", PORTALS],
-    ["src/app/radar/page.tsx", render(radar.default)],
     ["src/app/vault/page.tsx", render(vault.default)],
     ["src/app/about/page.tsx", render(about.default)],
     ["src/app/privacy/page.tsx", render(privacy.default)],
@@ -140,7 +144,7 @@ describe("static pages: one h1, no landmark of their own, fixed text", () => {
     expect(source).not.toMatch(/export const dynamic/);
     expect(source).not.toMatch(/next\/headers|cookies\(|headers\(|searchParams|"use client"|dangerouslySetInnerHTML/);
     expect(html.match(/<h1[\s>]/g)).toHaveLength(1);
-    // AI Studio port, Phase 3: the banner may carry a tint (red on Threat Radar, green elsewhere).
+    // AI Studio port, Phase 3: the banner may carry a tint (green).
     expect(html).toMatch(/^<div class="stack"><section class="card hero" aria-labelledby="page-title"(?: data-tint="(?:red|green)")?>/);
     expect(html).toContain('<h1 id="page-title" class="h1">');
     expect(html).not.toMatch(/<(?:main|header|footer|nav|aside)[\s>]|role="region"/);
@@ -157,5 +161,22 @@ describe("static pages: one h1, no landmark of their own, fixed text", () => {
     expect(css).toMatch(/--fs-2xl: 24px;[\s\S]*--fs-3xl: 30px;/);
     // 44px targets for every link that looks like a button.
     expect(css).toMatch(/\.btn \{[^}]*min-height: var\(--target\);/);
+  });
+});
+
+describe("Threat Radar is removed (owner decision, 2026-11-23, production Phase 5b)", () => {
+  it("/radar answers 308 to the analyzer, and no page, component or data file of the feature is left", () => {
+    expect(REDIRECTS.find((redirect) => redirect.source === "/radar")).toEqual({ source: "/radar", destination: "/check", permanent: true });
+    for (const path of ["src/app/radar", "src/components/radar", "src/data/threatSamples.ts"]) expect(existsSync(join(process.cwd(), path)), path).toBe(false);
+  });
+
+  it("no header tab, offline page, manifest shortcut or page text offers a Radar", () => {
+    expect(NAV_ITEMS.map((item) => item.href)).not.toContain("/radar");
+    expect(OFFLINE_PAGES).not.toContain("/radar");
+    expect(read("src/app/manifest.ts")).not.toMatch(/radar/i);
+    const visible = ["src/components/OfferChecker.tsx", "src/components/ResultCard.tsx", "src/app/privacy/page.tsx", "src/app/about/page.tsx", "src/components/shell/SettingsPanel.tsx"];
+    // "Pause radar" and "Resume radar" are the hero animation's control, not a feature.
+    for (const file of visible) expect(read(file), file).not.toMatch(/Threat Radar|Add to Radar|Save to Radar|to the Radar/i);
+    expect(JSON.stringify(Object.keys(AR))).not.toMatch(/Threat Radar|Add to Threat Radar/);
   });
 });

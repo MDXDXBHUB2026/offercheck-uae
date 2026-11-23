@@ -18,7 +18,6 @@ import { RULES } from "@/lib/agents/redFlag";
 import { mainChannels } from "@/lib/authorities";
 import { WARNING_SIGNS } from "@/lib/warningSigns";
 import { contact, MOHRE_INQUIRY_URL, UAE_CONTACTS } from "@/data/uaeContacts";
-import { THREAT_SAMPLES } from "@/data/threatSamples";
 import { EncryptedVault } from "@/components/EncryptedVault";
 import { NAV_ITEMS } from "@/components/shell/site";
 import AboutPage from "@/app/about/page";
@@ -26,7 +25,6 @@ import LegalPage from "@/app/legal/page";
 import PrivacyPage from "@/app/privacy/page";
 import TermsPage from "@/app/terms/page";
 import PortalsPage from "@/app/portals/page";
-import RadarPage from "@/app/radar/page";
 
 // Phase 3 checks for the AI Studio UI/UX port (docs/reference/aistudio-ui-inventory.md): the port is
 // visual only, adds no dependency, loads nothing from outside, moves only when motion is allowed,
@@ -312,7 +310,7 @@ describe("AI Studio port: analyzer card", () => {
 describe("AI Studio port: result card", () => {
   const render = (text: string, coverage: "full" | "unchecked" | "partial" = "full") =>
     renderToStaticMarkup(
-      createElement(ResultCard, { result: runManager(text), ruleCount: RULES.length, coverage, onReport: () => {} }),
+      createElement(ResultCard, { result: runManager(text), ruleCount: RULES.length, coverage }),
     );
   const tile = (html: string, title: string) =>
     html.match(new RegExp(`<li class="dimension[^"]*"><span class="dimension-title">${title.replace(/'/g, "&#x27;")}</span>.*?</li>`))?.[0] ?? "";
@@ -347,12 +345,12 @@ describe("AI Studio port: result card", () => {
     expect(basis).not.toContain("%");
   });
 
-  it("findings are numbered, with Copy quote (Copied for 1.5s) and Add to Threat Radar", () => {
+  it("findings are numbered, with Copy quote (Copied for 1.5s) and no Radar button (removed 2026-11-23)", () => {
     const html = render(SCAM_OFFER);
     const count = runManager(SCAM_OFFER).findings.filter((f) => f.severity !== "info").length;
     for (let n = 1; n <= count; n += 1) expect(html).toContain(`aria-hidden="true">${n}</span>`);
     expect(html).toContain("Copy quote");
-    expect(html).toContain("Add to Threat Radar");
+    expect(html).not.toMatch(/Threat Radar|Add to Radar|Save to Radar/);
     expect(html).not.toContain("Report signal");
     expect(COPIED_MS).toBe(1500);
     expect(html).toContain(`Documented red flags (${count})`);
@@ -403,16 +401,6 @@ describe("AI Studio port: Phase 3 pages", () => {
       html(createElement(PortalsPage)) + html(createElement(ResultCard, { result: runManager(SCAM_OFFER), ruleCount: RULES.length }));
     expect(rendered).not.toContain("inquiry.aspx");
     expect(rendered).toContain(`href="${MOHRE_INQUIRY_URL.replace("&", "&amp;")}"`);
-  });
-
-  it("Threat Radar: red banner, pulsing pill, red-glow Add to Threat Radar, every card tagged Example, no votes or dates", () => {
-    const page = html(createElement(RadarPage));
-    expect(page).toContain('aria-labelledby="page-title" data-tint="red"');
-    expect(page).toMatch(/<p class="eyebrow-pill eyebrow-red"><span class="dot dot-high pulse" aria-hidden="true"><\/span>/);
-    expect(page).toMatch(/<button type="button" class="btn btn-danger glow-red">[\s\S]*?Add to Threat Radar<\/button>/);
-    expect(page.match(/radar-card/g)).toHaveLength(THREAT_SAMPLES.length);
-    expect(page.match(/>Example</g)).toHaveLength(THREAT_SAMPLES.length);
-    expect(page).not.toMatch(/upvote|\bvotes?\b|\d{4}-\d{2}-\d{2}|\bago\b/i);
   });
 
   it("Gov Portals Hub: each directory card has a category, a level, the Arabic name, its purpose, two verify actions, the hotline and Open portal", () => {
@@ -524,7 +512,7 @@ describe("Header: the brand stays fully visible", () => {
 
   it("the three longest Arabic tab labels are shortened to the compact bar's words", () => {
     // Production hardening Phase 3 (2026-11-15): six tabs, Tools then Information; About added.
-    expect(NAV_ITEMS.map((item) => item.labelAr)).toEqual(["فاحص العروض", "الرادار", "الخزنة", "بوابات التحقق", "الإرشادات", "حول"]);
+    expect(NAV_ITEMS.map((item) => item.labelAr)).toEqual(["فاحص العروض", "الخزنة", "بوابات التحقق", "الإرشادات", "حول"]);
   });
 });
 
@@ -552,17 +540,15 @@ describe("Copy: Offer Check does not report anything for the user", () => {
   it("no rendered page or result says so either", () => {
     const rendered = [
       html(createElement(PortalsPage)),
-      html(createElement(RadarPage)),
       html(createElement(LegalPage)),
       // Production hardening Phase 3 (2026-11-15): the three new pages.
       html(createElement(AboutPage)),
       html(createElement(PrivacyPage)),
       html(createElement(TermsPage)),
-      html(createElement(ResultCard, { result: runManager(SCAM_OFFER), ruleCount: RULES.length, onReport: () => {} })),
+      html(createElement(ResultCard, { result: runManager(SCAM_OFFER), ruleCount: RULES.length })),
       html(createElement(ResultCard, { result: runManager(LEGIT_OFFER), ruleCount: RULES.length })),
     ].join(" ");
     expect(rendered).not.toMatch(FORBIDDEN);
-    expect(rendered).toContain("Add to Threat Radar");
   });
 
   it("the test catches the phrases it is meant to catch", () => {
@@ -582,12 +568,6 @@ describe("Copy: Offer Check does not report anything for the user", () => {
     const navbar = read("src/components/shell/Navbar.tsx");
     expect(navbar).toContain("<p className=\"small muted\">{t(REPORT_FRAUD_NOTE)}</p>");
     expect(navbar.indexOf("REPORT_FRAUD_NOTE)}")).toBeGreaterThan(navbar.indexOf('id="hotlines-panel"'));
-  });
-
-  it("the Threat Radar add buttons say what they do: keep a note in this tab", () => {
-    expect(read("src/components/radar/ReportModal.tsx")).toContain("Add to this tab");
-    expect(read("src/components/radar/ReportModal.tsx")).toContain("Offer Check does not send reports to anyone.");
-    for (const file of UI_SOURCES) expect(read(file), file).not.toMatch(/>\s*Add (?:a )?report\s*</);
   });
 
   it("the LINK-2 entries read as a directory, not as the MoI or Aman portals", () => {

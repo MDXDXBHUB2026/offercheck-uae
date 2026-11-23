@@ -21,7 +21,12 @@ export const SECURITY_HEADERS = [
 // The redesign moved the Warning signs page into Legal Guidelines; old links keep working. /about
 // was redirected to /legal#about until production hardening Phase 3 (2026-11-15), when it became
 // its own page again (src/app/about/page.tsx).
-export const REDIRECTS = [{ source: "/guide", destination: "/legal", permanent: false }];
+// Threat Radar was removed (owner decision, 2026-11-23, production Phase 5b): /radar answers 308 and
+// goes to the analyzer.
+export const REDIRECTS = [
+  { source: "/guide", destination: "/legal", permanent: false },
+  { source: "/radar", destination: "/check", permanent: true },
+];
 
 const nextConfig: NextConfig = {
   async redirects() {

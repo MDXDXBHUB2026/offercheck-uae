@@ -16,7 +16,7 @@ export const SITE_OPERATOR = {
 export const SITE_CONTACT_EMAIL = "offercheck.uae@gmail.com";
 
 // The "Last updated" date at the top of /privacy and /terms (ISO date, shown as written).
-export const POLICY_LAST_UPDATED = "2026-11-23";
+export const POLICY_LAST_UPDATED = "2026-11-24";
 
 // Production Phase 5 (owner decision, 2026-11-23): the "Offer Check missed a scam?" form. A Google
 // Form run by the owner; it opens in a new tab and Google receives what the person types there.

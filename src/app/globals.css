@@ -1126,10 +1126,12 @@ html {
   padding-inline: var(--sp-3);
 }
 
-/* Phase 3 (2026-11-15): six links, three a row, so each row is one group: Tools, then Information. */
+/* Phase 3 (2026-11-15): links in two rows, so each row is one group: Tools, then Information. Phase 5b
+   (2026-11-23): five links now. Six columns: the two Tools links take three each, the three
+   Information links take two each, so both rows are full. */
 .nav-mobile {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: var(--sp-2);
   padding-block: var(--sp-2);
   border-top: 1px solid var(--border);
@@ -1142,6 +1144,11 @@ html {
   justify-content: center;
   padding-inline: var(--sp-1);
   font-size: var(--fs-xs);
+  grid-column: span 2;
+}
+
+.nav-mobile .tab[data-group="tools"] {
+  grid-column: span 3;
 }
 
 .btn-label-wide {
@@ -2770,14 +2777,9 @@ ol.bullets {
   box-shadow: 0 0 22px var(--glow-red);
 }
 
-/* Threat Radar cards and portal directory cards: a glow on hover (the lift is in the motion block). */
-.radar-card:hover,
+/* Portal directory cards: a glow on hover (the lift is in the motion block). */
 .directory-card:hover {
   box-shadow: 0 0 24px var(--glow-green);
-}
-
-.radar-card.tone-high:hover {
-  box-shadow: 0 0 24px var(--glow-red);
 }
 
 /* Portal directory: numbered "How to verify" steps and the phone chip. */
@@ -2993,14 +2995,12 @@ ol.bullets {
     animation: page-in 200ms var(--ease-out) backwards;
   }
 
-  /* Phase 3: radar and portal cards lift 2px on hover; the Legal accordion folds with
+  /* Phase 3: portal cards lift 2px on hover; the Legal accordion folds with
      grid-template-rows and its chevron turns. */
-  .radar-card,
   .directory-card {
     transition: translate var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out);
   }
 
-  .radar-card:hover,
   .directory-card:hover {
     translate: 0 -2px;
   }
@@ -3180,8 +3180,7 @@ ol.bullets {
 
   /* Phase 3b: only the icon inside each header label moves; labels never animate. Opacity and
      transform (or a pseudo-element's opacity) only, so nothing shifts the layout. Every loop is
-     slower than one cycle a second, so nothing flashes. The calmest icons dim to 0.7 at most (the
-     signal arcs to 0.55): measured contrast stays above 3:1 on the header (docs/test-report.md). */
+     slower than one cycle a second, so nothing flashes. The calmest icons dim to 0.7 at most: measured contrast stays above 3:1 on the header (docs/test-report.md). */
 
   /* Offer Analyzer: a soft glow rises and falls behind the shield. Inside the tab, which clips it,
      so it never reaches the next label. */
@@ -3194,18 +3193,6 @@ ol.bullets {
     content: "";
     pointer-events: none;
     animation: icon-glow 3.6s ease-in-out infinite;
-  }
-
-  /* Threat Radar: the arcs swell and fade like a signal going out, inner then outer; the centre dot
-     stays still. */
-  .signal-arc {
-    transform-box: view-box;
-    transform-origin: 12px 12px;
-    animation: signal-arc 2.4s ease-in-out infinite;
-  }
-
-  .signal-arc-outer {
-    animation-delay: 0.5s;
   }
 
   /* Gov Portals Hub, Legal Guidelines, Encrypted Vault, About: one calm breath each, out of phase. */
@@ -3270,19 +3257,6 @@ ol.bullets {
 
     50% {
       opacity: 1;
-    }
-  }
-
-  @keyframes signal-arc {
-    0%,
-    100% {
-      opacity: 0.55;
-      scale: 0.88;
-    }
-
-    50% {
-      opacity: 1;
-      scale: 1;
     }
   }
 
@@ -3846,4 +3820,9 @@ ol.bullets {
   width: 1em;
   height: 1em;
   vertical-align: -0.125em;
+}
+
+/* /about: the five common job-scam patterns (Phase 5b): space between the items. */
+.pattern-item + .pattern-item {
+  margin-top: var(--sp-4);
 }

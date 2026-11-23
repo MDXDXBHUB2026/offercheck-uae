@@ -183,7 +183,7 @@ describe("pages: network first, the kept copy when offline", () => {
     const sw = harness("v1");
     await sw.lifecycle("install");
     sw.setOnline(false);
-    for (const page of ["/vault", "/radar"]) {
+    for (const page of ["/vault", "/no-such-page"]) {
       const response = (await sw.request(page, { mode: "navigate" })) as Response;
       expect(response.status).toBe(503);
       expect(response.headers.get("Content-Security-Policy")).toBe("default-src 'none'");

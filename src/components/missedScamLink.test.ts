@@ -152,7 +152,7 @@ describe("the missed-scam link: nothing else changes", () => {
 });
 
 describe("/privacy: the daily totals sentence (Part B)", () => {
-  const SENTENCE = "We keep daily totals of how many checks, errors and limit hits happened, with no text and nothing that identifies you.";
+  const SENTENCE = "We keep daily totals of how many checks, rejected inputs, errors and limit hits happened, with no text and nothing that identifies you.";
   it("is on the page in English and in Arabic", () => {
     expect(render(PrivacyPage)).toContain(SENTENCE);
     expect(AR[SENTENCE]).toBeTruthy();

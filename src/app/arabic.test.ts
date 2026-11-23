@@ -33,7 +33,6 @@ import {
   resultAnnouncement,
 } from "@/components/OfferChecker";
 import { PUBLIC_LIMITS_INTRO } from "@/components/publicLimitations";
-import { ReportModal } from "@/components/radar/ReportModal";
 import { intakeNote, ResultCard } from "@/components/ResultCard";
 import { EmptyVault, VAULT_EMPTY, VAULT_LOCAL_NOTE } from "@/components/EncryptedVault";
 import { PASSPHRASE_NOTE, SAVED_NOTICE, SaveVaultModal } from "@/components/SaveVaultModal";
@@ -54,7 +53,6 @@ import {
 } from "@/components/translateFlow";
 import { TranslateFailureAlert, TranslationShown } from "@/components/TranslationPanels";
 import { SAMPLE_OFFERS } from "@/data/sampleOffers";
-import { THREAT_SAMPLES } from "@/data/threatSamples";
 import { LEGIT_OFFER, SCAM_OFFER } from "@/lib/agents/fixtures";
 import { runManager } from "@/lib/agents/manager";
 import { RULES } from "@/lib/agents/redFlag";
@@ -73,7 +71,6 @@ import LegalPage from "./legal/page";
 import Loading from "./loading";
 import NotFound from "./not-found";
 import PortalsPage from "./portals/page";
-import RadarPage from "./radar/page";
 import VaultPage from "./vault/page";
 
 const html = (element: ReactElement) => renderToStaticMarkup(element);
@@ -89,12 +86,11 @@ const KEEP = new Set(
   ].map((word) => word.toLowerCase()),
 );
 
-// Offer text that is shown as typed: the fixtures, the samples and the demo quotes.
+// Offer text that is shown as typed: the fixtures, and the samples.
 const OFFER_TEXTS = [
   SCAM_OFFER,
   LEGIT_OFFER,
   ...SAMPLE_OFFERS.map((sample) => sample.text),
-  ...THREAT_SAMPLES.map((sample) => sample.warningQuote),
 ];
 
 const decode = (text: string) =>
@@ -135,7 +131,6 @@ const evidence = (result: ReturnType<typeof runManager>) => result.findings.flat
 describe("Arabic interface: every page is in Arabic", () => {
   it.each([
     ["/check", () => html(createElement(CheckPage))],
-    ["/radar", () => html(createElement(RadarPage))],
     ["/portals", () => html(createElement(PortalsPage))],
     ["/legal", () => html(createElement(LegalPage))],
     ["/vault", () => html(createElement(VaultPage))],
@@ -163,7 +158,6 @@ describe("Arabic interface: every state of a result is in Arabic", () => {
         redacted: 2,
         onNewAudit: () => {},
         onSave: () => {},
-        onReport: () => {},
         ...props,
       }),
     );
@@ -211,7 +205,6 @@ describe("Arabic interface: every state of a result is in Arabic", () => {
       html(createElement(ApprovalPanel, { gate: null, dispatch: () => {} })),
       html(createElement(ApprovalPanel, { gate: pending.gate, dispatch: () => {} })),
       html(createElement(AuditTrail, { entries: [] })),
-      html(createElement(ReportModal, { initial: {}, onClose: () => {} })),
       html(createElement(SaveVaultModal, { view: toResultView(scam), channel: "Email", checkedText: SCAM_OFFER, bandLabel: "High risk indicators", onClose: () => {}, onSaved: () => {} })),
       html(createElement(EmptyVault)),
     ];

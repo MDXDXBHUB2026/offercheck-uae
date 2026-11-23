@@ -56,7 +56,7 @@ const SECTIONS: readonly Section[] = [
     lines: [
       "To limit how often one visitor can check or translate, the server keeps counters. Each counter is keyed by a salted hash of your network address and a time window, never the address itself, and holds only a number.",
       "Each counter expires on its own: after 2 minutes for a per-minute limit, after 25 hours for a daily one. They are kept in an Upstash Redis store in Mumbai.",
-      "We keep daily totals of how many checks, errors and limit hits happened, with no text and nothing that identifies you.",
+      "We keep daily totals of how many checks, rejected inputs, errors and limit hits happened, with no text and nothing that identifies you.",
     ],
   },
   {
@@ -65,7 +65,6 @@ const SECTIONS: readonly Section[] = [
     lines: [
       "The Encrypted Vault: results you choose to save, encrypted with a passphrase that is not stored, and the number of saved results. Titles and notes are saved inside it, with Emirates ID, passport and UAE IBAN numbers hidden.",
       "Your choices in Settings: language, animations and text size, and whether you dismissed the install hint.",
-      "Reports you write on the Threat Radar stay in the open tab's memory only, are not sent anywhere, and are gone after a reload.",
       "If you export the vault, the file is saved where your browser puts downloads. It is still encrypted, and Offer Check keeps no copy.",
       "To clear them: open Settings and use Clear my data on this device. It removes the vault and every choice without the passphrase. Clearing this site's data in your browser's settings does the same.",
       "If you install the app, it keeps its own storage: results saved in the installed app stay there, and results saved in the browser stay in the browser.",

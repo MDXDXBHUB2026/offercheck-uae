@@ -40,7 +40,7 @@ describe("header measurements (docs/header-measurements.json)", () => {
     expect(file.measuredAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   });
 
-  it("was recorded with today's labels: six tabs, in order, the short English names or the Arabic ones", () => {
+  it("was recorded with today's labels: five tabs, in order, the short English names or the Arabic ones", () => {
     for (const m of file.results) {
       expect(m.tabs.map((t) => t.label), `${m.lang} ${m.viewport}`).toEqual(NAV_ITEMS.map((item) => (m.lang === "ar" ? item.labelAr : item.short)));
     }

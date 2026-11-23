@@ -5,7 +5,6 @@ import { ArrowRight, Eraser, FileText, Linkedin, Mail, MessageCircle, ScanSearch
 import { ApprovalPanel } from "@/components/ApprovalPanel";
 import { AuditTrail } from "@/components/AuditTrail";
 import { analyzeRequest, networkFailure, responseFailure, type CheckFailure } from "@/components/checkRequest";
-import { ReportModal, type ReportDraft } from "@/components/radar/ReportModal";
 import { ResultCard } from "@/components/ResultCard";
 import { revealResult, scrollBehaviorFor } from "@/components/revealResult";
 import { SAVED_NOTICE, SaveVaultModal, savedDay } from "@/components/SaveVaultModal";
@@ -191,7 +190,7 @@ function notCleared(): boolean {
   return false;
 }
 
-type Modal = { kind: "save" } | { kind: "report"; draft: ReportDraft } | null;
+type Modal = { kind: "save" } | null;
 
 // The screen-reader announcement uses the chip's wording, so the two never disagree (UX-1, LANG-2).
 export function resultAnnouncement(
@@ -708,12 +707,6 @@ export function OfferChecker({
           textNotKept={checked.textNotKept ?? false}
           onNewAudit={() => editText("")}
           onSave={() => setModal({ kind: "save" })}
-          onReport={(flag) =>
-            setModal({
-              kind: "report",
-              draft: { title: flag.signal, description: flag.explanation, warningQuote: flag.matched_text },
-            })
-          }
         >
           <ApprovalPanel gate={gateFlow.gate} dispatch={dispatchWithAudit} />
           <AuditTrail entries={auditLog} failed={auditFailed} />
@@ -741,7 +734,6 @@ export function OfferChecker({
           }}
         />
       )}
-      {modal?.kind === "report" && <ReportModal initial={modal.draft} onClose={() => setModal(null)} />}
     </div>
   );
 }
