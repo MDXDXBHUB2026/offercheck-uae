@@ -4,6 +4,7 @@ import { INSTALL_HINT_STORAGE_KEY, resetInstallHint } from "@/components/shell/i
 import { LANG_STORAGE_KEY, resetLang } from "@/components/shell/lang";
 import { MOTION_STORAGE_KEY, resetMotion } from "@/components/shell/motion";
 import { resetTextSize, TEXT_SIZE_STORAGE_KEY } from "@/components/shell/textSize";
+import { resetTheme, THEME_STORAGE_KEY } from "@/components/shell/theme";
 import { clearReopen } from "@/components/vaultStore";
 import { resetVault, VAULT_COUNT_KEY, VAULT_KEY } from "@/lib/vault";
 
@@ -18,6 +19,7 @@ export const STORED_KEYS = [
   LANG_STORAGE_KEY,
   MOTION_STORAGE_KEY,
   TEXT_SIZE_STORAGE_KEY,
+  THEME_STORAGE_KEY,
   INSTALL_HINT_STORAGE_KEY,
 ] as const;
 
@@ -37,6 +39,7 @@ export function clearMyData(): boolean {
   resetLang();
   resetMotion();
   resetTextSize();
+  resetTheme();
   resetInstallHint();
   return ok;
 }

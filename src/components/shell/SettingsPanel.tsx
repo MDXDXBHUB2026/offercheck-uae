@@ -8,6 +8,7 @@ import { InstallControl } from "@/components/shell/InstallControl";
 import { setLang, useLang, useT } from "@/components/shell/lang";
 import { setMotion, useMotion } from "@/components/shell/motion";
 import { setTextSize, useTextSize } from "@/components/shell/textSize";
+import { setTheme, useTheme } from "@/components/shell/theme";
 import { Button } from "@/components/ui";
 
 // Settings (production hardening Phase 4a, 2026-11-16): a gear button beside the language button opens
@@ -22,7 +23,6 @@ export const CLEAR_DATA_EXPLAIN =
 export const CLEAR_DATA_CONFIRM =
   "Clear all Offer Check data on this device? Your saved results will be permanently deleted. This cannot be undone.";
 export const CLEAR_DATA_DONE = "Your Offer Check data was removed from this browser.";
-export const THEME_NOTE = "The light theme is coming soon. The site uses the dark theme for now.";
 
 const FOCUSABLE =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
@@ -89,6 +89,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
   const lang = useLang();
   const motion = useMotion();
   const textSize = useTextSize();
+  const theme = useTheme();
   const panel = useRef<HTMLDivElement>(null);
   const [confirming, setConfirming] = useState(false);
   const [cleared, setCleared] = useState<"idle" | "done" | "failed">("idle");
@@ -172,15 +173,15 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
           </Choice>
         </Group>
 
-        <Group legend={t("Theme")} note={<p className="small muted">{t(THEME_NOTE)}</p>}>
-          <Choice name="theme" value="system" checked={false} disabled>
-            {t("System")} <span className="chip chip-soon">{t("coming soon")}</span>
+        <Group legend={t("Theme")}>
+          <Choice name="theme" value="system" checked={theme === "system"} onChange={() => setTheme("system")}>
+            {t("System")}
           </Choice>
-          <Choice name="theme" value="dark" checked>
+          <Choice name="theme" value="dark" checked={theme === "dark"} onChange={() => setTheme("dark")}>
             {t("Dark")}
           </Choice>
-          <Choice name="theme" value="light" checked={false} disabled>
-            {t("Light")} <span className="chip chip-soon">{t("coming soon")}</span>
+          <Choice name="theme" value="light" checked={theme === "light"} onChange={() => setTheme("light")}>
+            {t("Light")}
           </Choice>
         </Group>
 

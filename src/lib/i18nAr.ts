@@ -938,9 +938,6 @@ const ENTRIES: Record<string, string> = {
   "System": "حسب النظام",
   "Dark": "داكن",
   "Light": "فاتح",
-  "coming soon": "قريبًا",
-  "The light theme is coming soon. The site uses the dark theme for now.":
-    "المظهر الفاتح قادم قريبًا. يستخدم الموقع المظهر الداكن حاليًا.",
   "App": "التطبيق",
   "Clear my data on this device": "امسح بياناتي على هذا الجهاز",
   "Removes your Encrypted Vault, its count and every choice saved in this browser (language, animations, text size). Nothing is stored on Offer Check's server.":

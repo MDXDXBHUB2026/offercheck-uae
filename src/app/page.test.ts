@@ -46,6 +46,10 @@ const STORAGE_ALLOWED = [
   join("src", "components", "shell", "textSize.ts"),
   join("src", "components", "shell", "install.ts"),
   join("src", "components", "shell", "clearData.ts"),
+  // Phase 4b (light theme): the theme choice ("system", "dark" or "light"), and the head script that
+  // reads it back before the first paint; neither writes anything else, nor sends it anywhere.
+  join("src", "components", "shell", "theme.ts"),
+  join("src", "lib", "themeInit.ts"),
 ];
 
 describe("no logging or storage of offer text", () => {
@@ -78,6 +82,14 @@ describe("no logging or storage of offer text", () => {
     expect(clear).toContain("window.localStorage.removeItem(key)");
     for (const source of [size, install, clear]) {
       expect(source).not.toMatch(/\bconsole\.\w+|sessionStorage|indexedDB|document\.cookie/);
+    }
+    // Phase 4b: the theme store writes only the theme; the head script only reads one key.
+    const theme = read(STORAGE_ALLOWED[6]);
+    expect(theme.match(/localStorage\.setItem\(([^)]*)\)/g)).toEqual(["localStorage.setItem(THEME_STORAGE_KEY, theme)"]);
+    const init = read(STORAGE_ALLOWED[7]);
+    expect(init.match(/localStorage\.\w+/g)).toEqual(["localStorage.getItem"]);
+    for (const source of [theme, init]) {
+      expect(source).not.toMatch(/\bconsole\.\w+|sessionStorage|indexedDB|document\.cookie|fetch\(/);
     }
   });
 

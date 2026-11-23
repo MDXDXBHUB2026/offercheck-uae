@@ -90,7 +90,12 @@ describe("AI Studio port: nothing loaded from outside", () => {
   });
 
   it("no page or component injects HTML", () => {
-    for (const file of UI_SOURCES) expect(read(file), file).not.toContain("dangerouslySetInnerHTML");
+    // Phase 4b: changed on purpose. The layout has one exception: the theme script in the head, a
+    // fixed constant (THEME_INIT_SCRIPT, never built from user or request data) that carries the
+    // request's CSP nonce. No other file may use it.
+    for (const file of UI_SOURCES.filter((f) => !/layout\.tsx$/.test(f))) expect(read(file), file).not.toContain("dangerouslySetInnerHTML");
+    const layout = read("src/app/layout.tsx");
+    expect(layout.match(/dangerouslySetInnerHTML=\{[^}]*\}\}/g)).toEqual(["dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }}"]);
   });
 });
 

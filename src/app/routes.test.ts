@@ -98,7 +98,9 @@ describe("routes", () => {
     expect(source).toContain('<main id="main"');
     expect(source).toMatch(/<Navbar \/>[\s\S]*<main[\s\S]*<SiteFooter \/>/);
     expect(source).toContain('template: "%s · Offer Check UAE"');
-    expect(source).toContain('<html lang="en" dir="ltr">');
+    // Phase 4b: changed on purpose. suppressHydrationWarning is added because the head script sets
+    // data-theme on <html> before React hydrates (src/app/themeMechanism.test.ts).
+    expect(source).toContain('<html lang="en" dir="ltr" suppressHydrationWarning>');
   });
 });
 

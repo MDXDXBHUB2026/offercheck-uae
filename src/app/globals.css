@@ -3723,10 +3723,6 @@ ol.bullets {
   cursor: not-allowed;
 }
 
-.chip-soon {
-  margin-inline-start: var(--sp-1);
-}
-
 /* The iPhone / iPad Add to Home Screen hint, in Settings and (dismissible) in the footer. */
 .install-hint {
   display: flex;
