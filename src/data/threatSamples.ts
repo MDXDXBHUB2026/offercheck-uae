@@ -22,7 +22,7 @@ export type ThreatSample = {
   warningQuote: string;
 };
 
-export const SAMPLE_LABEL = "Sample reports (demo data)";
+export const SAMPLE_LABEL = "Example reports";
 
 export const THREAT_SAMPLES: readonly ThreatSample[] = [
   {

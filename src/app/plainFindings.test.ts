@@ -179,7 +179,7 @@ describe("the hero Example findings card", () => {
     nav.lang = lang;
     const markup = html(createElement(HeroStage, null));
     expect(markup).toContain(tr(lang, "Example findings"));
-    expect(markup.match(new RegExp(tr(lang, "Demo data, not your text"), "g"))).toHaveLength(1);
+    expect(markup.match(new RegExp(tr(lang, "Example only, not your text"), "g"))).toHaveLength(1);
     expect(markup).toContain('<bdi dir="ltr" lang="en">AED 1,950</bdi>');
     expect(markup).toContain('<bdi dir="ltr" lang="en">gmail.com</bdi>');
     for (const row of heroExamples()) expect(markup).toContain(tr(lang, row.label));

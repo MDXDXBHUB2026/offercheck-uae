@@ -405,13 +405,13 @@ describe("AI Studio port: Phase 3 pages", () => {
     expect(rendered).toContain(`href="${MOHRE_INQUIRY_URL.replace("&", "&amp;")}"`);
   });
 
-  it("Threat Radar: red banner, pulsing demo pill, red-glow Add to Threat Radar, every card tagged Demo data, no votes or dates", () => {
+  it("Threat Radar: red banner, pulsing pill, red-glow Add to Threat Radar, every card tagged Example, no votes or dates", () => {
     const page = html(createElement(RadarPage));
     expect(page).toContain('aria-labelledby="page-title" data-tint="red"');
     expect(page).toMatch(/<p class="eyebrow-pill eyebrow-red"><span class="dot dot-high pulse" aria-hidden="true"><\/span>/);
     expect(page).toMatch(/<button type="button" class="btn btn-danger glow-red">[\s\S]*?Add to Threat Radar<\/button>/);
     expect(page.match(/radar-card/g)).toHaveLength(THREAT_SAMPLES.length);
-    expect(page.match(/>Demo data</g)).toHaveLength(THREAT_SAMPLES.length);
+    expect(page.match(/>Example</g)).toHaveLength(THREAT_SAMPLES.length);
     expect(page).not.toMatch(/upvote|\bvotes?\b|\d{4}-\d{2}-\d{2}|\bago\b/i);
   });
 

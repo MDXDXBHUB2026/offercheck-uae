@@ -284,8 +284,8 @@ describe("Offer Analyzer hero", () => {
       const rows = hud.match(/<li>/g)?.length ?? 0;
       expect(rows).toBe(3);
       expect(hud).toContain(`${rows} EXAMPLES`);
-      expect(hud).toContain("Demo data, not your text");
-      expect(hero).toContain("Demo animation");
+      expect(hud).toContain("Example only, not your text");
+      expect(hero).toContain("Animation only");
       expect(hero).not.toMatch(/live|threat acquisition|60FPS|online/i);
       expect(css).toMatch(/\.radar \{[^}]*pointer-events: none;/);
     });

@@ -132,7 +132,7 @@ export function ThreatRadar() {
         ) : (
           <ul className="grid grid-2">
             {samples.map((entry) => (
-              <EntryCard key={entry.id} entry={entry} label="Demo data" />
+              <EntryCard key={entry.id} entry={entry} label="Example" />
             ))}
           </ul>
         )}
