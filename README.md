@@ -4,7 +4,7 @@ Last updated: 21 Nov 2026
 
 Offer Check is an MVP prototype. A job seeker pastes a job offer they received, for example by WhatsApp, email or LinkedIn. Offer Check checks it against five fixed rules and returns a risk score from 0 to 100, the risk indicators it found, and the words from the offer that matched, up to 3 quotes per finding. It also runs five text-only cross-checks and lists official steps that apply to the findings; neither changes the score. On request it fills a fixed reply template, which the user reviews before copying. It reports risk indicators, not a verdict. A low score does not confirm an offer is genuine.
 
-Live demo: https://offercheck-uae.vercel.app/
+Live site: https://offercheck-uae.vercel.app/
 
 It is built for the DDS 8-Day Building Agentic AI Application challenge. It is not a production service.
 
@@ -17,15 +17,14 @@ Job seekers in the UAE who want to check an unsolicited job offer for common sca
 | Page | Path | What it shows |
 |---|---|---|
 | Offer Analyzer | `/check` (also `/`) | The checker. Paste text or load one of 4 synthetic samples, then get the score, the findings with their quoted words, "Cross-checks on the offer", "Official steps for these findings" and a "Highlights in your text" view. From the result: Listen (the browser's own speech), Export PDF (the browser's print dialog), Save to Encrypted Vault, and a reply draft. |
-| Threat Radar | `/radar` | Common job-scam patterns shown with 4 made-up example reports. They are not real reports and not live data; the page says so. A report typed in its form is shown on that page only and is not sent anywhere. |
 | Gov Portals Hub | `/portals` | Official UAE portals and hotlines for confirming an offer, and where to report a job scam. Medium and High results on `/check` link to its reporting section. |
 | Legal Guidelines | `/legal` | Eight warning signs of labour and visa fraud, each with why it matters and what to do, paraphrased from one official page (UAE Government Portal, "Tips to avoid labour and visa fraud"). Not legal advice. |
 | Encrypted Vault | `/vault` | Results the user chose to save, encrypted with their passphrase and kept in this browser only. |
-| About | `/about` | What Offer Check is for and who it is for, how a check works, what it cannot do, privacy in short, and who runs it with the contact address. Not affiliated with any government body. |
+| About | `/about` | What Offer Check is for and who it is for, how a check works, five common job-scam patterns with the official places to report one and a link to tell the owner about a scam Offer Check missed (a Google Form), what it cannot do, privacy in short, and who runs it with the contact address. Not affiliated with any government body. |
 | Privacy | `/privacy` | What is sent, kept and not kept. Drafted, pending legal review; each statement is traced to the code in [docs/privacy-terms.md](docs/privacy-terms.md). |
 | Terms | `/terms` | Prototype status, not a verdict or legal advice, no guarantee, confirm through official channels, acceptable use. Drafted, pending legal review. |
 
-The old `/guide` link redirects to `/legal`. Every page has the same header and footer. The header has six tabs in two groups with a divider between them: Tools (Analyzer, Radar, Vault) and Information (Portals, Guidelines, About), then a UAE Hotlines menu, the language switch and a Settings (gear) button. Each tab is its own pill button (border, gap, hover and focus states; the current page is bolder with a bar under it, as well as green). Below 1200 px the same six links sit in a three-by-two bar under the header, one row per group, with a line between the rows. The footer links About, Privacy and Terms. The operator line and the contact address are kept in `src/lib/siteConfig.ts` only. The header's fit was measured in Chrome at 1280, 1440, 1568 and 1920 px in English and Arabic (`scripts/measure-header.mjs`, results in `docs/header-measurements.json`, checked by `src/app/headerMeasurements.test.ts`).
+The old `/guide` link redirects to `/legal`, and `/radar` (Threat Radar, removed 2026-11-23) redirects to `/check` with a 308. Every page has the same header and footer. The header has five tabs in two groups with a divider between them: Tools (Analyzer, Vault) and Information (Portals, Guidelines, About), then a UAE Hotlines menu, the language switch and a Settings (gear) button. Each tab is its own pill button (border, gap, hover and focus states; the current page is bolder with a bar under it, as well as green). Below 1200 px the same six links sit in a three-by-two bar under the header, one row per group, with a line between the rows. The footer links About, Privacy and Terms. The operator line and the contact address are kept in `src/lib/siteConfig.ts` only. The header's fit was measured in Chrome at 1280, 1440, 1568 and 1920 px in English and Arabic (`scripts/measure-header.mjs`, results in `docs/header-measurements.json`, checked by `src/app/headerMeasurements.test.ts`).
 
 ## What is built
 
@@ -139,11 +138,11 @@ npm run check   # tests, typecheck, lint, production build, no-bypass check
 
 Server environment variables are listed, without values, in `.env.example`. Rate limits use `KV_REST_API_URL`, `KV_REST_API_TOKEN`, `OFFERCHECK_RATE_SALT` and `OFFERCHECK_DAILY_CHAR_CAP`; with none of them set and outside Vercel, they run in memory. Translation needs one more: `GOOGLE_TRANSLATE_API_KEY`. Set it in the server environment only (for example in the Vercel project settings), never in a `NEXT_PUBLIC_` variable or in the repo, and set a quota on the Google Cloud project. The app works without it except for translation: the route answers `translation_unavailable`, nothing is sent, the send button is hidden, and the user can still check the original text.
 
-On 23 Nov 2026, `npm run check` passed on Node v24.19.0 with npm 11.17.0: 70 test files, 3,711 tests, then typecheck, lint, the production build and the no-bypass check (branch `phase-5`).
+On 24 Nov 2026, `npm run check` passed on Node v24.19.0 with npm 11.17.0: 71 test files, 3,688 tests, then typecheck, lint, the production build and the no-bypass check (branch `phase-5`).
 
 ## Synthetic data only
 
-Every offer in this repo, in the tests, the evaluation sets, the sample buttons and the Threat Radar demo reports, is synthetic. No real person's message is used. The evaluation sets are small: 43 dev cases (`src/lib/agents/eval/offers.ts`), 18 in holdout 1 (`holdout.ts`), 16 in holdout 2 (`holdout2.ts`) and 24 in holdout 3 (`holdout3.ts`). The rules were tuned on the dev set and have not been validated on real scam data. See [docs/test-report.md](docs/test-report.md) and [docs/technical-evidence.md](docs/technical-evidence.md).
+Every offer in this repo, in the tests, the evaluation sets, the sample buttons and the hero's example findings, is synthetic. No real person's message is used. The evaluation sets are small: 43 dev cases (`src/lib/agents/eval/offers.ts`), 18 in holdout 1 (`holdout.ts`), 16 in holdout 2 (`holdout2.ts`) and 24 in holdout 3 (`holdout3.ts`). The rules were tuned on the dev set and have not been validated on real scam data. See [docs/test-report.md](docs/test-report.md) and [docs/technical-evidence.md](docs/technical-evidence.md).
 
 Rules v2 (Phase 8) is built. The rules were changed for eight documented defects, then for the three cases holdout 3 got wrong, then once more for the wording `No deposit, fee or payment is ever required`. Every case added for those changes is tuned, not blind.
 

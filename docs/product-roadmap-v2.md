@@ -49,6 +49,8 @@ Status update (2026-11-09, owner decision, committed locally, not pushed): remov
 
 Status (2026-11-23, owner decision, production Phase 5): the 2026-11-09 decision to drop "how to report a problem" is **superseded for missed scams only**. A person can tell the owner about a scam Offer Check missed through one link to a Google Form (`SITE_MISSED_SCAM_FORM_URL` in `src/lib/siteConfig.ts`), under a result on /check and on /about and /privacy. It is a plain link: Offer Check sends nothing to the form, and Google receives what the person types there (`docs/privacy-terms.md`). Everything else in the 2026-11-09 decisions stands: no other report-a-problem route, and no contact for problems with the app beyond the address on /about and /privacy.
 
+Status (2026-11-23, owner decision, production Phase 5b): **Threat Radar is removed.** It was a page of four invented example reports and a form whose reports stayed in the open tab. `/radar` now answers 308 and goes to `/check`; the header has five tabs (Tools: Analyzer, Vault; Information: Portals, Guidelines, About). In its place `/about` carries a short guide to five common job-scam patterns, with the missed-scam form link and the official reporting links under it (written from `docs/known-limitations.md`, `src/lib/authorities.ts` and the rules list). Anything in the roadmap that mentions a Radar feature is superseded by this note.
+
 ## Phase 3: Test Lab (evaluation transparency)
 
 Build /lab, rendered on the server by running the real engine over the case files at request or build time (never hard-coded numbers; never ship rule patterns to the client):
