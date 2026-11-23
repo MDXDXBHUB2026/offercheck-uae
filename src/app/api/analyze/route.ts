@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { cleanOfferText } from "@/lib/agents/intake";
+import { countAfter } from "@/lib/countAfter";
 import { runWithAudit } from "@/lib/auditRun";
 import { allowAnalyze } from "@/lib/rateLimit";
 import { readCapped, TooLarge } from "@/lib/readCapped";
@@ -19,7 +20,21 @@ function errorResponse(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
 
+// Production Phase 5: the answer decides which daily total goes up by one (a result, a 429, any other
+// error, or a thrown error), after the response is sent (src/lib/countAfter.ts): numbers only, never text.
 export async function POST(request: Request) {
+  let response: Response;
+  try {
+    response = await handle(request);
+  } catch (error) {
+    countAfter("analyze_errors");
+    throw error;
+  }
+  countAfter(response.status === 200 ? "checks" : response.status === 429 ? "analyze_rate_limits" : "analyze_errors");
+  return response;
+}
+
+async function handle(request: Request) {
   if (!(await allowAnalyze(request.headers))) return errorResponse(TOO_MANY_CHECKS, 429);
 
   // A declared size over the cap is refused before anything is read. A request with no

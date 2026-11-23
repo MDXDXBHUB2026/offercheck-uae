@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { countAfter } from "@/lib/countAfter";
 import { readCapped, TooLarge } from "@/lib/readCapped";
 import { allowTranslate } from "@/lib/rateLimit";
 import { isSameSiteRequest, translateWithGoogle } from "@/lib/translateServer";
@@ -13,11 +14,15 @@ import { TRANSLATE_ERRORS, TRANSLATE_MAX_CHARS, type TranslateErrorCode } from "
 const MAX_BODY_BYTES = TRANSLATE_MAX_CHARS * 6 + 2048;
 const NO_STORE = { "Cache-Control": "no-store" };
 
+// Production Phase 5: every request and every refusal adds one to a daily total, after the response is
+// sent (src/lib/countAfter.ts): numbers only, never text.
 function fail(code: TranslateErrorCode) {
+  countAfter("translate_refusals");
   return NextResponse.json({ error: code }, { status: TRANSLATE_ERRORS[code], headers: NO_STORE });
 }
 
 export async function POST(request: Request) {
+  countAfter("translate_requests");
   if (!isSameSiteRequest(request)) return fail("cross_site");
 
   const apiKey = process.env.GOOGLE_TRANSLATE_API_KEY;
