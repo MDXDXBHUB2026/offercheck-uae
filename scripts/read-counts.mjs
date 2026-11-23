@@ -1,13 +1,13 @@
-// Prints the daily totals Offer Check keeps (src/lib/rateLimit.ts, "Daily totals"): checks, errors and
-// limit hits for the last 14 UTC days, as a table. For the owner to run on their own computer. There
+// Prints the daily totals Offer Check keeps (src/lib/rateLimit.ts, "Daily totals"): checks, rejected inputs,
+// errors and limit hits for the last 14 UTC days, as a table. For the owner to run on their own computer. There
 // is no public endpoint for these numbers.
 //
 // It reads KV_REST_API_URL and KV_REST_API_TOKEN from your own environment. Nothing is written to a
 // file, and the address and token are never printed. To use a local env file that is not committed:
 //   node --env-file=.env.local scripts/read-counts.mjs
 // or set the two variables in your shell first.
-const NAMES = ["checks", "analyze_errors", "analyze_rate_limits", "translate_requests", "translate_refusals"];
-const HEAD = ["day (UTC)", "checks", "analyze errors", "analyze 429", "translate requests", "translate refused"];
+const NAMES = ["checks", "analyze_errors", "analyze_rejected", "analyze_rate_limits", "translate_requests", "translate_refusals"];
+const HEAD = ["day (UTC)", "checks", "analyze errors", "analyze rejected", "analyze 429", "translate requests", "translate refused"];
 const DAYS = 14;
 const PREFIX = "oc:v1:m";
 

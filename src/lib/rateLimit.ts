@@ -219,16 +219,17 @@ export async function allowTranslate(headers: Headers, chars: number, options: L
 
 // --- Daily totals (Production Phase 5, counts only) ---------------------------------------------
 
-// How many checks, errors and limit hits happened in a UTC day: five counters, each a number. A key
+// How many checks, rejected inputs, errors and limit hits happened in a UTC day: six counters, each a number. A key
 // is oc:v1:m:<UTC day>:<name> and nothing else: no visitor key, no address, no user agent, no offer
 // text, no cookie, no request body. They expire after 40 days. Nothing reads them over the web;
 // scripts/read-counts.mjs, run by the owner, prints the last 14 days.
 //   checks              /api/analyze returned a result
-//   analyze_errors      /api/analyze answered with an error other than 429 (bad request, too long)
+//   analyze_errors      /api/analyze failed on our side: a 5xx answer or a thrown error (server faults only)
+//   analyze_rejected    /api/analyze refused the input: 400 (empty or not JSON) or 413 (too long)
 //   analyze_rate_limits /api/analyze answered 429
 //   translate_requests  every POST to /api/translate
 //   translate_refusals  /api/translate answered with an error (cross-site, no consent, limit, ...)
-export const COUNT_NAMES = ["checks", "analyze_errors", "analyze_rate_limits", "translate_requests", "translate_refusals"] as const;
+export const COUNT_NAMES = ["checks", "analyze_errors", "analyze_rejected", "analyze_rate_limits", "translate_requests", "translate_refusals"] as const;
 export type CountName = (typeof COUNT_NAMES)[number];
 export const COUNT_TTL_S = 40 * 86_400;
 

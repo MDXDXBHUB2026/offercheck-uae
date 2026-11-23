@@ -5,7 +5,7 @@ import { POST as analyze } from "@/app/api/analyze/route";
 import { POST as translate } from "@/app/api/translate/route";
 import { COUNT_NAMES, COUNT_TTL_S, countKey, dayWindow, memoryStore, recordCount } from "@/lib/rateLimit";
 
-// Production Phase 5, Part B: daily totals only. Five counters, keyed oc:v1:m:<UTC day>:<name>, 40-day
+// Production Phase 5, Part B: daily totals only. Six counters, keyed oc:v1:m:<UTC day>:<name>, 40-day
 // expiry. No visitor key, no address, no user agent, no offer text, no cookie, no request body; a
 // dead store changes nothing a visitor sees.
 
@@ -25,8 +25,8 @@ afterEach(() => {
 });
 
 describe("daily totals: keys", () => {
-  it("names the five totals and nothing else", () => {
-    expect([...COUNT_NAMES]).toEqual(["checks", "analyze_errors", "analyze_rate_limits", "translate_requests", "translate_refusals"]);
+  it("names the six totals and nothing else", () => {
+    expect([...COUNT_NAMES]).toEqual(["checks", "analyze_errors", "analyze_rejected", "analyze_rate_limits", "translate_requests", "translate_refusals"]);
     expect(COUNT_TTL_S).toBe(40 * 86_400);
   });
 
@@ -142,9 +142,54 @@ describe("daily totals: the routes", () => {
     for (const body of countBodies) {
       for (const [verb, key] of JSON.parse(body) as string[][]) {
         expect(["INCR", "EXPIRE"]).toContain(verb);
-        expect(key).toMatch(/^oc:v1:m:\d{8}:(checks|analyze_errors|analyze_rate_limits|translate_requests|translate_refusals)$/);
+        expect(key).toMatch(/^oc:v1:m:\d{8}:(checks|analyze_errors|analyze_rejected|analyze_rate_limits|translate_requests|translate_refusals)$/);
       }
     }
+  });
+});
+
+describe("daily totals: which total an /api/analyze answer adds to", () => {
+  // The names of the totals that went up, read from what a store would have been sent.
+  async function counted(run: () => Promise<Response>): Promise<{ names: string[]; status: number | "thrown" }> {
+    const fetchSpy = vi.fn(async () => new Response(JSON.stringify([{ result: 1 }, { result: 1 }]), { status: 200 }));
+    vi.stubGlobal("fetch", fetchSpy);
+    for (const [name, value] of Object.entries(STORE)) vi.stubEnv(name, value);
+    let status: number | "thrown";
+    try {
+      status = (await run()).status;
+    } catch {
+      status = "thrown";
+    }
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    const names = fetchSpy.mock.calls.flatMap((call) => {
+      const body = String((call as unknown as [string, RequestInit])[1].body);
+      return body.includes("oc:v1:m:") ? [(JSON.parse(body) as string[][])[0][1].split(":").pop() as string] : [];
+    });
+    return { names, status };
+  }
+  const post = (body: string, headers: Record<string, string> = {}) => new Request("http://localhost/api/analyze", { method: "POST", body, headers });
+
+  it("a result adds to checks only", async () => {
+    expect(await counted(() => analyze(post(JSON.stringify({ text: SECRET_TEXT }))))).toEqual({ names: ["checks"], status: 200 });
+  });
+
+  it.each([
+    ["an empty paste (400)", () => post(JSON.stringify({ text: "   " })), 400],
+    ["a body that is not JSON (400)", () => post("{not json"), 400],
+    ["text over the limit (413)", () => post(JSON.stringify({ text: "a".repeat(20_001) })), 413],
+    ["a declared size over the cap (413)", () => post("{}", { "content-length": "9999999" }), 413],
+  ])("%s adds to analyze_rejected only, not to analyze_errors", async (_name, make, status) => {
+    expect(await counted(() => analyze(make()))).toEqual({ names: ["analyze_rejected"], status });
+  });
+
+  it("a thrown error adds to analyze_errors only, and is still thrown", async () => {
+    const broken = new Request("http://localhost/api/analyze", { method: "POST", body: "{}" });
+    Object.defineProperty(broken, "headers", {
+      get() {
+        throw new Error("server fault");
+      },
+    });
+    expect(await counted(() => analyze(broken))).toEqual({ names: ["analyze_errors"], status: "thrown" });
   });
 });
 
@@ -155,7 +200,9 @@ describe("daily totals: no code path stores text", () => {
     for (const file of ["src/app/api/analyze/route.ts", "src/app/api/translate/route.ts"]) {
       const calls = [...read(file).matchAll(/countAfter\(([^)]*)\)/g)].map((m) => m[1]);
       expect(calls.length, file).toBeGreaterThan(0);
-      for (const arg of calls) expect(arg, file).toMatch(/^("[a-z_]+"|response\.status === 200 \? "[a-z_]+" : response\.status === 429 \? "[a-z_]+" : "[a-z_]+")$/);
+      const NAME = '"[a-z_]+"';
+      const BY_STATUS = `response\\.status === 200 \\? ${NAME} : response\\.status === 429 \\? ${NAME} : response\\.status >= 500 \\? ${NAME} : ${NAME},?`;
+      for (const arg of calls) expect(arg.replace(/\s+/g, " ").trim(), file).toMatch(new RegExp(`^(${NAME}|${BY_STATUS})$`));
     }
   });
 

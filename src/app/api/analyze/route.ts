@@ -20,8 +20,9 @@ function errorResponse(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
 }
 
-// Production Phase 5: the answer decides which daily total goes up by one (a result, a 429, any other
-// error, or a thrown error), after the response is sent (src/lib/countAfter.ts): numbers only, never text.
+// Production Phase 5: the answer decides which daily total goes up by one (a result, a 429, a refused
+// input (400 or 413), or a server fault (5xx or a thrown error)), after the response is sent
+// (src/lib/countAfter.ts): numbers only, never text.
 export async function POST(request: Request) {
   let response: Response;
   try {
@@ -30,7 +31,15 @@ export async function POST(request: Request) {
     countAfter("analyze_errors");
     throw error;
   }
-  countAfter(response.status === 200 ? "checks" : response.status === 429 ? "analyze_rate_limits" : "analyze_errors");
+  countAfter(
+    response.status === 200
+      ? "checks"
+      : response.status === 429
+        ? "analyze_rate_limits"
+        : response.status >= 500
+          ? "analyze_errors"
+          : "analyze_rejected",
+  );
   return response;
 }
 
