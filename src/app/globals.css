@@ -35,6 +35,13 @@
   /* Cyan: the far end of the primary button's gradient (white text on it is at least 4.5:1) */
   --cyan-action: #0e7490;
   --cyan-action-hover: #155e75;
+  /* The primary action (Phase 4b): dark = the emerald-to-cyan gradient and white text used before;
+     light = one blue. Text on it is --on-action. */
+  --action: #047857;
+  --action-hover: #065f46;
+  --action-end: #0e7490;
+  --action-end-hover: #155e75;
+  --on-action: #ffffff;
 
   /* Red: high risk, danger action */
   --red: #f87171;
@@ -127,6 +134,176 @@
   --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.35), 0 8px 10px -6px rgba(0, 0, 0, 0.35);
   --target: 44px;
   --content-max: 1280px;
+}
+
+/* Light theme (Phase 4b). The first :root block above is the dark theme and the default. Settings >
+   Theme sets data-theme on <html> (src/components/shell/theme.ts, and a script in the head before
+   first paint): "light" uses this block; "system" uses it only while the device prefers light (the
+   same tokens, repeated inside the media query because CSS cannot share a block between a selector
+   and a media query); "dark", or no attribute, keeps the dark block. src/app/themeContrast.test.ts
+   checks both blocks and that the two copies are identical. */
+:root[data-theme="light"] {
+  color-scheme: light;
+
+  /* Surfaces: warm off-white page, white cards */
+  --bg: #faf8f4;
+  --surface: #ffffff;
+  --surface-sunken: #f4f1ea;
+  --surface-raised: #ebe7de;
+  --border: #e5e0d6;
+  --border-strong: #cfc9bd;
+  --control-border: #64748b;
+
+  /* Text: dark slate */
+  --heading: #0f172a;
+  --ink: #1e293b;
+  --ink-soft: #334155;
+  --muted: #566174;
+
+  /* Emerald: low risk and brand accents (the primary action is blue in this theme) */
+  --green: #047857;
+  --green-soft: #065f46;
+  --green-bg: #ecfdf5;
+  --green-line: #6ee7b7;
+  --green-action: #047857;
+  --green-action-hover: #065f46;
+  --cyan-action: #0e7490;
+  --cyan-action-hover: #155e75;
+  --action: #1d4ed8;
+  --action-hover: #1e40af;
+  --action-end: #1d4ed8;
+  --action-end-hover: #1e40af;
+  --on-action: #ffffff;
+
+  /* Red: high risk, danger action */
+  --red: #b91c1c;
+  --red-soft: #991b1b;
+  --red-bg: #fef2f2;
+  --red-line: #fca5a5;
+  --red-action: #dc2626;
+  --red-action-hover: #b91c1c;
+
+  /* Amber: medium risk, caution */
+  --amber: #92400e;
+  --amber-soft: #78350f;
+  --amber-bg: #fffbeb;
+  --amber-line: #fcd34d;
+
+  /* Blue: links */
+  --sky: #0369a1;
+
+  /* UAE flag ribbon (the flag's own colours) */
+  --flag-green: #10b981;
+  --flag-white: #ffffff;
+  --flag-black: #0f172a;
+  --flag-red: #dc2626;
+
+  --print-paper: #ffffff;
+  --print-ink: #0f172a;
+  --print-line: #cbd5e1;
+
+  --focus: #1d4ed8;
+  --overlay: rgba(15, 23, 42, 0.55);
+
+  /* Glow and aurora: quiet on a light page (no neon) */
+  --glow-green: rgba(4, 120, 87, 0.16);
+  --glow-cyan: rgba(14, 116, 144, 0.12);
+  --glow-red: rgba(185, 28, 28, 0.16);
+  --aurora-green: rgba(16, 185, 129, 0.1);
+  --aurora-cyan: rgba(6, 182, 212, 0.08);
+  --aurora-indigo: rgba(99, 102, 241, 0.08);
+  --sheen: rgba(255, 255, 255, 0.6);
+  --radar-line: rgba(4, 120, 87, 0.35);
+  --radar-sweep: rgba(4, 120, 87, 0.3);
+  --radar-face: rgba(255, 255, 255, 0.7);
+  --scroll-track: #efebe3;
+  --scroll-thumb: #64748b;
+  --hero-glass: rgba(255, 255, 255, 0.92);
+
+  --shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -4px rgba(15, 23, 42, 0.1);
+}
+
+@media (prefers-color-scheme: light) {
+  :root[data-theme="system"] {
+    color-scheme: light;
+
+    /* Surfaces: warm off-white page, white cards */
+    --bg: #faf8f4;
+    --surface: #ffffff;
+    --surface-sunken: #f4f1ea;
+    --surface-raised: #ebe7de;
+    --border: #e5e0d6;
+    --border-strong: #cfc9bd;
+    --control-border: #64748b;
+
+    /* Text: dark slate */
+    --heading: #0f172a;
+    --ink: #1e293b;
+    --ink-soft: #334155;
+    --muted: #566174;
+
+    /* Emerald: low risk and brand accents (the primary action is blue in this theme) */
+    --green: #047857;
+    --green-soft: #065f46;
+    --green-bg: #ecfdf5;
+    --green-line: #6ee7b7;
+    --green-action: #047857;
+    --green-action-hover: #065f46;
+    --cyan-action: #0e7490;
+    --cyan-action-hover: #155e75;
+    --action: #1d4ed8;
+    --action-hover: #1e40af;
+    --action-end: #1d4ed8;
+    --action-end-hover: #1e40af;
+    --on-action: #ffffff;
+
+    /* Red: high risk, danger action */
+    --red: #b91c1c;
+    --red-soft: #991b1b;
+    --red-bg: #fef2f2;
+    --red-line: #fca5a5;
+    --red-action: #dc2626;
+    --red-action-hover: #b91c1c;
+
+    /* Amber: medium risk, caution */
+    --amber: #92400e;
+    --amber-soft: #78350f;
+    --amber-bg: #fffbeb;
+    --amber-line: #fcd34d;
+
+    /* Blue: links */
+    --sky: #0369a1;
+
+    /* UAE flag ribbon (the flag's own colours) */
+    --flag-green: #10b981;
+    --flag-white: #ffffff;
+    --flag-black: #0f172a;
+    --flag-red: #dc2626;
+
+    --print-paper: #ffffff;
+    --print-ink: #0f172a;
+    --print-line: #cbd5e1;
+
+    --focus: #1d4ed8;
+    --overlay: rgba(15, 23, 42, 0.55);
+
+    /* Glow and aurora: quiet on a light page (no neon) */
+    --glow-green: rgba(4, 120, 87, 0.16);
+    --glow-cyan: rgba(14, 116, 144, 0.12);
+    --glow-red: rgba(185, 28, 28, 0.16);
+    --aurora-green: rgba(16, 185, 129, 0.1);
+    --aurora-cyan: rgba(6, 182, 212, 0.08);
+    --aurora-indigo: rgba(99, 102, 241, 0.08);
+    --sheen: rgba(255, 255, 255, 0.6);
+    --radar-line: rgba(4, 120, 87, 0.35);
+    --radar-sweep: rgba(4, 120, 87, 0.3);
+    --radar-face: rgba(255, 255, 255, 0.7);
+    --scroll-track: #efebe3;
+    --scroll-thumb: #64748b;
+    --hero-glass: rgba(255, 255, 255, 0.92);
+
+    --shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -4px rgba(15, 23, 42, 0.1);
+  }
 }
 
 /* ---------- Base ---------- */
@@ -274,8 +451,8 @@ html {
   z-index: 100;
   padding: var(--sp-3) var(--sp-4);
   border-radius: var(--r-md);
-  background: var(--green-action);
-  color: var(--heading);
+  background: var(--action);
+  color: var(--on-action);
   font-weight: 700;
 }
 
@@ -612,18 +789,18 @@ html {
 }
 
 .btn-primary {
-  background: var(--green-action);
-  color: var(--heading);
+  background: var(--action);
+  color: var(--on-action);
   /* AI Studio port: an emerald-to-cyan gradient over the solid colour, so text contrast is checked
      on both ends (--green-action and --cyan-action). */
-  background-image: linear-gradient(90deg, var(--green-action), var(--cyan-action));
+  background-image: linear-gradient(90deg, var(--action), var(--action-end));
   box-shadow: 0 0 20px var(--glow-green);
 }
 
 .btn-primary:hover {
-  background: var(--green-action-hover);
-  color: var(--heading);
-  background-image: linear-gradient(90deg, var(--green-action-hover), var(--cyan-action-hover));
+  background: var(--action-hover);
+  color: var(--on-action);
+  background-image: linear-gradient(90deg, var(--action-hover), var(--action-end-hover));
   box-shadow: 0 0 28px var(--glow-green), 0 0 12px var(--glow-cyan);
 }
 
@@ -676,12 +853,12 @@ html {
 
 .btn-danger {
   background: var(--red-action);
-  color: var(--heading);
+  color: var(--on-action);
 }
 
 .btn-danger:hover {
   background: var(--red-action-hover);
-  color: var(--heading);
+  color: var(--on-action);
 }
 
 .btn-block {
@@ -2234,7 +2411,7 @@ select:focus-visible {
   width: 20px;
   height: 20px;
   margin: 0;
-  accent-color: var(--green-action);
+  accent-color: var(--action);
 }
 
 .check-item.done {
@@ -3248,6 +3425,89 @@ ol.bullets {
 }
 
 @media print {
+  /* Paper is always light: the light tokens, whatever the theme on screen. */
+  :root,
+  :root[data-theme] {
+    color-scheme: light;
+
+    /* Surfaces: warm off-white page, white cards */
+    --bg: #faf8f4;
+    --surface: #ffffff;
+    --surface-sunken: #f4f1ea;
+    --surface-raised: #ebe7de;
+    --border: #e5e0d6;
+    --border-strong: #cfc9bd;
+    --control-border: #64748b;
+
+    /* Text: dark slate */
+    --heading: #0f172a;
+    --ink: #1e293b;
+    --ink-soft: #334155;
+    --muted: #566174;
+
+    /* Emerald: low risk and brand accents (the primary action is blue in this theme) */
+    --green: #047857;
+    --green-soft: #065f46;
+    --green-bg: #ecfdf5;
+    --green-line: #6ee7b7;
+    --green-action: #047857;
+    --green-action-hover: #065f46;
+    --cyan-action: #0e7490;
+    --cyan-action-hover: #155e75;
+    --action: #1d4ed8;
+    --action-hover: #1e40af;
+    --action-end: #1d4ed8;
+    --action-end-hover: #1e40af;
+    --on-action: #ffffff;
+
+    /* Red: high risk, danger action */
+    --red: #b91c1c;
+    --red-soft: #991b1b;
+    --red-bg: #fef2f2;
+    --red-line: #fca5a5;
+    --red-action: #dc2626;
+    --red-action-hover: #b91c1c;
+
+    /* Amber: medium risk, caution */
+    --amber: #92400e;
+    --amber-soft: #78350f;
+    --amber-bg: #fffbeb;
+    --amber-line: #fcd34d;
+
+    /* Blue: links */
+    --sky: #0369a1;
+
+    /* UAE flag ribbon (the flag's own colours) */
+    --flag-green: #10b981;
+    --flag-white: #ffffff;
+    --flag-black: #0f172a;
+    --flag-red: #dc2626;
+
+    --print-paper: #ffffff;
+    --print-ink: #0f172a;
+    --print-line: #cbd5e1;
+
+    --focus: #1d4ed8;
+    --overlay: rgba(15, 23, 42, 0.55);
+
+    /* Glow and aurora: quiet on a light page (no neon) */
+    --glow-green: rgba(4, 120, 87, 0.16);
+    --glow-cyan: rgba(14, 116, 144, 0.12);
+    --glow-red: rgba(185, 28, 28, 0.16);
+    --aurora-green: rgba(16, 185, 129, 0.1);
+    --aurora-cyan: rgba(6, 182, 212, 0.08);
+    --aurora-indigo: rgba(99, 102, 241, 0.08);
+    --sheen: rgba(255, 255, 255, 0.6);
+    --radar-line: rgba(4, 120, 87, 0.35);
+    --radar-sweep: rgba(4, 120, 87, 0.3);
+    --radar-face: rgba(255, 255, 255, 0.7);
+    --scroll-track: #efebe3;
+    --scroll-thumb: #64748b;
+    --hero-glass: rgba(255, 255, 255, 0.92);
+
+    --shadow: 0 10px 15px -3px rgba(15, 23, 42, 0.1), 0 4px 6px -4px rgba(15, 23, 42, 0.1);
+  }
+
   /* Nothing moves on paper or in a PDF. */
   *,
   *::before,

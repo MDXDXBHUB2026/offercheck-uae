@@ -294,8 +294,8 @@ describe("AI Studio port: analyzer card", () => {
     expect(css).toMatch(/\.link-btn \{[^}]*min-height: var\(--target\);/);
   });
 
-  it("the primary button is an emerald-to-cyan gradient that goes flat and dim when blocked", () => {
-    expect(css).toMatch(/\.btn-primary \{[^}]*background-image: linear-gradient\(90deg, var\(--green-action\), var\(--cyan-action\)\);/);
+  it("the primary button is a gradient from --action to --action-end (emerald to cyan in dark) that goes flat and dim when blocked", () => {
+    expect(css).toMatch(/\.btn-primary \{[^}]*background-image: linear-gradient\(90deg, var\(--action\), var\(--action-end\)\);/);
     expect(css).toMatch(/\.btn-primary\[aria-disabled="true"\],\n\.btn-primary:disabled \{\s*background-image: none;\s*box-shadow: none;/);
   });
 
