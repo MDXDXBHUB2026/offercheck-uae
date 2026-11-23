@@ -37,7 +37,7 @@ describe("header tabs as pill buttons", () => {
 
   it("leaves a gap between pills on both bars, and a divider between the two groups", () => {
     expect(css).toMatch(/\.nav-group \{[^}]*gap: var\(--sp-1\);/);
-    expect(rule(".nav-mobile")).toMatch(/gap: var\(--sp-3\) var\(--sp-2\);/);
+    expect(rule(".nav-mobile")).toMatch(/gap: var\(--sp-2\);[\s\S]*padding-block: var\(--sp-2\);/);
     expect(rule(".nav-mobile")).toMatch(/linear-gradient\(var\(--border-strong\), var\(--border-strong\)\) center/);
     expect(rule(".tab")).toMatch(/min-height: var\(--target\);/);
     expect(css).toContain("--target: 44px;");

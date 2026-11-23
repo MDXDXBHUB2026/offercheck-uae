@@ -1130,8 +1130,8 @@ html {
 .nav-mobile {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--sp-3) var(--sp-2);
-  padding-block: var(--sp-3);
+  gap: var(--sp-2);
+  padding-block: var(--sp-2);
   border-top: 1px solid var(--border);
   /* The divider between the two groups (Tools row, Information row): a hairline half way down, in the
      gap between the rows. */
