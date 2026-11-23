@@ -940,8 +940,8 @@ const ENTRIES: Record<string, string> = {
   "Light": "فاتح",
   "App": "التطبيق",
   "Clear my data on this device": "امسح بياناتي على هذا الجهاز",
-  "Removes your Encrypted Vault, its count and every choice saved in this browser (language, animations, text size). Nothing is stored on Offer Check's server.":
-    "يحذف خزنتك المشفّرة وعدد نتائجها وكل اختيار محفوظ في هذا المتصفح (اللغة والحركة وحجم النص). لا يُخزَّن أي شيء على خادم Offer Check.",
+  "Removes your Encrypted Vault, its count and every choice saved in this browser (language, animations, text size, theme). Nothing is stored on Offer Check's server.":
+    "يحذف خزنتك المشفّرة وعدد نتائجها وكل اختيار محفوظ في هذا المتصفح (اللغة والحركة وحجم النص والمظهر). لا يُخزَّن أي شيء على خادم Offer Check.",
   "Clear all Offer Check data on this device? Your saved results will be permanently deleted. This cannot be undone.":
     "هل تريد مسح كل بيانات Offer Check على هذا الجهاز؟ ستُحذف نتائجك المحفوظة نهائيًا. لا يمكن التراجع عن ذلك.",
   "Delete everything": "احذف كل شيء",

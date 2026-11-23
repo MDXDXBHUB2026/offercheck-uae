@@ -959,6 +959,37 @@ html {
   box-shadow: 0 0 8px var(--green);
 }
 
+/* Cleanup 1 (2026-11-23): the header's tabs are separate pill buttons, on the wide bar and the compact
+   bar alike. Each has its own border and background, a gap to the next, a hover state, and the global
+   focus ring. The current page is not shown by colour alone: it is bolder, has a bar along its bottom
+   edge and, on the wide bar, the dot before its label; aria-current stays. Only the header's tabs, so
+   the vault records and other .tab uses are unchanged. Colours are existing tokens. */
+.site-header .tab {
+  border-color: var(--control-border);
+  border-radius: var(--r-full);
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.site-header .tab:hover {
+  border-color: var(--green);
+  background: var(--surface-raised);
+  color: var(--heading);
+}
+
+.site-header .tab[aria-current="page"] {
+  border-color: var(--green);
+  background: var(--green-bg);
+  color: var(--green-soft);
+  font-weight: 700;
+  box-shadow: inset 0 -3px 0 var(--green), 0 0 18px var(--glow-green);
+}
+
+.site-header .tab[aria-current="page"]:hover {
+  border-color: var(--green);
+  color: var(--heading);
+}
+
 /* ---------- Header ---------- */
 .site-header {
   position: sticky;
@@ -1099,9 +1130,12 @@ html {
 .nav-mobile {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--sp-1);
+  gap: var(--sp-2);
   padding-block: var(--sp-2);
   border-top: 1px solid var(--border);
+  /* The divider between the two groups (Tools row, Information row): a hairline half way down, in the
+     gap between the rows. */
+  background: linear-gradient(var(--border-strong), var(--border-strong)) center / calc(100% - 2 * var(--sp-2)) 1px no-repeat;
 }
 
 .nav-mobile .tab {
@@ -1133,6 +1167,12 @@ html {
     flex-shrink: 0;
   }
 
+  /* Pills need a little more room than plain tabs: in Arabic (the longest labels and caption) the six
+     pills fit between the brand and the buttons only with 8px between the three, not 12px. */
+  .header-row {
+    gap: var(--sp-2);
+  }
+
   /* The tab row takes only the space left between the brand and the actions: it may shrink to
      nothing and then scrolls sideways, so it is never drawn over the brand. */
   .nav-desktop {
@@ -1154,6 +1194,7 @@ html {
     display: flex;
     flex-shrink: 0;
     align-items: center;
+    gap: var(--sp-1);
   }
 
   .nav-divider {
@@ -1182,6 +1223,30 @@ html {
 
   .nav-mobile {
     display: none;
+  }
+}
+
+/* Phones of 400px or less: a little less space between the brand and the buttons, so the whole name
+   "Offer Check UAE" shows beside the three buttons at 360px, in English and in Arabic. */
+@media (max-width: 400px) {
+  .header-row {
+    gap: var(--sp-2);
+  }
+
+  .brand {
+    gap: var(--sp-2);
+  }
+
+  .brand-name {
+    font-size: var(--fs-sm);
+  }
+
+  .header-actions {
+    gap: var(--sp-1);
+  }
+
+  .header-actions .btn {
+    padding-inline: var(--sp-2);
   }
 }
 
