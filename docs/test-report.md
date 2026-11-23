@@ -2,6 +2,16 @@
 
 As of 2026-11-08, updated for QA round 2 (LANG-2 and COPY-1, the QA round 2 commit, see git log) on top of the QA fix batch `34903e2` (UX-1, LANG-1, nav "Soon" badge, approval wording). Every number gives its source. No automated test here ran against a live URL. The live site was checked by hand; see "Manual post-deploy QA (live site)" below.
 
+## Production Phase 5: missed-scam link, counts-only monitoring, demo wording (2026-11-23)
+
+Source: `npm run check` on branch `phase-5`: **3,711 tests in 70 files, all passed**, then typecheck, lint, the production build and the no-bypass check. Before (`5aacef2`): 3,674 tests in 68 files.
+
+- **Added:** `src/components/missedScamLink.test.ts` (14) and `src/lib/usageCounts.test.ts` (15); what they prove is in `docs/build-log/2026-11-23.md`.
+- **Changed on purpose:** four tests that pinned the old "Demo data", "Demo animation" labels or the privacy date, and the capitalised-word list of `policyPages.test.ts`.
+- **Client bundle:** 41 regex literals and 50 phrases from `redFlag.ts`, 0 found in `.next/static` (22 files) or the prerendered pages.
+- **Not covered:** the real Google Form, a real Upstash store (a fake store and a failing `fetch` are used), and a native reading of the new Arabic.
+- **Rules and scoring:** `redFlag.ts` and `scoring.ts` unchanged (`src/app/lockedFiles.test.ts` passes).
+
 ## Pre-merge H53 follow-up: "ever" between a "no" list and its verb (2026-11-21)
 
 Source: `npm run check` on branch `prod-hardening` after the freeze: **3523 tests in 64 files, 3523 passed, 0 failed**, then typecheck, lint, the production build and the no-bypass check. Before (`fdb73ad`): 3509 tests in 64 files.

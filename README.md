@@ -17,7 +17,7 @@ Job seekers in the UAE who want to check an unsolicited job offer for common sca
 | Page | Path | What it shows |
 |---|---|---|
 | Offer Analyzer | `/check` (also `/`) | The checker. Paste text or load one of 4 synthetic samples, then get the score, the findings with their quoted words, "Cross-checks on the offer", "Official steps for these findings" and a "Highlights in your text" view. From the result: Listen (the browser's own speech), Export PDF (the browser's print dialog), Save to Encrypted Vault, and a reply draft. |
-| Threat Radar | `/radar` | Common job-scam patterns shown with 4 made-up demo reports. They are not real reports and not live data; the page says so. A report typed in its form is shown on that page only and is not sent anywhere. |
+| Threat Radar | `/radar` | Common job-scam patterns shown with 4 made-up example reports. They are not real reports and not live data; the page says so. A report typed in its form is shown on that page only and is not sent anywhere. |
 | Gov Portals Hub | `/portals` | Official UAE portals and hotlines for confirming an offer, and where to report a job scam. Medium and High results on `/check` link to its reporting section. |
 | Legal Guidelines | `/legal` | Eight warning signs of labour and visa fraud, each with why it matters and what to do, paraphrased from one official page (UAE Government Portal, "Tips to avoid labour and visa fraud"). Not legal advice. |
 | Encrypted Vault | `/vault` | Results the user chose to save, encrypted with their passphrase and kept in this browser only. |
@@ -139,7 +139,7 @@ npm run check   # tests, typecheck, lint, production build, no-bypass check
 
 Server environment variables are listed, without values, in `.env.example`. Rate limits use `KV_REST_API_URL`, `KV_REST_API_TOKEN`, `OFFERCHECK_RATE_SALT` and `OFFERCHECK_DAILY_CHAR_CAP`; with none of them set and outside Vercel, they run in memory. Translation needs one more: `GOOGLE_TRANSLATE_API_KEY`. Set it in the server environment only (for example in the Vercel project settings), never in a `NEXT_PUBLIC_` variable or in the repo, and set a quota on the Google Cloud project. The app works without it except for translation: the route answers `translation_unavailable`, nothing is sent, the send button is hidden, and the user can still check the original text.
 
-On 23 Nov 2026, `npm run check` passed on Node v24.19.0 with npm 11.17.0: 68 test files, 3,674 tests, then typecheck, lint, the production build and the no-bypass check (branch `cleanup-1`).
+On 23 Nov 2026, `npm run check` passed on Node v24.19.0 with npm 11.17.0: 70 test files, 3,711 tests, then typecheck, lint, the production build and the no-bypass check (branch `phase-5`).
 
 ## Synthetic data only
 
