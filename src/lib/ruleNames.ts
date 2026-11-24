@@ -1,7 +1,7 @@
 import { CHECK_LABELS } from "./checkLabels";
 
 // Rule IDs (RF-001 to RF-005, and RF-00n-W for a mention inside a warning) are not shown in the main
-// views. They appear only in "How this was checked" and in the audit trail, as a small reference next
+// views. They appear only in "How this was checked", as a small reference next
 // to the plain name, so the score stays traceable. This maps each ID to its check, whose plain name
 // is in checkLabels.ts. redFlag.ts stays out of client code, so a test keeps this map equal to RULES.
 export const RULE_CHECKS: Readonly<Record<string, string>> = {

@@ -50,7 +50,7 @@ User pastes offer
 
 ### Build status today
 
-The contracts above are the target design. What runs today (also stated in `docs/known-limitations.md`; the Agent run panel and the audit trail use the same labels):
+The contracts above are the target design. What runs today (also stated in `docs/known-limitations.md`; the Agent run panel and the audit trail use the same labels; historical note, 2026-11-24: the audit panel is no longer shown in the interface, the record is internal):
 
 | Step | Status |
 |---|---|

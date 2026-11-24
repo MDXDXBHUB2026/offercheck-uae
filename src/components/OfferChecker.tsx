@@ -3,7 +3,6 @@
 import { useEffect, useReducer, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { ArrowRight, Eraser, FileText, Linkedin, Mail, MessageCircle, ScanSearch } from "lucide-react";
 import { ApprovalPanel } from "@/components/ApprovalPanel";
-import { AuditTrail } from "@/components/AuditTrail";
 import { analyzeRequest, networkFailure, responseFailure, type CheckFailure } from "@/components/checkRequest";
 import { ResultCard } from "@/components/ResultCard";
 import { revealResult, scrollBehaviorFor } from "@/components/revealResult";
@@ -195,9 +194,9 @@ export function OfferChecker({
   const [slowCheck, setSlowCheck] = useState(false);
   const slowTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [gateFlow, dispatchGate] = useReducer(gateReducer, INITIAL_GATE_FLOW);
-  const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
-  const [auditFailed, setAuditFailed] = useState(false);
-  // Appends run one after another, so the chain stays in order. A new run starts a new chain.
+  // The internal audit record (src/lib/audit.ts). It is built in the background and is not shown to the
+  // person (owner decision, 2026-11-24). Appends run one after another, so the chain stays in order.
+  // A new run starts a new chain.
   const auditQueue = useRef<Promise<AuditEntry[]>>(Promise.resolve([]));
   const runIdRef = useRef<string | null>(null);
   // The gate state as of the last action, so a second click before a re-render sees the first.
@@ -265,7 +264,7 @@ export function OfferChecker({
   }
 
   // STALE-1: the text changed, so everything from the previous check goes: the result (score,
-  // findings, Agent run, translation panel, draft), the approval gate and its audit chain, and any
+  // findings, Agent run, translation panel, draft), the approval gate and its internal audit chain, and any
   // failure alert. A request in flight is aborted and its reply ignored. Focus is not moved.
   function clearForEdit() {
     const hadSomething = checked !== null || loading || translateRef.current.step === "sending" || failure !== null;
@@ -293,24 +292,16 @@ export function OfferChecker({
   function startAudit(runId: string | null, log: AuditEntry[]) {
     runIdRef.current = runId;
     auditQueue.current = Promise.resolve(log);
-    setAuditLog(log);
-    setAuditFailed(false);
   }
 
   function logGate(records: AuditRecord[]) {
     if (records.length === 0) return;
-    const runId = records[0].runId;
     auditQueue.current = auditQueue.current.then(
       (log) =>
         appendEntries(log, records).then(
-          (next) => {
-            if (runIdRef.current === runId) setAuditLog(next);
-            return next;
-          },
-          () => {
-            if (runIdRef.current === runId) setAuditFailed(true);
-            return log;
-          },
+          // A failed append leaves the chain as it was. Nothing is shown either way.
+          (next) => next,
+          () => log,
         ),
     );
   }
@@ -324,7 +315,7 @@ export function OfferChecker({
   }
 
   // submitted: the text to check (the box's text, or the English translation). translation: the
-  // fixed-value record for the audit trail. shown: the original and the English, after a translation.
+  // fixed-value record for the internal audit record. shown: the original and the English, after a translation.
   // The language notice is decided from the text as sent, not from later edits.
   async function runCheck(
     unmasked: string,
@@ -388,8 +379,8 @@ export function OfferChecker({
     }
   }
 
-  // Check the text in the box, masked. "Check original anyway" after a failed translation: the audit
-  // trail records the failure code.
+  // Check the text in the box, masked. "Check original anyway" after a failed translation: the internal
+  // audit record keeps the failure code.
   function checkBox() {
     const prepared = prepareText(text);
     void runCheck(prepared.text, failureForCheck(translateRef.current), null, { boxText: text, redacted: prepared.count });
@@ -641,7 +632,6 @@ export function OfferChecker({
           onNewAudit={() => editText("")}
         >
           <ApprovalPanel gate={gateFlow.gate} dispatch={dispatchWithAudit} />
-          <AuditTrail entries={auditLog} failed={auditFailed} />
         </ResultCard>
       )}
     </div>

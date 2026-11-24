@@ -250,9 +250,9 @@ describe("AI Studio port: risk, not verdict", () => {
   });
 
   // AI Studio port, part 2: none of the export's claims come across. The only allowed uses are the
-  // audit trail's "chain verified" (its hash chain checks out) and a code comment ("Server-safe").
+  // code comment ("Server-safe"). The audit panel, which held "chain verified", was removed.
   it("uses none of the export's claim words: probability, reliability, safe, verified, legit, Online AI, 60FPS", () => {
-    const ALLOWED = /chain verified|Server-safe/g;
+    const ALLOWED = /Server-safe/g;
     for (const file of UI_SOURCES) {
       expect(read(file).replace(ALLOWED, ""), file).not.toMatch(
         /probabilit|reliabilit|trust score|\bsafe\b|\bverified\b|\blegit|genuine baseline|online ai|gemini|ai-powered|60 ?fps|live threat|threat acquisition/i,

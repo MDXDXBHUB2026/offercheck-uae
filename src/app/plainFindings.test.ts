@@ -6,7 +6,7 @@ import { describe, expect, it, vi } from "vitest";
 
 // Plain-language findings (owner brief, 2026-11-11): the main views name each finding in plain words
 // (the existing titles and the four tile names) and keep the points; the rule IDs (RF-001 to RF-005)
-// stay in the code and data, and are shown only in "How this was checked" and the audit trail, as a
+// stay in the code and data, and are shown only in "How this was checked", as a
 // small reference next to the plain name. The hero card shows values read from the synthetic "Visa
 // fee before joining" sample. Rules, scoring and the APIs are unchanged.
 
@@ -23,7 +23,6 @@ vi.mock("react", async (importOriginal) => {
 
 import CheckPage from "./check/page";
 import PortalsPage from "./portals/page";
-import { AuditTrail } from "@/components/AuditTrail";
 import { HeroStage } from "@/components/HeroStage";
 import { ResultCard, spokenSummary } from "@/components/ResultCard";
 import { scoreArithmetic } from "@/components/scoreArithmetic";
@@ -123,15 +122,13 @@ describe("rule IDs are gone from the main views", () => {
   });
 });
 
-describe("the audit trail keeps the IDs as a reference next to the plain name", () => {
-  it("shows each rule as its plain name with the ID in brackets; the entry keeps the bare IDs", async () => {
+describe("the internal audit record keeps the bare IDs (it is not shown on any page)", () => {
+  it("each entry keeps the bare rule IDs, never the plain names", async () => {
     nav.lang = "en";
     const { audit } = await runWithAudit(heroSampleText());
-    const markup = html(createElement(AuditTrail, { entries: audit }));
     for (const id of ["RF-001", "RF-003", "RF-004", "RF-005"]) {
-      expect(markup).toContain(`${ruleName(id)} (${id})`);
+      expect(JSON.stringify(audit)).toContain(`"${id}"`);
     }
-    expect(JSON.stringify(audit)).toContain('"RF-001"');
     expect(JSON.stringify(audit)).not.toContain(ruleName("RF-001"));
   });
 

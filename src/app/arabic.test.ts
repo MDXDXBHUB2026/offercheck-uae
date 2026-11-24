@@ -21,7 +21,6 @@ vi.mock("react", async (importOriginal) => {
 });
 
 import { ApprovalPanel } from "@/components/ApprovalPanel";
-import { AuditTrail } from "@/components/AuditTrail";
 import { networkFailure, responseFailure } from "@/components/checkRequest";
 import {
   checkBlockedReason,
@@ -195,12 +194,11 @@ describe("Arabic interface: every state of a result is in Arabic", () => {
     }
   });
 
-  it("the draft reply panel and the audit trail", () => {
+  it("the draft reply panel", () => {
     const pending = gateReducer(INITIAL_GATE_FLOW, { type: "prepare", at: "2026-11-10T00:00:00Z", findings: scam.findings });
     const panels = [
       html(createElement(ApprovalPanel, { gate: null, dispatch: () => {} })),
       html(createElement(ApprovalPanel, { gate: pending.gate, dispatch: () => {} })),
-      html(createElement(AuditTrail, { entries: [] })),
     ];
     for (const markup of panels) expect(english(markup)).toEqual([]);
   });

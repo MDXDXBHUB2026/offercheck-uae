@@ -19,7 +19,7 @@ import { useT } from "@/components/shell/lang";
 // Three example rows with concrete values read from the synthetic "Visa fee before joining" sample
 // (src/data/heroExamples.ts): what the rules find in it, and the official check it points to. Demo
 // data: they do not come from the user's text. The badge counts these rows. No rule IDs here; they
-// appear only in "How this was checked" and the audit trail.
+// appear only in "How this was checked".
 const EXAMPLES = heroExamples();
 // Stands in for {0} in the translated template, so the value can be placed as its own element.
 const SLOT = "\u0000";

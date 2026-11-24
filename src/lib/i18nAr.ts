@@ -355,7 +355,7 @@ const ENTRIES: Record<string, string> = {
   "Recruiters for a registered company usually write from the company's own domain.":
     "عادةً ما يراسلك مسؤولو التوظيف في الشركات المسجّلة من نطاق بريد الشركة نفسها.",
 
-  // Agent run and audit trail
+  // Agent run
   "Agent run": "تشغيل الوكلاء",
   "Manager": "المدير",
   "Intake (text cleaning only)": "الاستلام (تنظيف النص فقط)",
@@ -369,13 +369,6 @@ const ENTRIES: Record<string, string> = {
   "Ran {0} steps and merged the results": "نُفّذت الخطوات ({0}) ودُمجت النتائج",
   "Cleaned {0} characters, removed {1} hidden": "نُظّفت الأحرف ({0})، وحُذفت المخفية ({1})",
   "{0} of {1} rules matched": "تطابقت {0} من {1} قواعد",
-  "Audit trail": "سجل التدقيق",
-  "This browser could not add the latest step to the audit trail.": "تعذّر على هذا المتصفح إضافة الخطوة الأخيرة إلى سجل التدقيق.",
-  "{0} entry": "الإدخالات: {0}",
-  "{0} entries": "الإدخالات: {0}",
-  "checking the chain": "جارٍ فحص السلسلة",
-  "chain verified": "السلسلة سليمة",
-  "chain broken at entry {0}": "السلسلة منقطعة عند الإدخال {0}",
 
   // Translation panels
   "Machine translation": "ترجمة آلية",

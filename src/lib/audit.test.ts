@@ -442,7 +442,6 @@ describe("no secrets or environment", () => {
     "src/lib/audit.ts",
     "src/lib/auditRun.ts",
     "src/app/api/analyze/route.ts",
-    "src/components/AuditTrail.tsx",
     "src/components/OfferChecker.tsx",
   ])("%s reads no environment variable and no secret", (file) => {
     const source = readFileSync(join(process.cwd(), file), "utf8");
