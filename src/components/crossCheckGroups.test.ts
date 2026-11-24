@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 
 // The two groups under the findings (2026-11-11): "Cross-checks on the offer" and "Official steps for
 // these findings". Score-neutral, said once; plain names in the main view, V-ids only in "How this
-// was checked"; shown in print and in saved vault records; records saved before still open.
+// was checked"; shown in print.
 
 const nav = vi.hoisted(() => ({ lang: "en" as "en" | "ar" }));
 vi.mock("next/navigation", () => ({ usePathname: () => "/check" }));
@@ -123,14 +123,6 @@ describe("the groups on the result card", () => {
       expect(tag, name).not.toBe("");
       expect(tag).not.toContain("no-print");
     }
-  });
-});
-
-describe("saved vault records", () => {
-  it("the vault record view shows both groups from the saved check", () => {
-    const source = readFileSync("src/components/EncryptedVault.tsx", "utf8");
-    expect(source).toContain("<CrossChecksGroup result={current.check.response} />");
-    expect(source).toContain("<OfficialStepsGroup result={current.check.response} />");
   });
 });
 

@@ -25,7 +25,6 @@ import * as root from "./page";
 import * as portals from "./portals/page";
 import * as privacy from "./privacy/page";
 import * as terms from "./terms/page";
-import * as vault from "./vault/page";
 import { tr } from "@/lib/i18n";
 
 // The header reads the current path and the language store. Both are set here.
@@ -45,14 +44,13 @@ const CANARY = "CANARY-offer-text Desert Star hr@example.test";
 const read = (file: string) => readFileSync(join(process.cwd(), file), "utf8");
 
 // The redesign: the reference app's five tabs, one route each. "/" is the Offer Analyzer.
-// Production hardening Phase 3 (2026-11-15): About is a tab (a sixth, until Threat Radar was removed on 2026-11-23: now five); Privacy and Terms are linked from
+// Production hardening Phase 3 (2026-11-15): About is a tab (a sixth, until Threat Radar was removed on 2026-11-23, and a fifth until the Vault was removed on 2026-11-23, Phase 6: now four); Privacy and Terms are linked from
 // the footer and from About, not from the header.
 const ROUTES = [
   { path: "/", module: root, title: "Offer Analyzer" },
   { path: "/check", module: check, title: "Offer Analyzer" },
   { path: "/portals", module: portals, title: "Gov Portals Hub" },
   { path: "/legal", module: legal, title: "Legal Guidelines" },
-  { path: "/vault", module: vault, title: "Encrypted Vault" },
   { path: "/about", module: about, title: "About" },
   { path: "/privacy", module: privacy, title: "Privacy" },
   { path: "/terms", module: terms, title: "Terms" },
@@ -68,10 +66,9 @@ describe("routes", () => {
     expect(html).not.toMatch(/<main[\s>]|<header[\s>]|<footer[\s>]/);
   });
 
-  it("has exactly five tabs in two groups, Tools then Information, and no /how-it-works, /lab or /guide route", () => {
+  it("has exactly four tabs in two groups, Tools then Information, and no /how-it-works, /lab or /guide route", () => {
     expect(NAV_ITEMS.map((item) => [item.group, item.label, item.short, item.href])).toEqual([
       ["tools", "Offer Analyzer", "Analyzer", "/check"],
-      ["tools", "Encrypted Vault", "Vault", "/vault"],
       ["info", "Gov Portals Hub", "Portals", "/portals"],
       ["info", "Legal Guidelines", "Guidelines", "/legal"],
       ["info", "About", "About", "/about"],
@@ -146,11 +143,11 @@ describe("header", () => {
     expect(arabic).toContain(`aria-label="${tr("ar", "Information")}"`);
   });
 
-  it("has a compact tab bar for narrow screens with the same five links, Tools first", () => {
+  it("has a compact tab bar for narrow screens with the same four links, Tools first", () => {
     const compact = navOf(header("/legal"), "Main (compact)");
     expect([...compact.matchAll(/href="([^"]*)"/g)].map((m) => m[1])).toEqual(NAV_ITEMS.map((item) => item.href));
     expect(compact).toMatch(/<a class="tab" data-group="info" aria-current="page" href="\/legal">Guidelines<\/a>/);
-    expect([...compact.matchAll(/data-group="(\w+)"/g)].map((m) => m[1])).toEqual(["tools", "tools", "info", "info", "info"]);
+    expect([...compact.matchAll(/data-group="(\w+)"/g)].map((m) => m[1])).toEqual(["tools", "info", "info", "info"]);
   });
 
   it("brand: logo badge, name and caption, linking to the Offer Analyzer; the name is 'Offer Check UAE'", () => {
@@ -204,7 +201,7 @@ describe("header", () => {
   // and hotline numbers keep their digit order ("600 590000", not "590000 600").
   it("in Arabic, English text keeps its punctuation and the hotline numbers keep their order", () => {
     const css = read("src/app/globals.css");
-    expect(css).toMatch(/\[dir="rtl"\] body,\s*\[dir="rtl"\] \.tabs-boxed \.tab,\s*\[dir="rtl"\] \.vault-item \{\s*text-align: right;\s*\}/);
+    expect(css).toMatch(/\[dir="rtl"\] body,\s*\[dir="rtl"\] \.tabs-boxed \.tab \{\s*text-align: right;\s*\}/);
     expect(css).toMatch(/\[dir="rtl"\] body \*:not\(\[dir\]\) \{\s*unicode-bidi: plaintext;\s*\}/);
     expect(css).toMatch(/\[dir="rtl"\] \.score-text \{\s*flex-direction: row-reverse;\s*justify-content: flex-end;\s*\}/);
     expect(read("src/components/shell/Navbar.tsx")).toContain('<span className="contact-number" dir="ltr">{entry.hotlineLabel}</span>');
@@ -403,7 +400,7 @@ describe("footer", () => {
       expect(read(file), file).not.toMatch(/^(?:let|var) |new (?:Map|Set)\(|globalThis\.(?!crypto)/m);
     }
     // The browser's only requests are the analysis and, after consent, the translation. The new
-    // Threat Radar, Report modal, Gov Portals Hub and Encrypted Vault make none; a draft is only copied.
+    // Threat Radar, Report modal, Gov Portals Hub and the Action & Report Kit make none; a draft is only copied.
     const browser = [
       "src/components/OfferChecker.tsx",
       "src/components/ResultCard.tsx",
@@ -411,8 +408,8 @@ describe("footer", () => {
       "src/lib/approvalGate.ts",
       "src/components/translateRequest.ts",
       "src/components/ReferenceHelper.tsx",
-      "src/components/EncryptedVault.tsx",
-      "src/components/SaveVaultModal.tsx",
+      "src/components/ActionKit.tsx",
+      "src/lib/actionKit.ts",
       "src/lib/vault.ts",
       "src/lib/vaultCrypto.ts",
       "src/components/shell/Navbar.tsx",

@@ -14,7 +14,6 @@ import * as legal from "./legal/page";
 import * as portals from "./portals/page";
 import * as privacy from "./privacy/page";
 import * as terms from "./terms/page";
-import * as vault from "./vault/page";
 
 // The public doc pages after the redesign: Legal Guidelines (/legal) holds the Warning signs (was
 // /guide); the Gov Portals Hub (/portals) holds the report-fraud box. Plain language, static, fixed
@@ -38,10 +37,11 @@ const GUIDE = LEGAL;
 describe("/guide keeps working; /about is its own page again", () => {
   // Production hardening Phase 3 (owner decision, 2026-11-15): /about no longer redirects to
   // /legal#about; the About text moved out of Legal Guidelines into src/app/about/page.tsx.
-  it("only /guide and the removed /radar redirect (to Legal Guidelines and the analyzer)", () => {
+  it("only /guide and the removed /radar and /vault redirect (to Legal Guidelines and the analyzer)", () => {
     expect(REDIRECTS).toEqual([
       { source: "/guide", destination: "/legal", permanent: false },
       { source: "/radar", destination: "/check", permanent: true },
+      { source: "/vault", destination: "/check", permanent: true },
     ]);
     expect(existsSync(join(process.cwd(), "src/app/about/page.tsx"))).toBe(true);
     expect(existsSync(join(process.cwd(), "src/app/guide/page.tsx"))).toBe(false);
@@ -133,7 +133,6 @@ describe("static pages: one h1, no landmark of their own, fixed text", () => {
   it.each([
     ["src/app/legal/page.tsx", LEGAL],
     ["src/app/portals/page.tsx", PORTALS],
-    ["src/app/vault/page.tsx", render(vault.default)],
     ["src/app/about/page.tsx", render(about.default)],
     ["src/app/privacy/page.tsx", render(privacy.default)],
     ["src/app/terms/page.tsx", render(terms.default)],

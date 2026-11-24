@@ -209,7 +209,7 @@ export default function AboutPage() {
         <p>
           <T>
             {
-              "Offer Check's server does not store or log the text you check. Text is sent to Google only if you choose translation. Save to Encrypted Vault keeps an encrypted copy in this browser only. There are no advertising or tracking scripts."
+              "Offer Check's server does not store or log the text you check. Text is sent to Google only if you choose translation. The Action & Report Kit is built in this browser and nothing in it is sent. There are no advertising or tracking scripts."
             }
           </T>
         </p>

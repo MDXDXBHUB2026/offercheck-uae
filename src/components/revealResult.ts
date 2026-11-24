@@ -1,6 +1,6 @@
 // After a check completes, the result renders below the form and is often off screen. This brings
 // the result card's header into view and moves focus to its heading, so the score and the actions
-// (Save to Encrypted Vault among them) are where the person is. The "Results ready" live message is
+// (Export PDF and New Audit among them) are where the person is. The "Results ready" live message is
 // separate and unchanged. Smooth scrolling only when the person's system allows motion and the
 // site's Pause animations is off; otherwise the jump is instant.
 

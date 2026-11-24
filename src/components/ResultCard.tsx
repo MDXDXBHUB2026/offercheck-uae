@@ -12,13 +12,13 @@ import {
   FileDown,
   FileText,
   Info,
-  Lock,
   Phone,
   RotateCcw,
   ShieldAlert,
   Square,
   Volume2,
 } from "lucide-react";
+import { ActionKit } from "@/components/ActionKit";
 import { AgentRun } from "@/components/AgentRun";
 import { CrossChecksGroup, OfficialStepsGroup } from "@/components/CrossCheckGroups";
 import { scoreArithmetic } from "@/components/scoreArithmetic";
@@ -26,6 +26,7 @@ import { allClearShown, noticeFor, qualifiedSummary, reportLinkShown, scoreChip,
 import { Button, ButtonLink, Callout, Card, Chip, Disclosure, cx, type ChipTone, type Tone } from "@/components/ui";
 import { contact, MOHRE_INQUIRY_URL } from "@/data/uaeContacts";
 import { mainChannels, REPORT_FRAUD_ID, REPORT_FRAUD_NOTE, REPORT_LINK_SENTENCE } from "@/lib/authorities";
+import { clearanceLineShown, kitChannelFor, NOT_A_CLEARANCE } from "@/lib/actionKit";
 import { CHECK_LABELS, CHECK_NOTES } from "@/lib/checkLabels";
 import { CROSS_CHECK_LABELS, validCrossChecks } from "@/lib/crossCheckLabels";
 import { noticeForCoverage, type Coverage } from "@/lib/coverage";
@@ -36,7 +37,6 @@ import { HIGH_BAND_MIN, MEDIUM_BAND_MIN, SEVERITY_WEIGHTS } from "@/lib/scoring"
 import { LANGUAGE_NOTICES, type LanguageNotice } from "@/lib/textScript";
 import { languageName, TRANSLATION_PROVIDER_NAME } from "@/lib/translation";
 import type { AnalysisResult, Finding, Severity } from "@/lib/types";
-import { TEXT_NOT_KEPT } from "@/lib/vault";
 import { WARNING_SIGNS } from "@/lib/warningSigns";
 import { useLang, useT } from "@/components/shell/lang";
 import { tr } from "@/lib/i18n";
@@ -51,12 +51,9 @@ const INTAKE_NOTES: Record<Exclude<Coverage, "translated">, string | undefined> 
 };
 
 // Auto-Redact (always on, 2026-11-11): shown beside "Highlights in your text" only when at least one
-// number was hidden. A result re-opened from the vault drops the last sentence (the box does not hold
-// the original text then).
+// number was hidden.
 export const REDACTION_NOTE =
   "ID, passport and bank numbers are hidden before the text is sent. A reference number in a similar format may also be hidden. Your original text is still in the box.";
-export const REDACTION_NOTE_SAVED =
-  "ID, passport and bank numbers are hidden before the text is sent. A reference number in a similar format may also be hidden.";
 
 export function intakeNote(state: Coverage, sourceLang: string | null = null): string | undefined {
   if (state !== "translated") return INTAKE_NOTES[state];
@@ -201,10 +198,7 @@ export function ResultCard({
   sourceText = "",
   channel = null,
   redacted = 0,
-  reopened = false,
-  textNotKept = false,
   onNewAudit,
-  onSave,
   children,
 }: {
   result: AnalysisResult;
@@ -221,13 +215,7 @@ export function ResultCard({
   sourceText?: string;
   channel?: string | null;
   redacted?: number;
-  // Re-opened from the Encrypted Vault: the box does not hold the original text, so the redaction
-  // note does not say it does.
-  reopened?: boolean;
-  // Decision 2h: opened from a vault record saved without its checked text.
-  textNotKept?: boolean;
   onNewAudit?: () => void;
-  onSave?: () => void;
   children?: ReactNode;
 }) {
   const [view, setView] = useState<"flags" | "source">("flags");
@@ -372,12 +360,6 @@ export function ResultCard({
                 <FileDown className="icon" aria-hidden="true" />
                 {t("Export PDF")}
               </Button>
-              {onSave && (
-                <Button variant="secondary" onClick={onSave}>
-                  <Lock className="icon" aria-hidden="true" />
-                  {t("Save to Encrypted Vault")}
-                </Button>
-              )}
               {onNewAudit && (
                 <Button variant="secondary" onClick={onNewAudit}>
                   <RotateCcw className="icon" aria-hidden="true" />
@@ -385,7 +367,6 @@ export function ResultCard({
                 </Button>
               )}
             </div>
-            {onSave && <p className="small muted no-print">{t("Saved on this device only, encrypted with your passphrase.")}</p>}
             <p className="result-meta">
               <strong>{t(plural(riskFindings.length, "red flag"))}</strong>
               {channel ? ` · ${t(channel)}` : ""}
@@ -462,6 +443,11 @@ export function ResultCard({
             )}
           </p>
         </Callout>
+        {clearanceLineShown(risk.band) && (
+          <Callout tone="neutral" role="note" className="not-clearance">
+            <p>{t(NOT_A_CLEARANCE)}</p>
+          </Callout>
+        )}
         {reportLinkShown(risk.band, notice) && (
           <p className="report-link">
             <a href={`/portals#${REPORT_FRAUD_ID}`}>{t(REPORT_LINK_SENTENCE)}</a>
@@ -512,7 +498,7 @@ export function ResultCard({
           )}
         </div>
         {/* Auto-Redact is silent: only when a number was hidden does the result say so. */}
-        {redacted > 0 && <p className="small muted redaction-note">{t(reopened ? REDACTION_NOTE_SAVED : REDACTION_NOTE)}</p>}
+        {redacted > 0 && <p className="small muted redaction-note">{t(REDACTION_NOTE)}</p>}
 
         <div id="panel-flags" role="tabpanel" aria-labelledby="tab-flags" hidden={view !== "flags"} className="stack">
           {/* LANG-2, LANG-3, OFFER-1: with any notice, no green tick and no "all clear". */}
@@ -585,7 +571,6 @@ export function ResultCard({
         </div>
 
         <div id="panel-source" role="tabpanel" aria-labelledby="tab-source" hidden={view !== "source"} className="stack-sm">
-          {textNotKept && <p className="small">{t(TEXT_NOT_KEPT)}</p>}
           <p className="small muted">{t("The text the rules read. Each quoted warning sign is marked.")}</p>
           <div className="source-text" dir="auto">
             {parts.map((part, index) =>
@@ -607,6 +592,13 @@ export function ResultCard({
 
       <CrossChecksGroup result={result} />
       <OfficialStepsGroup result={result} />
+
+      <ActionKit
+        band={risk.band}
+        bandLabel={t(chip.label)}
+        checks={riskFindings.map((finding) => finding.check)}
+        defaultChannel={kitChannelFor(channel)}
+      />
 
       <div className="grid grid-2">
         <div className="stack">

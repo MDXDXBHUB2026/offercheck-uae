@@ -10,7 +10,6 @@ const ENTRIES: Record<string, string> = {
   // Shell, navigation and page states
   "Analyzer": "المحلل",
   "Portals": "البوابات",
-  "Vault": "الخزنة",
   "Legal": "الإرشادات",
   "Main": "التنقل الرئيسي",
   "Main (compact)": "التنقل الرئيسي (مختصر)",
@@ -48,14 +47,12 @@ const ENTRIES: Record<string, string> = {
   "A free, rule-based check for warning signs in UAE job offers.":
     "فحص مجاني قائم على قواعد ثابتة لعلامات التحذير في عروض العمل في الإمارات.",
   // [review] Auto-Redact always on (2026-11-11): the sentence about hidden numbers is new.
-  // [review] button renamed "Save to Encrypted Vault" (2026-11-11); Arabic name follows "Encrypted Vault".
-  "Prototype. Use synthetic or redacted offers only. Emirates ID, passport and UAE IBAN numbers in common formats are hidden in your browser before the text is sent. Offer Check's server does not store offer text. If you choose translation, Google Cloud Translation receives it. Save to Encrypted Vault keeps an encrypted copy in this browser only.":
-    "نموذج أولي. استخدم عروضًا مصطنعة أو منقّحة فقط. تُخفى أرقام الهوية الإماراتية وجواز السفر والآيبان الإماراتي بالصيغ الشائعة في متصفحك قبل إرسال النص. لا يخزّن خادم Offer Check نص العرض. إذا اخترت الترجمة، يستلمه Google Cloud Translation. ميزة \"حفظ في الخزنة المشفّرة\" تحفظ نسخة مشفّرة في هذا المتصفح فقط.",
+  "Prototype. Use synthetic or redacted offers only. Emirates ID, passport and UAE IBAN numbers in common formats are hidden in your browser before the text is sent. Offer Check's server does not store offer text. If you choose translation, Google Cloud Translation receives it.":
+    "نموذج أولي. استخدم عروضًا مصطنعة أو منقّحة فقط. تُخفى أرقام الهوية الإماراتية وجواز السفر والآيبان الإماراتي بالصيغ الشائعة في متصفحك قبل إرسال النص. لا يخزّن خادم Offer Check نص العرض. إذا اخترت الترجمة، يستلمه Google Cloud Translation.",
   "Made-up examples written for this app. No real company or person.":
     "أمثلة مختلقة كُتبت لهذا التطبيق. لا تخص أي شركة أو شخص حقيقي.",
   "Offer Check is an early prototype that checks English text. Text in other languages can be machine translated first, and a translation can lose or change meaning. A low score, or \"No risk indicators found\", does not mean an offer is genuine.":
     "Offer Check نموذج أولي مبكر يفحص النص الإنجليزي. يمكن ترجمة النص المكتوب بلغات أخرى آليًا أولًا، وقد تُفقد الترجمة المعنى أو تغيّره. الدرجة المنخفضة، أو عبارة \"لم يُعثر على مؤشرات خطر\"، لا تعني أن العرض حقيقي.",
-  "Encrypted Vault data stays in this browser": "بيانات الخزنة المشفّرة تبقى في هذا المتصفح",
 
   // Hero (check page)
   "Check a job offer before you pay or share anything.": "افحص عرض العمل قبل أن تدفع أو تشارك أي شيء.",
@@ -277,8 +274,6 @@ const ENTRIES: Record<string, string> = {
   "Export PDF": "تصدير PDF",
   // [review] new group label for the result card's action buttons (2026-11-11).
   "Result actions": "إجراءات النتيجة",
-  // [review] button renamed "Save to Encrypted Vault" (2026-11-11); Arabic name follows "Encrypted Vault".
-  "Save to Encrypted Vault": "حفظ في الخزنة المشفّرة",
   "New Audit": "فحص جديد",
   "Points": "النقاط",
   "Bands": "الفئات",
@@ -323,8 +318,6 @@ const ENTRIES: Record<string, string> = {
   // [review] Auto-Redact always on (2026-11-11): shown only when a number was hidden.
   "ID, passport and bank numbers are hidden before the text is sent. A reference number in a similar format may also be hidden. Your original text is still in the box.":
     "تُخفى أرقام الهوية وجواز السفر والحسابات المصرفية قبل إرسال النص. وقد يُخفى أيضًا رقم مرجعي بصيغة مشابهة. نصك الأصلي ما زال في المربع.",
-  "ID, passport and bank numbers are hidden before the text is sent. A reference number in a similar format may also be hidden.":
-    "تُخفى أرقام الهوية وجواز السفر والحسابات المصرفية قبل إرسال النص. وقد يُخفى أيضًا رقم مرجعي بصيغة مشابهة.",
   "The text the rules read. Each quoted warning sign is marked.":
     "النص الذي قرأته القواعد. كل علامة تحذير مقتبسة مميّزة.",
   "Check it yourself": "تحقق بنفسك",
@@ -648,7 +641,6 @@ const ENTRIES: Record<string, string> = {
   "Report a scam": "الإبلاغ عن احتيال",
   "Official UAE places to report a suspected job scam:": "جهات رسمية في الإمارات للإبلاغ عن احتيال وظيفي مشتبه به:",
   // [review] added 2026-11-23 (Phase 5b): the line under the result actions
-  "Saved on this device only, encrypted with your passphrase.": "تُحفظ على هذا الجهاز فقط، ومشفّرة بعبارة المرور الخاصة بك.",
 
   // Samples
   "A chat job offer that asks for the code sent to your phone.": "عرض عمل عبر الدردشة يطلب الرمز المرسل إلى هاتفك.",
@@ -656,78 +648,6 @@ const ENTRIES: Record<string, string> = {
     "راتب كبير، دون مقابلة، ورسوم تأشيرة تُدفع لوكيل أولًا.",
   "A message asking for a refundable deposit and your bank details.": "رسالة تطلب عربونًا مستردًا وبياناتك البنكية.",
   "A plain offer that says the employer pays all visa costs.": "عرض عادي يذكر أن صاحب العمل يدفع جميع تكاليف التأشيرة.",
-
-  // Vault
-  "Encrypt and save in this browser": "شفّر واحفظ في هذا المتصفح",
-  "Saved. Open it from the Encrypted Vault tab with the same passphrase.":
-    "حُفظ. افتحه من تبويب الخزنة المشفّرة بعبارة المرور نفسها.",
-  "The result is encrypted with AES-256-GCM in this browser and kept only here. The passphrase is not stored; if you forget it, the saved records cannot be opened.":
-    "تُشفّر النتيجة باستخدام AES-256-GCM في هذا المتصفح وتُحفظ هنا فقط. لا تُخزَّن عبارة المرور؛ وإذا نسيتها، لا يمكن فتح السجلات المحفوظة.",
-  "Passphrase": "عبارة المرور",
-  "That passphrase does not open the vault already saved in this browser.":
-    "عبارة المرور هذه لا تفتح الخزنة المحفوظة مسبقًا في هذا المتصفح.",
-  "This browser did not allow saving.": "لم يسمح هذا المتصفح بالحفظ.",
-  "Encrypt and save": "شفّر واحفظ",
-  "AES-256-GCM, in this browser only": "AES-256-GCM، في هذا المتصفح فقط",
-  "Encrypted Vault": "الخزنة المشفّرة",
-  // [review] button renamed "Save to Encrypted Vault" (2026-11-11); Arabic name follows "Encrypted Vault".
-  "Results you save with Save to Encrypted Vault stay in this browser, encrypted with your passphrase. They are never sent anywhere. The passphrase is not stored: without it the records cannot be opened.":
-    "النتائج التي تحفظها بميزة \"حفظ في الخزنة المشفّرة\" تبقى في هذا المتصفح، مشفّرة بعبارة مرورك. لا تُرسل إلى أي جهة. لا تُخزَّن عبارة المرور: ومن دونها لا يمكن فتح السجلات.",
-  "Lock": "قفل",
-  "Open the vault": "افتح الخزنة",
-  "Show passphrase": "إظهار عبارة المرور",
-  "Open": "فتح",
-  "That passphrase does not open the vault saved in this browser.": "عبارة المرور هذه لا تفتح الخزنة المحفوظة في هذا المتصفح.",
-  "This browser did not allow reading the vault.": "لم يسمح هذا المتصفح بقراءة الخزنة.",
-  "With nothing saved yet, any passphrase opens an empty vault.": "ما دام لم يُحفظ شيء بعد، تفتح أي عبارة مرور خزنة فارغة.",
-  // [review] button renamed "Save to Encrypted Vault" (2026-11-11); Arabic name follows "Encrypted Vault".
-  "The vault is empty. Check an offer, then choose Save to Encrypted Vault on the result.":
-    "الخزنة فارغة. افحص عرضًا، ثم اختر \"حفظ في الخزنة المشفّرة\" في النتيجة.",
-  "Saved results": "النتائج المحفوظة",
-  "Delete all": "حذف الكل",
-  "saved {0}": "حُفظ في {0}",
-  "{0} risk indicators, {1}": "مؤشرات الخطر ({0})، {1}",
-  "Checked text": "النص المفحوص",
-  "Copy text": "نسخ النص",
-  "Delete": "حذف",
-  "This browser did not allow that.": "لم يسمح هذا المتصفح بذلك.",
-  "No saved results yet": "لا توجد نتائج محفوظة بعد",
-  "Saved results are kept only in this browser. They are lost if this browser's data is cleared, and they are not available on another device or browser.":
-    "تُحفظ النتائج في هذا المتصفح فقط. وتضيع إذا مُسحت بيانات هذا المتصفح، ولا تتوفر على جهاز أو متصفح آخر.",
-  // [review] button renamed "Save to Encrypted Vault" (2026-11-11); Arabic name follows "Encrypted Vault".
-  "Run a check, then choose Save to Encrypted Vault on the result. You will choose your passphrase there. Offer Check cannot recover it.":
-    "أجرِ فحصًا، ثم اختر \"حفظ في الخزنة المشفّرة\" في النتيجة. ستختار عبارة المرور هناك. لا يستطيع Offer Check استعادتها.",
-  "The checked text was not kept with this result. Only the result was saved.":
-    "لم يُحفظ النص المفحوص مع هذه النتيجة. حُفظت النتيجة فقط.",
-  "Also keep the checked text (it may contain personal details)":
-    "احفظ النص المفحوص أيضًا (قد يحتوي على بيانات شخصية)",
-  "Go to the Offer Analyzer": "انتقل إلى محلل العروض",
-  "Saved results: {0}": "النتائج المحفوظة: {0}",
-  "Offer Check cannot recover a forgotten passphrase.": "لا يستطيع Offer Check استعادة عبارة مرور منسية.",
-  "Lock vault": "قفل الخزنة",
-  "Delete all saved results? This cannot be undone.": "حذف جميع النتائج المحفوظة؟ لا يمكن التراجع عن ذلك.",
-  "Keep them": "إبقاؤها",
-  "Delete this saved result? This cannot be undone.": "حذف هذه النتيجة المحفوظة؟ لا يمكن التراجع عن ذلك.",
-  "Keep it": "إبقاؤها",
-  "Notes": "ملاحظات",
-  "View result": "عرض النتيجة",
-  "This result was saved before View result was added, so it cannot be opened in the analyzer.":
-    "حُفظت هذه النتيجة قبل إضافة \"عرض النتيجة\"، لذا لا يمكن فتحها في المحلل.",
-  "Notes (optional)": "ملاحظات (اختياري)",
-  "Confirm passphrase": "تأكيد عبارة المرور",
-  "At least {0} characters.": "الحد الأدنى لعدد الأحرف: {0}.",
-  "A vault is already saved in this browser. Use the passphrase you chose for it.":
-    "توجد خزنة محفوظة مسبقًا في هذا المتصفح. استخدم عبارة المرور التي اخترتها لها.",
-  "Enter a passphrase.": "أدخل عبارة مرور.",
-  "The passphrase needs at least {0} characters.": "عبارة المرور أقصر من اللازم. الحد الأدنى لعدد الأحرف: {0}.",
-  "The two passphrases do not match.": "عبارتا المرور غير متطابقتين.",
-  "That passphrase does not open the vault already saved in this browser. Nothing was changed.":
-    "عبارة المرور هذه لا تفتح الخزنة المحفوظة مسبقًا في هذا المتصفح. لم يتغير شيء.",
-  "You choose this passphrase. Offer Check cannot recover it. If you forget it, saved results cannot be opened.":
-    "أنت من يختار عبارة المرور هذه. لا يستطيع Offer Check استعادتها. وإذا نسيتها، لا يمكن فتح النتائج المحفوظة.",
-  "Saved to your vault in this browser.": "حُفظ في خزنتك في هذا المتصفح.",
-  "Open the Encrypted Vault": "افتح الخزنة المشفّرة",
-  "Opened from your Encrypted Vault. Saved {0}.": "فُتح من خزنتك المشفّرة. تاريخ الحفظ: {0}.",
 
   // [review] Verification and Official channel (2026-11-11): every entry below, written with an AI
   // tool, not reviewed by a native speaker.
@@ -828,9 +748,8 @@ const ENTRIES: Record<string, string> = {
   "Cross-checks read only the text you paste. No company, website or offer number is looked up anywhere.":
     "تقرأ الفحوص المتقاطعة النص الذي تلصقه فقط. لا يُبحث عن أي شركة أو موقع أو رقم عرض في أي مكان.",
   "Your privacy": "خصوصيتك",
-  // [review] button renamed "Save to Encrypted Vault" (2026-11-11); Arabic name follows "Encrypted Vault".
-  "Offer Check's server does not store or log the text you check. Text is sent to Google only if you choose translation. Save to Encrypted Vault keeps an encrypted copy in this browser only. There are no advertising or tracking scripts.":
-    "لا يخزّن خادم Offer Check النص الذي تفحصه ولا يسجّله. لا يُرسل النص إلى Google إلا إذا اخترت الترجمة. ميزة \"حفظ في الخزنة المشفّرة\" تحفظ نسخة مشفّرة في هذا المتصفح فقط. لا توجد نصوص برمجية للإعلانات أو التتبع.",
+  "Offer Check's server does not store or log the text you check. Text is sent to Google only if you choose translation. The Action & Report Kit is built in this browser and nothing in it is sent. There are no advertising or tracking scripts.":
+    "لا يخزّن خادم Offer Check النص الذي تفحصه ولا يسجّله. لا يُرسل النص إلى Google إلا إذا اخترت الترجمة. تُنشأ حزمة الإجراء والبلاغ في هذا المتصفح، ولا يُرسل أي شيء منها. لا توجد نصوص برمجية للإعلانات أو التتبع.",
   "Read the privacy notice": "اقرأ إشعار الخصوصية",
   "Read the terms of use": "اقرأ شروط الاستخدام",
   "Who runs it": "من يديره",
@@ -866,18 +785,12 @@ const ENTRIES: Record<string, string> = {
   "Each counter expires on its own: after 2 minutes for a per-minute limit, after 25 hours for a daily one. They are kept in an Upstash Redis store in Mumbai.":
     "تنتهي صلاحية كل عدّاد تلقائيًا: بعد دقيقتين لحد الدقيقة، وبعد 25 ساعة للحد اليومي. وتُحفظ في مخزن Upstash Redis في مومباي.",
   "What stays in your browser": "ما يبقى في متصفحك",
-  // [review] Phase 4a (2026-11-16): the vault line, the Settings choices, export, Clear my data, the
+  // [review] Phase 4a (2026-11-16): the Settings choices, Clear my data, the
   // installed app and the offline copy are new or rewritten.
-  "The Encrypted Vault: results you choose to save, encrypted with a passphrase that is not stored, and the number of saved results. Titles and notes are saved inside it, with Emirates ID, passport and UAE IBAN numbers hidden.":
-    "الخزنة المشفّرة: النتائج التي تختار حفظها، مشفّرة بعبارة مرور لا تُخزَّن، وعدد النتائج المحفوظة. تُحفظ العناوين والملاحظات داخلها، مع إخفاء أرقام الهوية الإماراتية وجواز السفر والآيبان الإماراتي.",
   "Your choices in Settings: language, animations and text size, and whether you dismissed the install hint.":
     "اختياراتك في الإعدادات: اللغة والحركة وحجم النص، وما إذا كنت أخفيت تلميح التثبيت.",
-  "If you export the vault, the file is saved where your browser puts downloads. It is still encrypted, and Offer Check keeps no copy.":
-    "إذا صدّرت الخزنة، يُحفظ الملف حيث يضع متصفحك التنزيلات. يبقى مشفّرًا، ولا يحتفظ Offer Check بأي نسخة منه.",
-  "To clear them: open Settings and use Clear my data on this device. It removes the vault and every choice without the passphrase. Clearing this site's data in your browser's settings does the same.":
-    "لمسحها: افتح الإعدادات واستخدم \"امسح بياناتي على هذا الجهاز\". يُزيل ذلك الخزنة وكل الاختيارات دون الحاجة إلى عبارة المرور. ومسح بيانات هذا الموقع من إعدادات متصفحك يفعل الشيء نفسه.",
-  "If you install the app, it keeps its own storage: results saved in the installed app stay there, and results saved in the browser stay in the browser.":
-    "إذا ثبّت التطبيق، فله تخزينه الخاص: تبقى النتائج المحفوظة في التطبيق المثبّت هناك، وتبقى النتائج المحفوظة في المتصفح في المتصفح.",
+  "To clear them: open Settings and use Clear my data on this device. It removes every choice, and any results that an earlier version of Offer Check saved in this browser. Clearing this site's data in your browser's settings does the same.":
+    "لمسحها: افتح الإعدادات واستخدم \"امسح بياناتي على هذا الجهاز\". يُزيل ذلك كل الاختيارات، وأي نتائج حفظتها نسخة سابقة من Offer Check في هذا المتصفح. ومسح بيانات هذا الموقع من إعدادات متصفحك يفعل الشيء نفسه.",
   "Pages kept for offline reading": "صفحات محفوظة للقراءة دون اتصال",
   "After your first visit, your browser keeps a copy of the Check page and the About, Guidelines, Portals, Privacy and Terms pages, with the files they need, so you can read them offline.":
     "بعد زيارتك الأولى، يحتفظ متصفحك بنسخة من صفحة الفحص وصفحات حول والإرشادات والبوابات والخصوصية والشروط، مع الملفات التي تحتاجها، لتقرأها دون اتصال.",
@@ -922,7 +835,7 @@ const ENTRIES: Record<string, string> = {
     "يجوز للمشغّل تقييد الخدمة أو تغييرها أو إيقافها، أو أي جزء منها، في أي وقت. وتسري بالفعل حدود على عدد مرات الفحص أو الترجمة.",
   "Questions about these terms:": "أسئلة حول هذه الشروط:",
 
-  // Production hardening Phase 4a (2026-11-16): Settings, vault tools, installable app, offline.
+  // Production hardening Phase 4a (2026-11-16): Settings, installable app, offline.
   // Every entry in this block is [review]: written for this app, not yet reviewed by a native speaker.
   // [review] Settings dialog
   "Settings": "الإعدادات",
@@ -941,10 +854,10 @@ const ENTRIES: Record<string, string> = {
   "Light": "فاتح",
   "App": "التطبيق",
   "Clear my data on this device": "امسح بياناتي على هذا الجهاز",
-  "Removes your Encrypted Vault, its count and every choice saved in this browser (language, animations, text size, theme). Nothing is stored on Offer Check's server.":
-    "يحذف خزنتك المشفّرة وعدد نتائجها وكل اختيار محفوظ في هذا المتصفح (اللغة والحركة وحجم النص والمظهر). لا يُخزَّن أي شيء على خادم Offer Check.",
-  "Clear all Offer Check data on this device? Your saved results will be permanently deleted. This cannot be undone.":
-    "هل تريد مسح كل بيانات Offer Check على هذا الجهاز؟ ستُحذف نتائجك المحفوظة نهائيًا. لا يمكن التراجع عن ذلك.",
+  "Removes every choice saved in this browser (language, animations, text size, theme), and any results saved here by an earlier version. Nothing is stored on Offer Check's server.":
+    "يحذف كل اختيار محفوظ في هذا المتصفح (اللغة والحركة وحجم النص والمظهر)، وأي نتائج حفظتها نسخة سابقة هنا. لا يُخزَّن شيء على خادم Offer Check.",
+  "Clear all Offer Check data on this device? Your choices, and any results saved here by an earlier version, will be permanently deleted. This cannot be undone.":
+    "هل تريد مسح كل بيانات Offer Check على هذا الجهاز؟ ستُحذف اختياراتك، وأي نتائج حفظتها نسخة سابقة هنا، نهائيًا. لا يمكن التراجع عن ذلك.",
   "Delete everything": "احذف كل شيء",
   "Clear my data": "امسح بياناتي",
   "Your Offer Check data was removed from this browser.": "أُزيلت بيانات Offer Check من هذا المتصفح.",
@@ -953,48 +866,93 @@ const ENTRIES: Record<string, string> = {
   "Dismiss": "إخفاء",
   "To install on iPhone or iPad: tap Share, then Add to Home Screen.":
     "للتثبيت على iPhone أو iPad: اضغط على مشاركة، ثم على إضافة إلى الشاشة الرئيسية.",
-  "Saved results stay with the browser or the installed app they were saved in.":
-    "تبقى النتائج المحفوظة في المتصفح أو التطبيق المثبّت الذي حُفظت فيه.",
   "Offer Check is installed on this device.": "Offer Check مثبّت على هذا الجهاز.",
   "This browser does not offer to install the app.": "هذا المتصفح لا يتيح تثبيت التطبيق.",
   // [review] Check page while offline
   "You are offline. Checking an offer needs a connection. Your text stays in the box.":
     "أنت غير متصل بالإنترنت. فحص العرض يحتاج إلى اتصال. يبقى نصك في المربع.",
-  // [review] Save to Encrypted Vault: title and notes masked
-  "Emirates ID, passport and UAE IBAN numbers in the title and notes are hidden before saving, as in the offer text.":
-    "تُخفى أرقام الهوية الإماراتية وجواز السفر والآيبان الإماراتي في العنوان والملاحظات قبل الحفظ، كما في نص العرض.",
-  // [review] Vault: forgot passphrase and reset
-  "Forgot your passphrase?": "نسيت عبارة المرور؟",
-  "Offer Check cannot recover a passphrase, and nothing in the vault can be opened without it. Resetting the vault permanently deletes the saved results in this browser, so you can start again.":
-    "لا يستطيع Offer Check استعادة عبارة المرور، ولا يمكن فتح أي شيء في الخزنة بدونها. إعادة تعيين الخزنة تحذف النتائج المحفوظة في هذا المتصفح نهائيًا، لتبدأ من جديد.",
-  "Reset vault": "أعد تعيين الخزنة",
-  "Permanently delete the {0} saved results in this browser? This cannot be undone.":
-    "هل تريد حذف النتائج المحفوظة ({0}) في هذا المتصفح نهائيًا؟ لا يمكن التراجع عن ذلك.",
-  "Permanently delete the saved results in this browser? This cannot be undone.":
-    "هل تريد حذف النتائج المحفوظة في هذا المتصفح نهائيًا؟ لا يمكن التراجع عن ذلك.",
-  "Delete and reset": "احذف وأعد التعيين",
-  // [review] Vault: backup (export and import)
-  "Backup": "نسخة احتياطية",
-  "Export saves the vault to a file, still encrypted. Import puts a saved file back in this browser. Opening it still needs the passphrase it was saved with. Keep the file somewhere private.":
-    "التصدير يحفظ الخزنة في ملف وهي لا تزال مشفّرة. والاستيراد يعيد ملفًا محفوظًا إلى هذا المتصفح. فتحها لا يزال يحتاج إلى عبارة المرور التي حُفظت بها. احفظ الملف في مكان خاص.",
-  "Export vault": "صدّر الخزنة",
-  "Import vault": "استورد الخزنة",
-  "Replace the saved results in this browser with the ones in this file? The current ones will be permanently deleted.":
-    "هل تريد استبدال النتائج المحفوظة في هذا المتصفح بالنتائج الموجودة في هذا الملف؟ ستُحذف النتائج الحالية نهائيًا.",
-  "Replace": "استبدل",
-  "Vault exported. Your browser saved the file.": "صُدّرت الخزنة. حفظ متصفحك الملف.",
-  "Vault imported. Open it with the passphrase it was saved with.": "استُوردت الخزنة. افتحها بعبارة المرور التي حُفظت بها.",
-  "This file is not an Offer Check vault backup, or it is damaged. Nothing was changed.":
-    "هذا الملف ليس نسخة احتياطية لخزنة Offer Check، أو أنه تالف. لم يتغيّر شيء.",
-  // [review] Vault: change passphrase
-  "Change passphrase": "غيّر عبارة المرور",
-  "Current passphrase": "عبارة المرور الحالية",
-  "New passphrase": "عبارة المرور الجديدة",
-  "Confirm new passphrase": "أكّد عبارة المرور الجديدة",
-  "Enter your current passphrase.": "أدخل عبارة المرور الحالية.",
-  "Save new passphrase": "احفظ عبارة المرور الجديدة",
-  "Passphrase changed. Use the new one from now on.": "تغيّرت عبارة المرور. استخدم الجديدة من الآن.",
-  "That is not the current passphrase. Nothing was changed.": "هذه ليست عبارة المرور الحالية. لم يتغيّر شيء.",
+
+  // [review] Phase 6 (2026-11-23): the Action & Report Kit replaces the saved-results feature. Every entry below is new
+  // and written for this app, not yet reviewed by a native speaker. In logical reading order.
+  "Nothing you check is saved. The Action & Report Kit is built in this browser.":
+    "لا يُحفظ شيء مما تفحصه. تُنشأ حزمة الإجراء والبلاغ في هذا المتصفح.",
+  "The Action & Report Kit": "حزمة الإجراء والبلاغ",
+  "Action & Report Kit":
+    "حزمة الإجراء والبلاغ",
+  "Made in this browser from the check you just ran. Nothing is sent, saved or opened for you. The text never includes the offer text, names, phone numbers or email addresses unless you type them yourself.":
+    "تُنشأ في هذا المتصفح من الفحص الذي أجريته للتو. لا يُرسل أو يُحفظ أو يُفتح أي شيء نيابةً عنك. لا يتضمن النص نص العرض ولا الأسماء ولا أرقام الهاتف ولا عناوين البريد الإلكتروني، إلا إذا كتبتها أنت بنفسك.",
+  "Report text":
+    "نص البلاغ",
+  "Fixed wording you can paste into a report to the cybercrime channels or to MOHRE.":
+    "صياغة ثابتة يمكنك لصقها في بلاغ إلى قنوات الجرائم الإلكترونية أو إلى MOHRE.",
+  "Where did the offer come from?":
+    "من أين وصل العرض؟",
+  "Offer letter or PDF":
+    "خطاب العرض أو ملف PDF",
+  "Other":
+    "أخرى",
+  "Your own details (optional)":
+    "تفاصيلك الخاصة (اختياري)",
+  "Whatever you type here is added to the copied text and the download. Leave out anything you do not want to share.":
+    "كل ما تكتبه هنا يُضاف إلى النص المنسوخ وإلى الملف المنزَّل. لا تكتب ما لا تريد مشاركته.",
+  "Copy report text":
+    "انسخ نص البلاغ",
+  "Download this summary":
+    "نزّل هذا الملخص",
+  "WhatsApp replies":
+    "ردود واتساب",
+  "Three fixed replies. Copying one opens nothing and sends nothing; you paste it yourself.":
+    "ثلاثة ردود ثابتة. نسخ أي رد لا يفتح شيئًا ولا يرسل شيئًا؛ أنت من يلصقه.",
+  "Copy reply: decline politely":
+    "انسخ الرد: الاعتذار بلطف",
+  "Thank you for getting in touch about this role. I have decided not to go ahead, so please do not send me any more messages about it.":
+    "شكرًا لتواصلك معي بشأن هذه الوظيفة. قررت عدم المتابعة، لذا أرجو ألا ترسل إليّ أي رسائل أخرى عنها.",
+  "Copy reply: ask for the MOHRE offer reference number":
+    "انسخ الرد: طلب الرقم المرجعي للعرض لدى MOHRE",
+  "Thank you for the offer. Before I go any further, please send me the MOHRE offer reference number for this job, so that I can check it on the MOHRE enquiry service.":
+    "شكرًا على العرض. قبل أن أتابع، أرجو أن ترسل إليّ الرقم المرجعي للعرض لدى MOHRE لهذه الوظيفة، لأتحقق منه عبر خدمة الاستعلام في MOHRE.",
+  "Copy reply: continue only through official channels":
+    "انسخ الرد: المتابعة عبر القنوات الرسمية فقط",
+  "I would like to continue only through official channels. Please confirm the offer through the company's official website and MOHRE. I will not send documents or make any payment before that.":
+    "أود المتابعة عبر القنوات الرسمية فقط. أرجو تأكيد العرض عبر الموقع الرسمي للشركة وعبر MOHRE. لن أرسل مستندات ولن أدفع أي مبلغ قبل ذلك.",
+  "Official links":
+    "روابط رسمية",
+  "Copied.":
+    "تم النسخ.",
+  "Your browser did not allow copying. Select the text and copy it yourself.":
+    "لم يسمح متصفحك بالنسخ. حدّد النص وانسخه بنفسك.",
+  "The summary was saved to your device.":
+    "حُفظ الملخص على جهازك.",
+  "Your browser did not allow the download.":
+    "لم يسمح متصفحك بالتنزيل.",
+  "Job offer check summary, made with Offer Check UAE":
+    "ملخص فحص عرض عمل، أُعدّ باستخدام Offer Check UAE",
+  "This is a summary of warning signs found by fixed rules. It is not a verdict, and it is not an official report form.":
+    "هذا ملخص لعلامات تحذير وجدتها قواعد ثابتة. وهو ليس حكمًا، وليس نموذج بلاغ رسميًا.",
+  "This browser did not allow that.":
+    "لم يسمح هذا المتصفح بذلك.",
+  "Result":
+    "النتيجة",
+  "Warning signs found":
+    "علامات التحذير التي وُجدت",
+  "None of the fixed rules matched.":
+    "لم تتطابق أي من القواعد الثابتة.",
+  "The offer reached me by":
+    "وصلني العرض عبر",
+  "In my own words":
+    "بكلماتي",
+  "(nothing added)":
+    "(لم تُضف أي تفاصيل)",
+  "Where to report or check an offer":
+    "أين تُبلّغ أو تتحقق من عرض",
+  "These checks flagged nothing more. This is not a clearance: never pay a fee or send documents before you have confirmed the employer through official channels.":
+    "لم تُظهر هذه الفحوص شيئًا آخر. هذا ليس إبراءً: لا تدفع أي رسوم ولا ترسل أي مستندات قبل أن تؤكد جهة العمل عبر القنوات الرسمية.",
+  "The Action & Report Kit under each result is created on your device from the check you just ran. Nothing in it is sent to Offer Check or anywhere else, and Offer Check does not store it. It is text you copy or save to your device yourself.":
+    "تُنشأ حزمة الإجراء والبلاغ تحت كل نتيجة على جهازك من الفحص الذي أجريته للتو. لا يُرسل أي شيء منها إلى Offer Check أو إلى أي جهة أخرى، ولا يخزّنها Offer Check. هي نص تنسخه أو تحفظه على جهازك بنفسك.",
+  "If you download the summary, the file is saved where your browser puts downloads. Offer Check keeps no copy.":
+    "إذا نزّلت الملخص، يُحفظ الملف حيث يضع متصفحك التنزيلات. ولا يحتفظ Offer Check بأي نسخة منه.",
+  "The Action & Report Kit under each result is created on your device from the check you just ran, and nothing in it is sent. It is not an official report form, and Offer Check does not report anything for you. What you copy, save or send from it is your choice.":
+    "تُنشأ حزمة الإجراء والبلاغ تحت كل نتيجة على جهازك من الفحص الذي أجريته للتو، ولا يُرسل أي شيء منها. وهي ليست نموذج بلاغ رسميًا، ولا يبلّغ Offer Check عنك عن أي شيء. ما تنسخه أو تحفظه أو ترسله منها أمرٌ يعود إليك.",
 };
 
 // Official names: in Arabic, each contact shows its own official Arabic name (src/data/uaeContacts.ts).

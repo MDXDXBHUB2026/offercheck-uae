@@ -9,20 +9,21 @@ import { T } from "@/components/shell/T";
 // Site-wide text and navigation. Server-safe: no hooks here.
 
 // True only while no server code logs or stores the request body (page.test.ts checks that), the
-// Encrypted Vault keeps its copy in this browser only (src/lib/vault.ts), and Auto-Redact masks
-// every request (src/components/OfferChecker.tsx, src/components/translateRequest.ts).
+// Action & Report Kit is built in this browser and stores nothing (src/components/ActionKit.tsx), and
+// Auto-Redact masks every request (src/components/OfferChecker.tsx, src/components/translateRequest.ts).
 export const PROTOTYPE_NOTICE =
-  "Prototype. Use synthetic or redacted offers only. Emirates ID, passport and UAE IBAN numbers in common formats are hidden in your browser before the text is sent. Offer Check's server does not store offer text. If you choose translation, Google Cloud Translation receives it. Save to Encrypted Vault keeps an encrypted copy in this browser only.";
+  "Prototype. Use synthetic or redacted offers only. Emirates ID, passport and UAE IBAN numbers in common formats are hidden in your browser before the text is sent. Offer Check's server does not store offer text. If you choose translation, Google Cloud Translation receives it.";
 
-// The header's five tabs, in two groups (production hardening Phase 3, 2026-11-15): Tools (the
-// analyzer and the vault) and Information (portals, guidelines and About). label: the
+// The header's four tabs, in two groups (production hardening Phase 3, 2026-11-15; the fifth tab was
+// removed in Phase 6, 2026-11-23): Tools (the analyzer) and Information (portals, guidelines and
+// About). label: the
 // full page name (the browser tab title). short: the English tab text, in the desktop header and the
 // compact bar below 1200px; shortened so the five tabs fit beside the brand at 1280px
 // (docs/header-measurements.json). labelAr: the Arabic tab text (the reference app's own words, page
 // headings keep the full names); not yet reviewed by a native speaker.
 export type NavGroup = "tools" | "info";
 export type NavItem = {
-  id: "analyzer" | "vault" | "portals" | "legal" | "about";
+  id: "analyzer" | "portals" | "legal" | "about";
   group: NavGroup;
   href: string;
   label: string;
@@ -37,7 +38,6 @@ export const NAV_GROUPS: readonly { id: NavGroup; label: string }[] = [
 
 export const NAV_ITEMS: readonly NavItem[] = [
   { id: "analyzer", group: "tools", href: "/check", label: "Offer Analyzer", labelAr: "فاحص العروض", short: "Analyzer" },
-  { id: "vault", group: "tools", href: "/vault", label: "Encrypted Vault", labelAr: "الخزنة", short: "Vault" },
   { id: "portals", group: "info", href: "/portals", label: "Gov Portals Hub", labelAr: "بوابات التحقق", short: "Portals" },
   { id: "legal", group: "info", href: "/legal", label: "Legal Guidelines", labelAr: "الإرشادات", short: "Guidelines" },
   // [review] Arabic tab label added 2026-11-15.
@@ -137,7 +137,7 @@ export function SiteFooter() {
           <p className="row text-green mono">
             <Lock className="icon" aria-hidden="true" />
             <span>
-              <T>Encrypted Vault data stays in this browser</T>
+              <T>Nothing you check is saved. The Action & Report Kit is built in this browser.</T>
             </span>
           </p>
           <div className="footer-controls">

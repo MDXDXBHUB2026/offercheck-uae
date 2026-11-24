@@ -23,7 +23,6 @@ vi.mock("react", async (importOriginal) => {
 
 import CheckPage from "./check/page";
 import PortalsPage from "./portals/page";
-import VaultPage from "./vault/page";
 import { AuditTrail } from "@/components/AuditTrail";
 import { HeroStage } from "@/components/HeroStage";
 import { ResultCard, spokenSummary } from "@/components/ResultCard";
@@ -47,9 +46,9 @@ const sample = () => runManager(heroSampleText());
 const REFS = 'class="stack-sm rule-refs"';
 
 describe("rule IDs are gone from the main views", () => {
-  it.each(LANGS)("the Offer Analyzer, Portals and Vault pages (%s) show no rule ID", (lang) => {
+  it.each(LANGS)("the Offer Analyzer and Portals pages (%s) show no rule ID", (lang) => {
     nav.lang = lang;
-    for (const page of [CheckPage, PortalsPage, VaultPage]) {
+    for (const page of [CheckPage, PortalsPage]) {
       expect(html(createElement(page)), page.name).not.toMatch(RULE_ID);
     }
   });
@@ -97,7 +96,7 @@ describe("rule IDs are gone from the main views", () => {
     expect(spoken).toContain(t(CHECK_LABELS.fee_requested));
   });
 
-  it("the saved result (vault detail, PDF) carries no rule ID", () => {
+  it("the result view (PDF, summary) carries no rule ID", () => {
     expect(JSON.stringify(toResultView(sample()))).not.toMatch(RULE_ID);
   });
 

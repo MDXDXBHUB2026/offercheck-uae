@@ -23,9 +23,6 @@ vi.mock("react", async (importOriginal) => {
 import { ARABIC_NOTE, ArabicNote } from "@/components/shell/ArabicNote";
 import { PAUSE_ANIMATIONS, RESUME_ANIMATIONS } from "@/components/shell/MotionToggle";
 import { ResultCard } from "@/components/ResultCard";
-import { TEXT_NOT_KEPT } from "@/lib/vault";
-import { KEEP_TEXT_LABEL, SAVE_INTRO } from "@/components/SaveVaultModal";
-import { VAULT_EMPTY } from "@/components/EncryptedVault";
 import { NAV_ITEMS } from "@/components/shell/site";
 import { SCAM_OFFER } from "@/lib/agents/fixtures";
 import { runManager } from "@/lib/agents/manager";
@@ -72,12 +69,8 @@ describe("4b: every interface literal has Arabic", () => {
     expect(hasArabic(text)).toBe(true);
   });
 
-  it("the Phase 2 to 4 strings have Arabic: vault, pause toggle, skip link, review note", () => {
+  it("the Phase 2 to 4 strings have Arabic: pause toggle, skip link, review note", () => {
     for (const text of [
-      TEXT_NOT_KEPT,
-      KEEP_TEXT_LABEL,
-      SAVE_INTRO,
-      VAULT_EMPTY,
       PAUSE_ANIMATIONS,
       RESUME_ANIMATIONS,
       "Skip to content",
@@ -138,7 +131,7 @@ describe("4f: rule IDs stay left-to-right in Arabic lines", () => {
 
   it("the Arabic tab labels shortened in Phase 3 are the compact bar's words", () => {
     // Production hardening Phase 3 (2026-11-15): six tabs, Tools then Information; About added.
-    expect(NAV_ITEMS.map((item) => item.labelAr)).toEqual(["فاحص العروض", "الخزنة", "بوابات التحقق", "الإرشادات", "حول"]);
+    expect(NAV_ITEMS.map((item) => item.labelAr)).toEqual(["فاحص العروض", "بوابات التحقق", "الإرشادات", "حول"]);
   });
 });
 

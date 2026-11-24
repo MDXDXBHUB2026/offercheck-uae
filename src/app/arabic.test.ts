@@ -34,8 +34,6 @@ import {
 } from "@/components/OfferChecker";
 import { PUBLIC_LIMITS_INTRO } from "@/components/publicLimitations";
 import { intakeNote, ResultCard } from "@/components/ResultCard";
-import { EmptyVault, VAULT_EMPTY, VAULT_LOCAL_NOTE } from "@/components/EncryptedVault";
-import { PASSPHRASE_NOTE, SAVED_NOTICE, SaveVaultModal } from "@/components/SaveVaultModal";
 import { qualifiedSummary, scoreChip } from "@/components/scoreChip";
 import { Navbar } from "@/components/shell/Navbar";
 import { SiteFooter } from "@/components/shell/site";
@@ -58,6 +56,7 @@ import { runManager } from "@/lib/agents/manager";
 import { RULES } from "@/lib/agents/redFlag";
 import { gateReducer, INITIAL_GATE_FLOW } from "@/lib/approvalGate";
 import { CHECK_LABELS, CHECK_NOTES } from "@/lib/checkLabels";
+import { KIT_STRINGS } from "@/lib/actionKit";
 import { hasArabic } from "@/lib/i18n";
 import { OFFER_NOTICE } from "@/lib/offerLikeness";
 import { toResultView } from "@/lib/resultView";
@@ -71,7 +70,6 @@ import LegalPage from "./legal/page";
 import Loading from "./loading";
 import NotFound from "./not-found";
 import PortalsPage from "./portals/page";
-import VaultPage from "./vault/page";
 
 const html = (element: ReactElement) => renderToStaticMarkup(element);
 
@@ -133,7 +131,6 @@ describe("Arabic interface: every page is in Arabic", () => {
     ["/check", () => html(createElement(CheckPage))],
     ["/portals", () => html(createElement(PortalsPage))],
     ["/legal", () => html(createElement(LegalPage))],
-    ["/vault", () => html(createElement(VaultPage))],
     ["not found", () => html(createElement(NotFound))],
     ["loading", () => html(createElement(Loading))],
     ["error", () => html(createElement(ErrorPage, { error: new Error("x"), retry: () => {} }))],
@@ -157,7 +154,6 @@ describe("Arabic interface: every state of a result is in Arabic", () => {
         channel: "WhatsApp",
         redacted: 2,
         onNewAudit: () => {},
-        onSave: () => {},
         ...props,
       }),
     );
@@ -199,14 +195,12 @@ describe("Arabic interface: every state of a result is in Arabic", () => {
     }
   });
 
-  it("the draft reply panel, the audit trail and the modals", () => {
+  it("the draft reply panel and the audit trail", () => {
     const pending = gateReducer(INITIAL_GATE_FLOW, { type: "prepare", at: "2026-11-10T00:00:00Z", findings: scam.findings });
     const panels = [
       html(createElement(ApprovalPanel, { gate: null, dispatch: () => {} })),
       html(createElement(ApprovalPanel, { gate: pending.gate, dispatch: () => {} })),
       html(createElement(AuditTrail, { entries: [] })),
-      html(createElement(SaveVaultModal, { view: toResultView(scam), channel: "Email", checkedText: SCAM_OFFER, bandLabel: "High risk indicators", onClose: () => {}, onSaved: () => {} })),
-      html(createElement(EmptyVault)),
     ];
     for (const markup of panels) expect(english(markup)).toEqual([]);
   });
@@ -245,10 +239,8 @@ describe("Arabic interface: every message of the existing flow has Arabic", () =
     ...Object.values(CHECK_NOTES).filter((note): note is string => Boolean(note)),
     ...WARNING_SIGNS.flatMap((sign) => [sign.sign, sign.whatToDo, sign.why]),
     ...(["unchecked", "partial", "translated"] as const).map((state) => intakeNote(state, "hi") ?? ""),
-    VAULT_EMPTY,
-    VAULT_LOCAL_NOTE,
-    PASSPHRASE_NOTE,
-    SAVED_NOTICE,
+    // Phase 6: the Action & Report Kit, every string it shows or copies (proper names have no entry).
+    ...KIT_STRINGS.filter((text) => !["WhatsApp", "LinkedIn"].includes(text)),
   ];
   for (const notice of [null, "most", "part", "offer", "translated"] as const) {
     for (const result of [scam, legit]) {
