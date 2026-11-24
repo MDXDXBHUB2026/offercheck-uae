@@ -277,6 +277,19 @@ describe("no banned wording in the Kit", () => {
     }
   });
 
+  // Restored from the deleted Vault-page test (aistudioPort.test.ts, 2026-11-10): the phrase was banned
+  // everywhere, not only on that page, so the guard now covers every interface source.
+  it('no interface source says "zero server footprint"', () => {
+    const files = (dir: string): string[] =>
+      readdirSync(join(process.cwd(), dir)).flatMap((name) => {
+        const path = `${dir}/${name}`;
+        if (statSync(join(process.cwd(), path)).isDirectory()) return files(path);
+        return /\.(tsx?|css)$/.test(name) && !/\.test\.tsx?$/.test(name) ? [path] : [];
+      });
+    for (const path of files("src")) expect(read(path), path).not.toMatch(/zero server footprint/i);
+    for (const key of Object.keys(AR)) expect(key).not.toMatch(/zero server footprint/i);
+  });
+
   it("not in the rendered Kit, in English or Arabic", () => {
     for (const lang of ["en", "ar"] as const) {
       nav.lang = lang;

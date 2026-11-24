@@ -874,8 +874,8 @@ const ENTRIES: Record<string, string> = {
 
   // [review] Phase 6 (2026-11-23): the Action & Report Kit replaces the saved-results feature. Every entry below is new
   // and written for this app, not yet reviewed by a native speaker. In logical reading order.
-  "Nothing you check is saved. The Action & Report Kit is built in this browser.":
-    "لا يُحفظ شيء مما تفحصه. تُنشأ حزمة الإجراء والبلاغ في هذا المتصفح.",
+  "The server does not store the text you check or its result. The Action & Report Kit is built in this browser.":
+    "لا يخزّن خادم Offer Check النص الذي تفحصه ولا نتيجته. تُنشأ حزمة الإجراء والبلاغ في هذا المتصفح.",
   "The Action & Report Kit": "حزمة الإجراء والبلاغ",
   "Action & Report Kit":
     "حزمة الإجراء والبلاغ",

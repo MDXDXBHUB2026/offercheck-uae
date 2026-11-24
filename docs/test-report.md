@@ -4,9 +4,11 @@ As of 2026-11-08, updated for QA round 2 (LANG-2 and COPY-1, the QA round 2 comm
 
 ## Production Phase 6: Action & Report Kit replaces the Encrypted Vault (2026-11-24)
 
-Source: `npx vitest run` on branch `phase-6`: **3,605 tests in 70 files, all passed**; `npm run check` is recorded in `docs/build-log/2026-11-24.md`. Before (Phase 5b, `d436055`): 3,688 tests in 71 files.
+Source: `npx vitest run` on branch `phase-6`: **3,606 tests in 70 files, all passed**; `npm run check` is recorded in `docs/build-log/2026-11-24.md`. Before (Phase 5b, `d436055`): 3,688 tests in 71 files.
 
 - **Removed with the feature:** `vaultFlow.test.ts` (18 tests) and `vaultTools.test.ts` (14), and the Vault, Save and fifth-tab rows in 17 other test files (listed in the build log). `vaultCrypto.test.ts` and `lockedFiles.test.ts` are unchanged and pass.
+- **Reconciliation:** 3,688 - 232 removed + 150 added = 3,606; the per-group table is in `docs/build-log/2026-11-24.md`.
+- **Real-browser check of the Kit text:** headless Chrome on the production build, a made-up offer with a name, a phone number and an email; Copy report text and Download this summary were pressed and the clipboard call and the Blob were captured. The two texts are identical and hold none of the pasted values (nor "Desert Star", the amounts or the job title).
 - **Added:** `src/components/actionKit.test.ts`. It checks that no made-up name, phone, email or evidence quote reaches the Kit or the report text, in all five channels and all three bands, English and Arabic; that every Low and Medium result shows the not-a-clearance line and High does not; that no banned word is in any Kit string, report text or rendered Kit; that the Kit source has no network, storage, `window.open`, `wa.me` or `mailto`; that `/vault` redirects 308 and no Vault wording is left in any page, the header, footer, Settings or the Arabic dictionary.
 - **Header measurements re-run** (`scripts/measure-header.mjs`, production build, headless Chrome, 1280, 1440, 1568 and 1920 px, English and Arabic): four tabs; overflow 0 px in all eight cases; English Analyzer 103, Portals 77, Guidelines 100, About 72 px; Arabic 134, 116, 92, 58 px. `docs/header-measurements.json` rewritten; `headerMeasurements.test.ts` passes on it.
 - **360 px (headless Chrome, dark and light, English and Arabic):** page width 360, no horizontal scroll; the Kit spans 16 to 344 px with its content inside; every button, the channel picker and the note box are at least 44 px tall; viewed in screenshots.

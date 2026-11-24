@@ -137,7 +137,7 @@ export function SiteFooter() {
           <p className="row text-green mono">
             <Lock className="icon" aria-hidden="true" />
             <span>
-              <T>Nothing you check is saved. The Action & Report Kit is built in this browser.</T>
+              <T>The server does not store the text you check or its result. The Action & Report Kit is built in this browser.</T>
             </span>
           </p>
           <div className="footer-controls">
