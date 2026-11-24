@@ -9,7 +9,6 @@ import { UAE_CONTACTS } from "@/data/uaeContacts";
 const ENTRIES: Record<string, string> = {
   // Shell, navigation and page states
   "Analyzer": "المحلل",
-  "Radar": "الرادار",
   "Portals": "البوابات",
   "Vault": "الخزنة",
   "Legal": "الإرشادات",
@@ -67,9 +66,19 @@ const ENTRIES: Record<string, string> = {
   "Paste a job offer to check it against {0} fixed rules. The rules read English. Other languages can be translated by Google Cloud Translation if you agree. Offer Check's server does not store your text.":
     "الصق عرض عمل لفحصه وفق القواعد الثابتة (عددها {0}). تقرأ القواعد اللغة الإنجليزية. يمكن ترجمة اللغات الأخرى عبر Google Cloud Translation إذا وافقت. لا يخزّن خادم Offer Check النص الذي تدخله.",
   "Example findings": "أمثلة على النتائج",
+  // [review] Phase 5 (2026-11-23): the missed-scam link, its note, the privacy lines about the form and the daily totals.
+  "Offer Check missed a scam? Tell us what it did, without pasting the offer.": "لم يكتشف Offer Check عملية احتيال؟ أخبرنا بما فعله، من دون لصق العرض.",
+  "The link opens a Google Form in a new tab. Google receives what you type there. Offer Check does not send any offer text to the form.":
+    "يفتح الرابط نموذج Google في علامة تبويب جديدة. تستلم Google ما تكتبه هناك. لا يرسل Offer Check أي نص عرض إلى النموذج.",
+  "If Offer Check missed a scam": "إذا لم يكتشف Offer Check عملية احتيال",
+  "The link under a result, and on the About and Privacy pages, opens a Google Form in a new tab. Google receives what you type there, under Google's terms. Offer Check does not send the form any offer text, result or other data from the app, and the form is not part of this app.":
+    "يفتح الرابط الظاهر تحت النتيجة وفي صفحتي «حول» و«الخصوصية» نموذج Google في علامة تبويب جديدة. تستلم Google ما تكتبه هناك، وتسري عليه شروطها. لا يرسل Offer Check إلى النموذج أي نص عرض أو نتيجة أو بيانات أخرى من التطبيق، والنموذج ليس جزءًا من هذا التطبيق.",
+  "Please do not paste the offer into the form: say what Offer Check did and what it missed.": "يُرجى عدم لصق العرض في النموذج: اكتب ما فعله Offer Check وما لم يكتشفه.",
+  "We keep daily totals of how many checks, rejected inputs, errors and limit hits happened, with no text and nothing that identifies you.":
+    "نحتفظ بإجماليات يومية لعدد الفحوص والمدخلات المرفوضة والأخطاء ومرات بلوغ الحدّ، من دون أي نص ومن دون أي شيء يعرّف بك.",
   "{0} EXAMPLES": "الأمثلة: {0}",
-  "Demo data, not your text": "بيانات تجريبية، وليست نصك",
-  "Demo animation": "رسوم تجريبية",
+  "Example only, not your text": "مثال فقط، وليس نصك",
+  "Animation only": "رسوم متحركة فقط",
   "Pause radar": "إيقاف الرادار مؤقتًا",
   "Skip to content": "انتقل إلى المحتوى",
   "Pause animations": "إيقاف الحركة مؤقتًا",
@@ -294,7 +303,6 @@ const ENTRIES: Record<string, string> = {
   "+{0} points": "+{0} نقطة",
   "Copy quote": "نسخ الاقتباس",
   "Copied": "تم النسخ",
-  "Add to Threat Radar": "أضف إلى رادار التهديدات",
   "Your browser did not allow copying. Select the quote and copy it yourself.":
     "لم يسمح متصفحك بالنسخ. حدّد الاقتباس وانسخه بنفسك.",
   "The {0} rules read English only, so they could not check most of this text. This does not confirm that the offer is genuine.":
@@ -605,47 +613,42 @@ const ENTRIES: Record<string, string> = {
   "Do not start work in the UAE on a visit or tourist visa.": "لا تبدأ العمل في الإمارات بتأشيرة زيارة أو سياحة.",
   "Print": "طباعة",
 
-  // Threat Radar and report modal
-  "Threat Radar": "رادار التهديدات",
-  "Sample reports (demo data)": "بلاغات نموذجية (بيانات تجريبية)",
-  "Common job-scam patterns, shown with made-up examples. These are not real reports and are not live data.":
-    "أنماط شائعة لاحتيال الوظائف، معروضة بأمثلة مختلقة. هذه ليست بلاغات حقيقية وليست بيانات مباشرة.",
-  "Search the reports": "ابحث في البلاغات",
-  "Search by words or emirate": "ابحث بالكلمات أو الإمارة",
-  "Filter by type": "التصفية حسب النوع",
-  "All": "الكل",
-  "Advance fee": "رسوم مقدّمة",
-  "Document harvesting": "جمع المستندات",
-  "Your reports (this tab only, not sent anywhere)": "بلاغاتك (في هذه النافذة فقط، ولم تُرسل إلى أي جهة)",
-  "None of your reports match.": "لا يطابق أي من بلاغاتك.",
-  "Your report": "بلاغك",
-  "Demo data": "بيانات تجريبية",
-  "No sample report matches.": "لا يطابق أي بلاغ نموذجي.",
-  "Visa fee asked before any interview": "طلب رسوم تأشيرة قبل أي مقابلة",
-  "A made-up example: an email offers a hotel job with a high salary, skips the interview, and asks for a visa processing fee paid to a travel agent.":
-    "مثال مختلق: رسالة بريد إلكتروني تعرض وظيفة في فندق براتب مرتفع، دون مقابلة، وتطلب رسوم معالجة تأشيرة تُدفع لوكيل سفر.",
-  "Part-time online job asks for a phone code": "وظيفة إلكترونية بدوام جزئي تطلب رمز الهاتف",
-  "A made-up example: a chat message offers daily pay for simple online tasks and asks for the one-time code sent to the phone to open an account.":
-    "مثال مختلق: رسالة دردشة تعرض أجرًا يوميًا مقابل مهام إلكترونية بسيطة وتطلب الرمز لمرة واحدة المرسل إلى الهاتف لفتح حساب.",
-  "Deposit and bank statement to reserve a role": "عربون وكشف حساب بنكي لحجز وظيفة",
-  "A made-up example: a recruiter asks for a refundable deposit, an Emirates ID copy and a bank statement before any written offer.":
-    "مثال مختلق: مسؤول توظيف يطلب عربونًا مستردًا ونسخة من الهوية الإماراتية وكشف حساب بنكي قبل أي عرض مكتوب.",
-  "A made-up example: a message uses a company-sounding name but is sent from a free email address instead of the company's own domain.":
-    "مثال مختلق: رسالة تستخدم اسمًا يشبه اسم شركة لكنها مرسلة من عنوان بريد إلكتروني مجاني بدلًا من نطاق الشركة نفسها.",
-  "Close": "إغلاق",
-  "Added to this tab's Threat Radar": "أُضيف إلى رادار التهديدات في هذه النافذة",
-  "It was not sent anywhere and is gone after a reload. To report a scam, use the official channels in the Gov Portals Hub.":
-    "لم يُرسل إلى أي جهة ويختفي بعد إعادة التحميل. للإبلاغ عن احتيال، استخدم القنوات الرسمية في مركز البوابات الحكومية.",
-  "This stays in this browser tab only. Offer Check does not send reports to anyone.":
-    "يبقى هذا في نافذة المتصفح هذه فقط. لا يرسل Offer Check البلاغات إلى أي أحد.",
+  // Shared words (kept: Title, Cancel)
   "Title": "العنوان",
-  "Type": "النوع",
-  "Emirate": "الإمارة",
-  "Quoted text": "النص المقتبس",
-  "How it works": "طريقة العمل",
-  "Add a title and a description.": "أضف عنوانًا ووصفًا.",
   "Cancel": "إلغاء",
-  "Add to this tab": "أضف إلى هذه النافذة",
+  "How it works": "طريقة العمل",
+  // [review] added 2026-11-23 (Phase 5b): the five-pattern guide on /about
+  "Five common job-scam patterns": "خمسة أنماط شائعة لاحتيال الوظائف",
+  "These are the five warning signs Offer Check's fixed rules look for. One sign does not prove a scam, and finding none does not mean an offer is real.":
+    "هذه هي علامات التحذير الخمس التي تبحث عنها قواعد Offer Check الثابتة. وجود علامة واحدة لا يثبت أنه احتيال، وعدم وجود أي علامة لا يعني أن العرض حقيقي.",
+  "A fee before you join": "رسوم قبل أن تنضم",
+  "You are asked to pay for a visa, training, a uniform, a medical test or \"processing\" before you start work.":
+    "يُطلب منك دفع مبلغ لتأشيرة أو تدريب أو زي موحّد أو فحص طبي أو «معالجة» قبل أن تبدأ العمل.",
+  "Do not pay. Confirm the offer yourself on the official sites first.": "لا تدفع. تأكد من العرض بنفسك أولًا على المواقع الرسمية.",
+  "A request for card or login details": "طلب بيانات البطاقة أو بيانات الدخول",
+  "You are asked for a one-time code, a password, a card number or an online banking login, for example to \"set up your salary account\".":
+    "يُطلب منك رمز لمرة واحدة أو كلمة مرور أو رقم بطاقة أو بيانات الدخول إلى الخدمة المصرفية عبر الإنترنت، مثلًا «لإعداد حساب راتبك».",
+  "Do not share them with anyone who contacted you first.": "لا تشاركها مع أي شخص تواصل معك أولًا.",
+  "Identity documents sent early": "إرسال وثائق الهوية مبكرًا",
+  "You are asked for a passport, an Emirates ID or a bank statement before you have a written offer or contract.":
+    "يُطلب منك جواز سفر أو هوية إماراتية أو كشف حساب بنكي قبل أن يكون لديك عرض أو عقد مكتوب.",
+  "Wait until you have confirmed the employer. Send only what is needed, and hide numbers you do not need to show.":
+    "انتظر حتى تتأكد من صاحب العمل. أرسل ما يلزم فقط، وأخفِ الأرقام التي لا حاجة لإظهارها.",
+  "Pressure to act today": "ضغط للتصرف اليوم",
+  "The message says the offer ends tonight, or that you must reply or pay within hours.":
+    "تقول الرسالة إن العرض ينتهي الليلة، أو إن عليك الرد أو الدفع خلال ساعات.",
+  "Slow down. Take time to check, and ask someone you trust before you reply.": "تمهّل. خذ وقتك في التحقق، واسأل شخصًا تثق به قبل أن ترد.",
+  "A free email sender": "مرسل ببريد إلكتروني مجاني",
+  "A named company writes to you from a free address such as Gmail or Yahoo, not from the address of its own website.":
+    "شركة معروفة بالاسم تراسلك من عنوان مجاني مثل Gmail أو Yahoo، لا من عنوان موقعها الخاص.",
+  "Look up the company's own website yourself and compare the address. Do not use contact details from the message.":
+    "ابحث بنفسك عن موقع الشركة الرسمي وقارن العنوان. لا تستخدم بيانات الاتصال الواردة في الرسالة.",
+  "What it looks like:": "كيف يبدو:",
+  "Check an offer in the Offer Analyzer": "افحص عرضًا في فاحص العروض",
+  "Report a scam": "الإبلاغ عن احتيال",
+  "Official UAE places to report a suspected job scam:": "جهات رسمية في الإمارات للإبلاغ عن احتيال وظيفي مشتبه به:",
+  // [review] added 2026-11-23 (Phase 5b): the line under the result actions
+  "Saved on this device only, encrypted with your passphrase.": "تُحفظ على هذا الجهاز فقط، ومشفّرة بعبارة المرور الخاصة بك.",
 
   // Samples
   "A chat job offer that asks for the code sent to your phone.": "عرض عمل عبر الدردشة يطلب الرمز المرسل إلى هاتفك.",
@@ -869,8 +872,6 @@ const ENTRIES: Record<string, string> = {
     "الخزنة المشفّرة: النتائج التي تختار حفظها، مشفّرة بعبارة مرور لا تُخزَّن، وعدد النتائج المحفوظة. تُحفظ العناوين والملاحظات داخلها، مع إخفاء أرقام الهوية الإماراتية وجواز السفر والآيبان الإماراتي.",
   "Your choices in Settings: language, animations and text size, and whether you dismissed the install hint.":
     "اختياراتك في الإعدادات: اللغة والحركة وحجم النص، وما إذا كنت أخفيت تلميح التثبيت.",
-  "Reports you write on the Threat Radar stay in the open tab's memory only, are not sent anywhere, and are gone after a reload.":
-    "تبقى البلاغات التي تكتبها في رادار التهديدات في ذاكرة علامة التبويب المفتوحة فقط، ولا تُرسل إلى أي مكان، وتختفي بعد إعادة التحميل.",
   "If you export the vault, the file is saved where your browser puts downloads. It is still encrypted, and Offer Check keeps no copy.":
     "إذا صدّرت الخزنة، يُحفظ الملف حيث يضع متصفحك التنزيلات. يبقى مشفّرًا، ولا يحتفظ Offer Check بأي نسخة منه.",
   "To clear them: open Settings and use Clear my data on this device. It removes the vault and every choice without the passphrase. Clearing this site's data in your browser's settings does the same.":

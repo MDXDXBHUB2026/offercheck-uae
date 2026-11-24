@@ -17,31 +17,8 @@ import { useVaultState } from "@/components/vaultStore";
 import { HEADER_HOTLINE_IDS, contact } from "@/data/uaeContacts";
 import { REPORT_FRAUD_NOTE } from "@/lib/authorities";
 
-// Threat Radar's icon: a centre dot with an inner and an outer arc on each side, drawn inline so each
-// arc can animate on its own (Phase 3b: the arcs expand and fade like a signal, inner then outer;
-// the dot stays still). Decorative.
-export function SignalIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      aria-hidden="true"
-      focusable="false"
-    >
-      <circle className="signal-dot" cx="12" cy="12" r="2" fill="currentColor" stroke="none" />
-      <path className="signal-arc signal-arc-inner" d="M8.5 8.5a5 5 0 0 0 0 7M15.5 15.5a5 5 0 0 0 0-7" />
-      <path className="signal-arc signal-arc-outer" d="M5.6 5.6a9 9 0 0 0 0 12.8M18.4 18.4a9 9 0 0 0 0-12.8" />
-    </svg>
-  );
-}
-
-const ICONS: Record<NavItem["id"], typeof ShieldCheck | typeof SignalIcon> = {
+const ICONS: Record<NavItem["id"], typeof ShieldCheck> = {
   analyzer: ShieldCheck,
-  radar: SignalIcon,
   portals: FileCheck2,
   legal: BookOpen,
   vault: Lock,
@@ -54,7 +31,7 @@ export function isCurrent(pathname: string, href: string): boolean {
   return pathname === href || (href === "/check" && pathname === "/");
 }
 
-// The reference app's header: UAE flag ribbon (its colours drift slowly when motion is allowed), logo and title, six tabs in two groups, Tools and
+// The reference app's header: UAE flag ribbon (its colours drift slowly when motion is allowed), logo and title, five tabs in two groups, Tools and
 // Information, with a divider between them (a three-by-two bar under the header below 1200px), the hotlines dropdown and the English / Arabic switch. Tabs are real links, so
 // navigation works without JavaScript.
 export function Navbar() {
@@ -73,7 +50,7 @@ export function Navbar() {
     registerServiceWorker();
   }, []);
 
-  // The tab title follows the interface language on the six main pages. Next sets the page's own
+  // The tab title follows the interface language on the five main pages. Next sets the page's own
   // (English) title after a navigation, so while Arabic is on the title is set again when it changes.
   useEffect(() => {
     const item = NAV_ITEMS.find((entry) => isCurrent(pathname, entry.href));
@@ -223,7 +200,7 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Below 1200px: the same six links, one row per group (Tools, then Information). */}
+        {/* Below 1200px: the same five links, one row per group (Tools, then Information). */}
         <nav aria-label={t("Main (compact)")} className="nav-mobile">
           {NAV_ITEMS.map((item) => (
             <Link

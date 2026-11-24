@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ShieldCheck } from "lucide-react";
 import { ContactEmail, SiteOperator } from "@/components/shell/SiteOperator";
+import { MissedScamLink } from "@/components/MissedScamLink";
 import { T } from "@/components/shell/T";
 import { TRANSLATE_BUTTON } from "@/components/translateFlow";
 import { Card } from "@/components/ui";
-import { POLICY_LAST_UPDATED } from "@/lib/siteConfig";
+import { POLICY_LAST_UPDATED, SITE_MISSED_SCAM_FORM_URL } from "@/lib/siteConfig";
 
 export const metadata: Metadata = {
   title: "Privacy",
@@ -55,6 +56,7 @@ const SECTIONS: readonly Section[] = [
     lines: [
       "To limit how often one visitor can check or translate, the server keeps counters. Each counter is keyed by a salted hash of your network address and a time window, never the address itself, and holds only a number.",
       "Each counter expires on its own: after 2 minutes for a per-minute limit, after 25 hours for a daily one. They are kept in an Upstash Redis store in Mumbai.",
+      "We keep daily totals of how many checks, rejected inputs, errors and limit hits happened, with no text and nothing that identifies you.",
     ],
   },
   {
@@ -63,7 +65,6 @@ const SECTIONS: readonly Section[] = [
     lines: [
       "The Encrypted Vault: results you choose to save, encrypted with a passphrase that is not stored, and the number of saved results. Titles and notes are saved inside it, with Emirates ID, passport and UAE IBAN numbers hidden.",
       "Your choices in Settings: language, animations and text size, and whether you dismissed the install hint.",
-      "Reports you write on the Threat Radar stay in the open tab's memory only, are not sent anywhere, and are gone after a reload.",
       "If you export the vault, the file is saved where your browser puts downloads. It is still encrypted, and Offer Check keeps no copy.",
       "To clear them: open Settings and use Clear my data on this device. It removes the vault and every choice without the passphrase. Clearing this site's data in your browser's settings does the same.",
       "If you install the app, it keeps its own storage: results saved in the installed app stay there, and results saved in the browser stay in the browser.",
@@ -89,6 +90,22 @@ const SECTIONS: readonly Section[] = [
     lines: ["Offer Check has no advertising, analytics or tracking scripts, and its code sets no cookies."],
   },
 ];
+
+// Shown, after the translation section, only while the form link is on (src/lib/siteConfig.ts).
+const MISSED_FORM_SECTION: Section = {
+  id: "missed-form-heading",
+  title: "If Offer Check missed a scam",
+  lines: [
+    "The link under a result, and on the About and Privacy pages, opens a Google Form in a new tab. Google receives what you type there, under Google's terms. Offer Check does not send the form any offer text, result or other data from the app, and the form is not part of this app.",
+    "Please do not paste the offer into the form: say what Offer Check did and what it missed.",
+  ],
+};
+
+function sectionsToShow(): readonly Section[] {
+  if (!SITE_MISSED_SCAM_FORM_URL.trim()) return SECTIONS;
+  const after = SECTIONS.findIndex((section) => section.id === "translate-heading") + 1;
+  return [...SECTIONS.slice(0, after), MISSED_FORM_SECTION, ...SECTIONS.slice(after)];
+}
 
 // {0} is the translate button's own label, so the notice names the button exactly.
 function Line({ text }: { text: string }) {
@@ -121,7 +138,7 @@ export default function PrivacyPage() {
         </div>
       </section>
 
-      {SECTIONS.map((section) => (
+      {sectionsToShow().map((section) => (
         <Card as="section" key={section.id} className="stack-sm" aria-labelledby={section.id}>
           <h2 id={section.id} className="h2">
             <T>{section.title}</T>
@@ -152,6 +169,7 @@ export default function PrivacyPage() {
         <p>
           <T>Questions about this notice:</T> <ContactEmail />
         </p>
+        <MissedScamLink />
         <p>
           <Link href="/terms">
             <T>Read the terms of use</T>

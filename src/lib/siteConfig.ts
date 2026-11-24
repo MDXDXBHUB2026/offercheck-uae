@@ -16,4 +16,13 @@ export const SITE_OPERATOR = {
 export const SITE_CONTACT_EMAIL = "offercheck.uae@gmail.com";
 
 // The "Last updated" date at the top of /privacy and /terms (ISO date, shown as written).
-export const POLICY_LAST_UPDATED = "2026-11-16";
+export const POLICY_LAST_UPDATED = "2026-11-24";
+
+// Production Phase 5 (owner decision, 2026-11-23): the "Offer Check missed a scam?" form. A Google
+// Form run by the owner; it opens in a new tab and Google receives what the person types there.
+// Offer Check never sends offer text, a result or anything else to it: it is a plain link. The only
+// copy of the address: the link is shown only while this value is not empty (set it to "" to turn
+// the link off everywhere). src/lib/csp.ts is not involved, because a link is a navigation, not a
+// request the page makes.
+export const SITE_MISSED_SCAM_FORM_URL =
+  "https://docs.google.com/forms/d/e/1FAIpQLSeLc3RSg_6y59__ommv0U1nckl_8bO2MQPgE8br_odCH3Dg0A/viewform";

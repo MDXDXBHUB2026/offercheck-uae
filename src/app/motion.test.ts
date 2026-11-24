@@ -58,7 +58,7 @@ describe("3e: keyframes exist only where motion is allowed", () => {
 
   it("every @keyframes is inside the no-preference block", () => {
     const all = [...css.matchAll(/@keyframes [\w-]+/g)];
-    expect(all.length).toBeGreaterThanOrEqual(19);
+    expect(all.length).toBeGreaterThanOrEqual(18);
     for (const m of all) expect(m.index! > motion.start && m.index! < motion.end, m[0]).toBe(true);
   });
 
@@ -77,7 +77,6 @@ describe("3b/3c: only the header icons loop, slowly, with opacity or transform",
   const motion = block("@media (prefers-reduced-motion: no-preference)").text;
   const LOOPS: [string, string][] = [
     ['.nav-icon[data-icon="analyzer"]::before', "icon-glow"],
-    [".signal-arc", "signal-arc"],
     // The shared breathe rule lists portals, legal, vault and about; its last selector names it.
     ['.nav-icon[data-icon="about"] .icon', "icon-breathe"],
     [".hotline-icon::after", "halo-ring"],
@@ -93,23 +92,22 @@ describe("3b/3c: only the header icons loop, slowly, with opacity or transform",
   });
 
   // Production hardening Phase 3 (2026-11-15): About joins them, out of phase with the rest.
-  it("the four calm icons breathe out of phase; the radar's outer arc follows the inner one", () => {
+  it("the four calm icons breathe out of phase", () => {
     expect(motion).toMatch(/\.nav-icon\[data-icon="portals"\] \.icon,\s*\.nav-icon\[data-icon="legal"\] \.icon,\s*\.nav-icon\[data-icon="vault"\] \.icon,\s*\.nav-icon\[data-icon="about"\] \.icon \{\s*animation: icon-breathe 6s/);
     expect(motion).toMatch(/\.nav-icon\[data-icon="about"\] \.icon \{\s*animation-delay: -3s;/);
     expect(motion).toMatch(/\.nav-icon\[data-icon="legal"\] \.icon \{\s*animation-delay: -2s;/);
     expect(motion).toMatch(/\.nav-icon\[data-icon="vault"\] \.icon \{\s*animation-delay: -4s;/);
-    expect(motion).toMatch(/\.signal-arc-outer \{\s*animation-delay: 0\.5s;/);
   });
 
   it("the header keyframes change only opacity and scale, and never dim below 0.55", () => {
-    for (const name of ["icon-glow", "signal-arc", "icon-breathe", "halo-ring", "glow-rise"]) {
+    for (const name of ["icon-glow", "icon-breathe", "halo-ring", "glow-rise"]) {
       const at = motion.indexOf(`@keyframes ${name} {`);
       expect(at, name).toBeGreaterThan(-1);
       const body = motion.slice(at, motion.indexOf("\n  }\n", at));
       for (const [, prop] of body.matchAll(/^\s+([a-z-]+):/gm)) expect(["opacity", "scale"], `${name}: ${prop}`).toContain(prop);
     }
     // Icons themselves (not the glow or ring pseudo-elements, which fade to nothing by design).
-    for (const name of ["signal-arc", "icon-breathe"]) {
+    for (const name of ["icon-breathe"]) {
       const at = motion.indexOf(`@keyframes ${name} {`);
       const body = motion.slice(at, motion.indexOf("\n  }\n", at));
       for (const [, value] of body.matchAll(/opacity: ([\d.]+);/g)) expect(Number(value)).toBeGreaterThanOrEqual(0.55);
@@ -130,14 +128,12 @@ describe("3b/3c: only the header icons loop, slowly, with opacity or transform",
 });
 
 describe("3b: the header icons are present and decorative", () => {
-  it("renders all five tab icons in aria-hidden wrappers, and the radar's signal icon arc by arc", () => {
+  it("renders all four tab icons in aria-hidden wrappers (the Radar tab and its signal icon were removed 2026-11-23)", () => {
     const html = renderToStaticMarkup(createElement(Navbar));
-    for (const id of ["analyzer", "radar", "portals", "legal", "vault"]) {
+    for (const id of ["analyzer", "portals", "legal", "vault"]) {
       expect(html).toContain(`<span class="nav-icon" data-icon="${id}" aria-hidden="true"><svg`);
     }
-    expect(html).toMatch(/<circle class="signal-dot"[^>]*>/);
-    expect(html).toContain('class="signal-arc signal-arc-inner"');
-    expect(html).toContain('class="signal-arc signal-arc-outer"');
+    expect(html).not.toMatch(/signal-arc|signal-dot|data-icon="radar"/);
     expect(html).toContain('<span class="hotline-icon" aria-hidden="true">');
   });
 });

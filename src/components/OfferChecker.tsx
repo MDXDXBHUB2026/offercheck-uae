@@ -5,7 +5,6 @@ import { ArrowRight, Eraser, FileText, Linkedin, Mail, MessageCircle, ScanSearch
 import { ApprovalPanel } from "@/components/ApprovalPanel";
 import { AuditTrail } from "@/components/AuditTrail";
 import { analyzeRequest, networkFailure, responseFailure, type CheckFailure } from "@/components/checkRequest";
-import { ReportModal, type ReportDraft } from "@/components/radar/ReportModal";
 import { ResultCard } from "@/components/ResultCard";
 import { revealResult, scrollBehaviorFor } from "@/components/revealResult";
 import { SAVED_NOTICE, SaveVaultModal, savedDay } from "@/components/SaveVaultModal";
@@ -48,6 +47,7 @@ import type { LanguageNotice } from "@/lib/textScript";
 import { MAX_OFFER_CHARS } from "@/lib/types";
 import { useLang, useT } from "@/components/shell/lang";
 import { useOffline } from "@/components/shell/offline";
+import { MissedScamLink } from "@/components/MissedScamLink";
 
 // Where the offer came from, as in the reference app. Display and saving only: the rules read the
 // text the same way for every channel. "Offer Letter PDF" means the letter's text, pasted.
@@ -190,7 +190,7 @@ function notCleared(): boolean {
   return false;
 }
 
-type Modal = { kind: "save" } | { kind: "report"; draft: ReportDraft } | null;
+type Modal = { kind: "save" } | null;
 
 // The screen-reader announcement uses the chip's wording, so the two never disagree (UX-1, LANG-2).
 export function resultAnnouncement(
@@ -707,17 +707,12 @@ export function OfferChecker({
           textNotKept={checked.textNotKept ?? false}
           onNewAudit={() => editText("")}
           onSave={() => setModal({ kind: "save" })}
-          onReport={(flag) =>
-            setModal({
-              kind: "report",
-              draft: { title: flag.signal, description: flag.explanation, warningQuote: flag.matched_text },
-            })
-          }
         >
           <ApprovalPanel gate={gateFlow.gate} dispatch={dispatchWithAudit} />
           <AuditTrail entries={auditLog} failed={auditFailed} />
         </ResultCard>
       )}
+      {result && checked && <MissedScamLink />}
       {modal?.kind === "save" && result && checked && (
         <SaveVaultModal
           view={toResultView(result, checked.coverage)}
@@ -739,7 +734,6 @@ export function OfferChecker({
           }}
         />
       )}
-      {modal?.kind === "report" && <ReportModal initial={modal.draft} onClose={() => setModal(null)} />}
     </div>
   );
 }

@@ -89,7 +89,6 @@ describe("UI text", () => {
     "src/components/ResultCard.tsx",
     "src/app/legal/page.tsx",
     "src/app/portals/page.tsx",
-    "src/app/radar/page.tsx",
     "src/app/vault/page.tsx",
   ])(
     "%s has no literal rule count",
@@ -104,7 +103,6 @@ describe("UI text", () => {
     "src/app/check/page.tsx",
     "src/app/legal/page.tsx",
     "src/app/portals/page.tsx",
-    "src/app/radar/page.tsx",
     "src/app/vault/page.tsx",
   ])(
     "%s stays a server component, so the rules stay out of the client bundle",

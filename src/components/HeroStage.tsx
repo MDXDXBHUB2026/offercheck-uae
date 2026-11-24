@@ -132,7 +132,7 @@ export function HeroStage({ children }: { children: ReactNode }) {
             ))}
           </ul>
           <p className="hud-foot">
-            <span>{t("Demo data, not your text")}</span>
+            <span>{t("Example only, not your text")}</span>
           </p>
         </div>
 
@@ -147,7 +147,7 @@ export function HeroStage({ children }: { children: ReactNode }) {
           </button>
           <span className="chip chip-neutral demo-chip">
             <span className="dot pulse" aria-hidden="true" />
-            <span>{t("Demo animation")}</span>
+            <span>{t("Animation only")}</span>
           </span>
         </div>
       </div>

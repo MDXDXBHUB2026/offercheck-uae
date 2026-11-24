@@ -77,7 +77,7 @@ describe("the three pages render in English and Arabic", () => {
   // Arabic: no English sentence is left untranslated. What may stay in Latin letters: product and
   // service names, the address, the date, and the two technical terms given in brackets.
   const LATIN_ALLOWED = new Set(
-    "Offer Check UAE Google Cloud Translation Vercel Upstash Redis IP salted hash cookies WhatsApp LinkedIn Delete all".split(" "),
+    "Offer Check UAE Google Cloud Translation Vercel Upstash Redis IP salted hash cookies WhatsApp LinkedIn Delete all Gmail Yahoo".split(" "),
   );
   it.each(Object.keys(PAGES) as Page[])("/%s in Arabic leaves no English text outside names", (page) => {
     const html = render(page, "ar")
@@ -94,13 +94,13 @@ describe("the three pages render in English and Arabic", () => {
   });
 
   it("Privacy and Terms show the same 'Last updated' date, from siteConfig, at the top", () => {
-    expect(POLICY_LAST_UPDATED).toBe("2026-11-16");
+    expect(POLICY_LAST_UPDATED).toBe("2026-11-24");
     for (const page of ["privacy", "terms"] as const) {
       const html = render(page, "en");
       const at = html.indexOf("Last updated:");
       expect(at).toBeGreaterThan(-1);
       expect(at).toBeLessThan(html.indexOf('class="lead"'));
-      expect(html).toContain(`<time dateTime="2026-11-16" lang="en" dir="ltr">2026-11-16</time>`);
+      expect(html).toContain(`<time dateTime="2026-11-24" lang="en" dir="ltr">2026-11-24</time>`);
       expect(render(page, "ar")).toContain(AR["Last updated:"]);
     }
   });
@@ -166,9 +166,10 @@ describe("no personal name in user-facing copy", () => {
   const ALLOWED = new Set(
     `About Acceptable Before Check Checks Confirm Contact Cross Delete Do Each Emirates Encrypted English Five Fixed Google Gov Hub
     IBAN IBANs ID If India It Last Like Limits Mumbai No Not Numbers Offer Official Open Or Portals Privacy Questions Rate Read Redis
-    Reports Risk Save Some Terms Text The There They To Translation Translate Threat Radar UAE Upstash Use Vercel Vault Your WhatsApp
+    Reports Risk Save Some Terms Text The There They To Translation Translate UAE Upstash Use Vercel Vault Your WhatsApp
     LinkedIn People Cloud What When Where Who An Arabic Indic Information Tools IP A Before How You AI Remove Send
-    After Clear Clearing Guidelines Pages Settings Titles`.split(/\s+/),
+    After Clear Clearing Guidelines Pages Settings Titles Tell Form Please We
+    These One Identity Wait Pressure Slow Take Gmail Yahoo Look Analyzer Report Government MoI Aman Abu Dhabi Ministry Human Resources Emiratisation MOHRE All`.split(/\s+/),
   );
   it.each(["about", "privacy", "terms", "footer"] as const)("%s: every capitalised word is on the list", (page) => {
     const words = new Set(text(render(page, "en")).match(/\b[A-Z][A-Za-z]+\b/g) ?? []);
@@ -267,8 +268,8 @@ describe("privacy statements that can be checked on the code", () => {
     expect(read("src/components/shell/motion.ts")).toMatch(/MOTION_STORAGE_KEY = "offercheck_motion"/);
     expect(read("src/lib/vault.ts")).toMatch(/offercheck_vault_v1/);
     expect(read("src/lib/vault.ts")).toMatch(/offercheck_vault_count_v1/);
-    // Threat Radar reports: tab memory only.
-    expect(read("src/components/radar/localReports.ts")).not.toMatch(/localStorage|sessionStorage|fetch\(/);
+    // Threat Radar was removed (2026-11-23), so no report is kept in the tab either.
+    expect(existsSync(join(process.cwd(), "src/components/radar"))).toBe(false);
     // How to clear them: the vault's own Delete all, and (Phase 4a) Settings > Clear my data.
     expect(read("src/components/EncryptedVault.tsx")).toContain('{t("Delete all")}');
     expect(read("src/components/shell/SettingsPanel.tsx")).toContain('{t("Clear my data")}');

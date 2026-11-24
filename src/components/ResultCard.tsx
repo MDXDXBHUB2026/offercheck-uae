@@ -31,7 +31,7 @@ import { CROSS_CHECK_LABELS, validCrossChecks } from "@/lib/crossCheckLabels";
 import { noticeForCoverage, type Coverage } from "@/lib/coverage";
 import { highlightParts, type MarkLevel } from "@/lib/highlight";
 import { OFFER_NOTICE, showOfferNotice, type OfferSignal } from "@/lib/offerLikeness";
-import { toResultView, type ResultView, type ViewRedFlag } from "@/lib/resultView";
+import { toResultView, type ResultView } from "@/lib/resultView";
 import { HIGH_BAND_MIN, MEDIUM_BAND_MIN, SEVERITY_WEIGHTS } from "@/lib/scoring";
 import { LANGUAGE_NOTICES, type LanguageNotice } from "@/lib/textScript";
 import { languageName, TRANSLATION_PROVIDER_NAME } from "@/lib/translation";
@@ -132,14 +132,10 @@ export const DIMENSIONS = [
 
 function FlagCard({
   finding,
-  flag,
   index,
-  onReport,
 }: {
   finding: Finding & { severity: Exclude<Severity, "info"> };
-  flag: ViewRedFlag;
   index: number;
-  onReport?: (flag: ViewRedFlag) => void;
 }) {
   const [copied, setCopied] = useState<"idle" | "copied" | "failed">("idle");
   const t = useT();
@@ -183,12 +179,6 @@ function FlagCard({
             {copied === "copied" ? <Check className="icon" aria-hidden="true" /> : <Copy className="icon" aria-hidden="true" />}
             {copied === "copied" ? t("Copied") : t("Copy quote")}
           </Button>
-          {onReport && (
-            <Button variant="secondary" onClick={() => onReport(flag)}>
-              <ShieldAlert className="icon" aria-hidden="true" />
-              {t("Add to Threat Radar")}
-            </Button>
-          )}
         </div>
       </div>
       <p className="small text-red" role="status">
@@ -215,7 +205,6 @@ export function ResultCard({
   textNotKept = false,
   onNewAudit,
   onSave,
-  onReport,
   children,
 }: {
   result: AnalysisResult;
@@ -239,7 +228,6 @@ export function ResultCard({
   textNotKept?: boolean;
   onNewAudit?: () => void;
   onSave?: () => void;
-  onReport?: (flag: ViewRedFlag) => void;
   children?: ReactNode;
 }) {
   const [view, setView] = useState<"flags" | "source">("flags");
@@ -397,6 +385,7 @@ export function ResultCard({
                 </Button>
               )}
             </div>
+            {onSave && <p className="small muted no-print">{t("Saved on this device only, encrypted with your passphrase.")}</p>}
             <p className="result-meta">
               <strong>{t(plural(riskFindings.length, "red flag"))}</strong>
               {channel ? ` · ${t(channel)}` : ""}
@@ -573,8 +562,6 @@ export function ResultCard({
                   key={finding.source}
                   finding={finding}
                   index={index}
-                  flag={resultView.red_flags.find((flag) => flag.check === finding.check) ?? resultView.red_flags[0]}
-                  onReport={onReport}
                 />
               ))}
             </ul>

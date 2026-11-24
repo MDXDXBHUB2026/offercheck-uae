@@ -14,15 +14,15 @@ import { T } from "@/components/shell/T";
 export const PROTOTYPE_NOTICE =
   "Prototype. Use synthetic or redacted offers only. Emirates ID, passport and UAE IBAN numbers in common formats are hidden in your browser before the text is sent. Offer Check's server does not store offer text. If you choose translation, Google Cloud Translation receives it. Save to Encrypted Vault keeps an encrypted copy in this browser only.";
 
-// The header's six tabs, in two groups (production hardening Phase 3, 2026-11-15): Tools (the
-// analyzer, Threat Radar and the vault) and Information (portals, guidelines and About). label: the
+// The header's five tabs, in two groups (production hardening Phase 3, 2026-11-15): Tools (the
+// analyzer and the vault) and Information (portals, guidelines and About). label: the
 // full page name (the browser tab title). short: the English tab text, in the desktop header and the
-// compact bar below 1200px; shortened so the six tabs fit beside the brand at 1280px
+// compact bar below 1200px; shortened so the five tabs fit beside the brand at 1280px
 // (docs/header-measurements.json). labelAr: the Arabic tab text (the reference app's own words, page
 // headings keep the full names); not yet reviewed by a native speaker.
 export type NavGroup = "tools" | "info";
 export type NavItem = {
-  id: "analyzer" | "radar" | "vault" | "portals" | "legal" | "about";
+  id: "analyzer" | "vault" | "portals" | "legal" | "about";
   group: NavGroup;
   href: string;
   label: string;
@@ -37,7 +37,6 @@ export const NAV_GROUPS: readonly { id: NavGroup; label: string }[] = [
 
 export const NAV_ITEMS: readonly NavItem[] = [
   { id: "analyzer", group: "tools", href: "/check", label: "Offer Analyzer", labelAr: "فاحص العروض", short: "Analyzer" },
-  { id: "radar", group: "tools", href: "/radar", label: "Threat Radar", labelAr: "الرادار", short: "Radar" },
   { id: "vault", group: "tools", href: "/vault", label: "Encrypted Vault", labelAr: "الخزنة", short: "Vault" },
   { id: "portals", group: "info", href: "/portals", label: "Gov Portals Hub", labelAr: "بوابات التحقق", short: "Portals" },
   { id: "legal", group: "info", href: "/legal", label: "Legal Guidelines", labelAr: "الإرشادات", short: "Guidelines" },

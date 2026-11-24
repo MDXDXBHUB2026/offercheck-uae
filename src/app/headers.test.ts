@@ -132,7 +132,7 @@ describe("src/proxy.ts", () => {
   it("runs on pages, not on the API, static files, public files or prefetches", () => {
     const [rule] = proxyConfig.matcher;
     const pattern = new RegExp(`^${rule.source.replace("/(", "/(?:")}$`);
-    for (const page of ["/", "/check", "/legal", "/portals", "/radar", "/vault", "/no-such-page"]) expect(pattern.test(page), page).toBe(true);
+    for (const page of ["/", "/check", "/legal", "/portals", "/vault", "/no-such-page"]) expect(pattern.test(page), page).toBe(true);
     for (const skip of ["/api/analyze", "/api/translate", "/_next/static/chunks/a.js", "/hero/loop.mp4", "/hero/poster.jpg", "/favicon.ico"]) {
       expect(pattern.test(skip), skip).toBe(false);
     }
