@@ -14,7 +14,7 @@ vi.mock("react", async (importOriginal) => {
 });
 vi.mock("next/navigation", () => ({ usePathname: () => "/check" }));
 
-import { clearMyData, STORED_KEYS } from "@/components/shell/clearData";
+import { clearMyData, LEGACY_VAULT_KEYS, STORED_KEYS } from "@/components/shell/clearData";
 import {
   dismissInstallHint,
   getHintDismissed,
@@ -24,7 +24,7 @@ import {
   promptInstall,
   startInstallWatch,
 } from "@/components/shell/install";
-import { InstallControl, INSTALL_SEPARATE_NOTE, IOS_INSTALL_STEPS } from "@/components/shell/InstallControl";
+import { InstallControl, IOS_INSTALL_STEPS } from "@/components/shell/InstallControl";
 import { getLang, LANG_STORAGE_KEY, setLang } from "@/components/shell/lang";
 import { MotionToggle, RESUME_ANIMATIONS } from "@/components/shell/MotionToggle";
 import { getMotion, MOTION_STORAGE_KEY, setMotion } from "@/components/shell/motion";
@@ -38,7 +38,6 @@ import {
 import { getTextSize, restoreTextSize, setTextSize, TEXT_SIZE_STORAGE_KEY } from "@/components/shell/textSize";
 import { getTheme, restoreTheme, setTheme, THEME_STORAGE_KEY } from "@/components/shell/theme";
 import { AR } from "@/lib/i18nAr";
-import { saveVault, VAULT_COUNT_KEY, VAULT_KEY, vaultState } from "@/lib/vault";
 
 type Listener = (event: Event & { preventDefault?: () => void }) => void;
 
@@ -89,9 +88,13 @@ function radio(out: string, name: string, value: string): { tag: string; label: 
 }
 
 describe("Clear my data on this device", () => {
-  it("removes every stored key: the vault, its count, language, animations, text size, theme and the install hint", async () => {
+  // Phase 6 (2026-11-23): changed on purpose. The Vault is gone and nothing writes its two keys any
+  // more, but they stay in the list (as plain strings) so that Clear my data still removes a vault
+  // that someone saved in this browser before.
+  it("removes every stored key: any earlier vault and its count, language, animations, text size, theme and the install hint", async () => {
     const { store, root } = stubBrowser();
-    await saveVault([{ id: "1", savedAt: "2026-11-16T00:00:00Z", title: "t", channel: "Email", view: { overall_risk_level: "Low", summary: "", red_flags: [] } as never }], "a passphrase");
+    store.set("offercheck_vault_v1", '{"version":2,"iterations":600000,"salt":"x","iv":"y","data":"z"}');
+    store.set("offercheck_vault_count_v1", "3");
     setLang("ar");
     setMotion("paused");
     setTextSize("large");
@@ -100,10 +103,9 @@ describe("Clear my data on this device", () => {
     store.set("unrelated_site_key", "kept");
     expect([...store.keys()].sort()).toEqual([...STORED_KEYS, "unrelated_site_key"].sort());
 
-    // No passphrase: the vault is deleted, not opened.
+    // No passphrase: a saved vault is deleted, not opened.
     expect(clearMyData()).toBe(true);
     expect([...store.keys()]).toEqual(["unrelated_site_key"]);
-    expect(vaultState()).toBe("none");
     // And this page is back to the defaults, without writing them.
     expect([getLang(), getMotion(), getTextSize(), getTheme(), getHintDismissed()]).toEqual(["en", "running", "standard", "dark", false]);
     expect(root.dir).toBe("ltr");
@@ -114,7 +116,7 @@ describe("Clear my data on this device", () => {
 
   it("lists every storage key the code writes: no file in src writes an offercheck_ key not in the list", () => {
     expect([...STORED_KEYS].sort()).toEqual(
-      [VAULT_KEY, VAULT_COUNT_KEY, LANG_STORAGE_KEY, MOTION_STORAGE_KEY, TEXT_SIZE_STORAGE_KEY, THEME_STORAGE_KEY, INSTALL_HINT_STORAGE_KEY].sort(),
+      ["offercheck_vault_v1", "offercheck_vault_count_v1", LANG_STORAGE_KEY, MOTION_STORAGE_KEY, TEXT_SIZE_STORAGE_KEY, THEME_STORAGE_KEY, INSTALL_HINT_STORAGE_KEY].sort(),
     );
     const files = (dir: string): string[] =>
       readdirSync(dir).flatMap((name) => {
@@ -127,13 +129,21 @@ describe("Clear my data on this device", () => {
     expect([...found].sort()).toEqual([...STORED_KEYS].sort());
   });
 
+  it("still lists the two Vault keys, as the literal names, so Clear my data removes earlier copies", () => {
+    expect([...LEGACY_VAULT_KEYS]).toEqual(["offercheck_vault_v1", "offercheck_vault_count_v1"]);
+    for (const key of LEGACY_VAULT_KEYS) expect(STORED_KEYS).toContain(key);
+    const source = readFileSync("src/components/shell/clearData.ts", "utf8");
+    expect(source).toContain('"offercheck_vault_v1"');
+    expect(source).toContain('"offercheck_vault_count_v1"');
+  });
+
   it("says false, and does not crash, when the browser blocks storage", () => {
     stubBrowser({ blocked: true });
     expect(clearMyData()).toBe(false);
   });
 
-  it("asks first, saying saved results will be permanently deleted", () => {
-    expect(CLEAR_DATA_CONFIRM).toContain("Your saved results will be permanently deleted.");
+  it("asks first, saying the choices and any earlier saved results will be permanently deleted", () => {
+    expect(CLEAR_DATA_CONFIRM).toContain("any results saved here by an earlier version, will be permanently deleted.");
     const source = readFileSync("src/components/shell/SettingsPanel.tsx", "utf8");
     // The Clear my data button only opens the question; Delete everything clears.
     expect(source).toMatch(/setConfirming\(true\);\s*\}\}\s*>\s*<Trash2[^>]*\/>\s*\{t\("Clear my data"\)\}/);
@@ -292,14 +302,13 @@ describe("Install app", () => {
     expect(getInstallState()).toBe("available");
     const out = html(createElement(InstallControl, { place: "settings" }));
     expect(out).toContain("Install app");
-    expect(out).toContain(INSTALL_SEPARATE_NOTE);
     expect(html(createElement(InstallControl, { place: "footer" }))).toContain("Install app");
     await promptInstall();
     expect(prompt).toHaveBeenCalledOnce();
     expect(getInstallState()).toBe("installed");
   });
 
-  it("iPhone and iPad: a short hint with the two taps, the separate-storage note, and a footer dismiss that is remembered", async () => {
+  it("iPhone and iPad: a short hint with the two taps, and a footer dismiss that is remembered", async () => {
     expect(isAppleMobile("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)", "iPhone", 5)).toBe(true);
     expect(isAppleMobile("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", "MacIntel", 5)).toBe(true);
     expect(isAppleMobile("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)", "MacIntel", 0)).toBe(false);
@@ -316,7 +325,6 @@ describe("Install app", () => {
     expect(IOS_INSTALL_STEPS).toBe("To install on iPhone or iPad: tap Share, then Add to Home Screen.");
     const footer = html(createElement(InstallControl, { place: "footer" }));
     expect(footer).toContain(IOS_INSTALL_STEPS);
-    expect(footer).toContain(INSTALL_SEPARATE_NOTE);
     expect(footer).toContain('role="note"');
     expect(footer).toContain("Dismiss");
     dismissInstallHint();
@@ -342,6 +350,6 @@ describe("Install app", () => {
   });
 
   it("has Arabic for the install button and the hint", () => {
-    for (const text of ["Install app", "Dismiss", IOS_INSTALL_STEPS, INSTALL_SEPARATE_NOTE]) expect(AR[text], text).toBeTruthy();
+    for (const text of ["Install app", "Dismiss", IOS_INSTALL_STEPS]) expect(AR[text], text).toBeTruthy();
   });
 });

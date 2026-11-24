@@ -4,8 +4,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { analyzeRequest } from "./checkRequest";
-import { REDACTION_NOTE, REDACTION_NOTE_SAVED, ResultCard } from "./ResultCard";
-import { buildRecord } from "./SaveVaultModal";
+import { REDACTION_NOTE, ResultCard } from "./ResultCard";
 import { requestTranslation } from "./translateRequest";
 import { SAMPLE_OFFERS } from "@/data/sampleOffers";
 import { EVAL_OFFERS } from "@/lib/agents/eval/offers";
@@ -13,13 +12,11 @@ import { HOLDOUT_OFFERS } from "@/lib/agents/eval/holdout";
 import { HOLDOUT_2_OFFERS } from "@/lib/agents/eval/holdout2";
 import { runManager } from "@/lib/agents/manager";
 import { RULES } from "@/lib/agents/redFlag";
-import { runWithAudit } from "@/lib/auditRun";
 import { AR } from "@/lib/i18nAr";
 import { REDACTED, redactSensitive } from "@/lib/redact";
-import { toResultView } from "@/lib/resultView";
 
 // Auto-Redact always on and silent (owner decision, 2026-11-11). No toggle and no notice before a
-// check; masking runs in the browser at both requests; the vault keeps only masked text; the score
+// check; masking runs in the browser at both requests; the Kit holds no offer text at all (src/lib/actionKit.test.ts); the score
 // is the same with and without masking; the explanation shows only when a number was hidden.
 
 // Synthetic values, made up for this test.
@@ -106,42 +103,6 @@ describe("no toggle and no off state remain", () => {
   });
 });
 
-describe("the vault stores masked text only", () => {
-  it("kept text and quotes come from the masked text; the record holds none of the values", async () => {
-    const request = analyzeRequest(OFFER);
-    const response = await runWithAudit(request.text);
-    const record = buildRecord({
-      title: "t",
-      channel: "Email",
-      checkedText: request.text,
-      keepText: true,
-      view: toResultView(response),
-      notes: "",
-      bandLabel: "High",
-      points: null,
-      check: { response, coverage: "full", offerSignals: [], redacted: request.count, sourceLang: null },
-    });
-    expect(record.text).toContain(REDACTED);
-    expect(response.findings.flatMap((f) => f.evidence).join(" ")).toContain(REDACTED);
-    expect(holdsNone(JSON.stringify(record))).toEqual([]);
-    expect(record.check?.redacted).toBe(3);
-  });
-
-  it("a kept text is masked again when the record is built, so no caller can store an unmasked one", () => {
-    const record = buildRecord({
-      title: "t",
-      channel: "Email",
-      checkedText: OFFER,
-      keepText: true,
-      view: toResultView(runManager("Hello")),
-      notes: "",
-      bandLabel: "Low",
-      points: null,
-    });
-    expect(holdsNone(record.text ?? "")).toEqual([]);
-  });
-});
-
 describe("the score is the same with and without masking", () => {
   const texts: [string, string][] = [
     ...SAMPLE_OFFERS.map((offer): [string, string] => [`sample ${offer.id}`, offer.text]),
@@ -164,12 +125,12 @@ describe("the score is the same with and without masking", () => {
 });
 
 describe("after a check: the explanation shows only when a number was hidden", () => {
-  const render = (redacted: number, reopened = false) =>
-    renderToStaticMarkup(createElement(ResultCard, { result: runManager("Hello"), ruleCount: RULES.length, redacted, reopened }));
+  const render = (redacted: number) =>
+    renderToStaticMarkup(createElement(ResultCard, { result: runManager("Hello"), ruleCount: RULES.length, redacted }));
 
   it("nothing about redaction when nothing was hidden", () => {
     const html = render(0);
-    expect(html).not.toContain(REDACTION_NOTE_SAVED);
+    expect(html).not.toContain(REDACTION_NOTE.replace("'", "&#x27;"));
     expect(html).not.toContain("removed before checking");
     expect(html).not.toMatch(/hidden before the text is sent/);
   });
@@ -181,16 +142,9 @@ describe("after a check: the explanation shows only when a number was hidden", (
     expect(html.indexOf("Highlights in your text")).toBeLessThan(html.indexOf("redaction-note"));
   });
 
-  it("a result re-opened from the vault does not claim the original text is in the box", () => {
-    const html = render(1, true);
-    expect(html).toContain("1 number removed before checking");
-    expect(html).toContain(REDACTION_NOTE_SAVED);
-    expect(html).not.toContain("Your original text is still in the box.");
-  });
-
   it("the changed strings have Arabic entries marked for review", () => {
     const dict = read("src/lib/i18nAr.ts").split(/\r?\n/);
-    for (const english of [REDACTION_NOTE, REDACTION_NOTE_SAVED]) {
+    for (const english of [REDACTION_NOTE]) {
       expect(AR[english], english).toMatch(/\p{Script=Arabic}/u);
       const line = dict.findIndex((text) => text.startsWith(`  ${JSON.stringify(english)}`));
       expect(dict.slice(Math.max(0, line - 3), line).join("\n"), english).toMatch(/\[review\] Auto-Redact always on/);

@@ -363,8 +363,7 @@ body {
    page (offer text, quotes, official names) keeps its full stop and colon at the end, while the right alignment is
    inherited as a fixed side (not "start", which would follow the English text to the left). */
 [dir="rtl"] body,
-[dir="rtl"] .tabs-boxed .tab,
-[dir="rtl"] .vault-item {
+[dir="rtl"] .tabs-boxed .tab {
   text-align: right;
 }
 [dir="rtl"] body *:not([dir]) {
@@ -963,7 +962,7 @@ html {
    bar alike. Each has its own border and background, a gap to the next, a hover state, and the global
    focus ring. The current page is not shown by colour alone: it is bolder, has a bar along its bottom
    edge and, on the wide bar, the dot before its label; aria-current stays. Only the header's tabs, so
-   the vault records and other .tab uses are unchanged. Colours are existing tokens. */
+   other .tab uses are unchanged. Colours are existing tokens. */
 .site-header .tab {
   border-color: var(--control-border);
   border-radius: var(--r-full);
@@ -1126,9 +1125,9 @@ html {
   padding-inline: var(--sp-3);
 }
 
-/* Phase 3 (2026-11-15): links in two rows, so each row is one group: Tools, then Information. Phase 5b
-   (2026-11-23): five links now. Six columns: the two Tools links take three each, the three
-   Information links take two each, so both rows are full. */
+/* Phase 3 (2026-11-15): links in two rows, so each row is one group: Tools, then Information. Phase 6
+   (2026-11-23): four links now. Six columns: the one Tools link (the analyzer) takes the whole first
+   row, the three Information links take two each, so both rows are full. */
 .nav-mobile {
   display: grid;
   grid-template-columns: repeat(6, minmax(0, 1fr));
@@ -1148,7 +1147,7 @@ html {
 }
 
 .nav-mobile .tab[data-group="tools"] {
-  grid-column: span 3;
+  grid-column: span 6;
 }
 
 .btn-label-wide {
@@ -2553,7 +2552,7 @@ details.card > summary {
   font-family: var(--font-mono);
 }
 
-/* ---------- Radar, portals, legal, vault ---------- */
+/* ---------- Portals, legal ---------- */
 .search-wrap {
   position: relative;
   flex: 1 1 260px;
@@ -2644,32 +2643,10 @@ ol.bullets {
   list-style: decimal;
 }
 
-.vault-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--sp-4);
-}
-
-/* Layout only: a vault record is a .tab, full width, two lines. */
-.vault-item {
-  flex-direction: column;
-  align-items: flex-start;
-  width: 100%;
-  border-color: var(--border);
-  text-align: start;
-  white-space: normal;
-}
-
 .narrow {
   width: 100%;
   max-width: 440px;
   margin-inline: auto;
-}
-
-@media (min-width: 768px) {
-  .vault-layout {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
-  }
 }
 
 /* ---------- Modal ---------- */
@@ -2750,7 +2727,7 @@ ol.bullets {
   background-image: linear-gradient(135deg, var(--green-bg), var(--surface) 70%);
 }
 
-/* The eyebrow as a pill (Threat Radar, Gov Portals Hub, Legal Guidelines, Encrypted Vault). */
+/* The eyebrow as a pill (Gov Portals Hub, Legal Guidelines). */
 .eyebrow-pill {
   display: inline-flex;
   align-self: flex-start;
@@ -2867,52 +2844,6 @@ ol.bullets {
 
 .accordion[data-open="true"] .accordion-chevron {
   rotate: 180deg;
-}
-
-/* Encrypted Vault: the key in a ringed circle, and the passphrase show/hide button. */
-.key-ring {
-  display: inline-flex;
-  align-self: center;
-  align-items: center;
-  justify-content: center;
-  width: 72px;
-  height: 72px;
-  border: 1px solid var(--green-line);
-  border-radius: var(--r-full);
-  background: var(--green-bg);
-  box-shadow: 0 0 0 6px var(--surface-sunken), 0 0 0 7px var(--green-line), 0 0 30px var(--glow-green);
-}
-
-.unlock-title {
-  text-align: center;
-}
-
-.pass-wrap {
-  position: relative;
-}
-
-.pass-wrap input {
-  padding-inline-end: calc(var(--target) + var(--sp-2));
-}
-
-.pass-toggle {
-  position: absolute;
-  inset-block-start: 0;
-  inset-inline-end: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: var(--target);
-  height: var(--target);
-  border: 0;
-  background: none;
-  color: var(--ink-soft);
-  cursor: pointer;
-}
-
-.pass-toggle:hover,
-.pass-toggle[aria-pressed="true"] {
-  color: var(--green);
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -3195,10 +3126,9 @@ ol.bullets {
     animation: icon-glow 3.6s ease-in-out infinite;
   }
 
-  /* Gov Portals Hub, Legal Guidelines, Encrypted Vault, About: one calm breath each, out of phase. */
+  /* Gov Portals Hub, Legal Guidelines, About: one calm breath each, out of phase. */
   .nav-icon[data-icon="portals"] .icon,
   .nav-icon[data-icon="legal"] .icon,
-  .nav-icon[data-icon="vault"] .icon,
   .nav-icon[data-icon="about"] .icon {
     animation: icon-breathe 6s ease-in-out infinite;
   }
@@ -3209,10 +3139,6 @@ ol.bullets {
 
   .nav-icon[data-icon="legal"] .icon {
     animation-delay: -2s;
-  }
-
-  .nav-icon[data-icon="vault"] .icon {
-    animation-delay: -4s;
   }
 
   /* UAE Hotlines: a red halo ring spreads from the phone and fades; the button's red glow rises
@@ -3602,38 +3528,6 @@ ol.bullets {
   }
 }
 
-/* Saved results on the Encrypted Vault tab: the plain count kept beside the encrypted vault. */
-.nav-count {
-  display: inline-grid;
-  place-items: center;
-  min-width: 20px;
-  height: 20px;
-  padding-inline: var(--sp-1);
-  border: 1px solid var(--green-line);
-  border-radius: 999px;
-  background: var(--green-bg);
-  color: var(--green-soft);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
-}
-
-.nav-mobile .tab .nav-count {
-  margin-inline-start: var(--sp-1);
-}
-
-/* Notes the person wrote when saving: their own text, shown as text. */
-.vault-notes {
-  padding: var(--sp-3);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  background: var(--surface-sunken);
-  color: var(--ink-soft);
-  white-space: pre-wrap;
-  overflow-wrap: anywhere;
-}
-
 /* The question asked before a delete. */
 .confirm-delete {
   padding: var(--sp-3);
@@ -3825,4 +3719,68 @@ ol.bullets {
 /* /about: the five common job-scam patterns (Phase 5b): space between the items. */
 .pattern-item + .pattern-item {
   margin-top: var(--sp-4);
+}
+
+/* Production Phase 6 (2026-11-23): the Action & Report Kit under every result, and the not-a-clearance
+   line under a Low or Medium result. Existing tokens and logical properties only. The buttons are full
+   width on a phone (one thumb, 44px tall), two to a row when there is room. */
+.kit .field label {
+  display: block;
+}
+
+.kit-note {
+  min-height: 112px;
+}
+
+.kit-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: var(--sp-2);
+}
+
+.kit-actions .btn {
+  width: 100%;
+}
+
+.kit-part + .kit-part {
+  padding-block-start: var(--sp-3);
+  border-block-start: 1px solid var(--border);
+}
+
+.kit-reply {
+  padding: var(--sp-3);
+}
+
+.kit-reply-text {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: var(--fs-sm);
+  overflow-wrap: anywhere;
+}
+
+.kit-links li a {
+  display: inline-block;
+  min-height: var(--target);
+  padding-block: var(--sp-3);
+  overflow-wrap: anywhere;
+}
+
+.kit-links .icon {
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+}
+
+.kit-status {
+  min-height: 1.5em;
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+.kit-status-failed {
+  color: var(--red-soft);
+}
+
+.not-clearance {
+  font-weight: 600;
 }

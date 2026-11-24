@@ -138,10 +138,14 @@ describe("the missed-scam link: where it appears", () => {
     expect(html).toContain("does not send the form any offer text, result or other data from the app");
   });
 
-  it("the result on /check renders the link after the result card, and only when there is a result", () => {
-    const source = read("src/components/OfferChecker.tsx");
-    expect(source).toContain("{result && checked && <MissedScamLink />}");
-    expect(source.indexOf("</ResultCard>")).toBeLessThan(source.indexOf("<MissedScamLink />"));
+  // Phase 6 (2026-11-23): changed on purpose. The link moved into the Action & Report Kit, which the
+  // result card renders under every result; it is no longer a separate line after the card.
+  it("the result on /check shows the link inside the Action & Report Kit, and only when there is a result", () => {
+    const kit = read("src/components/ActionKit.tsx");
+    expect(kit).toContain("<MissedScamLink />");
+    expect(read("src/components/ResultCard.tsx")).toContain("<ActionKit");
+    expect(read("src/components/OfferChecker.tsx")).not.toContain("<MissedScamLink />");
+    expect(read("src/components/OfferChecker.tsx")).toMatch(/\{result && checked && \(\s*<ResultCard/);
   });
 });
 

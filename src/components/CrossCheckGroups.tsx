@@ -16,7 +16,7 @@ import type { AnalysisResult, CrossCheck } from "@/lib/types";
 
 // The two groups under the findings (2026-11-11): "Cross-checks on the offer" (Verification) and
 // "Official steps for these findings" (Official channel). Both are score-neutral and say so once.
-// Shown on the result card and in a saved vault record. A result saved before these steps existed
+// Shown on the result card. A result saved before these steps existed
 // has neither field, so neither group is shown for it.
 
 export const CROSS_CHECKS_TITLE = "Cross-checks on the offer";

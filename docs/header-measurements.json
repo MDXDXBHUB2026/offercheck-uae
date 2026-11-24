@@ -1,5 +1,5 @@
 {
-  "measuredAt": "2026-11-23",
+  "measuredAt": "2026-11-24",
   "base": "next start (production build)",
   "results": [
     {
@@ -43,50 +43,44 @@
       "tabs": [
         {
           "label": "Analyzer",
-          "left": 371.5,
-          "right": 474.5,
+          "left": 406.5,
+          "right": 509.5,
           "width": 103
         },
         {
-          "label": "Vault",
-          "left": 478.5,
-          "right": 544.5,
-          "width": 66
-        },
-        {
           "label": "Portals",
-          "left": 561.5,
-          "right": 638.5,
+          "left": 526.5,
+          "right": 603.5,
           "width": 77
         },
         {
           "label": "Guidelines",
-          "left": 642.5,
-          "right": 742.5,
+          "left": 607.5,
+          "right": 707.5,
           "width": 100
         },
         {
           "label": "About",
-          "left": 746.5,
-          "right": 818.5,
+          "left": 711.5,
+          "right": 783.5,
           "width": 72
         }
       ],
       "groups": [
         {
-          "left": 371.5,
-          "right": 544.5,
-          "width": 173
+          "left": 406.5,
+          "right": 509.5,
+          "width": 103
         },
         {
-          "left": 561.5,
-          "right": 818.5,
+          "left": 526.5,
+          "right": 783.5,
           "width": 257
         }
       ],
       "divider": {
-        "left": 552.5,
-        "right": 553.5,
+        "left": 517.5,
+        "right": 518.5,
         "width": 1
       }
     },
@@ -131,50 +125,44 @@
       "tabs": [
         {
           "label": "Analyzer",
-          "left": 451.5,
-          "right": 554.5,
+          "left": 486.5,
+          "right": 589.5,
           "width": 103
         },
         {
-          "label": "Vault",
-          "left": 558.5,
-          "right": 624.5,
-          "width": 66
-        },
-        {
           "label": "Portals",
-          "left": 641.5,
-          "right": 718.5,
+          "left": 606.5,
+          "right": 683.5,
           "width": 77
         },
         {
           "label": "Guidelines",
-          "left": 722.5,
-          "right": 822.5,
+          "left": 687.5,
+          "right": 787.5,
           "width": 100
         },
         {
           "label": "About",
-          "left": 826.5,
-          "right": 898.5,
+          "left": 791.5,
+          "right": 863.5,
           "width": 72
         }
       ],
       "groups": [
         {
-          "left": 451.5,
-          "right": 624.5,
-          "width": 173
+          "left": 486.5,
+          "right": 589.5,
+          "width": 103
         },
         {
-          "left": 641.5,
-          "right": 898.5,
+          "left": 606.5,
+          "right": 863.5,
           "width": 257
         }
       ],
       "divider": {
-        "left": 632.5,
-        "right": 633.5,
+        "left": 597.5,
+        "right": 598.5,
         "width": 1
       }
     },
@@ -219,50 +207,44 @@
       "tabs": [
         {
           "label": "Analyzer",
-          "left": 515.5,
-          "right": 618.5,
+          "left": 550.5,
+          "right": 653.5,
           "width": 103
         },
         {
-          "label": "Vault",
-          "left": 622.5,
-          "right": 688.5,
-          "width": 66
-        },
-        {
           "label": "Portals",
-          "left": 705.5,
-          "right": 782.5,
+          "left": 670.5,
+          "right": 747.5,
           "width": 77
         },
         {
           "label": "Guidelines",
-          "left": 786.5,
-          "right": 886.5,
+          "left": 751.5,
+          "right": 851.5,
           "width": 100
         },
         {
           "label": "About",
-          "left": 890.5,
-          "right": 962.5,
+          "left": 855.5,
+          "right": 927.5,
           "width": 72
         }
       ],
       "groups": [
         {
-          "left": 515.5,
-          "right": 688.5,
-          "width": 173
+          "left": 550.5,
+          "right": 653.5,
+          "width": 103
         },
         {
-          "left": 705.5,
-          "right": 962.5,
+          "left": 670.5,
+          "right": 927.5,
           "width": 257
         }
       ],
       "divider": {
-        "left": 696.5,
-        "right": 697.5,
+        "left": 661.5,
+        "right": 662.5,
         "width": 1
       }
     },
@@ -307,50 +289,44 @@
       "tabs": [
         {
           "label": "Analyzer",
-          "left": 691.5,
-          "right": 794.5,
+          "left": 726.5,
+          "right": 829.5,
           "width": 103
         },
         {
-          "label": "Vault",
-          "left": 798.5,
-          "right": 864.5,
-          "width": 66
-        },
-        {
           "label": "Portals",
-          "left": 881.5,
-          "right": 958.5,
+          "left": 846.5,
+          "right": 923.5,
           "width": 77
         },
         {
           "label": "Guidelines",
-          "left": 962.5,
-          "right": 1062.5,
+          "left": 927.5,
+          "right": 1027.5,
           "width": 100
         },
         {
           "label": "About",
-          "left": 1066.5,
-          "right": 1138.5,
+          "left": 1031.5,
+          "right": 1103.5,
           "width": 72
         }
       ],
       "groups": [
         {
-          "left": 691.5,
-          "right": 864.5,
-          "width": 173
+          "left": 726.5,
+          "right": 829.5,
+          "width": 103
         },
         {
-          "left": 881.5,
-          "right": 1138.5,
+          "left": 846.5,
+          "right": 1103.5,
           "width": 257
         }
       ],
       "divider": {
-        "left": 872.5,
-        "right": 873.5,
+        "left": 837.5,
+        "right": 838.5,
         "width": 1
       }
     },
@@ -395,50 +371,44 @@
       "tabs": [
         {
           "label": "فاحص العروض",
-          "left": 806.5,
-          "right": 940.5,
+          "left": 770.5,
+          "right": 904.5,
           "width": 134
         },
         {
-          "label": "الخزنة",
-          "left": 734.5,
-          "right": 802.5,
-          "width": 68
-        },
-        {
           "label": "بوابات التحقق",
-          "left": 601.5,
-          "right": 717.5,
+          "left": 637.5,
+          "right": 753.5,
           "width": 116
         },
         {
           "label": "الإرشادات",
-          "left": 505.5,
-          "right": 597.5,
+          "left": 541.5,
+          "right": 633.5,
           "width": 92
         },
         {
           "label": "حول",
-          "left": 443.5,
-          "right": 501.5,
+          "left": 479.5,
+          "right": 537.5,
           "width": 58
         }
       ],
       "groups": [
         {
-          "left": 734.5,
-          "right": 940.5,
-          "width": 206
+          "left": 770.5,
+          "right": 904.5,
+          "width": 134
         },
         {
-          "left": 443.5,
-          "right": 717.5,
+          "left": 479.5,
+          "right": 753.5,
           "width": 274
         }
       ],
       "divider": {
-        "left": 725.5,
-        "right": 726.5,
+        "left": 761.5,
+        "right": 762.5,
         "width": 1
       }
     },
@@ -483,50 +453,44 @@
       "tabs": [
         {
           "label": "فاحص العروض",
-          "left": 886.5,
-          "right": 1020.5,
+          "left": 850.5,
+          "right": 984.5,
           "width": 134
         },
         {
-          "label": "الخزنة",
-          "left": 814.5,
-          "right": 882.5,
-          "width": 68
-        },
-        {
           "label": "بوابات التحقق",
-          "left": 681.5,
-          "right": 797.5,
+          "left": 717.5,
+          "right": 833.5,
           "width": 116
         },
         {
           "label": "الإرشادات",
-          "left": 585.5,
-          "right": 677.5,
+          "left": 621.5,
+          "right": 713.5,
           "width": 92
         },
         {
           "label": "حول",
-          "left": 523.5,
-          "right": 581.5,
+          "left": 559.5,
+          "right": 617.5,
           "width": 58
         }
       ],
       "groups": [
         {
-          "left": 814.5,
-          "right": 1020.5,
-          "width": 206
+          "left": 850.5,
+          "right": 984.5,
+          "width": 134
         },
         {
-          "left": 523.5,
-          "right": 797.5,
+          "left": 559.5,
+          "right": 833.5,
           "width": 274
         }
       ],
       "divider": {
-        "left": 805.5,
-        "right": 806.5,
+        "left": 841.5,
+        "right": 842.5,
         "width": 1
       }
     },
@@ -571,50 +535,44 @@
       "tabs": [
         {
           "label": "فاحص العروض",
-          "left": 950.5,
-          "right": 1084.5,
+          "left": 914.5,
+          "right": 1048.5,
           "width": 134
         },
         {
-          "label": "الخزنة",
-          "left": 878.5,
-          "right": 946.5,
-          "width": 68
-        },
-        {
           "label": "بوابات التحقق",
-          "left": 745.5,
-          "right": 861.5,
+          "left": 781.5,
+          "right": 897.5,
           "width": 116
         },
         {
           "label": "الإرشادات",
-          "left": 649.5,
-          "right": 741.5,
+          "left": 685.5,
+          "right": 777.5,
           "width": 92
         },
         {
           "label": "حول",
-          "left": 587.5,
-          "right": 645.5,
+          "left": 623.5,
+          "right": 681.5,
           "width": 58
         }
       ],
       "groups": [
         {
-          "left": 878.5,
-          "right": 1084.5,
-          "width": 206
+          "left": 914.5,
+          "right": 1048.5,
+          "width": 134
         },
         {
-          "left": 587.5,
-          "right": 861.5,
+          "left": 623.5,
+          "right": 897.5,
           "width": 274
         }
       ],
       "divider": {
-        "left": 869.5,
-        "right": 870.5,
+        "left": 905.5,
+        "right": 906.5,
         "width": 1
       }
     },
@@ -659,50 +617,44 @@
       "tabs": [
         {
           "label": "فاحص العروض",
-          "left": 1126.5,
-          "right": 1260.5,
+          "left": 1090.5,
+          "right": 1224.5,
           "width": 134
         },
         {
-          "label": "الخزنة",
-          "left": 1054.5,
-          "right": 1122.5,
-          "width": 68
-        },
-        {
           "label": "بوابات التحقق",
-          "left": 921.5,
-          "right": 1037.5,
+          "left": 957.5,
+          "right": 1073.5,
           "width": 116
         },
         {
           "label": "الإرشادات",
-          "left": 825.5,
-          "right": 917.5,
+          "left": 861.5,
+          "right": 953.5,
           "width": 92
         },
         {
           "label": "حول",
-          "left": 763.5,
-          "right": 821.5,
+          "left": 799.5,
+          "right": 857.5,
           "width": 58
         }
       ],
       "groups": [
         {
-          "left": 1054.5,
-          "right": 1260.5,
-          "width": 206
+          "left": 1090.5,
+          "right": 1224.5,
+          "width": 134
         },
         {
-          "left": 763.5,
-          "right": 1037.5,
+          "left": 799.5,
+          "right": 1073.5,
           "width": 274
         }
       ],
       "divider": {
-        "left": 1045.5,
-        "right": 1046.5,
+        "left": 1081.5,
+        "right": 1082.5,
         "width": 1
       }
     }

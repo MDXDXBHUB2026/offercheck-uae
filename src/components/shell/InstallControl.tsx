@@ -10,8 +10,6 @@ import { Button } from "@/components/ui";
 // there a short hint gives the two taps; in the footer it can be dismissed. Nothing shows by itself
 // on arrival, and nothing is sent anywhere.
 
-export const INSTALL_SEPARATE_NOTE =
-  "Saved results stay with the browser or the installed app they were saved in.";
 export const IOS_INSTALL_STEPS = "To install on iPhone or iPad: tap Share, then Add to Home Screen.";
 
 export function InstallControl({ place }: { place: "settings" | "footer" }) {
@@ -26,7 +24,6 @@ export function InstallControl({ place }: { place: "settings" | "footer" }) {
           <Download className="icon" aria-hidden="true" />
           {t("Install app")}
         </Button>
-        {place === "settings" && <p className="small muted">{t(INSTALL_SEPARATE_NOTE)}</p>}
       </div>
     );
   }
@@ -39,7 +36,6 @@ export function InstallControl({ place }: { place: "settings" | "footer" }) {
           <p id={`install-hint-${place}`} className="small">
             {t(IOS_INSTALL_STEPS)}
           </p>
-          <p className="small muted">{t(INSTALL_SEPARATE_NOTE)}</p>
         </div>
         {place === "footer" && (
           <button type="button" className="icon-button" onClick={dismissInstallHint}>

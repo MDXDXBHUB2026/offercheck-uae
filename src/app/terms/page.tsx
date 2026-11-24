@@ -46,6 +46,13 @@ const SECTIONS: readonly { id: string; title: string; lines: readonly string[] }
     ],
   },
   {
+    id: "kit-heading",
+    title: "The Action & Report Kit",
+    lines: [
+      "The Action & Report Kit under each result is created on your device from the check you just ran, and nothing in it is sent. It is not an official report form, and Offer Check does not report anything for you. What you copy, save or send from it is your choice.",
+    ],
+  },
+  {
     id: "use-heading",
     title: "Acceptable use",
     lines: [

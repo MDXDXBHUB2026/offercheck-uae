@@ -6,10 +6,10 @@ import { describe, expect, it } from "vitest";
 import { PROTOTYPE_NOTICE, SiteFooter } from "@/components/shell/site";
 import Home from "./page";
 
-// The redesign: the notice names the server (it stores nothing), Google (only on translation) and
-// the Encrypted Vault (an encrypted copy in this browser, only on Save to Encrypted Vault).
+// The redesign: the notice names the server (it stores nothing) and Google (only on translation).
+// Phase 6 (2026-11-23): the sentence about the saved-results store was removed with the Vault.
 const NOTICE =
-  "Prototype. Use synthetic or redacted offers only. Emirates ID, passport and UAE IBAN numbers in common formats are hidden in your browser before the text is sent. Offer Check&#x27;s server does not store offer text. If you choose translation, Google Cloud Translation receives it. Save to Encrypted Vault keeps an encrypted copy in this browser only.";
+  "Prototype. Use synthetic or redacted offers only. Emirates ID, passport and UAE IBAN numbers in common formats are hidden in your browser before the text is sent. Offer Check&#x27;s server does not store offer text. If you choose translation, Google Cloud Translation receives it.";
 
 function sourceFiles(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -33,9 +33,10 @@ describe("home page", () => {
 });
 
 // The notice says the server does not store offer text. These checks keep that true.
-// Two files may use browser storage, both named in the notice or the footer and checked below: the
-// Encrypted Vault (only ciphertext, on the user's Save to Encrypted Vault) and the language switch (only
-// "en" or "ar"). Every other file stays free of storage.
+// A few files may use browser storage, each checked below: the language switch (only "en" or "ar"), the
+// display choices and Clear my data. src/lib/vault.ts is still in the tree but no page imports it
+// since Phase 6 (2026-11-23), so it writes nothing at run time; it stays because its test
+// (src/lib/vaultCrypto.test.ts) is locked and imports it. Every other file stays free of storage.
 const STORAGE_ALLOWED = [
   join("src", "lib", "vault.ts"),
   join("src", "components", "shell", "lang.ts"),
@@ -56,9 +57,9 @@ describe("no logging or storage of offer text", () => {
   const files = [...sourceFiles(join(process.cwd(), "src")), join(process.cwd(), "next.config.ts")];
   const read = (file: string) => readFileSync(join(process.cwd(), file), "utf8");
 
-  it("the vault writes only the encrypted payload, and the language switch only the language", () => {
+  it("the unused vault module writes only the encrypted payload, and the language switch only the language", () => {
     const vault = read(STORAGE_ALLOWED[0]);
-    // Besides the ciphertext, only the number of saved results (for the Vault tab) is written.
+    // Besides the ciphertext, only the number of saved results is written.
     expect(vault.match(/localStorage\.setItem\(([^)]*\)?)\)/g)).toEqual([
       "localStorage.setItem(VAULT_KEY, value)",
       "localStorage.setItem(VAULT_COUNT_KEY, String(count))",

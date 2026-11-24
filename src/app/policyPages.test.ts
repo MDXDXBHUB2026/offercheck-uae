@@ -77,7 +77,7 @@ describe("the three pages render in English and Arabic", () => {
   // Arabic: no English sentence is left untranslated. What may stay in Latin letters: product and
   // service names, the address, the date, and the two technical terms given in brackets.
   const LATIN_ALLOWED = new Set(
-    "Offer Check UAE Google Cloud Translation Vercel Upstash Redis IP salted hash cookies WhatsApp LinkedIn Delete all Gmail Yahoo".split(" "),
+    "Offer Check UAE Google Cloud Translation Vercel Upstash Redis IP salted hash cookies WhatsApp LinkedIn Gmail Yahoo".split(" "),
   );
   it.each(Object.keys(PAGES) as Page[])("/%s in Arabic leaves no English text outside names", (page) => {
     const html = render(page, "ar")
@@ -164,12 +164,12 @@ describe("no personal name in user-facing copy", () => {
   // Capitalised words that may appear: product, place, service and organisation names, and the
   // first word of a sentence or heading. Anything else (such as a person's name) fails.
   const ALLOWED = new Set(
-    `About Acceptable Before Check Checks Confirm Contact Cross Delete Do Each Emirates Encrypted English Five Fixed Google Gov Hub
+    `About Acceptable Before Check Checks Confirm Contact Cross Delete Do Each Emirates English Five Fixed Google Gov Hub
     IBAN IBANs ID If India It Last Like Limits Mumbai No Not Numbers Offer Official Open Or Portals Privacy Questions Rate Read Redis
-    Reports Risk Save Some Terms Text The There They To Translation Translate UAE Upstash Use Vercel Vault Your WhatsApp
+    Reports Risk Save Some Terms Text The There They To Translation Translate UAE Upstash Use Vercel Your WhatsApp
     LinkedIn People Cloud What When Where Who An Arabic Indic Information Tools IP A Before How You AI Remove Send
     After Clear Clearing Guidelines Pages Settings Titles Tell Form Please We
-    These One Identity Wait Pressure Slow Take Gmail Yahoo Look Analyzer Report Government MoI Aman Abu Dhabi Ministry Human Resources Emiratisation MOHRE All`.split(/\s+/),
+    These One Identity Wait Pressure Slow Take Gmail Yahoo Look Analyzer Report Government MoI Aman Abu Dhabi Ministry Human Resources Emiratisation MOHRE All Action Kit Nothing`.split(/\s+/),
   );
   it.each(["about", "privacy", "terms", "footer"] as const)("%s: every capitalised word is on the list", (page) => {
     const words = new Set(text(render(page, "en")).match(/\b[A-Z][A-Za-z]+\b/g) ?? []);
@@ -248,7 +248,7 @@ describe("privacy statements that can be checked on the code", () => {
     expect(source).toContain('["EXPIRE", key, String(ttlSeconds), "NX"]');
   });
 
-  it("what stays in the browser: exactly the vault, its count, the language, animation, text size and theme choices, and a dismissed install hint", () => {
+  it("what stays in the browser: exactly the language, animation, text size and theme choices, and a dismissed install hint (the unused vault module and the Clear my data list are the only other files that touch storage)", () => {
     const storage = sources("src").filter((path) => /localStorage|sessionStorage|indexedDB/.test(read(path)));
     expect(storage.sort()).toEqual([
       "src/components/shell/clearData.ts",
@@ -266,12 +266,15 @@ describe("privacy statements that can be checked on the code", () => {
     expect(storage.some((path) => /sessionStorage|indexedDB/.test(read(path)))).toBe(false);
     expect(read("src/components/shell/lang.ts")).toContain('const STORAGE_KEY = "offercheck_lang";');
     expect(read("src/components/shell/motion.ts")).toMatch(/MOTION_STORAGE_KEY = "offercheck_motion"/);
-    expect(read("src/lib/vault.ts")).toMatch(/offercheck_vault_v1/);
-    expect(read("src/lib/vault.ts")).toMatch(/offercheck_vault_count_v1/);
+    // Phase 6: the Action & Report Kit stores nothing: no storage API in its files.
+    for (const file of ["src/components/ActionKit.tsx", "src/lib/actionKit.ts"]) {
+      expect(read(file), file).not.toMatch(/localStorage|sessionStorage|indexedDB|document\.cookie/);
+    }
+    expect(read("src/components/shell/clearData.ts")).toMatch(/offercheck_vault_v1/);
+    expect(read("src/components/shell/clearData.ts")).toMatch(/offercheck_vault_count_v1/);
     // Threat Radar was removed (2026-11-23), so no report is kept in the tab either.
     expect(existsSync(join(process.cwd(), "src/components/radar"))).toBe(false);
-    // How to clear them: the vault's own Delete all, and (Phase 4a) Settings > Clear my data.
-    expect(read("src/components/EncryptedVault.tsx")).toContain('{t("Delete all")}');
+    // How to clear them: Settings > Clear my data (Phase 4a).
     expect(read("src/components/shell/SettingsPanel.tsx")).toContain('{t("Clear my data")}');
   });
 

@@ -4,8 +4,8 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
-// Result card action bar (2026-11-11): Listen, Export PDF, Save to Encrypted Vault and New Audit sit in
-// the result card's header, on the score's row; the button is renamed everywhere it is named; a
+// Result card action bar (2026-11-11): Listen, Export PDF and New Audit sit in the result card's
+// header, on the score's row (the Save button was removed with the Vault, Phase 6, 2026-11-23); a
 // completed check brings the header into view and focuses its heading. Chrome checks at 1280 and
 // 390 px in English and Arabic are in docs/test-report.md.
 
@@ -30,15 +30,13 @@ import { runManager } from "@/lib/agents/manager";
 import { RULES } from "@/lib/agents/redFlag";
 import { AR } from "@/lib/i18nAr";
 
-const NEW_NAME = "Save to Encrypted Vault";
-const AR_NEW_NAME = "حفظ في الخزنة المشفّرة";
 const read = (path: string) => readFileSync(join(process.cwd(), path), "utf8").replaceAll("\r\n", "\n");
 
 function render(lang: "en" | "ar") {
   env.lang = lang;
   const result = runManager(SCAM_OFFER);
   return renderToStaticMarkup(
-    createElement(ResultCard, { result, ruleCount: RULES.length, onSave: () => {}, onNewAudit: () => {} }),
+    createElement(ResultCard, { result, ruleCount: RULES.length, onNewAudit: () => {} }),
   );
 }
 
@@ -52,12 +50,12 @@ function headerRow(html: string): string {
 }
 
 const LABELS = {
-  en: ["Listen", "Export PDF", NEW_NAME, "New Audit"],
-  ar: [AR["Listen"], AR["Export PDF"], AR_NEW_NAME, AR["New Audit"]],
+  en: ["Listen", "Export PDF", "New Audit"],
+  ar: [AR["Listen"], AR["Export PDF"], AR["New Audit"]],
 };
 
-describe("the four actions are in the result card header", () => {
-  it.each(["en", "ar"] as const)("%s: Listen, Export PDF, Save to Encrypted Vault, New Audit, in that order, on the score's row", (lang) => {
+describe("the three actions are in the result card header", () => {
+  it.each(["en", "ar"] as const)("%s: Listen, Export PDF, New Audit, in that order, on the score's row", (lang) => {
     const html = render(lang);
     const row = headerRow(html);
     const toolbar = row.slice(row.indexOf('class="result-toolbar no-print"'));
@@ -93,7 +91,7 @@ describe("the four actions are in the result card header", () => {
   });
 });
 
-describe("the button is called Save to Encrypted Vault everywhere", () => {
+describe("the Save button is gone", () => {
   function sources(dir: string): string[] {
     return readdirSync(join(process.cwd(), dir)).flatMap((name) => {
       const path = `${dir}/${name}`;
@@ -101,33 +99,12 @@ describe("the button is called Save to Encrypted Vault everywhere", () => {
     });
   }
 
-  it("no source file still uses the old button name", () => {
+  it("no source file names the old button, and the result card has no Save button or passphrase line", () => {
     const old = ["Save", "Encrypted"].join(" ");
     expect(sources("src").filter((path) => read(path).includes(old))).toEqual([]);
-  });
-
-  it("the strings that name it use the new name: button, vault empty state, vault intro, footer, privacy line", () => {
-    expect(read("src/components/ResultCard.tsx")).toContain(`t("${NEW_NAME}")`);
-    const vault = read("src/components/EncryptedVault.tsx");
-    expect(vault).toContain(`choose ${NEW_NAME} on the result`);
-    expect(vault).toContain(`Results you save with ${NEW_NAME} stay in this browser`);
-    expect(read("src/components/shell/site.tsx")).toContain(`${NEW_NAME} keeps an encrypted copy`);
-    // Production hardening Phase 3 (2026-11-15): the privacy line moved from /legal#about to /about.
-    expect(read("src/app/about/page.tsx")).toContain(`${NEW_NAME} keeps an encrypted copy`);
-  });
-
-  it("Arabic: every entry that names it uses the vault's Arabic name, marked for review", () => {
-    const named = Object.entries(AR).filter(([english]) => english.includes(NEW_NAME));
-    expect(named.length).toBeGreaterThanOrEqual(6);
-    for (const [, arabic] of named) expect(arabic).toContain(AR_NEW_NAME);
-    expect(Object.values(AR).some((arabic) => arabic.includes("حفظ مشفّر"))).toBe(false);
-    const dict = read("src/lib/i18nAr.ts").split("\n");
-    for (const [english] of named) {
-      const line = dict.findIndex((text) => text.startsWith(`  ${JSON.stringify(english)}`));
-      expect(line, english).toBeGreaterThan(0);
-      expect(dict[line - 1], english).toMatch(/\/\/ \[review\] button renamed/);
-    }
-    expect(dict[dict.findIndex((text) => text.startsWith('  "Result actions"')) - 1]).toMatch(/\/\/ \[review\]/);
+    const html = render("en");
+    expect(html).not.toMatch(/Save to|passphrase/i);
+    expect(Object.keys(AR).filter((key) => key.includes(old))).toEqual([]);
   });
 });
 

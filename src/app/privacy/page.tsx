@@ -63,11 +63,10 @@ const SECTIONS: readonly Section[] = [
     id: "browser-heading",
     title: "What stays in your browser",
     lines: [
-      "The Encrypted Vault: results you choose to save, encrypted with a passphrase that is not stored, and the number of saved results. Titles and notes are saved inside it, with Emirates ID, passport and UAE IBAN numbers hidden.",
+      "The Action & Report Kit under each result is created on your device from the check you just ran. Nothing in it is sent to Offer Check or anywhere else, and Offer Check does not store it. It is text you copy or save to your device yourself.",
       "Your choices in Settings: language, animations and text size, and whether you dismissed the install hint.",
-      "If you export the vault, the file is saved where your browser puts downloads. It is still encrypted, and Offer Check keeps no copy.",
-      "To clear them: open Settings and use Clear my data on this device. It removes the vault and every choice without the passphrase. Clearing this site's data in your browser's settings does the same.",
-      "If you install the app, it keeps its own storage: results saved in the installed app stay there, and results saved in the browser stay in the browser.",
+      "If you download the summary, the file is saved where your browser puts downloads. Offer Check keeps no copy.",
+      "To clear them: open Settings and use Clear my data on this device. It removes every choice, and any results that an earlier version of Offer Check saved in this browser. Clearing this site's data in your browser's settings does the same.",
     ],
   },
   {

@@ -19,9 +19,9 @@ import { Button } from "@/components/ui";
 // focus goes back to the gear button.
 
 export const CLEAR_DATA_EXPLAIN =
-  "Removes your Encrypted Vault, its count and every choice saved in this browser (language, animations, text size, theme). Nothing is stored on Offer Check's server.";
+  "Removes every choice saved in this browser (language, animations, text size, theme), and any results saved here by an earlier version. Nothing is stored on Offer Check's server.";
 export const CLEAR_DATA_CONFIRM =
-  "Clear all Offer Check data on this device? Your saved results will be permanently deleted. This cannot be undone.";
+  "Clear all Offer Check data on this device? Your choices, and any results saved here by an earlier version, will be permanently deleted. This cannot be undone.";
 export const CLEAR_DATA_DONE = "Your Offer Check data was removed from this browser.";
 
 const FOCUSABLE =

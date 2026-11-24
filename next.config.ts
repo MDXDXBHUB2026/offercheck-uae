@@ -23,9 +23,12 @@ export const SECURITY_HEADERS = [
 // its own page again (src/app/about/page.tsx).
 // Threat Radar was removed (owner decision, 2026-11-23, production Phase 5b): /radar answers 308 and
 // goes to the analyzer.
+// The Encrypted Vault was removed (owner decision, 2026-11-23, production Phase 6, replaced by the
+// Action & Report Kit under every result): /vault answers 308 and goes to the analyzer.
 export const REDIRECTS = [
   { source: "/guide", destination: "/legal", permanent: false },
   { source: "/radar", destination: "/check", permanent: true },
+  { source: "/vault", destination: "/check", permanent: true },
 ];
 
 const nextConfig: NextConfig = {

@@ -2,14 +2,8 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it } from "vitest";
 
-// The vault page shows its unlock form only when a vault is saved; the plain count says one is.
-const vaultState = vi.hoisted(() => ({ value: "pending" }));
-vi.mock("@/components/vaultStore", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@/components/vaultStore")>()),
-  useVaultState: () => vaultState.value,
-}));
 import { CHECKING_PANEL_DELAY_MS, checkingSteps } from "@/components/OfferChecker";
 import { COPIED_MS, DIMENSIONS, ResultCard } from "@/components/ResultCard";
 import { LEGIT_OFFER, SCAM_OFFER } from "@/lib/agents/fixtures";
@@ -18,7 +12,6 @@ import { RULES } from "@/lib/agents/redFlag";
 import { mainChannels } from "@/lib/authorities";
 import { WARNING_SIGNS } from "@/lib/warningSigns";
 import { contact, MOHRE_INQUIRY_URL, UAE_CONTACTS } from "@/data/uaeContacts";
-import { EncryptedVault } from "@/components/EncryptedVault";
 import { NAV_ITEMS } from "@/components/shell/site";
 import AboutPage from "@/app/about/page";
 import LegalPage from "@/app/legal/page";
@@ -238,9 +231,6 @@ describe("AI Studio port: right-to-left", () => {
       ".verify-steps li",
       ".report-links",
       ".accordion-toggle",
-      ".pass-wrap input",
-      ".pass-toggle",
-      ".key-ring",
     ]) {
       const at = css.indexOf(`${selector} {`);
       expect(at, selector).toBeGreaterThan(-1);
@@ -447,19 +437,6 @@ describe("AI Studio port: Phase 3 pages", () => {
     expect(block("@media print").text).toMatch(/\.accordion-panel \{\s*grid-template-rows: 1fr !important;\s*visibility: visible !important;/);
   });
 
-  it("Encrypted Vault: the existing wording as a pill, a ringed key, show/hide passphrase and a full-width button", () => {
-    vaultState.value = "1";
-    const page = html(createElement(EncryptedVault));
-    vaultState.value = "pending";
-    expect(page).toContain('<p class="eyebrow-pill">');
-    expect(page).toContain("AES-256-GCM, in this browser only");
-    expect(page).toMatch(/<span class="key-ring" aria-hidden="true">/);
-    expect(page).toMatch(/<input id="vault-open-pass" type="password"/);
-    expect(page).toMatch(/<button type="button" class="pass-toggle" aria-pressed="false" aria-controls="vault-open-pass">[\s\S]*?Show passphrase<\/span><\/button>/);
-    expect(page).toMatch(/<button type="submit" class="btn btn-primary btn-block btn-lg"/);
-    expect(page).not.toMatch(/zero server footprint/i);
-  });
-
   it("route change: the page fades in over 200ms with an 8px rise", () => {
     expect(block("@media (prefers-reduced-motion: no-preference)").text).toMatch(/\.page > \.stack \{\s*animation: page-in 200ms/);
     expect(css).toMatch(/@keyframes page-in \{\s*from \{\s*opacity: 0;\s*translate: 0 8px;/);
@@ -512,7 +489,7 @@ describe("Header: the brand stays fully visible", () => {
 
   it("the three longest Arabic tab labels are shortened to the compact bar's words", () => {
     // Production hardening Phase 3 (2026-11-15): six tabs, Tools then Information; About added.
-    expect(NAV_ITEMS.map((item) => item.labelAr)).toEqual(["فاحص العروض", "الخزنة", "بوابات التحقق", "الإرشادات", "حول"]);
+    expect(NAV_ITEMS.map((item) => item.labelAr)).toEqual(["فاحص العروض", "بوابات التحقق", "الإرشادات", "حول"]);
   });
 });
 

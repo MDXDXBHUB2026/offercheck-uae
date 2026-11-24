@@ -77,7 +77,7 @@ describe("3b/3c: only the header icons loop, slowly, with opacity or transform",
   const motion = block("@media (prefers-reduced-motion: no-preference)").text;
   const LOOPS: [string, string][] = [
     ['.nav-icon[data-icon="analyzer"]::before', "icon-glow"],
-    // The shared breathe rule lists portals, legal, vault and about; its last selector names it.
+    // The shared breathe rule lists portals, legal and about; its last selector names it.
     ['.nav-icon[data-icon="about"] .icon', "icon-breathe"],
     [".hotline-icon::after", "halo-ring"],
     [".hotline-btn::before", "glow-rise"],
@@ -92,11 +92,10 @@ describe("3b/3c: only the header icons loop, slowly, with opacity or transform",
   });
 
   // Production hardening Phase 3 (2026-11-15): About joins them, out of phase with the rest.
-  it("the four calm icons breathe out of phase", () => {
-    expect(motion).toMatch(/\.nav-icon\[data-icon="portals"\] \.icon,\s*\.nav-icon\[data-icon="legal"\] \.icon,\s*\.nav-icon\[data-icon="vault"\] \.icon,\s*\.nav-icon\[data-icon="about"\] \.icon \{\s*animation: icon-breathe 6s/);
+  it("the three calm icons breathe out of phase", () => {
+    expect(motion).toMatch(/\.nav-icon\[data-icon="portals"\] \.icon,\s*\.nav-icon\[data-icon="legal"\] \.icon,\s*\.nav-icon\[data-icon="about"\] \.icon \{\s*animation: icon-breathe 6s/);
     expect(motion).toMatch(/\.nav-icon\[data-icon="about"\] \.icon \{\s*animation-delay: -3s;/);
     expect(motion).toMatch(/\.nav-icon\[data-icon="legal"\] \.icon \{\s*animation-delay: -2s;/);
-    expect(motion).toMatch(/\.nav-icon\[data-icon="vault"\] \.icon \{\s*animation-delay: -4s;/);
   });
 
   it("the header keyframes change only opacity and scale, and never dim below 0.55", () => {
@@ -128,9 +127,9 @@ describe("3b/3c: only the header icons loop, slowly, with opacity or transform",
 });
 
 describe("3b: the header icons are present and decorative", () => {
-  it("renders all four tab icons in aria-hidden wrappers (the Radar tab and its signal icon were removed 2026-11-23)", () => {
+  it("renders all four tab icons in aria-hidden wrappers (the Radar tab was removed 2026-11-23, the Vault tab in Phase 6)", () => {
     const html = renderToStaticMarkup(createElement(Navbar));
-    for (const id of ["analyzer", "portals", "legal", "vault"]) {
+    for (const id of ["analyzer", "portals", "legal", "about"]) {
       expect(html).toContain(`<span class="nav-icon" data-icon="${id}" aria-hidden="true"><svg`);
     }
     expect(html).not.toMatch(/signal-arc|signal-dot|data-icon="radar"/);
