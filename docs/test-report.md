@@ -2,6 +2,16 @@
 
 As of 2026-11-08, updated for QA round 2 (LANG-2 and COPY-1, the QA round 2 commit, see git log) on top of the QA fix batch `34903e2` (UX-1, LANG-1, nav "Soon" badge, approval wording). Every number gives its source. No automated test here ran against a live URL. The live site was checked by hand; see "Manual post-deploy QA (live site)" below.
 
+## Production Phase 7: audit panel removed, Sender check added (2026-11-24)
+
+Source: `npx vitest run` on branch `phase-7`: **3,836 tests in 71 files (one of them, `actionKit.test.ts`, timed out once in the full run and passed alone)**. Before (Phase 6 merge, `398609a`): 3,606 tests in 70 files (3 of those failed in the fresh worktree used for the count; the cause was not investigated). Reconciliation, computed from the two JSON reports: 3,606 - 24 removed + 254 added = 3,836.
+
+- **Removed (24):** `AuditTrail.test.ts` 4; `arabicGaps.test.ts` 10 (two 4b and eight 4g rows for the deleted audit strings and the old offline sentence); `plainFindings.test.ts` 2 (renamed); `routes.test.ts` 2 (four-tab wording); `arabic.test.ts` 1 (renamed); `headerMeasurements.test.ts` 1 (renamed); `page.test.ts` 1 (the AuditTrail source scan); `design.test.ts` 1 (renamed); `audit.test.ts` 1 (the deleted file's list entry); `serviceWorker.test.ts` 1 (renamed).
+- **Added (254):** `senderCheck.test.ts` (lib) 138; `senderCheck.test.ts` (components) 39; `arabicGaps.test.ts` 65 (the new Arabic strings: 4b and 4g rows); `page.test.ts` 3 (the three new source files); `routes.test.ts` 3; and one each, as renamed replacements, in `plainFindings` (2), `arabic`, `headerMeasurements`, `design`, `serviceWorker`.
+- **Scoring unchanged:** the six sample offers score as before (visa-fee 100 high, whatsapp-otp 60 high, documents-deposit 100 high, genuine-letter 0 low, SCAM_OFFER 100 high, LEGIT_OFFER 0 low); the locked-file hashes test passes.
+- **Network:** a test spies on `fetch`, `sendBeacon` and `XMLHttpRequest` while the checks run; in a real Chrome run of the production build no request followed the button.
+- Not verified by eye: the Arabic page after the left-to-right isolates were added to typed addresses.
+
 ## Production Phase 6: Action & Report Kit replaces the Encrypted Vault (2026-11-24)
 
 Source: `npx vitest run` on branch `phase-6`: **3,606 tests in 70 files, all passed**; `npm run check` is recorded in `docs/build-log/2026-11-24.md`. Before (Phase 5b, `d436055`): 3,688 tests in 71 files.

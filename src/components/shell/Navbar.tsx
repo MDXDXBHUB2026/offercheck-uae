@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Fragment, useEffect, useRef, useState, type KeyboardEvent } from "react";
-import { BookOpen, ChevronDown, FileCheck2, Info, Languages, PhoneCall, ShieldCheck } from "lucide-react";
+import { BookOpen, ChevronDown, FileCheck2, Info, Languages, MailSearch, PhoneCall, ShieldCheck } from "lucide-react";
 import { BrandBadge, NAV_GROUPS, NAV_ITEMS, type NavItem } from "@/components/shell/site";
 import { restoreLang, setLang, useLang, useT } from "@/components/shell/lang";
 import { restoreMotion } from "@/components/shell/motion";
@@ -18,6 +18,7 @@ import { REPORT_FRAUD_NOTE } from "@/lib/authorities";
 
 const ICONS: Record<NavItem["id"], typeof ShieldCheck> = {
   analyzer: ShieldCheck,
+  sender: MailSearch,
   portals: FileCheck2,
   legal: BookOpen,
   about: Info,
@@ -29,7 +30,7 @@ export function isCurrent(pathname: string, href: string): boolean {
   return pathname === href || (href === "/check" && pathname === "/");
 }
 
-// The reference app's header: UAE flag ribbon (its colours drift slowly when motion is allowed), logo and title, four tabs in two groups, Tools and
+// The reference app's header: UAE flag ribbon (its colours drift slowly when motion is allowed), logo and title, five tabs in two groups, Tools and
 // Information, with a divider between them (a three-by-two bar under the header below 1200px), the hotlines dropdown and the English / Arabic switch. Tabs are real links, so
 // navigation works without JavaScript.
 export function Navbar() {
@@ -48,7 +49,7 @@ export function Navbar() {
     registerServiceWorker();
   }, []);
 
-  // The tab title follows the interface language on the four main pages. Next sets the page's own
+  // The tab title follows the interface language on the main pages. Next sets the page's own
   // (English) title after a navigation, so while Arabic is on the title is set again when it changes.
   useEffect(() => {
     const item = NAV_ITEMS.find((entry) => isCurrent(pathname, entry.href));
@@ -184,7 +185,7 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Below 1200px: the same four links, one row per group (Tools, then Information). */}
+        {/* Below 1200px: the same five links, one row per group (Tools, then Information). */}
         <nav aria-label={t("Main (compact)")} className="nav-mobile">
           {NAV_ITEMS.map((item) => (
             <Link

@@ -169,7 +169,7 @@ describe("no personal name in user-facing copy", () => {
     Reports Risk Save Some Terms Text The There They To Translation Translate UAE Upstash Use Vercel Your WhatsApp
     LinkedIn People Cloud What When Where Who An Arabic Indic Information Tools IP A Before How You AI Remove Send
     After Clear Clearing Guidelines Pages Settings Titles Tell Form Please We
-    These One Identity Wait Pressure Slow Take Gmail Yahoo Look Analyzer Report Government MoI Aman Abu Dhabi Ministry Human Resources Emiratisation MOHRE All Action Kit Nothing`.split(/\s+/),
+    These One Identity Wait Pressure Slow Take Gmail Yahoo Look Analyzer Report Government MoI Aman Abu Dhabi Ministry Human Resources Emiratisation MOHRE All Action Kit Nothing Sender`.split(/\s+/),
   );
   it.each(["about", "privacy", "terms", "footer"] as const)("%s: every capitalised word is on the list", (page) => {
     const words = new Set(text(render(page, "en")).match(/\b[A-Z][A-Za-z]+\b/g) ?? []);

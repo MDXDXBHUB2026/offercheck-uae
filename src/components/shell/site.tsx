@@ -14,16 +14,16 @@ import { T } from "@/components/shell/T";
 export const PROTOTYPE_NOTICE =
   "Prototype. Use synthetic or redacted offers only. Emirates ID, passport and UAE IBAN numbers in common formats are hidden in your browser before the text is sent. Offer Check's server does not store offer text. If you choose translation, Google Cloud Translation receives it.";
 
-// The header's four tabs, in two groups (production hardening Phase 3, 2026-11-15; the fifth tab was
-// removed in Phase 6, 2026-11-23): Tools (the analyzer) and Information (portals, guidelines and
-// About). label: the
+// The header's five tabs, in two groups (production hardening Phase 3, 2026-11-15; the saved-results tab
+// was removed in Phase 6, 2026-11-23; the Sender check was added in Phase 7, 2026-11-24): Tools (the
+// analyzer and the Sender check) and Information (portals, guidelines and About). label: the
 // full page name (the browser tab title). short: the English tab text, in the desktop header and the
 // compact bar below 1200px; shortened so the five tabs fit beside the brand at 1280px
 // (docs/header-measurements.json). labelAr: the Arabic tab text (the reference app's own words, page
 // headings keep the full names); not yet reviewed by a native speaker.
 export type NavGroup = "tools" | "info";
 export type NavItem = {
-  id: "analyzer" | "portals" | "legal" | "about";
+  id: "analyzer" | "sender" | "portals" | "legal" | "about";
   group: NavGroup;
   href: string;
   label: string;
@@ -38,6 +38,8 @@ export const NAV_GROUPS: readonly { id: NavGroup; label: string }[] = [
 
 export const NAV_ITEMS: readonly NavItem[] = [
   { id: "analyzer", group: "tools", href: "/check", label: "Offer Analyzer", labelAr: "فاحص العروض", short: "Analyzer" },
+  // [review] Arabic tab label added 2026-11-24.
+  { id: "sender", group: "tools", href: "/sender", label: "Sender Check", labelAr: "فحص المرسل", short: "Sender check" },
   { id: "portals", group: "info", href: "/portals", label: "Gov Portals Hub", labelAr: "بوابات التحقق", short: "Portals" },
   { id: "legal", group: "info", href: "/legal", label: "Legal Guidelines", labelAr: "الإرشادات", short: "Guidelines" },
   // [review] Arabic tab label added 2026-11-15.

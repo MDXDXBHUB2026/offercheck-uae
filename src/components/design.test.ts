@@ -603,8 +603,9 @@ describe("header and nav (UX-2)", () => {
 
   // Production hardening Phase 3 (2026-11-15): tabs in two groups with a divider between them; the
   // compact bar holds the same tabs, one row per group. Phase 6 (2026-11-23): four tabs, so the Tools
-  // row is the analyzer alone and spans the whole row.
-  it("four tabs in two groups from 1200px; below that a compact six-column bar (Tools span 6, Information span 2) under the header", () => {
+  // row was the analyzer alone and spanned the whole row. Phase 7 (2026-11-24): five tabs, the Tools row
+  // holds two (span 3 each) and the Information row three (span 2 each).
+  it("five tabs in two groups from 1200px; below that a compact six-column bar (Tools span 3, Information span 2) under the header", () => {
     expect(rule(".nav-desktop")).toMatch(/display: none;/);
     const wide = block("@media (min-width: 1200px)").text;
     expect(wide).toMatch(/\.nav-desktop \{\s*display: flex;/);
@@ -614,7 +615,7 @@ describe("header and nav (UX-2)", () => {
     expect(wide).toMatch(/\.nav-mobile \{\s*display: none;/);
     expect(rule(".nav-mobile")).toMatch(/grid-template-columns: repeat\(6, minmax\(0, 1fr\)\);/);
     expect(rule(".nav-mobile .tab")).toMatch(/grid-column: span 2;/);
-    expect(rule('.nav-mobile .tab[data-group="tools"]')).toMatch(/grid-column: span 6;/);
+    expect(rule('.nav-mobile .tab[data-group="tools"]')).toMatch(/grid-column: span 3;/);
   });
 
   it("the hotlines panel is inside the screen on a 390px phone, and anchored with a logical property", () => {

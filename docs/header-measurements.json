@@ -43,44 +43,50 @@
       "tabs": [
         {
           "label": "Analyzer",
-          "left": 406.5,
-          "right": 509.5,
+          "left": 346,
+          "right": 449,
           "width": 103
         },
         {
+          "label": "Sender check",
+          "left": 453,
+          "right": 570,
+          "width": 117
+        },
+        {
           "label": "Portals",
-          "left": 526.5,
-          "right": 603.5,
+          "left": 587,
+          "right": 664,
           "width": 77
         },
         {
           "label": "Guidelines",
-          "left": 607.5,
-          "right": 707.5,
+          "left": 668,
+          "right": 768,
           "width": 100
         },
         {
           "label": "About",
-          "left": 711.5,
-          "right": 783.5,
+          "left": 772,
+          "right": 844,
           "width": 72
         }
       ],
       "groups": [
         {
-          "left": 406.5,
-          "right": 509.5,
-          "width": 103
+          "left": 346,
+          "right": 570,
+          "width": 224
         },
         {
-          "left": 526.5,
-          "right": 783.5,
+          "left": 587,
+          "right": 844,
           "width": 257
         }
       ],
       "divider": {
-        "left": 517.5,
-        "right": 518.5,
+        "left": 578,
+        "right": 579,
         "width": 1
       }
     },
@@ -125,44 +131,50 @@
       "tabs": [
         {
           "label": "Analyzer",
-          "left": 486.5,
-          "right": 589.5,
+          "left": 426,
+          "right": 529,
           "width": 103
         },
         {
+          "label": "Sender check",
+          "left": 533,
+          "right": 650,
+          "width": 117
+        },
+        {
           "label": "Portals",
-          "left": 606.5,
-          "right": 683.5,
+          "left": 667,
+          "right": 744,
           "width": 77
         },
         {
           "label": "Guidelines",
-          "left": 687.5,
-          "right": 787.5,
+          "left": 748,
+          "right": 848,
           "width": 100
         },
         {
           "label": "About",
-          "left": 791.5,
-          "right": 863.5,
+          "left": 852,
+          "right": 924,
           "width": 72
         }
       ],
       "groups": [
         {
-          "left": 486.5,
-          "right": 589.5,
-          "width": 103
+          "left": 426,
+          "right": 650,
+          "width": 224
         },
         {
-          "left": 606.5,
-          "right": 863.5,
+          "left": 667,
+          "right": 924,
           "width": 257
         }
       ],
       "divider": {
-        "left": 597.5,
-        "right": 598.5,
+        "left": 658,
+        "right": 659,
         "width": 1
       }
     },
@@ -207,44 +219,50 @@
       "tabs": [
         {
           "label": "Analyzer",
-          "left": 550.5,
-          "right": 653.5,
+          "left": 490,
+          "right": 593,
           "width": 103
         },
         {
+          "label": "Sender check",
+          "left": 597,
+          "right": 714,
+          "width": 117
+        },
+        {
           "label": "Portals",
-          "left": 670.5,
-          "right": 747.5,
+          "left": 731,
+          "right": 808,
           "width": 77
         },
         {
           "label": "Guidelines",
-          "left": 751.5,
-          "right": 851.5,
+          "left": 812,
+          "right": 912,
           "width": 100
         },
         {
           "label": "About",
-          "left": 855.5,
-          "right": 927.5,
+          "left": 916,
+          "right": 988,
           "width": 72
         }
       ],
       "groups": [
         {
-          "left": 550.5,
-          "right": 653.5,
-          "width": 103
+          "left": 490,
+          "right": 714,
+          "width": 224
         },
         {
-          "left": 670.5,
-          "right": 927.5,
+          "left": 731,
+          "right": 988,
           "width": 257
         }
       ],
       "divider": {
-        "left": 661.5,
-        "right": 662.5,
+        "left": 722,
+        "right": 723,
         "width": 1
       }
     },
@@ -289,44 +307,50 @@
       "tabs": [
         {
           "label": "Analyzer",
-          "left": 726.5,
-          "right": 829.5,
+          "left": 666,
+          "right": 769,
           "width": 103
         },
         {
+          "label": "Sender check",
+          "left": 773,
+          "right": 890,
+          "width": 117
+        },
+        {
           "label": "Portals",
-          "left": 846.5,
-          "right": 923.5,
+          "left": 907,
+          "right": 984,
           "width": 77
         },
         {
           "label": "Guidelines",
-          "left": 927.5,
-          "right": 1027.5,
+          "left": 988,
+          "right": 1088,
           "width": 100
         },
         {
           "label": "About",
-          "left": 1031.5,
-          "right": 1103.5,
+          "left": 1092,
+          "right": 1164,
           "width": 72
         }
       ],
       "groups": [
         {
-          "left": 726.5,
-          "right": 829.5,
-          "width": 103
+          "left": 666,
+          "right": 890,
+          "width": 224
         },
         {
-          "left": 846.5,
-          "right": 1103.5,
+          "left": 907,
+          "right": 1164,
           "width": 257
         }
       ],
       "divider": {
-        "left": 837.5,
-        "right": 838.5,
+        "left": 898,
+        "right": 899,
         "width": 1
       }
     },
@@ -371,44 +395,50 @@
       "tabs": [
         {
           "label": "فاحص العروض",
-          "left": 770.5,
-          "right": 904.5,
+          "left": 830,
+          "right": 964,
           "width": 134
         },
         {
+          "label": "فحص المرسل",
+          "left": 711,
+          "right": 826,
+          "width": 115
+        },
+        {
           "label": "بوابات التحقق",
-          "left": 637.5,
-          "right": 753.5,
+          "left": 578,
+          "right": 694,
           "width": 116
         },
         {
           "label": "الإرشادات",
-          "left": 541.5,
-          "right": 633.5,
+          "left": 482,
+          "right": 574,
           "width": 92
         },
         {
           "label": "حول",
-          "left": 479.5,
-          "right": 537.5,
+          "left": 420,
+          "right": 478,
           "width": 58
         }
       ],
       "groups": [
         {
-          "left": 770.5,
-          "right": 904.5,
-          "width": 134
+          "left": 711,
+          "right": 964,
+          "width": 253
         },
         {
-          "left": 479.5,
-          "right": 753.5,
+          "left": 420,
+          "right": 694,
           "width": 274
         }
       ],
       "divider": {
-        "left": 761.5,
-        "right": 762.5,
+        "left": 702,
+        "right": 703,
         "width": 1
       }
     },
@@ -453,44 +483,50 @@
       "tabs": [
         {
           "label": "فاحص العروض",
-          "left": 850.5,
-          "right": 984.5,
+          "left": 910,
+          "right": 1044,
           "width": 134
         },
         {
+          "label": "فحص المرسل",
+          "left": 791,
+          "right": 906,
+          "width": 115
+        },
+        {
           "label": "بوابات التحقق",
-          "left": 717.5,
-          "right": 833.5,
+          "left": 658,
+          "right": 774,
           "width": 116
         },
         {
           "label": "الإرشادات",
-          "left": 621.5,
-          "right": 713.5,
+          "left": 562,
+          "right": 654,
           "width": 92
         },
         {
           "label": "حول",
-          "left": 559.5,
-          "right": 617.5,
+          "left": 500,
+          "right": 558,
           "width": 58
         }
       ],
       "groups": [
         {
-          "left": 850.5,
-          "right": 984.5,
-          "width": 134
+          "left": 791,
+          "right": 1044,
+          "width": 253
         },
         {
-          "left": 559.5,
-          "right": 833.5,
+          "left": 500,
+          "right": 774,
           "width": 274
         }
       ],
       "divider": {
-        "left": 841.5,
-        "right": 842.5,
+        "left": 782,
+        "right": 783,
         "width": 1
       }
     },
@@ -535,44 +571,50 @@
       "tabs": [
         {
           "label": "فاحص العروض",
-          "left": 914.5,
-          "right": 1048.5,
+          "left": 974,
+          "right": 1108,
           "width": 134
         },
         {
+          "label": "فحص المرسل",
+          "left": 855,
+          "right": 970,
+          "width": 115
+        },
+        {
           "label": "بوابات التحقق",
-          "left": 781.5,
-          "right": 897.5,
+          "left": 722,
+          "right": 838,
           "width": 116
         },
         {
           "label": "الإرشادات",
-          "left": 685.5,
-          "right": 777.5,
+          "left": 626,
+          "right": 718,
           "width": 92
         },
         {
           "label": "حول",
-          "left": 623.5,
-          "right": 681.5,
+          "left": 564,
+          "right": 622,
           "width": 58
         }
       ],
       "groups": [
         {
-          "left": 914.5,
-          "right": 1048.5,
-          "width": 134
+          "left": 855,
+          "right": 1108,
+          "width": 253
         },
         {
-          "left": 623.5,
-          "right": 897.5,
+          "left": 564,
+          "right": 838,
           "width": 274
         }
       ],
       "divider": {
-        "left": 905.5,
-        "right": 906.5,
+        "left": 846,
+        "right": 847,
         "width": 1
       }
     },
@@ -617,44 +659,50 @@
       "tabs": [
         {
           "label": "فاحص العروض",
-          "left": 1090.5,
-          "right": 1224.5,
+          "left": 1150,
+          "right": 1284,
           "width": 134
         },
         {
+          "label": "فحص المرسل",
+          "left": 1031,
+          "right": 1146,
+          "width": 115
+        },
+        {
           "label": "بوابات التحقق",
-          "left": 957.5,
-          "right": 1073.5,
+          "left": 898,
+          "right": 1014,
           "width": 116
         },
         {
           "label": "الإرشادات",
-          "left": 861.5,
-          "right": 953.5,
+          "left": 802,
+          "right": 894,
           "width": 92
         },
         {
           "label": "حول",
-          "left": 799.5,
-          "right": 857.5,
+          "left": 740,
+          "right": 798,
           "width": 58
         }
       ],
       "groups": [
         {
-          "left": 1090.5,
-          "right": 1224.5,
-          "width": 134
+          "left": 1031,
+          "right": 1284,
+          "width": 253
         },
         {
-          "left": 799.5,
-          "right": 1073.5,
+          "left": 740,
+          "right": 1014,
           "width": 274
         }
       ],
       "divider": {
-        "left": 1081.5,
-        "right": 1082.5,
+        "left": 1022,
+        "right": 1023,
         "width": 1
       }
     }

@@ -344,12 +344,12 @@ describe("the Vault is gone", () => {
   });
 
   it("no header tab and no footer link goes to /vault, in either header", () => {
-    expect(NAV_ITEMS.map((item) => item.href)).toEqual(["/check", "/portals", "/legal", "/about"]);
+    expect(NAV_ITEMS.map((item) => item.href)).toEqual(["/check", "/sender", "/portals", "/legal", "/about"]);
     for (const lang of ["en", "ar"] as const) {
       nav.lang = lang;
       const markup = html(createElement(Navbar));
       expect(markup, lang).not.toMatch(/\/vault|data-icon="vault"|nav-count/);
-      expect(markup.match(/<a [^>]*class="tab"/g)?.length, lang).toBe(8);
+      expect(markup.match(/<a [^>]*class="tab"/g)?.length, lang).toBe(10);
     }
     nav.lang = "en";
   });

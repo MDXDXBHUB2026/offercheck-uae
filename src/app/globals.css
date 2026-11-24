@@ -1147,7 +1147,7 @@ html {
 }
 
 .nav-mobile .tab[data-group="tools"] {
-  grid-column: span 6;
+  grid-column: span 3;
 }
 
 .btn-label-wide {
@@ -3783,4 +3783,28 @@ ol.bullets {
 
 .not-clearance {
   font-weight: 600;
+}
+
+/* Production Phase 7 (2026-11-24): the Sender check page. Existing tokens and logical properties only. */
+.sender-form .field label {
+  display: block;
+}
+
+.sender-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+  gap: var(--sp-2);
+}
+
+.sender-actions .btn {
+  width: 100%;
+}
+
+.sender-finding {
+  padding: var(--sp-3);
+  overflow-wrap: anywhere;
+}
+
+.sender-finding p {
+  margin: 0;
 }

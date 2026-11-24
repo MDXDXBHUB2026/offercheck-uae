@@ -64,6 +64,7 @@ const SECTIONS: readonly Section[] = [
     title: "What stays in your browser",
     lines: [
       "The Action & Report Kit under each result is created on your device from the check you just ran. Nothing in it is sent to Offer Check or anywhere else, and Offer Check does not store it. It is text you copy or save to your device yourself.",
+      "The Sender check runs in your browser on what you type into it, and nothing you type there is sent, saved or looked up.",
       "Your choices in Settings: language, animations and text size, and whether you dismissed the install hint.",
       "If you download the summary, the file is saved where your browser puts downloads. Offer Check keeps no copy.",
       "To clear them: open Settings and use Clear my data on this device. It removes every choice, and any results that an earlier version of Offer Check saved in this browser. Clearing this site's data in your browser's settings does the same.",
@@ -73,7 +74,7 @@ const SECTIONS: readonly Section[] = [
     id: "offline-heading",
     title: "Pages kept for offline reading",
     lines: [
-      "After your first visit, your browser keeps a copy of the Check page and the About, Guidelines, Portals, Privacy and Terms pages, with the files they need, so you can read them offline.",
+      "After your first visit, your browser keeps a copy of the Check page, the Sender check and the About, Guidelines, Portals, Privacy and Terms pages, with the files they need, so you can read them offline.",
       "The copy holds only these public pages and the app's own files. It never holds the text you paste, a result, or any reply from Offer Check's server to a check or a translation.",
       "Each new version of the site replaces the copy. Clearing this site's data in your browser's settings removes it.",
     ],

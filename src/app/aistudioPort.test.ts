@@ -489,7 +489,7 @@ describe("Header: the brand stays fully visible", () => {
 
   it("the three longest Arabic tab labels are shortened to the compact bar's words", () => {
     // Production hardening Phase 3 (2026-11-15): six tabs, Tools then Information; About added.
-    expect(NAV_ITEMS.map((item) => item.labelAr)).toEqual(["فاحص العروض", "بوابات التحقق", "الإرشادات", "حول"]);
+    expect(NAV_ITEMS.map((item) => item.labelAr)).toEqual(["فاحص العروض", "فحص المرسل", "بوابات التحقق", "الإرشادات", "حول"]);
   });
 });
 

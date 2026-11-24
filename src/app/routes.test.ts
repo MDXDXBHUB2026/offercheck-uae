@@ -23,6 +23,7 @@ import Loading from "./loading";
 import NotFound, { metadata as notFoundMetadata } from "./not-found";
 import * as root from "./page";
 import * as portals from "./portals/page";
+import * as sender from "./sender/page";
 import * as privacy from "./privacy/page";
 import * as terms from "./terms/page";
 import { tr } from "@/lib/i18n";
@@ -44,11 +45,12 @@ const CANARY = "CANARY-offer-text Desert Star hr@example.test";
 const read = (file: string) => readFileSync(join(process.cwd(), file), "utf8");
 
 // The redesign: the reference app's five tabs, one route each. "/" is the Offer Analyzer.
-// Production hardening Phase 3 (2026-11-15): About is a tab (a sixth, until Threat Radar was removed on 2026-11-23, and a fifth until the Vault was removed on 2026-11-23, Phase 6: now four); Privacy and Terms are linked from
+// Production hardening Phase 3 (2026-11-15): About is a tab (a sixth, until Threat Radar was removed on 2026-11-23, and a fifth until the Vault was removed on 2026-11-23, Phase 6: four; the Sender check was added on 2026-11-24, Phase 7: five); Privacy and Terms are linked from
 // the footer and from About, not from the header.
 const ROUTES = [
   { path: "/", module: root, title: "Offer Analyzer" },
   { path: "/check", module: check, title: "Offer Analyzer" },
+  { path: "/sender", module: sender, title: "Sender Check" },
   { path: "/portals", module: portals, title: "Gov Portals Hub" },
   { path: "/legal", module: legal, title: "Legal Guidelines" },
   { path: "/about", module: about, title: "About" },
@@ -66,9 +68,10 @@ describe("routes", () => {
     expect(html).not.toMatch(/<main[\s>]|<header[\s>]|<footer[\s>]/);
   });
 
-  it("has exactly four tabs in two groups, Tools then Information, and no /how-it-works, /lab or /guide route", () => {
+  it("has exactly five tabs in two groups, Tools then Information, and no /how-it-works, /lab or /guide route", () => {
     expect(NAV_ITEMS.map((item) => [item.group, item.label, item.short, item.href])).toEqual([
       ["tools", "Offer Analyzer", "Analyzer", "/check"],
+      ["tools", "Sender Check", "Sender check", "/sender"],
       ["info", "Gov Portals Hub", "Portals", "/portals"],
       ["info", "Legal Guidelines", "Guidelines", "/legal"],
       ["info", "About", "About", "/about"],
@@ -143,11 +146,11 @@ describe("header", () => {
     expect(arabic).toContain(`aria-label="${tr("ar", "Information")}"`);
   });
 
-  it("has a compact tab bar for narrow screens with the same four links, Tools first", () => {
+  it("has a compact tab bar for narrow screens with the same five links, Tools first", () => {
     const compact = navOf(header("/legal"), "Main (compact)");
     expect([...compact.matchAll(/href="([^"]*)"/g)].map((m) => m[1])).toEqual(NAV_ITEMS.map((item) => item.href));
     expect(compact).toMatch(/<a class="tab" data-group="info" aria-current="page" href="\/legal">Guidelines<\/a>/);
-    expect([...compact.matchAll(/data-group="(\w+)"/g)].map((m) => m[1])).toEqual(["tools", "info", "info", "info"]);
+    expect([...compact.matchAll(/data-group="(\w+)"/g)].map((m) => m[1])).toEqual(["tools", "tools", "info", "info", "info"]);
   });
 
   it("brand: logo badge, name and caption, linking to the Offer Analyzer; the name is 'Offer Check UAE'", () => {

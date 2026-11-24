@@ -53,6 +53,13 @@ const SECTIONS: readonly { id: string; title: string; lines: readonly string[] }
     ],
   },
   {
+    id: "sender-heading",
+    title: "The Sender check",
+    lines: [
+      "The Sender check runs in your browser and nothing you type there is sent; it gives plain facts, not a verdict.",
+    ],
+  },
+  {
     id: "use-heading",
     title: "Acceptable use",
     lines: [

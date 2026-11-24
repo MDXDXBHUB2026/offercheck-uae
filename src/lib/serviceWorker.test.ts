@@ -111,11 +111,11 @@ function harness(version = "v1", existingCaches: string[] = []) {
 }
 
 describe("install: the app shell and the five reading pages", () => {
-  it("keeps the Check page, About, Guidelines, Portals, Privacy and Terms, the icons and manifest, and the built files they use", async () => {
+  it("keeps the Check page, Sender check, About, Guidelines, Portals, Privacy and Terms, the icons and manifest, and the built files they use", async () => {
     const sw = harness("v1");
     await sw.lifecycle("install");
     const kept = [...(sw.stores.get(sw.cacheName)?.keys() ?? [])];
-    expect(OFFLINE_PAGES).toEqual(["/check", "/about", "/legal", "/portals", "/privacy", "/terms"]);
+    expect(OFFLINE_PAGES).toEqual(["/check", "/sender", "/about", "/legal", "/portals", "/privacy", "/terms"]);
     for (const page of OFFLINE_PAGES) expect(kept).toContain(page);
     for (const asset of OFFLINE_ASSETS) expect(kept).toContain(asset);
     expect(kept).toEqual(expect.arrayContaining(["/_next/static/css/app.css", "/_next/static/chunks/main-abc.js", "/_next/static/chunks/page-about.js"]));

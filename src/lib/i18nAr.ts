@@ -785,8 +785,8 @@ const ENTRIES: Record<string, string> = {
   "To clear them: open Settings and use Clear my data on this device. It removes every choice, and any results that an earlier version of Offer Check saved in this browser. Clearing this site's data in your browser's settings does the same.":
     "لمسحها: افتح الإعدادات واستخدم \"امسح بياناتي على هذا الجهاز\". يُزيل ذلك كل الاختيارات، وأي نتائج حفظتها نسخة سابقة من Offer Check في هذا المتصفح. ومسح بيانات هذا الموقع من إعدادات متصفحك يفعل الشيء نفسه.",
   "Pages kept for offline reading": "صفحات محفوظة للقراءة دون اتصال",
-  "After your first visit, your browser keeps a copy of the Check page and the About, Guidelines, Portals, Privacy and Terms pages, with the files they need, so you can read them offline.":
-    "بعد زيارتك الأولى، يحتفظ متصفحك بنسخة من صفحة الفحص وصفحات حول والإرشادات والبوابات والخصوصية والشروط، مع الملفات التي تحتاجها، لتقرأها دون اتصال.",
+  "After your first visit, your browser keeps a copy of the Check page, the Sender check and the About, Guidelines, Portals, Privacy and Terms pages, with the files they need, so you can read them offline.":
+    "بعد زيارتك الأولى، يحتفظ متصفحك بنسخة من صفحة الفحص وفحص المرسل وصفحات حول والإرشادات والبوابات والخصوصية والشروط، مع الملفات التي تحتاجها، لتقرأها دون اتصال.",
   "The copy holds only these public pages and the app's own files. It never holds the text you paste, a result, or any reply from Offer Check's server to a check or a translation.":
     "لا تحتوي النسخة إلا على هذه الصفحات العامة وملفات التطبيق نفسه. ولا تحتوي أبدًا على النص الذي تلصقه، ولا على نتيجة، ولا على أي رد من خادم Offer Check على فحص أو ترجمة.",
   "Each new version of the site replaces the copy. Clearing this site's data in your browser's settings removes it.":
@@ -946,6 +946,85 @@ const ENTRIES: Record<string, string> = {
     "إذا نزّلت الملخص، يُحفظ الملف حيث يضع متصفحك التنزيلات. ولا يحتفظ Offer Check بأي نسخة منه.",
   "The Action & Report Kit under each result is created on your device from the check you just ran, and nothing in it is sent. It is not an official report form, and Offer Check does not report anything for you. What you copy, save or send from it is your choice.":
     "تُنشأ حزمة الإجراء والبلاغ تحت كل نتيجة على جهازك من الفحص الذي أجريته للتو، ولا يُرسل أي شيء منها. وهي ليست نموذج بلاغ رسميًا، ولا يبلّغ Offer Check عنك عن أي شيء. ما تنسخه أو تحفظه أو ترسله منها أمرٌ يعود إليك.",
+
+  // [review] Phase 7 (2026-11-24): the Sender check page, its findings and the Privacy and Terms sentences. Every entry
+  // below is new and written for this app, not yet reviewed by a native speaker. In logical reading order.
+  "Sender check": "فحص المرسل",
+  "Sender Check": "فحص المرسل",
+  "Runs in your browser": "يعمل في متصفحك",
+  "Look at the email address, phone number and web address an offer came from. You get plain facts and what to do next, never a verdict. Nothing is sent, saved or looked up.":
+    "اطّلع على البريد الإلكتروني ورقم الهاتف وعنوان الويب التي جاء منها العرض. ستحصل على وقائع واضحة وعلى ما تفعله بعد ذلك، وليس على حكم. لا يُرسل شيء ولا يُحفظ ولا يُبحث عنه.",
+  "What the sender gave you": "ما قدّمه لك المرسل",
+  "Fill in at least one of the first three. Nothing is sent, saved or looked up: the checks run in this browser.":
+    "املأ واحدًا على الأقل من الحقول الثلاثة الأولى. لا يُرسل شيء ولا يُحفظ ولا يُبحث عنه: تجري الفحوص في هذا المتصفح.",
+  "Sender email address": "البريد الإلكتروني للمرسل",
+  "Phone number": "رقم الهاتف",
+  "Web address or domain": "عنوان الويب أو النطاق",
+  "If you paste a full web address, only its host name is used. The page is not opened.":
+    "إذا لصقت عنوان ويب كاملًا، يُستخدم اسم المضيف فقط. لا تُفتح الصفحة.",
+  "Company name the offer used": "اسم الشركة الذي ذكره العرض",
+  "Optional. Only used to compare with the email domain.": "اختياري. يُستخدم فقط للمقارنة مع نطاق البريد الإلكتروني.",
+  "Run the checks": "شغّل الفحوص",
+  "Clear": "مسح",
+  "{0} thing to look at": "{0} أمر للنظر فيه",
+  "{0} things to look at": "{0} أمور للنظر فيها",
+  "What to do next": "ما تفعله بعد ذلك",
+  "These are facts about what you typed, not a verdict. They are separate from the score on the Analyzer page.":
+    "هذه وقائع عمّا كتبته، وليست حكمًا. وهي منفصلة عن الدرجة في صفحة المحلل.",
+  "What this check cannot know": "ما لا يستطيع هذا الفحص معرفته",
+  "These checks found nothing to flag. This is not a clearance: confirm the employer through official channels before you pay a fee or send documents.":
+    "لم تجد هذه الفحوص ما يستدعي التنبيه. هذا ليس إبراءً: تأكد من جهة العمل عبر القنوات الرسمية قبل أن تدفع أي رسوم أو ترسل أي مستندات.",
+  "Add an email address, a phone number or a web address to run the checks. The company name is only used to compare with the email domain.":
+    "أضف بريدًا إلكترونيًا أو رقم هاتف أو عنوان ويب لتشغيل الفحوص. يُستخدم اسم الشركة فقط للمقارنة مع نطاق البريد الإلكتروني.",
+  "Offer Check does not look anything up. It cannot tell whether a number is a VoIP line, who owns an address, or whether a company is registered.":
+    "لا يبحث Offer Check عن أي شيء. ولا يستطيع أن يعرف إن كان الرقم خط VoIP، ولا من يملك العنوان، ولا إن كانت الشركة مسجّلة.",
+  "email domain": "نطاق البريد الإلكتروني",
+  "web address": "عنوان الويب",
+  "The email address could not be read. Type only the address, for example name@company.com.":
+    "تعذّرت قراءة عنوان البريد الإلكتروني. اكتب العنوان فقط، مثل name@company.com.",
+  "The web address could not be read as a web address or domain name.":
+    "تعذّرت قراءة هذا النص بوصفه عنوان ويب أو اسم نطاق.",
+  "The email address uses a free-mail provider ({0}). Anyone can open an account there.":
+    "يستخدم عنوان البريد الإلكتروني مزوّد بريد مجاني ({0}). يمكن لأي شخص فتح حساب لديه.",
+  "The {0} ({1}) is not in Offer Check's list of official addresses, but it matches {2} once look-alike letters are swapped (for example rn for m, 0 for o, 1 for l).":
+    "{0} ({1}) غير مدرج في قائمة Offer Check للعناوين الرسمية، لكنه يطابق {2} بعد استبدال الحروف المتشابهة (مثل rn بدل m، و0 بدل o، و1 بدل l).",
+  "The {0} ({1}) is not in Offer Check's list of official addresses, but it matches {2} once the hyphens are removed.":
+    "{0} ({1}) غير مدرج في قائمة Offer Check للعناوين الرسمية، لكنه يطابق {2} بعد حذف الشرطات.",
+  "The {0} ({1}) is not in Offer Check's list of official addresses, and it differs from {2} by only one or two characters.":
+    "{0} ({1}) غير مدرج في قائمة Offer Check للعناوين الرسمية، ويختلف عن {2} بحرف واحد أو حرفين فقط.",
+  "The {0} ({1}) is not in Offer Check's list of official addresses, but it contains the name in {2} with other words or hyphens added.":
+    "{0} ({1}) غير مدرج في قائمة Offer Check للعناوين الرسمية، لكنه يحتوي على الاسم الوارد في {2} مع كلمات أو شرطات مضافة.",
+  "The {0} ({1}) uses an international form: characters outside a to z, digits and hyphens, or an xn-- label. Look-alike addresses use this form, and so do ordinary international names.":
+    "{0} ({1}) يستخدم صيغة دولية: أحرفًا غير a إلى z والأرقام والشرطات، أو مقطعًا يبدأ بـ xn--. تستخدم العناوين المشابهة هذه الصيغة، وكذلك الأسماء الدولية العادية.",
+  "The {0} ({1}) mixes letters from more than one writing system in one name (for example Latin and Cyrillic). Look-alike addresses use this to resemble another name.":
+    "{0} ({1}) يخلط حروفًا من أكثر من نظام كتابة في اسم واحد (مثل اللاتينية والسيريلية). تستخدم العناوين المشابهة ذلك لتشبه اسمًا آخر.",
+  "The email domain ({0}) does not contain any word from the company name you typed ({1}). A company's own domain often does, but not always.":
+    "نطاق البريد الإلكتروني ({0}) لا يحتوي على أي كلمة من اسم الشركة الذي كتبته ({1}). غالبًا ما يحتوي نطاق الشركة الخاص عليها، لكن ليس دائمًا.",
+  "The phone number contains letters. A phone number is made of digits, spaces and the signs + - ( ) only.":
+    "يحتوي رقم الهاتف على أحرف. يتكوّن رقم الهاتف من أرقام ومسافات والعلامات + - ( ) فقط.",
+  "The phone number has no country code and no leading 0, so Offer Check cannot tell which country it is for.":
+    "ليس في رقم الهاتف رمز دولة ولا صفر في البداية، لذا لا يستطيع Offer Check معرفة الدولة التي يخصها.",
+  "The phone number starts with a country code other than +971 (the UAE). Offer Check does not look up which country it belongs to.":
+    "يبدأ رقم الهاتف برمز دولة غير +971 (الإمارات). لا يبحث Offer Check عن الدولة التي ينتمي إليها.",
+  "The phone number has {0} digits after +971. UAE numbers have 8 or 9 digits after +971: 8 for a landline, 9 for a mobile.":
+    "يحتوي رقم الهاتف على {0} أرقام بعد +971. أرقام الإمارات تتكوّن من 8 أو 9 أرقام بعد +971: 8 للهاتف الأرضي و9 للجوال.",
+  "The phone number starts with the mobile prefix {0} but has {1} digits after +971. UAE mobile numbers have 9.":
+    "يبدأ رقم الهاتف ببادئة الجوال {0} لكنه يحتوي على {1} أرقام بعد +971. أرقام الجوال في الإمارات تتكوّن من 9 أرقام.",
+  "The phone number starts with the area code {0} but has {1} digits after +971. UAE landline numbers have 8.":
+    "يبدأ رقم الهاتف برمز المنطقة {0} لكنه يحتوي على {1} أرقام بعد +971. أرقام الهاتف الأرضي في الإمارات تتكوّن من 8 أرقام.",
+  "After +971 the phone number starts with {0}, which is not a mobile prefix (50, 52, 54, 55, 56, 58), a landline area code (2, 3, 4, 6, 7, 9) or 800 in Offer Check's list. The numbering plan can change.":
+    "بعد +971 يبدأ رقم الهاتف بـ {0}، وهي ليست بادئة جوال (50، 52، 54، 55، 56، 58) ولا رمز منطقة للهاتف الأرضي (2، 3، 4، 6، 7، 9) ولا 800 في قائمة Offer Check. قد تتغير خطة الترقيم.",
+  "Confirm the employer through official channels before you pay a fee or send documents. Ask for a message from the company's own email domain.":
+    "تأكد من جهة العمل عبر القنوات الرسمية قبل أن تدفع أي رسوم أو ترسل أي مستندات. اطلب رسالة من نطاق البريد الإلكتروني الخاص بالشركة.",
+  "Do not follow links in the message. Type the official address yourself, or use the official links below.":
+    "لا تتبع الروابط الواردة في الرسالة. اكتب العنوان الرسمي بنفسك، أو استخدم الروابط الرسمية أدناه.",
+  "Ask for the employer's UAE contact details and confirm them through official channels before you pay a fee or send documents.":
+    "اطلب بيانات الاتصال الخاصة بجهة العمل في الإمارات، وتأكد منها عبر القنوات الرسمية قبل أن تدفع أي رسوم أو ترسل أي مستندات.",
+  "The Sender check runs in your browser on what you type into it, and nothing you type there is sent, saved or looked up.":
+    "يعمل فحص المرسل في متصفحك على ما تكتبه فيه، ولا يُرسل أي شيء تكتبه هناك ولا يُحفظ ولا يُبحث عنه.",
+  "The Sender check": "فحص المرسل",
+  "The Sender check runs in your browser and nothing you type there is sent; it gives plain facts, not a verdict.":
+    "يعمل فحص المرسل في متصفحك ولا يُرسل أي شيء تكتبه هناك؛ وهو يعطي وقائع واضحة لا حكمًا.",
 };
 
 // Official names: in Arabic, each contact shows its own official Arabic name (src/data/uaeContacts.ts).

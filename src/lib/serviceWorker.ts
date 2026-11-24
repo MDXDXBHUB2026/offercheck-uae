@@ -15,7 +15,7 @@
 
 export const CACHE_PREFIX = "offercheck-";
 // The pages kept for offline reading. "/" is the Check page too.
-export const OFFLINE_PAGES = ["/check", "/about", "/legal", "/portals", "/privacy", "/terms"] as const;
+export const OFFLINE_PAGES = ["/check", "/sender", "/about", "/legal", "/portals", "/privacy", "/terms"] as const;
 export const OFFLINE_ASSETS = [
   "/manifest.webmanifest",
   "/icons/icon-192.png",
@@ -33,7 +33,7 @@ export const SW_HEADERS: Record<string, string> = {
 };
 
 // Shown for a page that is not kept offline. No script, no style, no outside resource.
-const OFFLINE_HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Offline · Offer Check UAE</title></head><body><h1>You are offline</h1><p>This page is not saved for offline reading. These pages are: <a href="/check">Offer Analyzer</a>, <a href="/about">About</a>, <a href="/legal">Guidelines</a>, <a href="/portals">Portals</a>, <a href="/privacy">Privacy</a>, <a href="/terms">Terms</a>. Checking an offer needs a connection.</p><div lang="ar" dir="rtl"><h2>أنت غير متصل بالإنترنت</h2><p>هذه الصفحة غير محفوظة للقراءة دون اتصال. فحص العرض يحتاج إلى اتصال.</p></div></body></html>`;
+const OFFLINE_HTML = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Offline · Offer Check UAE</title></head><body><h1>You are offline</h1><p>This page is not saved for offline reading. These pages are: <a href="/check">Offer Analyzer</a>, <a href="/sender">Sender Check</a>, <a href="/about">About</a>, <a href="/legal">Guidelines</a>, <a href="/portals">Portals</a>, <a href="/privacy">Privacy</a>, <a href="/terms">Terms</a>. Checking an offer needs a connection.</p><div lang="ar" dir="rtl"><h2>أنت غير متصل بالإنترنت</h2><p>هذه الصفحة غير محفوظة للقراءة دون اتصال. فحص العرض يحتاج إلى اتصال.</p></div></body></html>`;
 
 // Under `next dev`: keep nothing, delete any Offer Check cache a production build left on this
 // origin, and unregister, so local code changes are never hidden by a cached page.
