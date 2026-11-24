@@ -89,11 +89,15 @@ export const FACT_PHONE_UNKNOWN_START =
 export const NEXT_STEPS = [NEXT_CONFIRM, NEXT_TYPE_IT, NEXT_PHONE] as const;
 export const FIELD_NAMES = [EMAIL_DOMAIN, WEB_ADDRESS] as const;
 
+export const CANNOT_KNOW_PREFIXES =
+  "The mobile prefixes 52, 54, 56 and 58 in this check come from the owner's list. No regulator document found names them, so a number that starts with one of them is accepted without a regulator source.";
+
 // Every sentence the checks can produce, for the Arabic coverage test.
 export const SENDER_TEMPLATES = [
   NOTHING_FLAGGED,
   NEED_ONE,
   CANNOT_KNOW,
+  CANNOT_KNOW_PREFIXES,
   NEXT_CONFIRM,
   NEXT_TYPE_IT,
   NEXT_PHONE,

@@ -5,7 +5,7 @@ import { Eraser, ExternalLink, ScanSearch } from "lucide-react";
 import { useT } from "@/components/shell/lang";
 import { Button, Callout, Card } from "@/components/ui";
 import { mainChannels, REPORT_FRAUD_NOTE } from "@/lib/authorities";
-import { CANNOT_KNOW, checkSender, NEED_ONE, NOTHING_FLAGGED, type SenderInput, type SenderResult } from "@/lib/senderCheck";
+import { CANNOT_KNOW, CANNOT_KNOW_PREFIXES, checkSender, NEED_ONE, NOTHING_FLAGGED, type SenderInput, type SenderResult } from "@/lib/senderCheck";
 
 // Production Phase 7 (2026-11-24): the Sender check. Everything runs in this browser, on the text the
 // person types: no network call, nothing stored (not even in this browser), nothing sent, no page
@@ -177,6 +177,7 @@ export function SenderLimits() {
         {t("What this check cannot know")}
       </h2>
       <p className="small muted">{t(CANNOT_KNOW)}</p>
+      <p className="small muted">{t(CANNOT_KNOW_PREFIXES)}</p>
       <h3 className="h3">{t("Official links")}</h3>
       <ul className="stack-sm small kit-links">
         {channels.map((entry) => (

@@ -978,6 +978,8 @@ const ENTRIES: Record<string, string> = {
     "أضف بريدًا إلكترونيًا أو رقم هاتف أو عنوان ويب لتشغيل الفحوص. يُستخدم اسم الشركة فقط للمقارنة مع نطاق البريد الإلكتروني.",
   "Offer Check does not look anything up. It cannot tell whether a number is a VoIP line, who owns an address, or whether a company is registered.":
     "لا يبحث Offer Check عن أي شيء. ولا يستطيع أن يعرف إن كان الرقم خط VoIP، ولا من يملك العنوان، ولا إن كانت الشركة مسجّلة.",
+  "The mobile prefixes 52, 54, 56 and 58 in this check come from the owner's list. No regulator document found names them, so a number that starts with one of them is accepted without a regulator source.":
+    "بادئات الجوال 52 و54 و56 و58 في هذا الفحص مأخوذة من قائمة المالك. لم نجد وثيقة من جهة تنظيمية تذكرها، لذا يُقبل الرقم الذي يبدأ بإحداها دون مصدر من جهة تنظيمية.",
   "email domain": "نطاق البريد الإلكتروني",
   "web address": "عنوان الويب",
   "The email address could not be read. Type only the address, for example name@company.com.":

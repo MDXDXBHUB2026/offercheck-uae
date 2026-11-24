@@ -101,6 +101,13 @@ describe("the result wording", () => {
     expect(text(html(createElement(SenderResults, { result: resultOf({ company: "Desert Star" }) })))).toContain("Add an email address, a phone number or a web address");
   });
 
+  it("the limits text says the mobile prefixes 52, 54, 56 and 58 have no regulator source, and so do both limitation docs", () => {
+    expect(text(html(createElement(SenderLimits)))).toContain("52, 54, 56 and 58 in this check come from the owner's list. No regulator document found names them");
+    for (const file of ["docs/known-limitations.md", "docs/technical-evidence.md"]) {
+      expect(read(file)).toContain("52, 54, 56 and 58 are the owner's list, and no regulator document listing them was found");
+    }
+  });
+
   it("the live region is in the page even with no result, so a result is announced", () => {
     expect(html(createElement(SenderResults, { result: null }))).toBe('<div role="status" aria-live="polite" class="stack-sm"></div>');
   });
@@ -239,8 +246,8 @@ describe("every new Arabic string is in the Phase 7 [review] block, once", () =>
   const block = source.slice(start, source.indexOf("// Official names"));
   const keys = [...block.matchAll(/^ {2}("(?:[^"\\]|\\.)*"):/gm)].map((match) => JSON.parse(match[1]) as string);
 
-  it("holds 47 entries, none repeated, none the same as its English", () => {
-    expect(keys).toHaveLength(47);
+  it("holds 48 entries, none repeated, none the same as its English", () => {
+    expect(keys).toHaveLength(48);
     expect(new Set(keys).size).toBe(keys.length);
     for (const key of keys) expect(AR[key], key).not.toBe(key);
   });

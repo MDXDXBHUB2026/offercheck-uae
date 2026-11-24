@@ -4,12 +4,14 @@ As of 2026-11-08, updated for QA round 2 (LANG-2 and COPY-1, the QA round 2 comm
 
 ## Production Phase 7: audit panel removed, Sender check added (2026-11-24)
 
-Source: `npx vitest run` on branch `phase-7`: **3,836 tests in 71 files (one of them, `actionKit.test.ts`, timed out once in the full run and passed alone)**. Before (Phase 6 merge, `398609a`): 3,606 tests in 70 files (3 of those failed in the fresh worktree used for the count; the cause was not investigated). Reconciliation, computed from the two JSON reports: 3,606 - 24 removed + 254 added = 3,836.
+Source: `npx vitest run` on branch `phase-7`: **3,839 tests in 71 files**. Before (Phase 6 merge, `398609a`): 3,606 tests in 70 files (3 of those failed in the fresh worktree used for the count: `aistudioPort.test.ts`, three CSS-pattern tests, because a fresh Windows checkout has CRLF line endings (`core.autocrlf=true`) and the tests match `
+`; the committed file is LF and they pass on LF. Reproduced on a fresh `phase-7` worktree. Test fragility, not a product defect). Reconciliation, computed from the two JSON reports: 3,606 - 24 removed + 257 added = 3,839.
 
 - **Removed (24):** `AuditTrail.test.ts` 4; `arabicGaps.test.ts` 10 (two 4b and eight 4g rows for the deleted audit strings and the old offline sentence); `plainFindings.test.ts` 2 (renamed); `routes.test.ts` 2 (four-tab wording); `arabic.test.ts` 1 (renamed); `headerMeasurements.test.ts` 1 (renamed); `page.test.ts` 1 (the AuditTrail source scan); `design.test.ts` 1 (renamed); `audit.test.ts` 1 (the deleted file's list entry); `serviceWorker.test.ts` 1 (renamed).
-- **Added (254):** `senderCheck.test.ts` (lib) 138; `senderCheck.test.ts` (components) 39; `arabicGaps.test.ts` 65 (the new Arabic strings: 4b and 4g rows); `page.test.ts` 3 (the three new source files); `routes.test.ts` 3; and one each, as renamed replacements, in `plainFindings` (2), `arabic`, `headerMeasurements`, `design`, `serviceWorker`.
+- **Added (257):** `senderCheck.test.ts` (lib) 139; `senderCheck.test.ts` (components) 40; `arabicGaps.test.ts` 66 (the new Arabic strings: 4b and 4g rows); `page.test.ts` 3 (the three new source files); `routes.test.ts` 3; and one each, as renamed replacements, in `plainFindings` (2), `arabic`, `headerMeasurements`, `design`, `serviceWorker`.
 - **Scoring unchanged:** the six sample offers score as before (visa-fee 100 high, whatsapp-otp 60 high, documents-deposit 100 high, genuine-letter 0 low, SCAM_OFFER 100 high, LEGIT_OFFER 0 low); the locked-file hashes test passes.
 - **Network:** a test spies on `fetch`, `sendBeacon` and `XMLHttpRequest` while the checks run; in a real Chrome run of the production build no request followed the button.
+- **Full suite run three times after the final change:** 3,839 passed each time (27 to 29 s); `actionKit.test.ts` did not time out. Its slowest test takes about 1.5 s alone; the one 20 s timeout seen earlier happened while other work was running on the machine.
 - Not verified by eye: the Arabic page after the left-to-right isolates were added to typed addresses.
 
 ## Production Phase 6: Action & Report Kit replaces the Encrypted Vault (2026-11-24)
