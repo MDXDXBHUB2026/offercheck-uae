@@ -2,6 +2,16 @@
 
 As of 2026-11-08, updated for QA round 2 (LANG-2 and COPY-1, the QA round 2 commit, see git log) on top of the QA fix batch `34903e2` (UX-1, LANG-1, nav "Soon" badge, approval wording). Every number gives its source. No automated test here ran against a live URL. The live site was checked by hand; see "Manual post-deploy QA (live site)" below.
 
+## Production Phase 6: Action & Report Kit replaces the Encrypted Vault (2026-11-24)
+
+Source: `npx vitest run` on branch `phase-6`: **3,605 tests in 70 files, all passed**; `npm run check` is recorded in `docs/build-log/2026-11-24.md`. Before (Phase 5b, `d436055`): 3,688 tests in 71 files.
+
+- **Removed with the feature:** `vaultFlow.test.ts` (18 tests) and `vaultTools.test.ts` (14), and the Vault, Save and fifth-tab rows in 17 other test files (listed in the build log). `vaultCrypto.test.ts` and `lockedFiles.test.ts` are unchanged and pass.
+- **Added:** `src/components/actionKit.test.ts`. It checks that no made-up name, phone, email or evidence quote reaches the Kit or the report text, in all five channels and all three bands, English and Arabic; that every Low and Medium result shows the not-a-clearance line and High does not; that no banned word is in any Kit string, report text or rendered Kit; that the Kit source has no network, storage, `window.open`, `wa.me` or `mailto`; that `/vault` redirects 308 and no Vault wording is left in any page, the header, footer, Settings or the Arabic dictionary.
+- **Header measurements re-run** (`scripts/measure-header.mjs`, production build, headless Chrome, 1280, 1440, 1568 and 1920 px, English and Arabic): four tabs; overflow 0 px in all eight cases; English Analyzer 103, Portals 77, Guidelines 100, About 72 px; Arabic 134, 116, 92, 58 px. `docs/header-measurements.json` rewritten; `headerMeasurements.test.ts` passes on it.
+- **360 px (headless Chrome, dark and light, English and Arabic):** page width 360, no horizontal scroll; the Kit spans 16 to 344 px with its content inside; every button, the channel picker and the note box are at least 44 px tall; viewed in screenshots.
+- **Not checked:** pressing Copy and Download in a real browser; a native reading of the Arabic; other browsers; a real screen reader. Three CRLF-only failures in `aistudioPort.test.ts` seen on some Windows checkouts before this phase are a line-ending artefact (CI passes).
+
 ## Production Phase 5b: Threat Radar removed, five-pattern guide, counters split (2026-11-24)
 
 Source: `npm run check` on branch `phase-5` after the Phase 5b commits: **3,688 tests in 71 files, all passed**, then typecheck, lint (0 errors, 0 warnings), the production build and the no-bypass check. Before (Phase 5, `c9ba6e8`): 3,711 tests in 70 files.
